@@ -1,4 +1,4 @@
-package org.example.edusoft.Service.file;
+package org.example.edusoft.service.file;
 
 import org.example.edusoft.common.domain.Dtree;
 import org.example.edusoft.common.domain.Result;

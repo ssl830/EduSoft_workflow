@@ -1,16 +1,16 @@
-package org.example.edusoft.Service.file.impl;
+package org.example.edusoft.service.file.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import org.example.edusoft.common.constant.CommonConstant;
 import org.example.edusoft.common.domain.FileBo;
 import org.example.edusoft.common.domain.Result;
 import org.example.edusoft.exception.BusinessException;
+import org.example.edusoft.mapper.file.FileMapper;
+import org.example.edusoft.service.file.FileService;
 import org.example.edusoft.common.storage.IFileStorage;
 import org.example.edusoft.common.storage.IFileStorageProvider;
 import org.example.edusoft.entity.file.FileInfo;
 import org.example.edusoft.common.dto.UpdateFileNameDTO;
-import org.example.edusoft.Mapper.file.FileMapper;
-import org.example.edusoft.Service.file.FileService;
 import org.example.edusoft.common.domain.Dtree;
 import org.apache.ibatis.annotations.Param;
 // import org.apache.tomcat.jni.FileInfo;

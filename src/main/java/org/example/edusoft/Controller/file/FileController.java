@@ -1,4 +1,4 @@
-package org.example.edusoft.Controller.file;
+package org.example.edusoft.controller.file;
 
 public class FileController {
     

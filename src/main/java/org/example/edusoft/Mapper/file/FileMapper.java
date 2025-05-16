@@ -1,4 +1,4 @@
-package org.example.edusoft.Mapper.file;
+package org.example.edusoft.mapper.file;
 
 import java.util.List;
 import java.util.Date;
