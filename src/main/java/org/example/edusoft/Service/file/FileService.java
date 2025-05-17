@@ -27,7 +27,7 @@ public interface FileService {
     /**
      * 获取用户在某个课程下的文件
      */
-    List<FileInfo> getFilesByUserAndCourse(Long userId, Long courseId);
+    List<FileInfo> getFilesByUserandCourse(Long userId, Long courseId);
 
     /**
      * 获取某个文件夹下的内容
@@ -39,6 +39,8 @@ public interface FileService {
      */
     void downloadFileOrFolder(Long fileId, HttpServletResponse response);
 
+    public Result<?> uploadFile(Long courseId, Long sectionId, Long uploaderId, MultipartFile file, String visibility);
+    public FileInfo findSectionFolder(Long parentId, Long sectionId);
     /**
      * 上传文件
      */
