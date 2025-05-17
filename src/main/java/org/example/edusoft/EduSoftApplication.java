@@ -8,7 +8,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import cn.dev33.satoken.SaManager;
 
 @SpringBootApplication
-@MapperScan("org.example.edusoft.file.mapper")  // 告诉 Spring 和 MyBatis 去指定包路径下扫描所有的 Mapper 接口，并将它们注册为 Spring 容器中的 Bean
+@MapperScan("org.example.edusoft.mapper")  // 告诉 Spring 和 MyBatis 去指定包路径下扫描所有的 Mapper 接口，并将它们注册为 Spring 容器中的 Bean
 @EnableConfigurationProperties({FileServerProperties.class})
 public class EduSoftApplication {
 

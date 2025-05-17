@@ -54,6 +54,6 @@ public class User {
     public enum UserRole {
         student,    // 使用大写，符合Java枚举命名规范
         teacher,
-        ta
+        tutor
     }
 }
