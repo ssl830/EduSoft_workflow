@@ -1,16 +1,20 @@
-package org.example.edusoft.controller;
+package org.example.edusoft.controller.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
-import org.example.edusoft.entity.User;
-import org.example.edusoft.entity.UserUpdate;
+
+import org.example.edusoft.entity.user.User;
+import org.example.edusoft.entity.user.UserUpdate;
 import org.example.edusoft.service.user.UserService;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @Validated
@@ -27,14 +31,9 @@ public class UserController {
     @PostMapping("/register")
     public SaResult register(@Valid @RequestBody User user) {
         System.out.println("开始处理注册请求: " + user.getUsername());
-
         try {
-            // 先检查用户名是否已存在
-            if (userService.findByUsername(user.getUsername()) != null) {
-                return SaResult.error("用户名已存在，请选择其他用户名");
-            }
             // 检查userid是否已存在
-            if (userService.findByUserid(user.getUserid()) != null) {
+            if (userService.findByUserId(user.getUserId()) != null) {
                return SaResult.error("用户ID已存在，请选择其他用户ID");
             }
             // 密码加密
@@ -47,12 +46,8 @@ public class UserController {
             // 保存用户
             userService.save(user);
             return SaResult.ok("注册成功");
-
         } catch (Exception e) {
             System.out.println("注册失败: " + e.getMessage());
-            if (e.getMessage().contains("Duplicate entry") && e.getMessage().contains("username")) {
-                return SaResult.error("用户名已存在，请选择其他用户名");
-            }
             if (e.getMessage().contains("Duplicate entry") && e.getMessage().contains("userid")) {
                return SaResult.error("用户ID已存在，请选择其他用户ID");
             }
@@ -62,11 +57,11 @@ public class UserController {
 
     @SaIgnore
     @PostMapping("/login")
-    public SaResult login(@RequestParam String username, @RequestParam String password) {
+    public SaResult login(@RequestParam String userId, @RequestParam String password) {
         try {
-            System.out.println("开始处理登录请求: username=" + username); // 添加日志
+            System.out.println("开始处理登录请求: username=" + userId); // 添加日志
             // 查找用户
-            User user = userService.findByUsername(username);
+            User user = userService.findByUserId(userId);
             System.out.println("查询用户结果: " + (user != null ? "找到用户" : "用户不存在")); // 添加日志
             if (user != null) {
                 System.out.println("用户信息: " + user); // 打印用户信息
@@ -83,11 +78,40 @@ public class UserController {
             }
             // 登录成功
             StpUtil.login(user.getId());
-            return SaResult.ok("登录成功").setData(StpUtil.getTokenValue());
+            String token = StpUtil.getTokenValue();
+            // 创建返回的用户信息，排除敏感字段
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("username", user.getUsername());
+            userInfo.put("userid", user.getUserId());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("role", user.getRole());
+           // 构建返回数据
+            Map<String, Object> data = new HashMap<>();
+           data.put("token", token);
+           data.put("userInfo", userInfo);
+           return SaResult.ok("登录成功").setData(data);
         } catch (Exception e) {
             e.printStackTrace(); // 打印完整堆栈
             System.out.println("登录失败，详细错误: " + e.getMessage());
             return SaResult.error("登录失败：系统错误");
+        }
+    }
+
+    // 用户登出
+    @PostMapping("/logout")
+    public SaResult logout() {
+        try {
+            // 判断是否已登录
+            if (!StpUtil.isLogin()) {
+                return SaResult.error("用户未登录");
+            }
+            // 执行登出
+            StpUtil.logout();
+            return SaResult.ok("退出登录成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return SaResult.error("退出登录失败：" + e.getMessage());
         }
     }
 
@@ -116,13 +140,7 @@ public class UserController {
         }
     }
 
-    // 用户登出
-    @PostMapping("/logout")
-    public String logout() {
-        StpUtil.logout();
-        return "Logout successful";
-    }
-
+    
     // 更新用户信息
     @PostMapping("/update")
     public SaResult updateUserInfo(@Valid @RequestBody UserUpdate updateDTO) {
@@ -137,8 +155,8 @@ public class UserController {
                 return SaResult.error("用户不存在");
             }
             // 只更新允许修改的字段
-            if (updateDTO.getName() != null) {
-                currentUser.setName(updateDTO.getName());
+            if (updateDTO.getUsername() != null) {
+                currentUser.setUsername(updateDTO.getUsername());
             }
             if (updateDTO.getEmail() != null) {
                 currentUser.setEmail(updateDTO.getEmail());
@@ -185,6 +203,33 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
             return SaResult.error("密码修改失败：" + e.getMessage());
+        }
+    }
+
+    //注销账号接口
+    @PostMapping("/deactivate")
+    public SaResult deactivateAccount(@RequestParam String password) {
+        try {
+            // 获取当前登录用户
+            Long loginId = StpUtil.getLoginIdAsLong();
+            User currentUser = userService.findById(loginId);
+            if (currentUser == null) {
+                return SaResult.error("用户不存在");
+            }
+            // 验证密码
+            String encryptedPassword = SaSecureUtil.md5BySalt(password, SALT);
+            if (!encryptedPassword.equals(currentUser.getPasswordHash())) {
+                return SaResult.error("密码错误");
+            }
+            // 密码验证通过，执行注销
+            userService.deactivateAccount(currentUser.getId());
+            // 注销成功后，清除登录状态
+            StpUtil.logout();
+            return SaResult.ok("账号已注销");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return SaResult.error("注销失败：" + e.getMessage());
         }
     }
 }

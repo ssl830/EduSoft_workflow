@@ -1,4 +1,4 @@
-package org.example.edusoft.Controller.course;
+package org.example.edusoft.controller.course;
 
 import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.course.Course;

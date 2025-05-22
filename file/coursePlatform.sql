@@ -7,10 +7,9 @@ USE CoursePlatform;
 CREATE TABLE User (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id VARCHAR(15) NOT NULL UNIQUE,
-    username VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL ,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('student', 'teacher', 'tutor') NOT NULL,
-    name VARCHAR(100),
     email VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

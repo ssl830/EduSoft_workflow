@@ -1,4 +1,4 @@
-package org.example.edusoft.entity;
+package org.example.edusoft.entity.courseclass;
 
 import java.util.Date;
 

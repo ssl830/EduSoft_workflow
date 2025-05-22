@@ -1,8 +1,7 @@
 package org.example.edusoft.mapper.file;
-
 import java.util.List;
 import java.util.Date;
-
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.example.edusoft.entity.file.FileInfo;
 
@@ -10,6 +9,7 @@ import org.example.edusoft.entity.file.FileInfo;
  * @Date: 2025/5/15 11:30
  * @Description: 资源文件表mapper接口，定义数据库操作方法
  */
+@Mapper
 public interface FileMapper {
 
     

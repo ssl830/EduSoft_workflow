@@ -1,4 +1,4 @@
-package org.example.edusoft.entity;
+package org.example.edusoft.entity.user;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,11 +20,11 @@ public class User {
     @NotBlank(message = "用户ID不能为空")
     @Size(min = 3, max = 15, message = "用户ID长度必须在3-15个字符之间")
     @Column(name = "userid", unique = true, nullable = false)
-    private String userid;
+    private String userId;
 
-    @NotBlank(message = "用户名不能为空")
-    @Size(min = 3, max = 50, message = "用户名长度必须在3-50个字符之间")
-    @Column(unique = true, nullable = false)
+    @NotBlank(message = "姓名不能为空")
+    @Size(min = 2, max = 50, message = "姓名长度必须在1-50个字符之间")
+    @Column(nullable = false)
     private String username;
 
     @NotBlank(message = "密码不能为空")
@@ -36,9 +36,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
-
-    @Size(max = 100, message = "姓名长度不能超过100个字符")
-    private String name;
 
     @Email(message = "邮箱格式不正确")
     @Size(max = 100, message = "邮箱长度不能超过100个字符")

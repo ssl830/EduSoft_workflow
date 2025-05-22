@@ -1,11 +1,13 @@
 package org.example.edusoft.service.user;
-import org.example.edusoft.entity.User;
+import org.example.edusoft.entity.user.User;
 
 public interface UserService {
-    User findByUsername(String username);
+
     User findById(Long id);
-    User findByUserid(String userid);
+    User findByUserId(String userId);
     void save(User user);
+    void deactivateAccount(Long id);
+       
 }
 
 
