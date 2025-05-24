@@ -1,9 +1,11 @@
 package org.example.edusoft.service.record.impl;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,38 +26,39 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Cell;
 import java.time.LocalDateTime;
-import com.itextpdf.io.font.PdfEncodings;  // 添加这个导入
-
+import com.itextpdf.io.font.PdfEncodings; // 添加这个导入
 
 @Service
 @Transactional(readOnly = true)
 public class RecordServiceImpl implements RecordService {
-    
+
     @Autowired
     private StudyRecordMapper studyRecordMapper;
-    
+
     @Autowired
     private PracticeRecordMapper practiceRecordMapper;
-    
+
     @Override
     public List<StudyRecord> getStudyRecords(Long studentId) {
         return studyRecordMapper.findStudyRecords(studentId);
     }
-    
+
     @Override
     public List<PracticeRecord> getPracticeRecords(Long studentId) {
         List<PracticeRecord> records = practiceRecordMapper.findPracticeRecords(studentId);
         for (PracticeRecord record : records) {
-            record.setAnswers(practiceRecordMapper.findAnswerDetails(record.getId()));
+            List<QuestionRecord> questions = practiceRecordMapper.findQuestionsBySubmissionId(record.getId());
+            if (questions != null && !questions.isEmpty()) {
+                record.setQuestions(questions);
+            }
         }
         return records;
     }
-    
+
     @Override
     public byte[] exportRecordsToExcel(Long studentId) {
         List<StudyRecord> studyRecords = getStudyRecords(studentId);
         List<PracticeRecord> practiceRecords = getPracticeRecords(studentId);
-        
         try (Workbook workbook = new XSSFWorkbook()) {
             // 创建学习记录sheet
             Sheet studySheet = workbook.createSheet("学习记录");
@@ -64,7 +67,7 @@ public class RecordServiceImpl implements RecordService {
             headerRow.createCell(1).setCellValue("章节");
             headerRow.createCell(2).setCellValue("完成状态");
             headerRow.createCell(3).setCellValue("完成时间");
-            
+
             int rowNum = 1;
             for (StudyRecord record : studyRecords) {
                 Row row = studySheet.createRow(rowNum++);
@@ -72,16 +75,15 @@ public class RecordServiceImpl implements RecordService {
                 row.createCell(1).setCellValue(record.getSectionTitle());
                 row.createCell(2).setCellValue(record.getCompleted() ? "已完成" : "未完成");
                 row.createCell(3).setCellValue(
-                    record.getCompletedAt() != null ? 
-                    record.getCompletedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : 
-                    ""
-                );
+                        record.getCompletedAt() != null
+                                ? record.getCompletedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                                : "");
             }
-            
+
             // 创建练习记录sheet
             Sheet practiceSheet = workbook.createSheet("练习记录");
             // ... 类似的创建练习记录sheet的代码 ...
-            
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             return outputStream.toByteArray();
@@ -91,24 +93,104 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
+    public byte[] exportPracticeRecordsToExcel(Long studentId) {
+        try (Workbook workbook = new XSSFWorkbook();
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            // 获取所有练习记录（包含题目信息）
+            List<PracticeRecord> records = getPracticeRecords(studentId);
+
+            // 创建概览sheet
+            Sheet sheet = workbook.createSheet("练习记录概览");
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("练习标题");
+            headerRow.createCell(1).setCellValue("课程名称");
+            headerRow.createCell(2).setCellValue("总分");
+            headerRow.createCell(3).setCellValue("提交时间");
+
+            // 填充概览数据
+            int rowNum = 1;
+            for (PracticeRecord record : records) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(record.getPracticeTitle());
+                row.createCell(1).setCellValue(record.getCourseName());
+                row.createCell(2).setCellValue(record.getScore());
+                row.createCell(3).setCellValue(
+                        record.getSubmittedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+                // 为每个练习创建一个详细sheet
+                if (record.getQuestions() != null && !record.getQuestions().isEmpty()) {
+                    // 使用练习标题作为sheet名（去除特殊字符）
+                    String sheetName = record.getPracticeTitle()
+                            .replaceAll("[\\\\/:*?\\[\\]]", "") // 移除Excel不允许的字符
+                            .substring(0, Math.min(31, record.getPracticeTitle().length())); // Excel sheet名最大31字符
+                    Sheet detailSheet = workbook.createSheet(sheetName);
+
+                    // 创建详细sheet的表头
+                    Row detailHeader = detailSheet.createRow(0);
+                    detailHeader.createCell(0).setCellValue("题目内容");
+                    detailHeader.createCell(1).setCellValue("题目类型");
+                    detailHeader.createCell(2).setCellValue("题目选项");
+                    detailHeader.createCell(3).setCellValue("我的答案");
+                    detailHeader.createCell(4).setCellValue("正确答案");
+                    detailHeader.createCell(5).setCellValue("得分");
+                    detailHeader.createCell(6).setCellValue("是否正确");
+
+                    // 填充题目详情
+                    int detailRowNum = 1;
+                    for (QuestionRecord question : record.getQuestions()) {
+                        Row detailRow = detailSheet.createRow(detailRowNum++);
+                        detailRow.createCell(0).setCellValue(question.getContent());
+                        detailRow.createCell(1).setCellValue(question.getType());
+                        detailRow.createCell(2).setCellValue(question.getOptions());
+                        detailRow.createCell(3).setCellValue(question.getStudentAnswer());
+                        detailRow.createCell(4).setCellValue(question.getCorrectAnswer());
+                        detailRow.createCell(5).setCellValue(question.getScore());
+                        detailRow.createCell(6).setCellValue(question.getIsCorrect() ? "正确" : "错误");
+
+                        // 设置自动换行
+                        detailRow.setHeight((short) -1); // 自动行高
+                    }
+
+                    // 设置列宽和样式
+                    detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列宽
+                    detailSheet.setColumnWidth(2, 256 * 30); // 选项列宽
+                    for (int i = 1; i < 7; i++) {
+                        if (i != 2) {
+                            detailSheet.autoSizeColumn(i);
+                        }
+                    }
+                }
+            }
+
+            // 调整概览sheet的列宽
+            for (int i = 0; i < 4; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("生成Excel文件失败", e);
+        }
+    }
+
+    @Override
     public Map<String, Object> getPracticeReport(Long practiceId, Long studentId) {
         Map<String, Object> report = new HashMap<>();
-        
         // 获取练习基本信息
         PracticeRecord record = practiceRecordMapper.findPracticeRecord(practiceId, studentId);
-        report.put("practiceInfo", record);
-        
-        // 获取班级排名
-        int rank = practiceRecordMapper.getPracticeRank(practiceId, studentId);
-        int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(practiceId);
-        
-        report.put("rank", rank);
-        report.put("totalStudents", totalStudents);
-        report.put("percentile", ((totalStudents - rank) * 100.0) / totalStudents);
-        
-        // 获取得分分布
-        List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getScoreDistribution(practiceId);
-        report.put("scoreDistribution", scoreDistribution);
+        if (record != null) {
+            report.put("practiceInfo", record);
+            // 获取班级排名
+            int rank = practiceRecordMapper.getPracticeRank(practiceId, studentId);
+            int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(practiceId);
+            report.put("rank", rank);
+            report.put("totalStudents", totalStudents);
+            report.put("percentile", ((totalStudents - rank) * 100.0) / totalStudents);
+            // 获取得分分布
+            List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getScoreDistribution(practiceId);
+            report.put("scoreDistribution", scoreDistribution);
+        }
         
         return report;
     }
@@ -119,36 +201,37 @@ public class RecordServiceImpl implements RecordService {
             PdfWriter writer = new PdfWriter(out);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
-            
+
             // 使用系统字体，确保中文能显示
-           String fontPath = "C:/Windows/Fonts/simsun.ttc,0";
-           PdfFont font = PdfFontFactory.createFont(fontPath, PdfEncodings.IDENTITY_H);
+            String fontPath = "C:/Windows/Fonts/simsun.ttc,0";
+            PdfFont font = PdfFontFactory.createFont(fontPath, PdfEncodings.IDENTITY_H);
             // 标题
             Paragraph title = new Paragraph("练习报告")
-                .setFont(font)
-                .setFontSize(20);
+                    .setFont(font)
+                    .setFontSize(20);
             document.add(title);
-            
+
             // 基本信息
             PracticeRecord practiceInfo = (PracticeRecord) reportData.get("practiceInfo");
             document.add(new Paragraph("\n练习信息").setFont(font).setFontSize(16));
             document.add(new Paragraph("练习标题：" + practiceInfo.getPracticeTitle()).setFont(font));
             document.add(new Paragraph("课程名称：" + practiceInfo.getCourseName()).setFont(font));
             document.add(new Paragraph("得分：" + practiceInfo.getScore() + "分").setFont(font));
-            
+
             // 排名信息
             document.add(new Paragraph("\n排名信息").setFont(font).setFontSize(16));
             document.add(new Paragraph("班级排名：第" + reportData.get("rank") + "名").setFont(font));
             document.add(new Paragraph("总人数：" + reportData.get("totalStudents") + "人").setFont(font));
-            document.add(new Paragraph("超过：" + String.format("%.1f", reportData.get("percentile")) + "%的同学").setFont(font));
-            
+            document.add(
+                    new Paragraph("超过：" + String.format("%.1f", reportData.get("percentile")) + "%的同学").setFont(font));
+
             // 分数分布表格
             document.add(new Paragraph("\n分数分布").setFont(font).setFontSize(16));
-            Table table = new Table(new float[]{150f, 150f, 150f});
+            Table table = new Table(new float[] { 150f, 150f, 150f });
             table.addCell(new Cell().add(new Paragraph("分数段").setFont(font)));
             table.addCell(new Cell().add(new Paragraph("人数").setFont(font)));
             table.addCell(new Cell().add(new Paragraph("占比").setFont(font)));
-            
+
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> distribution = (List<Map<String, Object>>) reportData.get("scoreDistribution");
             for (Map<String, Object> item : distribution) {
@@ -157,12 +240,12 @@ public class RecordServiceImpl implements RecordService {
                 table.addCell(new Cell().add(new Paragraph(item.get("percentage") + "%").setFont(font)));
             }
             document.add(table);
-            
+
             // 生成时间
-            document.add(new Paragraph("\n\n生成时间：" + 
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .setFont(font));
-            
+            document.add(new Paragraph("\n\n生成时间：" +
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .setFont(font));
+
             document.close();
             return out.toByteArray();
         } catch (IOException e) {

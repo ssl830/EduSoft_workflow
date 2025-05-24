@@ -17,10 +17,9 @@ public class PracticeRecord {
     private LocalDateTime submittedAt;
     private Integer score;
     private String feedback;
-    
+    private List<QuestionRecord> questions;  // 添加题目记录列表
     // 关联属性
     private String practiceTitle;
-    private List<AnswerDetail> answers;
     private String courseName;    // 添加课程名称
     private String className;     // 添加班级名称
 }
