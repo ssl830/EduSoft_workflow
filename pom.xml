@@ -194,6 +194,39 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!--导出excel -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+        <!-- PDF支持 -->
+       <dependency>
+          <groupId>com.itextpdf</groupId>
+          <artifactId>itext7-core</artifactId>
+          <version>7.2.5</version>
+          <type>pom</type>
+        </dependency>
+        <dependency>
+        <groupId>com.itextpdf</groupId>
+        <artifactId>kernel</artifactId>
+        <version>7.2.5</version>
+    </dependency>
+    <dependency>
+        <groupId>com.itextpdf</groupId>
+        <artifactId>io</artifactId>
+        <version>7.2.5</version>
+    </dependency>
+    <dependency>
+        <groupId>com.itextpdf</groupId>
+        <artifactId>layout</artifactId>
+        <version>7.2.5</version>
+    </dependency>
+    <dependency>
+        <groupId>com.itextpdf</groupId>
+        <artifactId>font-asian</artifactId>
+        <version>7.2.5</version>
+    </dependency>
     </dependencies>
 
     <repositories>
