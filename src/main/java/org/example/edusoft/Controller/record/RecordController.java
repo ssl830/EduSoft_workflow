@@ -153,10 +153,8 @@ public class RecordController {
                 writeErrorResponse(response, "请先登录");
                 return;
             }
-
             Long studentId = StpUtil.getLoginIdAsLong();
             byte[] data = recordService.exportPracticeRecordsByCourseToExcel(studentId, courseId);
-
             // 设置响应头
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition",
