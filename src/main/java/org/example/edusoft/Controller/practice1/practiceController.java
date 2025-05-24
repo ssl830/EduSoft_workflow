@@ -1,7 +1,7 @@
-package org.example.edusoft.controller.practice;
+package org.example.edusoft.controller.practice1;
 
 import org.example.edusoft.common.Result;
-import org.example.edusoft.service.practice.PracticeService;
+import org.example.edusoft.service.practice1.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import cn.dev33.satoken.stp.StpUtil;

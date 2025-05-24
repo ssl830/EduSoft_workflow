@@ -1,4 +1,4 @@
-package org.example.edusoft.service.practice;
+package org.example.edusoft.service.practice1;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package org.example.edusoft.mapper.practice;
+package org.example.edusoft.mapper.practice1;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.example.edusoft.entity.practice.*;

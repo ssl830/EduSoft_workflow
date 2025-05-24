@@ -1,9 +1,9 @@
-package org.example.edusoft.service.practice.impl;
+package org.example.edusoft.service.practice1.impl;
 
 import org.example.edusoft.entity.practice.*;
-import org.example.edusoft.mapper.practice.PracticeMapper;
-import org.example.edusoft.mapper.practice.QuestionMapper;
-import org.example.edusoft.service.practice.PracticeService;
+import org.example.edusoft.mapper.practice1.PracticeMapper;
+import org.example.edusoft.mapper.practice1.QuestionMapper;
+import org.example.edusoft.service.practice1.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

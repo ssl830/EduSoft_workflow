@@ -56,16 +56,17 @@ src/main/java/org/example/edusoft/
 ```json
 {
     "code": 200,
-    "message": "success",
+    "message": "操作成功",
     "data": [
         {
             "id": 1,
+            "studentId": 3,
             "courseId": 1,
-            "courseName": "软件工程基础",
             "sectionId": 1,
-            "sectionTitle": "第一章：软件工程导论",
             "completed": true,
-            "completedAt": "2025-05-25T10:00:00"
+            "completedAt": "2025-05-24T23:57:11",
+            "courseName": "软件工程基础",
+            "sectionTitle": "第一章：软件工程导论"
         }
     ]
 }
@@ -75,7 +76,24 @@ src/main/java/org/example/edusoft/
 - 请求方式：GET
 - 路径：/api/record/study/course/{courseId}
 - 请求头：需要登录token
-- 返回：同上
+- 返回：
+``` json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+        {
+            "id": 1,
+            "studentId": 3,
+            "courseId": 1,
+            "sectionId": 1,
+            "completed": true,
+            "completedAt": "2025-05-24T23:57:11",
+            "courseName": "软件工程基础",
+            "sectionTitle": "第一章：软件工程导论"
+        }
+    ]
+}```
 
 ### 3. 获取所有练习记录
 - 请求方式：GET
@@ -85,29 +103,33 @@ src/main/java/org/example/edusoft/
 ```json
 {
     "code": 200,
-    "message": "success",
+    "message": "操作成功",
     "data": [
         {
             "id": 1,
             "practiceId": 1,
-            "practiceTitle": "第一章练习",
-            "courseName": "软件工程基础",
-            "className": "软工A班",
-            "submittedAt": "2025-05-25T10:00:00",
-            "score": 85,
-            "feedback": "完成得很好",
+            "studentId": 3,
+            "submittedAt": "2025-05-24T23:57:11",
+            "score": 5,
+            "feedback": "回答正确",
             "questions": [
                 {
                     "id": 1,
+                    "sectionId": 1,
+                    "courseId": 1,
                     "content": "软件工程的第一步是什么？",
                     "type": "singlechoice",
-                    "options": ["需求分析", "编码", "测试", "部署"],
+                    "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
                     "studentAnswer": "需求分析",
                     "correctAnswer": "需求分析",
                     "isCorrect": true,
+                    "analysis": "easy",
                     "score": 5
                 }
-            ]
+            ],
+            "practiceTitle": "第一章练习",
+            "courseName": "软件工程基础",
+            "className": "软工A班"
         }
     ]
 }
@@ -127,40 +149,59 @@ src/main/java/org/example/edusoft/
 ```json
 {
     "code": 200,
-    "message": "success",
+    "message": "操作成功",
     "data": {
-        "submission": {
+        "percentile": 0.0,
+        "scoreDistribution": [
+            {
+                "percentage": 100.00,
+                "count": 1,
+                "score_range": "0-59"
+            }
+        ],
+        "submissionInfo": {
             "id": 1,
             "practiceId": 1,
+            "studentId": 3,
+            "submittedAt": "2025-05-24T23:57:11",
+            "score": 5,
+            "feedback": "回答正确",
+            "questions": [
+                {
+                    "id": 1,
+                    "sectionId": 1,
+                    "courseId": 1,
+                    "content": "软件工程的第一步是什么？",
+                    "type": "singlechoice",
+                    "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
+                    "studentAnswer": "需求分析",
+                    "correctAnswer": "需求分析",
+                    "isCorrect": true,
+                    "analysis": "easy",
+                    "score": 5
+                }
+            ],
             "practiceTitle": "第一章练习",
             "courseName": "软件工程基础",
-            "className": "软工A班",
-            "submittedAt": "2025-05-25T10:00:00",
-            "score": 85,
-            "feedback": "完成得很好"
+            "className": "软工A班"
         },
         "questions": [
             {
                 "id": 1,
+                "sectionId": null,
+                "courseId": null,
                 "content": "软件工程的第一步是什么？",
                 "type": "singlechoice",
-                "options": ["需求分析", "编码", "测试", "部署"],
+                "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
                 "studentAnswer": "需求分析",
                 "correctAnswer": "需求分析",
                 "isCorrect": true,
-                "score": 5,
-                "analysis": "需求分析是软件工程的第一步，它帮助确定系统的功能和约束"
+                "analysis": "easy",
+                "score": 5
             }
         ],
-        "rank": 5,
-        "totalStudents": 30,
-        "scoreDistribution": [
-            {
-                "score_range": "80-89",
-                "count": 10,
-                "percentage": 33.33
-            }
-        ]
+        "rank": 1,
+        "totalStudents": 1
     }
 }
 ```
