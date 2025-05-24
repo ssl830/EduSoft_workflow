@@ -1,82 +1,83 @@
 ### 测试数据准备
-### 1. 添加测试用户（教师）
-POST http://localhost:8080/api/users
+### 1. 注册管理员账号
+POST http://localhost:8080/user/register
 Content-Type: application/json
 
 {
-    "userId": "T001",
-    "username": "test_teacher",
-    "password": "123456",
+    "userId": "admin",
+    "username": "管理员",
+    "passwordHash": "123456",
     "role": "teacher",
-    "email": "teacher@test.com"
+    "email": "admin@example.com"
 }
 
-### 2. 添加测试用户（学生）
-POST http://localhost:8080/api/users
+### 2. 登录获取token
+POST http://localhost:8080/user/login?userId=admin&password=123456
 Content-Type: application/json
-
-{
-    "userId": "S001",
-    "username": "test_student",
-    "password": "123456",
-    "role": "student",
-    "email": "student@test.com"
-}
 
 ### 课程管理模块测试
 ### 1. 创建课程
 POST http://localhost:8080/api/courses
 Content-Type: application/json
+satoken: {{token}}
 
 {
     "teacherId": 1,
     "name": "Java程序设计",
     "code": "JAVA101",
-    "outline": "本课程介绍Java编程基础知识和面向对象编程概念",
-    "objective": "掌握Java编程基础，理解面向对象编程思想",
-    "assessment": "平时作业30%，项目30%，期末考试40%"
+    "outline": "Java基础语法、面向对象编程、集合框架等",
+    "objective": "掌握Java编程基础，能够独立开发简单的Java应用程序",
+    "assessment": "平时成绩30%，期末考试70%"
 }
 
 ### 2. 创建第二个课程
 POST http://localhost:8080/api/courses
 Content-Type: application/json
+satoken: {{token}}
 
 {
     "teacherId": 1,
     "name": "数据库原理",
     "code": "DB101",
-    "outline": "本课程介绍数据库基本概念和SQL语言",
-    "objective": "掌握数据库设计和管理的基本技能",
-    "assessment": "平时作业20%，项目30%，期末考试50%"
+    "outline": "数据库基础、SQL语言、数据库设计等",
+    "objective": "理解数据库基本原理，掌握SQL语言，能够进行数据库设计",
+    "assessment": "平时成绩40%，期末考试60%"
 }
 
 ### 3. 获取教师的课程列表
 GET http://localhost:8080/api/courses/user/1
+satoken: {{token}}
 
-### 4. 获取课程详情
+### 4. 获取第一个课程的详情
 GET http://localhost:8080/api/courses/1
+satoken: {{token}}
 
-### 5. 更新课程信息
+### 5. 更新第一个课程的信息
 PUT http://localhost:8080/api/courses/1
 Content-Type: application/json
+satoken: {{token}}
 
 {
     "teacherId": 1,
-    "name": "Java程序设计（更新版）",
-    "code": "JAVA101",
-    "outline": "本课程介绍Java编程基础知识和面向对象编程概念，包括最新的Java特性",
-    "objective": "掌握Java编程基础，理解面向对象编程思想，能够独立开发Java应用",
-    "assessment": "平时作业30%，项目30%，期末考试40%"
+    "name": "Java程序设计（更新版3）",
+    "code": "JAVA101_2025",
+    "outline": "、面向对象编程、集合框架、多线程编程等",
+    "objective": "掌握Java编程基础，能够独立开发多线程Java应用程序",
+    "assessment": "平时成绩40%，期末考试60%"
 }
 
 ### 6. 获取更新后的课程详情
 GET http://localhost:8080/api/courses/1
+satoken: {{token}}
 
-### 7. 删除课程
-DELETE http://localhost:8080/api/courses/2
+### 7. 删除第二个课程
+DELETE http://localhost:8080/api/courses/3
+satoken: {{token}}
 
-### 8. 验证课程已被删除
-GET http://localhost:8080/api/courses/2
+### 8. 验证第二个课程已被删除
+GET http://localhost:8080/api/courses/3
+satoken: {{token}}
 
-### 9. 获取教师的课程列表（验证删除结果）
+### 9. 再次获取教师的课程列表，确认更新
 GET http://localhost:8080/api/courses/user/1
+satoken: {{token}}

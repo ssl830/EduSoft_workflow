@@ -6,101 +6,152 @@ import org.example.edusoft.entity.classroom.ClassUser;
 import org.example.edusoft.entity.imports.ImportRecord;
 import org.example.edusoft.service.classroom.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/classes")
+@Validated
 public class ClassController {
 
     @Autowired
     private ClassService classService;
 
     @PostMapping
-    public Result<Class> createClass(@RequestBody Class clazz) {
-        return Result.success(classService.createClass(clazz));
+    public Result<Class> createClass(@Valid @RequestBody Class clazz) {
+        try {
+            return Result.success(classService.createClass(clazz));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @GetMapping("/teacher/{teacherId}")
-    public Result<List<Class>> getClassesByTeacherId(@PathVariable Long teacherId) {
-        return Result.success(classService.getClassesByTeacherId(teacherId));
+    public Result<List<Class>> getClassesByTeacherId(@NotNull(message = "教师ID不能为空") @PathVariable Long teacherId) {
+        try {
+            return Result.success(classService.getClassesByTeacherId(teacherId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @GetMapping("/student/{studentId}")
-    public Result<List<Class>> getClassesByStudentId(@PathVariable Long studentId) {
-        return Result.success(classService.getClassesByStudentId(studentId));
+    public Result<List<Class>> getClassesByStudentId(@NotNull(message = "学生ID不能为空") @PathVariable Long studentId) {
+        try {
+            return Result.success(classService.getClassesByStudentId(studentId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public Result<Class> getClassById(@PathVariable Long id) {
-        return Result.success(classService.getClassById(id));
+    public Result<Class> getClassById(@NotNull(message = "班级ID不能为空") @PathVariable Long id) {
+        try {
+            return Result.success(classService.getClassById(id));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public Result<Class> updateClass(@PathVariable Long id, @RequestBody Class clazz) {
-        clazz.setId(id);
-        return Result.success(classService.updateClass(clazz));
+    public Result<Class> updateClass(@NotNull(message = "班级ID不能为空") @PathVariable Long id, 
+                                   @Valid @RequestBody Class clazz) {
+        try {
+            clazz.setId(id);
+            return Result.success(classService.updateClass(clazz));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public Result<Boolean> deleteClass(@PathVariable Long id) {
-        return Result.success(classService.deleteClass(id));
+    public Result<Boolean> deleteClass(@NotNull(message = "班级ID不能为空") @PathVariable Long id) {
+        try {
+            return Result.success(classService.deleteClass(id));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/{classId}/join/{userId}")
-    public Result<Boolean> joinClass(@PathVariable Long classId, @PathVariable Long userId) {
-        return Result.success(classService.joinClass(classId, userId));
+    public Result<Boolean> joinClass(@NotNull(message = "班级ID不能为空") @PathVariable Long classId,
+                                   @NotNull(message = "用户ID不能为空") @PathVariable Long userId) {
+        try {
+            return Result.success(classService.joinClass(classId, userId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{classId}/leave/{userId}")
-    public Result<Boolean> leaveClass(@PathVariable Long classId, @PathVariable Long userId) {
-        return Result.success(classService.leaveClass(classId, userId));
+    public Result<Boolean> leaveClass(@NotNull(message = "班级ID不能为空") @PathVariable Long classId,
+                                    @NotNull(message = "用户ID不能为空") @PathVariable Long userId) {
+        try {
+            return Result.success(classService.leaveClass(classId, userId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @GetMapping("/{classId}/users")
-    public Result<List<ClassUser>> getClassUsers(@PathVariable Long classId) {
-        return Result.success(classService.getClassUsers(classId));
+    public Result<List<ClassUser>> getClassUsers(@NotNull(message = "班级ID不能为空") @PathVariable Long classId) {
+        try {
+            return Result.success(classService.getClassUsers(classId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/{classId}/import")
-    public Result<Boolean> importStudents(@PathVariable Long classId, @RequestBody List<Long> studentIds) {
-        return Result.success(classService.importStudents(classId, studentIds));
+    public Result<Boolean> importStudents(@NotNull(message = "班级ID不能为空") @PathVariable Long classId,
+                                        @RequestBody List<Long> studentIds) {
+        try {
+            return Result.success(classService.importStudents(classId, studentIds));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/{classId}/students")
-    public Result<ImportRecord> addStudent(
-            @PathVariable Long classId,
-            @RequestParam Long studentId) {
+    public Result<ImportRecord> addStudent(@NotNull(message = "班级ID不能为空") @PathVariable Long classId,
+                                         @NotNull(message = "学生ID不能为空") @RequestParam Long studentId) {
         try {
             ImportRecord record = classService.addStudent(classId, studentId);
             return Result.success(record);
-        } catch (Exception e) {
-            return Result.error("添加学生失败：" + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
         }
     }
 
     @DeleteMapping("/{classId}/students/{studentId}")
-    public Result<Void> removeStudent(
-            @PathVariable Long classId,
-            @PathVariable Long studentId) {
+    public Result<Void> removeStudent(@NotNull(message = "班级ID不能为空") @PathVariable Long classId,
+                                    @NotNull(message = "学生ID不能为空") @PathVariable Long studentId) {
         try {
             classService.removeStudent(classId, studentId);
             return Result.success(null);
-        } catch (Exception e) {
-            return Result.error("删除学生失败：" + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
         }
     }
 
     @PostMapping("/join")
-    public Result<ImportRecord> joinClassByCode(
-            @RequestParam String classCode,
-            @RequestParam Long studentId) {
+    public Result<ImportRecord> joinClassByCode(@NotBlank(message = "班级代码不能为空") @RequestParam String classCode,
+                                              @NotNull(message = "学生ID不能为空") @RequestParam Long studentId) {
         try {
             ImportRecord record = classService.joinClassByCode(classCode, studentId);
             return Result.success(record);
-        } catch (Exception e) {
-            return Result.error("加入班级失败：" + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
         }
+    }
+
+    @GetMapping("/user/{userId}")
+    public Result<List<Class>> getClassesByUserId(@PathVariable Long userId) {
+        return Result.success(classService.getClassesByUserId(userId));
     }
 } 

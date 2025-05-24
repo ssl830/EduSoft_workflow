@@ -16,4 +16,7 @@ public interface ClassUserMapper extends BaseMapper<ClassUser> {
     @Select("SELECT COUNT(*) FROM ClassUser " +
             "WHERE class_id = #{classId} AND user_id = #{userId}")
     int checkUserInClass(Long classId, Long userId);
+
+    @Select("SELECT COUNT(*) FROM User WHERE id = #{userId}")
+    boolean checkUserExists(Long userId);
 } 

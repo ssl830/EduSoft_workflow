@@ -223,19 +223,21 @@ public class ImportController {
 ### 1. 导入学生数据
 - 请求方式：POST
 - 路径：/api/imports/students
-- 请求参数：
-  - classId：班级ID
-  - operatorId：操作人ID
-  - importType：导入类型（FILE/MANUAL）
-  - studentData：学生数据JSON数组
+- 请求体格式：
 ```json
-[
-    {
-        "student_id": "1",
-        "name": "张三",
-        "other_info": "其他信息"
-    }
-]
+{
+    "classId": 1,                // 班级ID
+    "operatorId": 1,            // 操作人ID
+    "importType": "MANUAL",     // 导入类型：FILE（文件导入）或 MANUAL（手动导入）
+    "fileName": "students.csv", // 可选，文件导入时的文件名
+    "studentData": [            // 学生数据数组
+        {
+            "student_id": "1",
+            "name": "张三",
+            "other_info": "其他信息"
+        }
+    ]
+}
 ```
 
 ### 2. 获取导入记录列表
@@ -255,6 +257,7 @@ public class ImportController {
 3. 导入前需要验证学生ID的有效性
 4. 已存在于班级中的学生将被跳过，并记录在失败原因中
 5. 建议定期查看导入记录，及时处理导入失败的情况
+6. 导入请求必须使用JSON格式，所有参数都应在请求体中提供
 
 ## 错误处理
 
