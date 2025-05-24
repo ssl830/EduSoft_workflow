@@ -7,12 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.net.URLEncoder;
 import org.example.edusoft.service.record.RecordService;
 import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.record.*;
@@ -182,19 +178,17 @@ public class RecordController {
         }
     }
 
-    // 获得某次练习的报告
-    @GetMapping("/practice/{practiceId}/report")
-    public Result<Map<String, Object>> getPracticeReport(@PathVariable Long practiceId) {
-        // 检查登录状态
+    // 获得某次练习提交的报告
+    @GetMapping("/submission/{submissionId}/report")
+    public Result<Map<String, Object>> getSubmissionReport(@PathVariable Long submissionId) {
         if (!StpUtil.isLogin()) {
             return Result.error("请先登录");
         }
         try {
             Long studentId = StpUtil.getLoginIdAsLong();
-            Map<String, Object> report = recordService.getPracticeReport(practiceId, studentId);
-            System.out.println(report); // 添加日志
+            Map<String, Object> report = recordService.getSubmissionReport(submissionId, studentId);
             if (report == null || report.isEmpty()) {
-                return Result.error("未找到该练习记录");
+                return Result.error("未找到该提交记录");
             }
             return Result.success(report);
         } catch (Exception e) {
@@ -202,29 +196,29 @@ public class RecordController {
         }
     }
 
-    // 导出某次练习报告
-    @GetMapping("/practice/export-report/{practiceId}")
-    public void exportPracticeReport(@PathVariable Long practiceId, HttpServletResponse response) {
+    // 导出某次练习提交的报告
+    @GetMapping("/submission/{submissionId}/export-report")
+    public void exportSubmissionReport(@PathVariable Long submissionId, HttpServletResponse response) {
         try {
             if (!StpUtil.isLogin()) {
                 writeErrorResponse(response, "请先登录");
                 return;
             }
             Long studentId = StpUtil.getLoginIdAsLong();
-            // 检查练习是否存在
-            Map<String, Object> reportData = recordService.getPracticeReport(practiceId, studentId);
+            // 检查提交是否存在
+            Map<String, Object> reportData = recordService.getSubmissionReport(submissionId, studentId);
             if (reportData == null || reportData.isEmpty()) {
-                writeErrorResponse(response, "未找到该练习记录");
+                writeErrorResponse(response, "未找到该提交记录");
                 return;
             }
             // 生成PDF报告
-            byte[] pdfData = recordService.generatePracticeReportPdf(reportData);
+            byte[] pdfData = recordService.generateSubmissionReportPdf(reportData);
             if (pdfData == null || pdfData.length == 0) {
                 writeErrorResponse(response, "生成PDF报告失败");
                 return;
             }
             response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "attachment; filename=practice_report.pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=submission_report.pdf");
             response.getOutputStream().write(pdfData);
         } catch (Exception e) {
             try {
@@ -234,7 +228,6 @@ public class RecordController {
             }
         }
     }
-
     // 添加辅助方法处理错误响应
     private void writeErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType("application/json;charset=UTF-8");

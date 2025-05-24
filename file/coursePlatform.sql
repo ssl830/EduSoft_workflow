@@ -75,7 +75,6 @@ CREATE TABLE Question (
     course_id BIGINT,            -- 新增：关联课程
     section_id BIGINT,           -- 新增：关联章节
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    analysis TEXT ,
     FOREIGN KEY (creator_id) REFERENCES User(id),
     FOREIGN KEY (course_id) REFERENCES Course(id),
     FOREIGN KEY (section_id) REFERENCES CourseSection(id)
@@ -111,7 +110,7 @@ CREATE TABLE Submission (
     student_id BIGINT NOT NULL,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     score INT DEFAULT 0,
-    is_judged BOOLEAN DEFAULT FALSE, 
+    is_judged INT , 
     feedback TEXT,
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (student_id) REFERENCES User(id)
@@ -247,9 +246,9 @@ VALUES
     JSON_ARRAY('需求分析', '编码', '测试', '部署'), 
     '需求分析');
 
-INSERT INTO Practice (course_id, title, start_time, end_time, allow_multiple_submission, created_by)
+INSERT INTO Practice (course_id,class_id, title, start_time, end_time, allow_multiple_submission, created_by)
 VALUES 
-(1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
+(1, 1,'第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
 
 INSERT INTO PracticeQuestion (practice_id, question_id, score)
 VALUES (1, 1, 5);

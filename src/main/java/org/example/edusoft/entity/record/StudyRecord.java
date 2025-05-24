@@ -16,7 +16,6 @@ public class StudyRecord {
     private Long sectionId;
     private Boolean completed;
     private LocalDateTime completedAt;
-    
     // 关联属性
     private String courseName;
     private String sectionTitle;

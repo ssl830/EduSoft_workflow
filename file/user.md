@@ -54,7 +54,7 @@ src/main/java/org/example/edusoft/
 | POST | /api/user/register | 注册用户 |
 | POST | /api/user/login | 用户登录 |
 | POST | /api/user/logout | 退出登录 |
-| GET | /api/user/info | 获取用户信息 |
+| GET  | /api/user/info | 获取用户信息 |
 | POST | /api/user/update | 更新用户信息 |
 | POST | /api/user/changePassword | 更改密码 |
 | DELETE| /api/user/deactivate | 注销当前用户 |

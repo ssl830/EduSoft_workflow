@@ -131,6 +131,17 @@ public interface PracticeMapper {
             @Param("courseId") Long courseId);
 
     @Select("""
+                SELECT cu.class_id
+                FROM ClassUser cu
+                JOIN CourseClass cc ON cu.class_id = cc.class_id
+                WHERE cu.user_id = #{userId}
+                AND cc.course_id = #{courseId}
+            """)
+    Long findClassIdByUserAndCourse(
+            @Param("userId") Long userId,
+            @Param("courseId") Long courseId);
+
+    @Select("""
                 SELECT
                     p.id,
                     p.title,
@@ -138,6 +149,22 @@ public interface PracticeMapper {
                     p.end_time,
                     p.allow_multiple_submission,
                     p.created_at,
+                    (
+                        SELECT cs.id
+                        FROM PracticeQuestion pq
+                        JOIN Question q ON pq.question_id = q.id
+                        JOIN CourseSection cs ON q.section_id = cs.id
+                        WHERE pq.practice_id = p.id
+                        LIMIT 1
+                    ) as section_id,
+                    (
+                        SELECT cs.title
+                        FROM PracticeQuestion pq
+                        JOIN Question q ON pq.question_id = q.id
+                        JOIN CourseSection cs ON q.section_id = cs.id
+                        WHERE pq.practice_id = p.id
+                        LIMIT 1
+                    ) as section_title,
                     (
                         SELECT COUNT(*)
                         FROM PracticeQuestion pq
@@ -159,9 +186,11 @@ public interface PracticeMapper {
                     ) as last_score
                 FROM Practice p
                 WHERE p.course_id = #{courseId}
+                AND p.class_id = #{classId}
                 ORDER BY p.created_at DESC
             """)
     List<Map<String, Object>> findCoursePractices(
             @Param("courseId") Long courseId,
+            @Param("classId") Long classId,
             @Param("studentId") Long studentId);
 }

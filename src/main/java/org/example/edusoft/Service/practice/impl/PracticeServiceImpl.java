@@ -1,4 +1,5 @@
 package org.example.edusoft.service.practice.impl;
+
 import org.example.edusoft.entity.practice.*;
 import org.example.edusoft.mapper.practice.PracticeMapper;
 import org.example.edusoft.mapper.practice.QuestionMapper;
@@ -6,7 +7,7 @@ import org.example.edusoft.service.practice.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,9 +71,16 @@ public class PracticeServiceImpl implements PracticeService {
         practiceMapper.deleteWrongQuestion(studentId, questionId);
     }
 
-
     @Override
     public List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId) {
-        return practiceMapper.findCoursePractices(courseId, studentId);
+        // 先查询学生所在班级
+        Long classId = practiceMapper.findClassIdByUserAndCourse(studentId, courseId);
+        if (classId == null) {
+            throw new RuntimeException("未找到学生所在班级");
+        }
+
+        // 根据班级ID和课程ID查询练习，同时传入studentId
+        return practiceMapper.findCoursePractices(courseId, classId, studentId);
     }
+
 }

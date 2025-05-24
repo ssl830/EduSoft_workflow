@@ -27,4 +27,5 @@ public interface PracticeService {
 
     // 获取课程的所有练习
     List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId);
+
 } 

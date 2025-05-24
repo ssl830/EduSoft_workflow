@@ -132,7 +132,6 @@ public class RecordServiceImpl implements RecordService {
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             // 获取所有练习记录（包含题目信息）
             List<PracticeRecord> records = getPracticeRecords(studentId);
-
             // 创建概览sheet
             Sheet sheet = workbook.createSheet("练习记录概览");
             Row headerRow = sheet.createRow(0);
@@ -140,7 +139,6 @@ public class RecordServiceImpl implements RecordService {
             headerRow.createCell(1).setCellValue("课程名称");
             headerRow.createCell(2).setCellValue("总分");
             headerRow.createCell(3).setCellValue("提交时间");
-
             // 填充概览数据
             int rowNum = 1;
             for (PracticeRecord record : records) {
@@ -150,7 +148,6 @@ public class RecordServiceImpl implements RecordService {
                 row.createCell(2).setCellValue(record.getScore());
                 row.createCell(3).setCellValue(
                         record.getSubmittedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-
                 // 为每个练习创建一个详细sheet
                 if (record.getQuestions() != null && !record.getQuestions().isEmpty()) {
                     // 使用练习标题作为sheet名（去除特殊字符）
@@ -168,6 +165,7 @@ public class RecordServiceImpl implements RecordService {
                     detailHeader.createCell(4).setCellValue("正确答案");
                     detailHeader.createCell(5).setCellValue("得分");
                     detailHeader.createCell(6).setCellValue("是否正确");
+                    detailHeader.createCell(7).setCellValue("解析");
 
                     // 填充题目详情
                     int detailRowNum = 1;
@@ -180,7 +178,7 @@ public class RecordServiceImpl implements RecordService {
                         detailRow.createCell(4).setCellValue(question.getCorrectAnswer());
                         detailRow.createCell(5).setCellValue(question.getScore());
                         detailRow.createCell(6).setCellValue(question.getIsCorrect() ? "正确" : "错误");
-
+                        detailRow.createCell(7).setCellValue(question.getAnalysis());
                         // 设置自动换行
                         detailRow.setHeight((short) -1); // 自动行高
                     }
@@ -188,7 +186,7 @@ public class RecordServiceImpl implements RecordService {
                     // 设置列宽和样式
                     detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列宽
                     detailSheet.setColumnWidth(2, 256 * 30); // 选项列宽
-                    for (int i = 1; i < 7; i++) {
+                    for (int i = 1; i < 8; i++) {
                         if (i != 2) {
                             detailSheet.autoSizeColumn(i);
                         }
@@ -213,8 +211,7 @@ public class RecordServiceImpl implements RecordService {
         try (Workbook workbook = new XSSFWorkbook();
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             // 获取所有练习记录（包含题目信息）
-            List<PracticeRecord> records = getPracticeRecordsByCourse(studentId,courseId);
-
+            List<PracticeRecord> records = getPracticeRecordsByCourse(studentId, courseId);
             // 创建概览sheet
             Sheet sheet = workbook.createSheet("练习记录概览");
             Row headerRow = sheet.createRow(0);
@@ -250,7 +247,7 @@ public class RecordServiceImpl implements RecordService {
                     detailHeader.createCell(4).setCellValue("正确答案");
                     detailHeader.createCell(5).setCellValue("得分");
                     detailHeader.createCell(6).setCellValue("是否正确");
-
+                    detailHeader.createCell(7).setCellValue("解析");
                     // 填充题目详情
                     int detailRowNum = 1;
                     for (QuestionRecord question : record.getQuestions()) {
@@ -262,6 +259,7 @@ public class RecordServiceImpl implements RecordService {
                         detailRow.createCell(4).setCellValue(question.getCorrectAnswer());
                         detailRow.createCell(5).setCellValue(question.getScore());
                         detailRow.createCell(6).setCellValue(question.getIsCorrect() ? "正确" : "错误");
+                        detailRow.createCell(7).setCellValue(question.getAnalysis());
 
                         // 设置自动换行
                         detailRow.setHeight((short) -1); // 自动行高
@@ -270,7 +268,7 @@ public class RecordServiceImpl implements RecordService {
                     // 设置列宽和样式
                     detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列宽
                     detailSheet.setColumnWidth(2, 256 * 30); // 选项列宽
-                    for (int i = 1; i < 7; i++) {
+                    for (int i = 1; i < 8; i++) {
                         if (i != 2) {
                             detailSheet.autoSizeColumn(i);
                         }
@@ -291,33 +289,36 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
-    public Map<String, Object> getPracticeReport(Long practiceId, Long studentId) {
+    public Map<String, Object> getSubmissionReport(Long submissionId, Long studentId) {
         Map<String, Object> report = new HashMap<>();
-        // 获取练习基本信息
-        PracticeRecord record = practiceRecordMapper.findPracticeRecord(practiceId, studentId);
-        if (record != null) {
-            report.put("practiceInfo", record);
-            // 获取班级排名
-            int rank = practiceRecordMapper.getPracticeRank(practiceId, studentId);
-            int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(practiceId);
-            report.put("rank", rank);
-            report.put("totalStudents", totalStudents);
-            report.put("percentile", ((totalStudents - rank) * 100.0) / totalStudents);
-            // 获取得分分布
-            List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getScoreDistribution(practiceId);
-            report.put("scoreDistribution", scoreDistribution);
+        // 获取提交基本信息
+        PracticeRecord submission = practiceRecordMapper.findSubmissionDetail(submissionId, studentId);
+        if (submission == null) {
+            return null;
         }
+        report.put("submissionInfo", submission);
+        // 获取题目和答案信息
+        List<QuestionRecord> questions = practiceRecordMapper.findSubmissionQuestions(submissionId);
+        report.put("questions", questions);
+        // 获取班级排名
+        int rank = practiceRecordMapper.getSubmissionRank(submissionId, studentId);
+        int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(submission.getPracticeId());
+        report.put("rank", rank);
+        report.put("totalStudents", totalStudents);
+        report.put("percentile", ((totalStudents - rank) * 100.0) / totalStudents);
 
+        // 获取得分分布
+        List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getSubmissionScoreDistribution(submissionId);
+        report.put("scoreDistribution", scoreDistribution);
         return report;
     }
 
     @Override
-    public byte[] generatePracticeReportPdf(Map<String, Object> reportData) {
+    public byte[] generateSubmissionReportPdf(Map<String, Object> reportData) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(out);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
-
             // 使用系统字体，确保中文能显示
             String fontPath = "C:/Windows/Fonts/simsun.ttc,0";
             PdfFont font = PdfFontFactory.createFont(fontPath, PdfEncodings.IDENTITY_H);
@@ -328,11 +329,15 @@ public class RecordServiceImpl implements RecordService {
             document.add(title);
 
             // 基本信息
-            PracticeRecord practiceInfo = (PracticeRecord) reportData.get("practiceInfo");
+            @SuppressWarnings("unchecked")
+            PracticeRecord submissionInfo = (PracticeRecord) reportData.get("submissionInfo");
+
             document.add(new Paragraph("\n练习信息").setFont(font).setFontSize(16));
-            document.add(new Paragraph("练习标题：" + practiceInfo.getPracticeTitle()).setFont(font));
-            document.add(new Paragraph("课程名称：" + practiceInfo.getCourseName()).setFont(font));
-            document.add(new Paragraph("得分：" + practiceInfo.getScore() + "分").setFont(font));
+            document.add(new Paragraph("练习标题：" + submissionInfo.getPracticeTitle()).setFont(font));
+            document.add(new Paragraph("课程名称：" + submissionInfo.getCourseName()).setFont(font));
+            document.add(new Paragraph("班级：" + submissionInfo.getClassName()).setFont(font));
+            document.add(new Paragraph("得分：" + submissionInfo.getScore() + "分").setFont(font));
+            document.add(new Paragraph("提交时间：" + submissionInfo.getSubmittedAt()).setFont(font));
 
             // 排名信息
             document.add(new Paragraph("\n排名信息").setFont(font).setFontSize(16));
@@ -343,19 +348,39 @@ public class RecordServiceImpl implements RecordService {
 
             // 分数分布表格
             document.add(new Paragraph("\n分数分布").setFont(font).setFontSize(16));
-            Table table = new Table(new float[] { 150f, 150f, 150f });
-            table.addCell(new Cell().add(new Paragraph("分数段").setFont(font)));
-            table.addCell(new Cell().add(new Paragraph("人数").setFont(font)));
-            table.addCell(new Cell().add(new Paragraph("占比").setFont(font)));
+            Table distributionTable = new Table(new float[] { 150f, 150f, 150f });
+            distributionTable.addCell(new Cell().add(new Paragraph("分数段").setFont(font)));
+            distributionTable.addCell(new Cell().add(new Paragraph("人数").setFont(font)));
+            distributionTable.addCell(new Cell().add(new Paragraph("占比").setFont(font)));
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> distribution = (List<Map<String, Object>>) reportData.get("scoreDistribution");
             for (Map<String, Object> item : distribution) {
-                table.addCell(new Cell().add(new Paragraph(item.get("score_range").toString()).setFont(font)));
-                table.addCell(new Cell().add(new Paragraph(item.get("count").toString()).setFont(font)));
-                table.addCell(new Cell().add(new Paragraph(item.get("percentage") + "%").setFont(font)));
+                distributionTable
+                        .addCell(new Cell().add(new Paragraph(item.get("score_range").toString()).setFont(font)));
+                distributionTable.addCell(new Cell().add(new Paragraph(item.get("count").toString()).setFont(font)));
+                distributionTable.addCell(new Cell().add(new Paragraph(item.get("percentage") + "%").setFont(font)));
             }
-            document.add(table);
+            document.add(distributionTable);
+
+            // 题目详情
+            document.add(new Paragraph("\n题目详情").setFont(font).setFontSize(16));
+            @SuppressWarnings("unchecked")
+            List<QuestionRecord> questions = (List<QuestionRecord>) reportData.get("questions");
+            for (int i = 0; i < questions.size(); i++) {
+                QuestionRecord question = questions.get(i);
+                document.add(new Paragraph("\n第" + (i + 1) + "题").setFont(font).setFontSize(14));
+                document.add(new Paragraph("题目内容：" + question.getContent()).setFont(font));
+                document.add(new Paragraph("题目类型：" + question.getType()).setFont(font));
+                document.add(new Paragraph("选项：" + question.getOptions()).setFont(font));
+                document.add(new Paragraph("我的答案：" + question.getStudentAnswer()).setFont(font));
+                document.add(new Paragraph("正确答案：" + question.getCorrectAnswer()).setFont(font));
+                document.add(new Paragraph("得分：" + question.getScore()).setFont(font));
+                document.add(new Paragraph("是否正确：" + (question.getIsCorrect() ? "正确" : "错误")).setFont(font));
+                if (question.getAnalysis() != null) {
+                    document.add(new Paragraph("解析：" + question.getAnalysis()).setFont(font));
+                }
+            }
 
             // 生成时间
             document.add(new Paragraph("\n\n生成时间：" +
