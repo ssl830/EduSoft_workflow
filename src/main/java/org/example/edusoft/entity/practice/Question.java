@@ -4,20 +4,51 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import javax.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
-@NoArgsConstructor  // 添加无参构造函数
-@AllArgsConstructor // 添加全参构造函数
-@Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "Question")
 public class Question {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String content;        // 题目内容
-    private String type;          // 题目类型（SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE, FILL_BLANK）
-    private String options;       // 选项，JSON格式存储
-    private String answer;        // 正确答案
-    private Long courseId;        // 所属课程ID
-    private Long sectionId;       // 所属章节ID
-    private String analysis;      // 题目解析
+
+    @Column(name = "creator_id", nullable = false)
+    private Long creatorId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private QuestionType type;
+
+    @Column(nullable = false)
+    private String content;
+
+    private String analysis;
+
+    @Column(columnDefinition = "json")
+    private String options;
+
+    private String answer;
+
+    @Column(name = "course_id")
+    private Long courseId;
+
+    @Column(name = "section_id")
+    private Long sectionId;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-}
+
+    public enum QuestionType {
+        singlechoice,
+        program,
+        fillblank
+    }
+} 
