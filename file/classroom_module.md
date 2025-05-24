@@ -116,19 +116,27 @@ src/main/java/org/example/edusoft/
 - 请求方式：DELETE
 - 路径：/api/classes/{id}
 
-### 6. 学生加入班级
+### 6. 学生加入班级（管理员添加）
 - 请求方式：POST
 - 路径：/api/classes/{classId}/join/{userId}
 
-### 7. 学生退出班级
+### 7. 学生通过班级代码加入班级
+- 请求方式：POST
+- 路径：/api/classes/join
+- 请求参数：
+  - classCode: 班级代码（班级暗号）
+  - studentId: 学生ID
+- 说明：此接口用于学生通过班级暗号自主加入班级
+
+### 8. 学生退出班级
 - 请求方式：DELETE
 - 路径：/api/classes/{classId}/leave/{userId}
 
-### 8. 获取班级成员
+### 9. 获取班级成员
 - 请求方式：GET
 - 路径：/api/classes/{classId}/users
 
-### 9. 批量导入学生
+### 10. 批量导入学生
 - 请求方式：POST
 - 路径：/api/classes/{classId}/import
 - 请求体：

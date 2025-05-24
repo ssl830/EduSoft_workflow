@@ -5,9 +5,9 @@ import org.example.edusoft.service.imports.ImportService;
 import org.example.edusoft.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/imports")
@@ -16,26 +16,14 @@ public class ImportController {
     @Autowired
     private ImportService importService;
 
-    @PostMapping("/students/file")
-    public Result<ImportRecord> importStudentsByFile(
+    @PostMapping("/students")
+    public Result<ImportRecord> importStudents(
             @RequestParam("classId") Long classId,
             @RequestParam("operatorId") Long operatorId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("importType") String importType,
+            @RequestBody List<Map<String, Object>> studentData) {
         try {
-            ImportRecord record = importService.importStudentsByFile(classId, operatorId, file);
-            return Result.success(record);
-        } catch (Exception e) {
-            return Result.error("导入失败：" + e.getMessage());
-        }
-    }
-
-    @PostMapping("/students/manual")
-    public Result<ImportRecord> importStudentsManually(
-            @RequestParam("classId") Long classId,
-            @RequestParam("operatorId") Long operatorId,
-            @RequestBody List<Long> studentIds) {
-        try {
-            ImportRecord record = importService.importStudentsManually(classId, operatorId, studentIds);
+            ImportRecord record = importService.importStudents(classId, operatorId, importType, studentData);
             return Result.success(record);
         } catch (Exception e) {
             return Result.error("导入失败：" + e.getMessage());
