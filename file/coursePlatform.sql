@@ -71,8 +71,12 @@ CREATE TABLE Question (
     content TEXT NOT NULL,
     options JSON,
     answer TEXT,
+    course_id BIGINT,            -- 新增：关联课程
+    section_id BIGINT,           -- 新增：关联章节
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (creator_id) REFERENCES User(id)
+    FOREIGN KEY (creator_id) REFERENCES User(id),
+    FOREIGN KEY (course_id) REFERENCES Course(id),
+    FOREIGN KEY (section_id) REFERENCES CourseSection(id)
 );
 
 CREATE TABLE Practice (
