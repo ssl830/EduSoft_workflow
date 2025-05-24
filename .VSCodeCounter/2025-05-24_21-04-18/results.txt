@@ -1,0 +1,87 @@
+Date : 2025-05-24 21:04:18
+Directory : d:\桌面\大二下\软工\classmanager\EduSoft\qianduan
+Total : 36 files,  5728 codes, 164 comments, 566 blanks, all 6458 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| vue                |         14 |      2,725 |         16 |        426 |      3,167 |
+| JSON               |          5 |      2,303 |          4 |          9 |      2,316 |
+| TypeScript         |         10 |        410 |        127 |         81 |        618 |
+| SCSS               |          1 |        195 |         17 |         36 |        248 |
+| CSS                |          1 |         70 |          0 |         10 |         80 |
+| HTML               |          1 |         13 |          0 |          0 |         13 |
+| JSON with Comments |          1 |          7 |          0 |          1 |          8 |
+| Markdown           |          1 |          3 |          0 |          3 |          6 |
+| XML                |          2 |          2 |          0 |          0 |          2 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                       |         36 |      5,728 |        164 |        566 |      6,458 |
+| . (Files)                                                                               |          8 |      2,328 |          5 |         14 |      2,347 |
+| .bolt                                                                                   |          1 |          3 |          0 |          1 |          4 |
+| public                                                                                  |          1 |          1 |          0 |          0 |          1 |
+| src                                                                                     |         26 |      3,396 |        159 |        551 |      4,106 |
+| src (Files)                                                                             |          4 |        117 |          1 |         18 |        136 |
+| src\api                                                                                 |          5 |        236 |         42 |         52 |        330 |
+| src\assets                                                                              |          1 |          1 |          0 |          0 |          1 |
+| src\components                                                                          |          7 |      1,345 |          3 |        221 |      1,569 |
+| src\components (Files)                                                                  |          1 |         35 |          0 |          7 |         42 |
+| src\components\course                                                                   |          4 |        993 |          3 |        164 |      1,160 |
+| src\components\layout                                                                   |          2 |        317 |          0 |         50 |        367 |
+| src\router                                                                              |          1 |         78 |         72 |          6 |        156 |
+| src\stores                                                                              |          1 |         82 |         11 |         19 |        112 |
+| src\styles                                                                              |          1 |        195 |         17 |         36 |        248 |
+| src\views                                                                               |          6 |      1,342 |         13 |        199 |      1,554 |
+| src\views (Files)                                                                       |          2 |        156 |          0 |         19 |        175 |
+| src\views\auth                                                                          |          2 |        337 |          0 |         53 |        390 |
+| src\views\course                                                                        |          1 |        172 |          6 |         27 |        205 |
+| src\views\exercise                                                                      |          1 |        677 |          7 |        100 |        784 |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                | language           | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\.bolt\config.json                            | JSON               |          3 |          0 |          1 |          4 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\README.md                                    | Markdown           |          3 |          0 |          3 |          6 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\index.html                                   | HTML               |         13 |          0 |          0 |         13 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\package-lock.json                            | JSON               |      2,234 |          0 |          1 |      2,235 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\package.json                                 | JSON               |         28 |          0 |          1 |         29 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\public\vite.svg                              | XML                |          1 |          0 |          0 |          1 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\App.vue                                  | vue                |         38 |          0 |          6 |         44 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\api\auth.ts                              | TypeScript         |         31 |          5 |          6 |         42 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\api\axios.ts                             | TypeScript         |         39 |         10 |         10 |         59 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\api\course.ts                            | TypeScript         |         54 |         10 |         13 |         77 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\api\exercise.ts                          | TypeScript         |         58 |         11 |         12 |         81 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\api\resource.ts                          | TypeScript         |         54 |          6 |         11 |         71 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\assets\vue.svg                           | XML                |          1 |          0 |          0 |          1 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\HelloWorld.vue                | vue                |         35 |          0 |          7 |         42 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\course\CourseCard.vue         | vue                |        108 |          0 |         19 |        127 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\course\CourseExerciseList.vue | vue                |        286 |          0 |         45 |        331 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\course\CourseResourceList.vue | vue                |        512 |          3 |         86 |        601 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\course\CourseSyllabus.vue     | vue                |         87 |          0 |         14 |        101 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\layout\AppHeader.vue          | vue                |        150 |          0 |         29 |        179 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\components\layout\AppSidebar.vue         | vue                |        167 |          0 |         21 |        188 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\main.ts                                  | TypeScript         |          9 |          0 |          1 |         10 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\router\index.ts                          | TypeScript         |         78 |         72 |          6 |        156 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\stores\auth.ts                           | TypeScript         |         82 |         11 |         19 |        112 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\style.css                                | CSS                |         70 |          0 |         10 |         80 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\styles\index.scss                        | SCSS               |        195 |         17 |         36 |        248 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\Home.vue                           | vue                |        139 |          0 |         18 |        157 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\NotFound.vue                       | vue                |         17 |          0 |          1 |         18 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\auth\Login.vue                     | vue                |        142 |          0 |         24 |        166 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\auth\Register.vue                  | vue                |        195 |          0 |         29 |        224 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\course\CourseDetail.vue            | vue                |        172 |          6 |         27 |        205 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\views\exercise\ExerciseCreate.vue        | vue                |        677 |          7 |        100 |        784 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\src\vite-env.d.ts                            | TypeScript         |          0 |          1 |          1 |          2 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\tsconfig.app.json                            | JSON               |         20 |          2 |          3 |         25 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\tsconfig.json                                | JSON with Comments |          7 |          0 |          1 |          8 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\tsconfig.node.json                           | JSON               |         18 |          2 |          3 |         23 |
+| d:\桌面\大二下\软工\classmanager\EduSoft\qianduan\vite.config.ts                               | TypeScript         |          5 |          1 |          2 |          8 |
+| Total                                                                                   |                    |      5,728 |        164 |        566 |      6,458 |
++-----------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
