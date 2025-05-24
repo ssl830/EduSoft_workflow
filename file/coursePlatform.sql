@@ -84,6 +84,7 @@ CREATE TABLE Question (
 CREATE TABLE Practice (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     course_id BIGINT NOT NULL,
+    class_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
     start_time DATETIME,
     end_time DATETIME,
@@ -91,7 +92,8 @@ CREATE TABLE Practice (
     created_by BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES Course(id),
-    FOREIGN KEY (created_by) REFERENCES User(id)
+    FOREIGN KEY (created_by) REFERENCES User(id),
+    FOREIGN KEY (class_id) REFERENCES Class(id)
 );
 
 CREATE TABLE PracticeQuestion (
@@ -109,6 +111,7 @@ CREATE TABLE Submission (
     student_id BIGINT NOT NULL,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     score INT DEFAULT 0,
+    is_judged BOOLEAN DEFAULT FALSE, 
     feedback TEXT,
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (student_id) REFERENCES User(id)
@@ -119,6 +122,7 @@ CREATE TABLE Answer (
     submission_id BIGINT NOT NULL,
     question_id BIGINT NOT NULL,
     answer_text TEXT,
+    is_judged BOOLEAN DEFAULT FALSE,
     correct BOOLEAN,
     score INT,
     FOREIGN KEY (submission_id) REFERENCES Submission(id),

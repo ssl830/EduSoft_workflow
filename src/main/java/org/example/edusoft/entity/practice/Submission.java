@@ -25,6 +25,9 @@ public class Submission {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    @Column(name = "is_judged")
+    private Boolean isJudged = false;
+
     private Integer score = 0;
 
     private String feedback;
