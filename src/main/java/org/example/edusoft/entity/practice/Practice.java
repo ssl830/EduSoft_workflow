@@ -19,6 +19,9 @@ public class Practice {
     @Column(name = "course_id", nullable = false)
     private Long courseId;
 
+    @Column(name = "class_id", nullable = false)
+    private Long classId;
+
     @Column(nullable = false)
     private String title;
 

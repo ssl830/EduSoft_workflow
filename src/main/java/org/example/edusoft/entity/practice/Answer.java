@@ -24,6 +24,9 @@ public class Answer {
     @Column(name = "answer_text")
     private String answerText;
 
+    @Column(name = "is_judged")
+    private Boolean isJudged;
+
     private Boolean correct;
 
     private Integer score;
