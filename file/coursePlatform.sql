@@ -7,7 +7,7 @@ USE CoursePlatform;
 CREATE TABLE User (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id VARCHAR(15) NOT NULL UNIQUE,
-    username VARCHAR(50) NOT NULL ,
+    username VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('student', 'teacher', 'tutor') NOT NULL,
     email VARCHAR(100),
@@ -20,7 +20,7 @@ CREATE TABLE Course (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     teacher_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,   --  课程代码（类似于ISBN)
+    code VARCHAR(20) UNIQUE NOT NULL,   -- 课程代码（类似于ISBN）
     outline TEXT,
     objective TEXT,
     assessment TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE Class (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     course_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    class_code VARCHAR(20) NOT NULL UNIQUE, --班级暗号，学生自己加入班级
+    class_code VARCHAR(20) NOT NULL UNIQUE, -- 班级暗号，学生自己加入班级
     FOREIGN KEY (course_id) REFERENCES Course(id)
 );
 
@@ -51,7 +51,7 @@ CREATE TABLE ClassUser (
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (class_id, user_id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
 CREATE TABLE CourseClass (
@@ -62,7 +62,6 @@ CREATE TABLE CourseClass (
     FOREIGN KEY (class_id) REFERENCES Class(id),
     FOREIGN KEY (course_id) REFERENCES Course(id)
 );
-
 
 -- 六、题库与练习
 CREATE TABLE Question (
@@ -141,7 +140,7 @@ CREATE TABLE FavoriteQuestion (
     FOREIGN KEY (question_id) REFERENCES Question(id)
 );
 
--- 八、通知（可选扩展）
+-- 八、通知
 CREATE TABLE Notification (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -152,61 +151,61 @@ CREATE TABLE Notification (
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
-
 -- 九、文件管理
 CREATE TABLE file_node (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    file_name VARCHAR(255) NOT NULL,             -- 节点名称
-    is_dir BOOLEAN NOT NULL DEFAULT FALSE,  -- 是否为文件夹
-    parent_id BIGINT NULL,                  -- 父节点ID（根节点为NULL）
-    course_id BIGINT NOT NULL,              -- 所属课程
-    class_id BIGINT NULL,                   -- 所属班级（非必须，用于权限控制）
-    uploader_id BIGINT NOT NULL,            -- 上传者
+    file_name VARCHAR(255) NOT NULL,
+    is_dir BOOLEAN NOT NULL DEFAULT FALSE,
+    parent_id BIGINT NULL,
+    course_id BIGINT NOT NULL,
+    class_id BIGINT NULL,
+    uploader_id BIGINT NOT NULL,
     file_type ENUM('AUDIO_VIDEO', 'IMAGE', 'TEXT', 'PDF', 'OTHER') NOT NULL,
-    section_id BIGINT,     -- 所属章节，章节文件夹和所有的课程班级根文件夹中的文件的section_id都为0或null
+    section_id BIGINT,
     file_version INT NOT NULL DEFAULT 1,
     file_size BIGINT NOT NULL,
     visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
-    file_path VARCHAR(1024),                     -- 物化路径（可选）
+    file_path VARCHAR(1024),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
     FOREIGN KEY (parent_id) REFERENCES file_node(id),
     FOREIGN KEY (course_id) REFERENCES Course(id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
 
-INSERT INTO User (user_id, username, password_hash, role, name, email) 
-VALUES ('U001', 'teacher_zhang', 'hash123456', 'teacher', '张老师', 'zhang@example.com'),
-       ('U002', 'student_li', 'hash789012', 'student', '李同学', 'li@example.com');
-       
+-- 数据插入部分（修复 INSERT）
+INSERT INTO User (user_id, username, password_hash, role, email) 
+VALUES 
+('U001', 'teacher_zhang', 'hash123456', 'teacher', 'zhang@example.com'),
+('U002', 'student_li', 'hash789012', 'student', 'li@example.com');
 
 INSERT INTO Course (teacher_id, name, code, outline, objective, assessment)
 VALUES (1, '软件工程基础', 'SE101', '介绍软件开发流程', '掌握基础知识', '作业+项目+考试');
 
-
 INSERT INTO CourseSection (course_id, title, sort_order)
-VALUES (1, '第一章：软件工程导论', 1),
-       (1, '第二章：需求分析', 2);
-       
-       
+VALUES 
+(1, '第一章：软件工程导论', 1),
+(1, '第二章：需求分析', 2);
+
 INSERT INTO Class (course_id, name, class_code)
 VALUES (1, '软工A班', 'CLASS_A_101');
 
 INSERT INTO ClassUser (class_id, user_id)
-VALUES (1, 2);  -- 学生加入班级
-
+VALUES (1, 2);
 
 INSERT INTO Question (creator_id, type, content, options, answer)
-VALUES (1, 'singlechoice', '软件工程的第一步是什么？', '["需求分析","编码","测试","部署"]', '需求分析');
-
+VALUES 
+(1, 'singlechoice', '软件工程的第一步是什么？', 
+    JSON_ARRAY('需求分析', '编码', '测试', '部署'), 
+    '需求分析');
 
 INSERT INTO Practice (course_id, title, start_time, end_time, allow_multiple_submission, created_by)
-VALUES (1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
+VALUES 
+(1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
 
 INSERT INTO PracticeQuestion (practice_id, question_id, score)
-VALUES (1, 1, 5);  -- 第一题占5分
+VALUES (1, 1, 5);
 
 INSERT INTO Submission (practice_id, student_id, score, feedback)
 VALUES (1, 2, 5, '回答正确');
@@ -220,8 +219,5 @@ VALUES (2, 1, 1, TRUE, NOW());
 INSERT INTO FavoriteQuestion (student_id, question_id)
 VALUES (2, 1);
 
-
 INSERT INTO Notification (user_id, title, message)
 VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
-
-

@@ -1,0 +1,82 @@
+### 测试数据准备
+### 1. 添加测试用户（教师）
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+    "userId": "T001",
+    "username": "test_teacher",
+    "password": "123456",
+    "role": "teacher",
+    "email": "teacher@test.com"
+}
+
+### 2. 添加测试用户（学生）
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+    "userId": "S001",
+    "username": "test_student",
+    "password": "123456",
+    "role": "student",
+    "email": "student@test.com"
+}
+
+### 课程管理模块测试
+### 1. 创建课程
+POST http://localhost:8080/api/courses
+Content-Type: application/json
+
+{
+    "teacherId": 1,
+    "name": "Java程序设计",
+    "code": "JAVA101",
+    "outline": "本课程介绍Java编程基础知识和面向对象编程概念",
+    "objective": "掌握Java编程基础，理解面向对象编程思想",
+    "assessment": "平时作业30%，项目30%，期末考试40%"
+}
+
+### 2. 创建第二个课程
+POST http://localhost:8080/api/courses
+Content-Type: application/json
+
+{
+    "teacherId": 1,
+    "name": "数据库原理",
+    "code": "DB101",
+    "outline": "本课程介绍数据库基本概念和SQL语言",
+    "objective": "掌握数据库设计和管理的基本技能",
+    "assessment": "平时作业20%，项目30%，期末考试50%"
+}
+
+### 3. 获取教师的课程列表
+GET http://localhost:8080/api/courses/user/1
+
+### 4. 获取课程详情
+GET http://localhost:8080/api/courses/1
+
+### 5. 更新课程信息
+PUT http://localhost:8080/api/courses/1
+Content-Type: application/json
+
+{
+    "teacherId": 1,
+    "name": "Java程序设计（更新版）",
+    "code": "JAVA101",
+    "outline": "本课程介绍Java编程基础知识和面向对象编程概念，包括最新的Java特性",
+    "objective": "掌握Java编程基础，理解面向对象编程思想，能够独立开发Java应用",
+    "assessment": "平时作业30%，项目30%，期末考试40%"
+}
+
+### 6. 获取更新后的课程详情
+GET http://localhost:8080/api/courses/1
+
+### 7. 删除课程
+DELETE http://localhost:8080/api/courses/2
+
+### 8. 验证课程已被删除
+GET http://localhost:8080/api/courses/2
+
+### 9. 获取教师的课程列表（验证删除结果）
+GET http://localhost:8080/api/courses/user/1
