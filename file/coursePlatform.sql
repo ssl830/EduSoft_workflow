@@ -155,8 +155,11 @@ CREATE TABLE Notification (
     user_id BIGINT NOT NULL,
     title VARCHAR(200),
     message TEXT,
+    type VARCHAR(20) NOT NULL,
     read_flag BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    related_id BIGINT,
+    related_type VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
@@ -206,12 +209,25 @@ CREATE TABLE import_record (
 
 CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
 
--- 1. 用户表 User
-INSERT INTO User (user_id, username, password_hash, role, email) VALUES
-('stu001', 'Alice',   'hash_pw_1', 'student', 'alice@example.com'),
-('stu002', 'Bob',     'hash_pw_2', 'student', 'bob@example.com'),
-('tea001', 'Prof.Chen', 'hash_pw_3','teacher','chen@example.edu'),
-('tut001', 'TutorLi', 'hash_pw_4','tutor',  'li@example.com');
+-- 错题库
+CREATE TABLE WrongQuestion (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    wrong_answer TEXT,
+    correct_answer TEXT,
+    wrong_count INT DEFAULT 1,
+    last_wrong_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES User(id),
+    FOREIGN KEY (question_id) REFERENCES Question(id)
+);
+
+-- 数据插入部分（修复 INSERT）
+INSERT INTO User (user_id, username, password_hash, role, email) 
+VALUES 
+('U001', 'teacher_zhang', 'hash123456', 'teacher', 'zhang@example.com'),
+('U002', 'student_li', 'hash789012', 'student', 'li@example.com');
 
 -- 2. 课程与章节
 INSERT INTO Course (teacher_id, name, code, outline, objective, assessment) VALUES
@@ -246,6 +262,9 @@ INSERT INTO Question (creator_id, type, content, analysis, options, answer, cour
  '["进程管理","数据传输","电路设计","编译优化"]',
  '进程管理',
  1, 1),
+INSERT INTO Practice (course_id,class_id, title, start_time, end_time, allow_multiple_submission, created_by)
+VALUES 
+(1, 1,'第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
 
 (3, 'program',
  '请写一个函数，反转链表。',
@@ -271,5 +290,7 @@ INSERT INTO Submission (practice_id, student_id, score, is_judged, feedback) VAL
 (1, 1, 0, 0, NULL),
 (1, 2, 0, 0, NULL);
 
--- 假设 Submission.id = 1, 2
-INSERT INTO Ans
+
+INSERT INTO Notification (user_id, title, message)
+VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+

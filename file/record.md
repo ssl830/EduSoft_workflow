@@ -1,4 +1,5 @@
-# 查询记录模块说明文档
+# 练习记录模块说明文档
+
 ## 模块结构
 
 该模块在以下目录中实现了相关功能：
@@ -6,121 +7,214 @@
 ```
 src/main/java/org/example/edusoft/
 ├── entity/record/
-│   ├── Practice.java  
-|   ├── QuestionRecord.java
-|   └── StudyRecord.java       
-├── mapper/user/
-│   └── UserMapper.java           # 成员数据访问接口
-├── service/user/
-│   ├── UserService.java          # 服务接口
+│   ├── PracticeRecord.java      # 练习记录实体类
+│   ├── StudyRecord.java         # 学习记录实体类
+│   └── QuestionRecord.java      # 题目记录实体类
+├── mapper/record/
+│   └── PracticeRecordMapper.java # 记录数据访问接口
+├── service/record/
+│   ├── RecordService.java       # 服务接口
 │   └── impl/
-│       └── UserServiceImpl.java  # 服务实现类
-└── Controller/user/
-    └── UserController.java       # 控制器
+│       └── RecordServiceImpl.java # 服务实现类
+└── controller/record/
+    └── RecordController.java    # 控制器
 ```
 
 ## 功能说明
 
 ### 1. 实体类
-#### Practice.java
-- 对应数据库中的User表，包含用户的基本信息
-#### QuestionRecord.java
-- 更新操作使用的实体类，只有部分变量可以更新，所以前端输入进来的只有用户名和邮箱属性即可
+#### PracticeRecord.java
+- 练习记录实体类，包含练习基本信息、得分、反馈等
 #### StudyRecord.java
-- 学习记录
+- 学习记录实体类，记录学习进度和完成情况
+#### QuestionRecord.java
+- 题目记录实体类，包含题目内容、答案、得分等
 
-### 2. 数据访问层
-#### UserMapper.java
-- 基本的增删改查
-- 查询方法：
-  - 根据ID获取
-  - 根据userId获取用户
-
-### 3. 服务层
-#### 接口（UserService.java）
-- 定义用户相关的业务方法：
-  - User findById(Long id);查询
-  - User findByUserId(String userId);学号查询
-  - void save(User user);保存更新
-  - void deactivateAccount(Long id);注销账号
-
-#### 实现类（UserServiceImpl.java）
-- 实现UserService接口定义的所有方法
-- 调用Mapper层进行数据操作
-
-### 4. 控制器（UserController.java）
+### 2. 控制器（RecordController.java）
 提供以下RESTful API接口：
 
 | 请求方法 | 路径 | 功能说明 |
 |---------|------|---------|
-| POST | /api/user/register | 注册用户 |
-| POST | /api/user/login | 用户登录 |
-| POST | /api/user/logout | 退出登录 |
-| GET | /api/user/info | 获取用户信息 |
-| POST | /api/user/update | 更新用户信息 |
-| POST | /api/user/changePassword | 更改密码 |
-| DELETE| /api/user/deactivate | 注销当前用户 |
+| GET | /api/record/study | 获取所有学习记录 |
+| GET | /api/record/study/course/{courseId} | 获取指定课程的学习记录 |
+| GET | /api/record/practice | 获取所有练习记录 |
+| GET | /api/record/practice/course/{courseId} | 获取指定课程的练习记录 |
+| GET | /api/record/submission/{submissionId}/report | 获取练习提交报告 |
+| GET | /api/record/study/export | 导出所有学习记录 |
+| GET | /api/record/study/course/{courseId}/export | 导出指定课程的学习记录 |
+| GET | /api/record/practice/export | 导出所有练习记录 |
+| GET | /api/record/practice/course/{courseId}/export | 导出指定课程的练习记录 |
+| GET | /api/record/submission/{submissionId}/export-report | 导出练习提交报告 |
 
 ## 前端接口说明
 
-### 1. 注册用户
-- 请求方式：POST
-- 路径：/api/user/register
-- 请求体：
-```json
-{
-    "username": "testuser1",
-    "passwordHash": "password123",
-    "role": "student",
-    "email": "test@example.com",
-    "name": "Test User",
-    "userId": "u111"
-}
-```
-- 返回：请求结果
-### 2. 登录
-- 请求方式：POST
-- 路径：/api/user/login
-- 参数：
-
-    String userId
-
-    String password
-- 返回：token和用户信息
-
-### 3. 退出登录
-- 请求方式：POST
-- 路径：/api/user/logout
-- 参数：无
-
-### 4. 获取当前用户信息
+### 1. 获取所有学习记录
 - 请求方式：GET
-- 路径：/api/user/info
-- 参数：无
-- 返回：用户json格式信息
-
-### 5. 更新用户信息
-- 请求方式：POST
-- 路径：/api/user/update
-- 参数：
+- 路径：/api/record/study
+- 请求头：需要登录token
+- 返回：
 ```json
 {
-    "email": "test1@example.com",
-    "username": "Test1"
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+        {
+            "id": 1,
+            "studentId": 3,
+            "courseId": 1,
+            "sectionId": 1,
+            "completed": true,
+            "completedAt": "2025-05-24T23:57:11",
+            "courseName": "软件工程基础",
+            "sectionTitle": "第一章：软件工程导论"
+        }
+    ]
 }
 ```
-### 6. 修改密码
-- 请求方式：POST
-- 路径：/api/user/changePassword
-- 参数：
 
-      String oldPassword
-      
-      String newPassword
-### 7. 注销当前用户
-- 请求方式：POST
-- 路径：/api/user/deactivate{userId}
-- 参数：输入密码
+### 2. 获取指定课程的学习记录
+- 请求方式：GET
+- 路径：/api/record/study/course/{courseId}
+- 请求头：需要登录token
+- 返回：
+``` json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+        {
+            "id": 1,
+            "studentId": 3,
+            "courseId": 1,
+            "sectionId": 1,
+            "completed": true,
+            "completedAt": "2025-05-24T23:57:11",
+            "courseName": "软件工程基础",
+            "sectionTitle": "第一章：软件工程导论"
+        }
+    ]
+}```
 
-    String password
+### 3. 获取所有练习记录
+- 请求方式：GET
+- 路径：/api/record/practice
+- 请求头：需要登录token
+- 返回：
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+        {
+            "id": 1,
+            "practiceId": 1,
+            "studentId": 3,
+            "submittedAt": "2025-05-24T23:57:11",
+            "score": 5,
+            "feedback": "回答正确",
+            "questions": [
+                {
+                    "id": 1,
+                    "sectionId": 1,
+                    "courseId": 1,
+                    "content": "软件工程的第一步是什么？",
+                    "type": "singlechoice",
+                    "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
+                    "studentAnswer": "需求分析",
+                    "correctAnswer": "需求分析",
+                    "isCorrect": true,
+                    "analysis": "easy",
+                    "score": 5
+                }
+            ],
+            "practiceTitle": "第一章练习",
+            "courseName": "软件工程基础",
+            "className": "软工A班"
+        }
+    ]
+}
+```
 
+### 4. 获取指定课程的练习记录
+- 请求方式：GET
+- 路径：/api/record/practice/course/{courseId}
+- 请求头：需要登录token
+- 返回：同上
+
+### 5. 获取练习提交报告
+- 请求方式：GET
+- 路径：/api/record/submission/{submissionId}/report
+- 请求头：需要登录token
+- 返回：
+```json
+{
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+        "percentile": 0.0,
+        "scoreDistribution": [
+            {
+                "percentage": 100.00,
+                "count": 1,
+                "score_range": "0-59"
+            }
+        ],
+        "submissionInfo": {
+            "id": 1,
+            "practiceId": 1,
+            "studentId": 3,
+            "submittedAt": "2025-05-24T23:57:11",
+            "score": 5,
+            "feedback": "回答正确",
+            "questions": [
+                {
+                    "id": 1,
+                    "sectionId": 1,
+                    "courseId": 1,
+                    "content": "软件工程的第一步是什么？",
+                    "type": "singlechoice",
+                    "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
+                    "studentAnswer": "需求分析",
+                    "correctAnswer": "需求分析",
+                    "isCorrect": true,
+                    "analysis": "easy",
+                    "score": 5
+                }
+            ],
+            "practiceTitle": "第一章练习",
+            "courseName": "软件工程基础",
+            "className": "软工A班"
+        },
+        "questions": [
+            {
+                "id": 1,
+                "sectionId": null,
+                "courseId": null,
+                "content": "软件工程的第一步是什么？",
+                "type": "singlechoice",
+                "options": "[\"需求分析\", \"编码\", \"测试\", \"部署\"]",
+                "studentAnswer": "需求分析",
+                "correctAnswer": "需求分析",
+                "isCorrect": true,
+                "analysis": "easy",
+                "score": 5
+            }
+        ],
+        "rank": 1,
+        "totalStudents": 1
+    }
+}
+```
+
+### 6. 导出功能
+所有导出接口（/api/record/*/export）都返回文件下载，需要在前端处理文件下载逻辑。
+
+- 学习记录导出：返回 Excel 文件
+- 练习记录导出：返回 Excel 文件
+- 练习报告导出：返回 PDF 文件
+
+注意事项：
+1. 所有接口都需要用户登录
+2. 导出接口需要处理文件下载
+3. 如果未登录，所有接口都会返回错误信息
+4. 如果发生错误，接口会返回相应的错误信息和状态码 

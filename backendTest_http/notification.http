@@ -1,0 +1,100 @@
+### 获取用户的所有通知
+GET http://localhost:8080/api/notifications
+Authorization: Bearer {{token}}
+
+### 获取未读通知数量
+GET http://localhost:8080/api/notifications/unread
+Authorization: Bearer {{token}}
+
+### 标记通知为已读
+PUT http://localhost:8080/api/notifications/1/read
+Authorization: Bearer {{token}}
+
+### 标记所有通知为已读
+PUT http://localhost:8080/api/notifications/read-all
+Authorization: Bearer {{token}}
+
+### 删除通知
+DELETE http://localhost:8080/api/notifications/1
+Authorization: Bearer {{token}}
+
+### 测试场景1：获取通知列表（正常情况）
+# @name getNotifications
+GET http://localhost:8080/api/notifications
+Authorization: Bearer {{token}}
+
+### 测试场景2：获取通知列表（未登录）
+GET http://localhost:8080/api/notifications
+
+### 测试场景3：获取未读通知数量（正常情况）
+# @name getUnreadCount
+GET http://localhost:8080/api/notifications/unread
+Authorization: Bearer {{token}}
+
+### 测试场景4：标记通知为已读（正常情况）
+# @name markAsRead
+PUT http://localhost:8080/api/notifications/1/read
+Authorization: Bearer {{token}}
+
+### 测试场景5：标记通知为已读（通知不存在）
+PUT http://localhost:8080/api/notifications/999/read
+Authorization: Bearer {{token}}
+
+### 测试场景6：标记所有通知为已读（正常情况）
+# @name markAllAsRead
+PUT http://localhost:8080/api/notifications/read-all
+Authorization: Bearer {{token}}
+
+### 测试场景7：删除通知（正常情况）
+# @name deleteNotification
+DELETE http://localhost:8080/api/notifications/1
+Authorization: Bearer {{token}}
+
+### 测试场景8：删除通知（通知不存在）
+DELETE http://localhost:8080/api/notifications/999
+Authorization: Bearer {{token}}
+
+### 测试场景9：创建练习并验证通知（正常情况）
+# @name createPractice
+POST http://localhost:8080/api/practice/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "测试练习",
+    "courseId": 1,
+    "classId": 1,
+    "startTime": "2024-03-20T10:00:00",
+    "endTime": "2024-03-27T10:00:00",
+    "allowMultipleSubmission": true,
+    "createdBy": 1
+}
+
+### 测试场景10：创建练习并验证通知（无效时间）
+POST http://localhost:8080/api/practice/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "测试练习",
+    "courseId": 1,
+    "classId": 1,
+    "startTime": "2024-03-27T10:00:00",
+    "endTime": "2024-03-20T10:00:00",
+    "allowMultipleSubmission": true,
+    "createdBy": 1
+}
+
+### 测试场景11：创建练习并验证通知（缺少必填字段）
+POST http://localhost:8080/api/practice/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "courseId": 1,
+    "classId": 1,
+    "startTime": "2024-03-20T10:00:00",
+    "endTime": "2024-03-27T10:00:00",
+    "allowMultipleSubmission": true,
+    "createdBy": 1
+} 
