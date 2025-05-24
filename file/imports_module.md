@@ -35,6 +35,25 @@ src/main/java/org/example/edusoft/
   - importType：导入类型（FILE/MANUAL）
 - 使用MyBatis-Plus注解进行ORM映射
 
+关键代码：
+```java
+@Data
+@TableName("import_record")
+public class ImportRecord {
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private Long classId;
+    private Long operatorId;  // 操作人ID
+    private String fileName;  // 导入文件名
+    private Integer totalCount;  // 总记录数
+    private Integer successCount;  // 成功导入数
+    private Integer failCount;  // 失败数
+    private String failReason;  // 失败原因
+    private LocalDateTime importTime;  // 导入时间
+    private String importType;  // 导入类型：FILE（文件导入）, MANUAL（手动导入）
+}
+```
+
 ### 2. 数据访问层（ImportRecordMapper.java）
 - 继承MyBatis-Plus的BaseMapper接口
 - 提供基础的CRUD操作
@@ -42,12 +61,35 @@ src/main/java/org/example/edusoft/
   - 根据班级ID获取导入记录列表
   - 根据记录ID获取导入记录详情
 
+关键代码：
+```java
+@Mapper
+public interface ImportRecordMapper extends BaseMapper<ImportRecord> {
+    @Select("SELECT * FROM import_record WHERE class_id = #{classId} ORDER BY import_time DESC")
+    List<ImportRecord> getImportRecordsByClassId(Long classId);
+}
+```
+
 ### 3. 服务层
 #### 接口（ImportService.java）
 - 定义导入相关的业务方法：
   - 导入学生数据（统一接口）
   - 获取班级的导入记录列表
   - 获取导入记录详情
+
+关键代码：
+```java
+public interface ImportService {
+    // 统一的学生导入接口
+    ImportRecord importStudents(Long classId, Long operatorId, String importType, List<Map<String, Object>> studentData);
+    
+    // 获取班级的导入记录
+    List<ImportRecord> getImportRecords(Long classId);
+    
+    // 获取导入记录详情
+    ImportRecord getImportRecord(Long id);
+}
+```
 
 #### 实现类（ImportServiceImpl.java）
 - 实现ImportService接口定义的所有方法
@@ -59,6 +101,70 @@ src/main/java/org/example/edusoft/
   - 记录导入结果和失败原因
   - 调用Mapper层进行数据操作
 
+关键代码：
+```java
+@Service
+public class ImportServiceImpl implements ImportService {
+    @Autowired
+    private ImportRecordMapper importRecordMapper;
+    @Autowired
+    private ClassUserMapper classUserMapper;
+
+    @Override
+    @Transactional
+    public ImportRecord importStudents(Long classId, Long operatorId, String importType, List<Map<String, Object>> studentData) {
+        ImportRecord record = new ImportRecord();
+        record.setClassId(classId);
+        record.setOperatorId(operatorId);
+        record.setImportTime(LocalDateTime.now());
+        record.setImportType(importType);
+        
+        int totalCount = studentData.size();
+        int successCount = 0;
+        int failCount = 0;
+        List<String> failReasons = new ArrayList<>();
+
+        for (Map<String, Object> student : studentData) {
+            try {
+                Long studentId = Long.parseLong(student.get("student_id").toString());
+                if (classUserMapper.checkUserInClass(classId, studentId) == 0) {
+                    ClassUser classUser = new ClassUser();
+                    classUser.setClassId(classId);
+                    classUser.setUserId(studentId);
+                    classUser.setJoinedAt(LocalDateTime.now());
+                    classUserMapper.insert(classUser);
+                    successCount++;
+                } else {
+                    failCount++;
+                    failReasons.add("学生ID " + studentId + " 已在班级中");
+                }
+            } catch (Exception e) {
+                failCount++;
+                failReasons.add("学生数据处理失败: " + e.getMessage());
+            }
+        }
+
+        record.setTotalCount(totalCount);
+        record.setSuccessCount(successCount);
+        record.setFailCount(failCount);
+        record.setFailReason(String.join("; ", failReasons));
+        
+        importRecordMapper.insert(record);
+        return record;
+    }
+
+    @Override
+    public List<ImportRecord> getImportRecords(Long classId) {
+        return importRecordMapper.getImportRecordsByClassId(classId);
+    }
+
+    @Override
+    public ImportRecord getImportRecord(Long id) {
+        return importRecordMapper.selectById(id);
+    }
+}
+```
+
 ### 4. 控制器（ImportController.java）
 提供以下RESTful API接口：
 
@@ -67,6 +173,50 @@ src/main/java/org/example/edusoft/
 | POST | /api/imports/students | 导入学生数据 |
 | GET | /api/imports/records/{classId} | 获取班级的导入记录列表 |
 | GET | /api/imports/record/{id} | 获取导入记录详情 |
+
+关键代码：
+```java
+@RestController
+@RequestMapping("/api/imports")
+public class ImportController {
+    @Autowired
+    private ImportService importService;
+
+    @PostMapping("/students")
+    public Result<ImportRecord> importStudents(
+            @RequestParam("classId") Long classId,
+            @RequestParam("operatorId") Long operatorId,
+            @RequestParam("importType") String importType,
+            @RequestBody List<Map<String, Object>> studentData) {
+        try {
+            ImportRecord record = importService.importStudents(classId, operatorId, importType, studentData);
+            return Result.success(record);
+        } catch (Exception e) {
+            return Result.error("导入失败：" + e.getMessage());
+        }
+    }
+
+    @GetMapping("/records/{classId}")
+    public Result<List<ImportRecord>> getImportRecords(@PathVariable Long classId) {
+        try {
+            List<ImportRecord> records = importService.getImportRecords(classId);
+            return Result.success(records);
+        } catch (Exception e) {
+            return Result.error("获取导入记录失败：" + e.getMessage());
+        }
+    }
+
+    @GetMapping("/record/{id}")
+    public Result<ImportRecord> getImportRecord(@PathVariable Long id) {
+        try {
+            ImportRecord record = importService.getImportRecord(id);
+            return Result.success(record);
+        } catch (Exception e) {
+            return Result.error("获取导入记录详情失败：" + e.getMessage());
+        }
+    }
+}
+```
 
 ## 前端接口说明
 
