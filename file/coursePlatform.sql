@@ -20,7 +20,7 @@ CREATE TABLE Course (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     teacher_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,   --  课程暗号
+    code VARCHAR(20) UNIQUE NOT NULL,   --  课程代码（类似于ISBN)
     outline TEXT,
     objective TEXT,
     assessment TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE Class (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     course_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    class_code VARCHAR(20) NOT NULL UNIQUE,
+    class_code VARCHAR(20) NOT NULL UNIQUE, --班级暗号，学生自己加入班级
     FOREIGN KEY (course_id) REFERENCES Course(id)
 );
 
