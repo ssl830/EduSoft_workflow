@@ -16,8 +16,8 @@ Content-Type: application/json
 satoken: {{token}}
 
 {
-    "courseId": 4,
-    "name": "体育",
+    "courseId": 1,
+    "name": "周二下午",
     "classCode": "JAVA20FALL00"
 }
 
@@ -95,12 +95,7 @@ satoken: {{token}}
 GET http://localhost:8080/api/classes/1/users
 satoken: {{token}}
 
-### 10. 批量导入学生
-POST http://localhost:8080/api/classes/1/import
-Content-Type: application/json
-satoken: {{token}}
 
-[4, 5, 6]
 
 ### 11. 学生退出班级
 DELETE http://localhost:8080/api/classes/1/leave/2

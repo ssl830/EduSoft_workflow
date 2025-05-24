@@ -75,7 +75,7 @@ DELETE http://localhost:8080/api/courses/3
 satoken: {{token}}
 
 ### 8. 验证第二个课程已被删除
-GET http://localhost:8080/api/courses/2
+GET http://localhost:8080/api/courses/3
 satoken: {{token}}
 
 ### 9. 再次获取教师的课程列表，确认更新
