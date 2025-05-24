@@ -6,7 +6,7 @@
 <mapper namespace="org.example.edusoft.mapper.file.FileMapper">
 
      <!-- 结果映射 --> 
-    <resultMap id="FileNodeResultMap" type="FileInfo">
+    <resultMap id="FileNodeResultMap" type="org.example.edusoft.entity.file.FileInfo">
         <id property="id" column="id"/>
         <result property="name" column="file_name"/>
         <result property="isDir" column="is_dir"/>
@@ -29,14 +29,14 @@
     </resultMap>
 
     <!-- 在FileMapper.xml中添加ClassUser结果映射 -->
-    <resultMap id="ClassUserResultMap" type="ClassUser">
+    <resultMap id="ClassUserResultMap" type="org.example.edusoft.entity.classroom.ClassUser">
         <id property="classId" column="class_id"/>
         <result property="userId" column="user_id"/>
         <result property="joinedAt" column="joined_at"/>
     </resultMap>
 
     <!-- 映射 CourseClass -->
-    <resultMap id="CourseClassResultMap" type="CourseClass">
+    <resultMap id="CourseClassResultMap" type="org.example.edusoft.entity.courseclass.CourseClass">
         <id property="courseId" column="course_id"/>
         <result property="classId" column="class_id"/>
         <result property="joinedAt" column="joined_at"/>
