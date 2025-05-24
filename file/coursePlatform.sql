@@ -74,6 +74,7 @@ CREATE TABLE Question (
     course_id BIGINT,            -- 新增：关联课程
     section_id BIGINT,           -- 新增：关联章节
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    analysis TEXT ,
     FOREIGN KEY (creator_id) REFERENCES User(id),
     FOREIGN KEY (course_id) REFERENCES Course(id),
     FOREIGN KEY (section_id) REFERENCES CourseSection(id)
@@ -201,6 +202,20 @@ CREATE TABLE import_record (
 
 CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
 
+-- 错题库
+CREATE TABLE WrongQuestion (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    wrong_answer TEXT,
+    correct_answer TEXT,
+    wrong_count INT DEFAULT 1,
+    last_wrong_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES User(id),
+    FOREIGN KEY (question_id) REFERENCES Question(id)
+);
+
 -- 数据插入部分（修复 INSERT）
 INSERT INTO User (user_id, username, password_hash, role, email) 
 VALUES 
@@ -248,3 +263,4 @@ VALUES (2, 1);
 
 INSERT INTO Notification (user_id, title, message)
 VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+
