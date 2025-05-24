@@ -153,26 +153,33 @@ CREATE TABLE Notification (
 
 -- 九、文件管理
 CREATE TABLE file_node (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    file_name VARCHAR(255) NOT NULL,
-    is_dir BOOLEAN NOT NULL DEFAULT FALSE,
-    parent_id BIGINT NULL,
-    course_id BIGINT NOT NULL,
-    class_id BIGINT NULL,
-    uploader_id BIGINT NOT NULL,
-    file_type ENUM('AUDIO_VIDEO', 'IMAGE', 'TEXT', 'PDF', 'OTHER') NOT NULL,
-    section_id BIGINT,
-    file_version INT NOT NULL DEFAULT 1,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT, 
+    file_name VARCHAR(255) NOT NULL,             -- 节点名称
+    is_dir BOOLEAN NOT NULL DEFAULT FALSE,  -- 是否为文件夹
+    parent_id BIGINT NULL,                  -- 父节点ID（根节点为NULL）
+    course_id BIGINT NOT NULL,              -- 所属课程
+    class_id BIGINT NULL,                   -- 所属班级（非必须，用于权限控制）
+    uploader_id BIGINT NOT NULL,            -- 上传者
+    sectiondir_id BIGINT default -1,            -- 是班级根文件夹中的章节文件夹时，这个字段等于它内部的文件的section_id
+    file_type ENUM('VIDEO', 'PPT', 'CODE', 'PDF', 'OTHER') NOT NULL,
+    section_id BIGINT default -1,     -- 所属章节，章节文件夹和所有的课程班级根文件夹中的文件的section_id都为-1
+    last_file_version BIGINT NOT NULL DEFAULT 0,   -- 指向该文件的上一个版本的id，如果没有上一个版本默认为0
+    is_current_version BOOLEAN NOT NULL DEFAULT TRUE, -- 是否是一个文件的最新版本，没有多个版本时默认为true
     file_size BIGINT NOT NULL,
     visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
-    file_path VARCHAR(1024),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    file_url VARCHAR(1024),      -- 文件存储路径，在云对象库中 
+    file_version int,     -- 文件版本号           
+    object_name VARCHAR(255),  -- 对象存储中的文件路径到文件名，如 /course/1/section/1/file.txt
+
     FOREIGN KEY (parent_id) REFERENCES file_node(id),
     FOREIGN KEY (course_id) REFERENCES Course(id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
+
+CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
 
 -- 数据插入部分（修复 INSERT）
 INSERT INTO User (user_id, username, password_hash, role, email) 

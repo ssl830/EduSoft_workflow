@@ -1,6 +1,7 @@
 package org.example.edusoft.mapper.file;
+
 import java.util.List;
-import java.util.Date;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.example.edusoft.entity.file.FileInfo;
@@ -16,18 +17,41 @@ public interface FileMapper {
     /**
      * 查询某个父节点下的所有子节点（包括文件夹和文件）
      */
+    @Mapper
     List<FileInfo> getChildren(@Param("parentId") Long parentId);
 
+
+    List<FileInfo> getChildrenWithFilter(
+        @Param("parentId") Long parentId,
+        @Param("title") String title,
+        @Param("type") String type,
+        @Param("chapter") Long chapter,
+        @Param("regexTitle") String regexTitle
+    );
+    
     /**
      * 获取某个用户所在的所有班级对应的根文件夹
      */
     List<FileInfo> getRootFoldersByUserId(@Param("userId") Long userId);
 
     /**
+     * 根据基础文件名获取所有版本的文件
+     */
+    List<FileInfo> getVersionsByBaseName(
+        @Param("baseName") String baseName,
+        @Param("parentId") Long parentId
+    );
+
+    /**
      * 获取某个班级对应的根文件夹
      */
     FileInfo getRootFolderByClassId(
         @Param("classId") Long classId
+    );
+
+    FileInfo getFolderBySection(
+        @Param("parentId") Long parentId,
+        @Param("sectiondirId") Long sectiondirId
     );
 
     /**
@@ -42,7 +66,7 @@ public interface FileMapper {
     void insertNode(FileInfo node);
 
     FileInfo selectById(Long id);
-
+    
     /**
      * 更新节点信息
      */
@@ -53,7 +77,15 @@ public interface FileMapper {
      */
     void deleteNodeById(Long id);
 
+    Long getLastVersionId(@Param("parentId") Long parentId, @Param("baseName") String baseName, @Param("currentName") String currentName);
+
     boolean existsByNameAndParent(@Param("name") String name, @Param("parentId") Long parentId);
+
+    /**
+     * 检查全局是否存在相同文件名（忽略目录）
+     */
+    boolean existsByNameGlobally(@Param("name") String name);
+
     boolean isDir(Long id);
 
     Long getClassIdByUserandCourse(
@@ -61,42 +93,7 @@ public interface FileMapper {
         @Param("courseId") Long courseId
     );
 
-    /* 
-    List<FileInfo> selectAll();
-
-    
-    void insert(FileInfo fileinfo);
-
-    void update(FileInfo fileinfo);
-
-    void deleteById(Long id);
-
-
-    List<FileInfo> selectByUserIdAndParentId(
-        @Param("parentId") Long parentId
+    List<Long> getAllClassIdsByCourseId(
+        @Param("courseId") Long courseId
     );
-
-
-   
-    List<Long> selectClassIdsByUserId(@Param("userId") Long userId);
-
-  
-    Long selectClassIdByUserIdAndCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);
-    
-    List<FileInfo> selectByConditions(
-        @Param("id") Long id,
-        @Param("courseId") Long courseId,
-        @Param("classId") Long classId,
-        @Param("fileType") String fileType,
-        @Param("uploaderId") Long uploaderId,
-        @Param("sectionId") Long sectionId,
-        @Param("fileSize") Long fileSize,
-        @Param("uploadTime") Date uploadTime,
-        @Param("fileVersion") Integer fileVersion,
-        @Param("visibility") String visibility,
-        @Param("fileLocation") String fileLocation,      // 文件归属（课程文件/章节文件等）
-        @Param("fileName") String fileName,      // 模糊匹配文件名
-        @Param("sortBy") String sortBy,          // 排序字段（name / upload_time）
-        @Param("order") String order             // 排序方式（asc / desc）
-    );*/
 }

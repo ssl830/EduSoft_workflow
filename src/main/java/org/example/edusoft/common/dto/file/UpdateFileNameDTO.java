@@ -1,4 +1,4 @@
-package org.example.edusoft.common.dto;
+package org.example.edusoft.common.dto.file;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,8 +10,6 @@ import java.io.Serializable;
 /**
  * 文件重命名DTO
  *
- * @Author: hao.ding@insentek.com
- * @Date: 2024/6/11 11:24
  */
 @Data
 public class UpdateFileNameDTO implements Serializable {
