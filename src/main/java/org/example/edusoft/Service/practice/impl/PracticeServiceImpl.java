@@ -10,7 +10,7 @@ import org.example.edusoft.utils.NotificationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,8 +30,8 @@ public class PracticeServiceImpl implements PracticeService {
     @Transactional
     public Practice createPractice(Practice practice) {
         // 验证练习时间
-        if (practice.getStartTime() != null && practice.getEndTime() != null 
-            && practice.getStartTime().isAfter(practice.getEndTime())) {
+        if (practice.getStartTime() != null && practice.getEndTime() != null
+                && practice.getStartTime().isAfter(practice.getEndTime())) {
             throw new PracticeException("PRACTICE_INVALID_TIME", "练习开始时间不能晚于结束时间");
         }
 
@@ -51,20 +51,19 @@ public class PracticeServiceImpl implements PracticeService {
 
         // 设置创建时间
         practice.setCreatedAt(LocalDateTime.now());
-        
+
         practiceMapper.createPractice(practice);
 
         // 获取班级中的所有学生ID
         List<Long> studentIds = practiceMapper.getClassStudentIds(practice.getClassId());
-        
+
         // 创建通知
         notificationUtils.createPracticeNotification(
-            practice.getId(),
-            practice.getTitle(),
-            practice.getCourseId(),
-            practice.getClassId(),
-            studentIds
-        );
+                practice.getId(),
+                practice.getTitle(),
+                practice.getCourseId(),
+                practice.getClassId(),
+                studentIds);
 
         return practice;
     }
@@ -79,8 +78,8 @@ public class PracticeServiceImpl implements PracticeService {
         }
 
         // 验证练习时间
-        if (practice.getStartTime() != null && practice.getEndTime() != null 
-            && practice.getStartTime().isAfter(practice.getEndTime())) {
+        if (practice.getStartTime() != null && practice.getEndTime() != null
+                && practice.getStartTime().isAfter(practice.getEndTime())) {
             throw new PracticeException("PRACTICE_INVALID_TIME", "练习开始时间不能晚于结束时间");
         }
 
@@ -110,7 +109,7 @@ public class PracticeServiceImpl implements PracticeService {
         if (size < 1) {
             throw new PracticeException("PRACTICE_INVALID_SIZE", "每页大小必须大于0");
         }
-        
+
         int offset = (page - 1) * size;
         return practiceMapper.getPracticeList(courseId, classId, offset, size);
     }
@@ -121,7 +120,7 @@ public class PracticeServiceImpl implements PracticeService {
         if (practice == null) {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
-        
+
         List<Question> questions = questionMapper.getQuestionsByPractice(id);
         // 这里可以设置practice的questions属性，如果Practice类中有这个字段的话
         return practice;
@@ -134,7 +133,7 @@ public class PracticeServiceImpl implements PracticeService {
         if (practice == null) {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
-        
+
         // 先删除练习关联的题目
         questionMapper.removeAllQuestionsFromPractice(id);
         // 再删除练习
@@ -175,11 +174,11 @@ public class PracticeServiceImpl implements PracticeService {
             throw e;
         } catch (Exception e) {
             if (e.getCause() instanceof java.sql.SQLIntegrityConstraintViolationException) {
-                throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED", 
-                    "添加题目失败：练习ID " + practiceId + " 不存在或已被删除");
+                throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED",
+                        "添加题目失败：练习ID " + practiceId + " 不存在或已被删除");
             }
-            throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED", 
-                "添加题目失败：" + e.getMessage());
+            throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED",
+                    "添加题目失败：" + e.getMessage());
         }
     }
 
@@ -205,4 +204,67 @@ public class PracticeServiceImpl implements PracticeService {
 
         return questionMapper.getQuestionsByPractice(practiceId);
     }
-} 
+
+    @Override
+    public void favoriteQuestion(Long studentId, Long questionId) {
+        // 检查题目是否已收藏
+        if (!practiceMapper.isQuestionFavorited(studentId, questionId)) {
+            practiceMapper.insertFavoriteQuestion(studentId, questionId);
+        }
+    }
+
+    @Override
+    public void unfavoriteQuestion(Long studentId, Long questionId) {
+        practiceMapper.deleteFavoriteQuestion(studentId, questionId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getFavoriteQuestions(Long studentId) {
+        return practiceMapper.findFavoriteQuestions(studentId);
+    }
+
+    @Override
+    public void addWrongQuestion(Long studentId, Long questionId, String wrongAnswer) {
+        // 从数据库获取题目信息，包括正确答案
+        Question question = questionMapper.findById(questionId);
+        if (question == null) {
+            throw new RuntimeException("题目不存在");
+        }
+
+        // 检查是否已存在该错题
+        if (practiceMapper.existsWrongQuestion(studentId, questionId)) {
+            // 如果存在，更新错误次数和最后错误时间
+            practiceMapper.updateWrongQuestion(studentId, questionId, wrongAnswer, question.getAnswer());
+        } else {
+            // 如果不存在，新增错题记录
+            practiceMapper.insertWrongQuestion(studentId, questionId, wrongAnswer, question.getAnswer());
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> getWrongQuestions(Long studentId) {
+        return practiceMapper.findWrongQuestions(studentId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getWrongQuestionsByCourse(Long studentId, Long courseId) {
+        return practiceMapper.findWrongQuestionsByCourse(studentId, courseId);
+    }
+
+    @Override
+    public void removeWrongQuestion(Long studentId, Long questionId) {
+        practiceMapper.deleteWrongQuestion(studentId, questionId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId) {
+        // 先查询学生所在班级
+        Long classId = practiceMapper.findClassIdByUserAndCourse(studentId, courseId);
+        if (classId == null) {
+            throw new RuntimeException("未找到学生所在班级");
+        }
+
+        // 根据班级ID和课程ID查询练习，同时传入studentId
+        return practiceMapper.findCoursePractices(courseId, classId, studentId);
+    }
+}
