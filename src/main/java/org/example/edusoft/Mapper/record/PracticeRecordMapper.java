@@ -43,6 +43,37 @@ public interface PracticeRecordMapper {
     })
     List<PracticeRecord> findPracticeRecords(@Param("studentId") Long studentId);
 
+
+    @Select("""
+                SELECT
+                    s.id,
+                    s.practice_id,
+                    s.student_id,
+                    s.submitted_at,
+                    s.score,
+                    s.feedback,
+                    p.title as practice_title,
+                    c.name as course_name,
+                    cl.name as class_name
+                FROM Submission s
+                JOIN Practice p ON s.practice_id = p.id
+                JOIN Course c ON p.course_id = c.id
+                LEFT JOIN ClassUser cu ON s.student_id = cu.user_id
+                LEFT JOIN Class cl ON cu.class_id = cl.id
+                WHERE s.student_id = #{studentId} and p.course_id=#{courseId}
+                ORDER BY s.submitted_at DESC
+            """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "practiceId", column = "practice_id"),
+            @Result(property = "practiceTitle", column = "practice_title"),
+            @Result(property = "courseName", column = "course_name"),
+            @Result(property = "className", column = "class_name"),
+            @Result(property = "submittedAt", column = "submitted_at"),
+            @Result(property = "questions", column = "id", many = @Many(select = "findQuestionsBySubmissionId"))
+    })
+    List<PracticeRecord> findByStudentIdAndCourseId(@Param("studentId") Long studentId,@Param("courseId") Long courseId);
+
     @Select("""
                 SELECT
                     q.id,

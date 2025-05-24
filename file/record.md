@@ -1,5 +1,4 @@
 # 查询记录模块说明文档
-
 ## 模块结构
 
 该模块在以下目录中实现了相关功能：
@@ -7,7 +6,9 @@
 ```
 src/main/java/org/example/edusoft/
 ├── entity/record/
-│   └── Record.java                 # 实体类
+│   ├── Practice.java  
+|   ├── QuestionRecord.java
+|   └── StudyRecord.java       
 ├── mapper/user/
 │   └── UserMapper.java           # 成员数据访问接口
 ├── service/user/
@@ -21,10 +22,12 @@ src/main/java/org/example/edusoft/
 ## 功能说明
 
 ### 1. 实体类
-#### User.java
+#### Practice.java
 - 对应数据库中的User表，包含用户的基本信息
-#### UserUpdate.java
+#### QuestionRecord.java
 - 更新操作使用的实体类，只有部分变量可以更新，所以前端输入进来的只有用户名和邮箱属性即可
+#### StudyRecord.java
+- 学习记录
 
 ### 2. 数据访问层
 #### UserMapper.java

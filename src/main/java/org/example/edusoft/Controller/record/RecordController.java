@@ -19,15 +19,15 @@ import org.example.edusoft.entity.record.*;
 import cn.dev33.satoken.stp.StpUtil;
 
 @RestController
-@RequestMapping("/record")
+@RequestMapping("/api/record")
 public class RecordController {
 
     @Autowired
     private RecordService recordService;
 
+    // 查询所有学习记录
     @GetMapping("/study")
     public Result<List<StudyRecord>> getStudyRecords() {
-        // 检查登录状态
         if (!StpUtil.isLogin()) {
             return Result.error("请先登录");
         }
@@ -35,6 +35,18 @@ public class RecordController {
         return Result.success(recordService.getStudyRecords(studentId));
     }
 
+    // 查询某一课的学习记录
+    @GetMapping("/study/course/{courseId}")
+    public Result<List<StudyRecord>> getStudyRecordsByCourse(@PathVariable Long courseId) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long studentId = StpUtil.getLoginIdAsLong();
+        List<StudyRecord> records = recordService.getStudyRecordsByCourse(studentId, courseId);
+        return Result.success(records);
+    }
+
+    // 查询所有练习记录
     @GetMapping("/practice")
     public Result<List<PracticeRecord>> getPracticeRecords() {
         // 检查登录状态
@@ -45,9 +57,20 @@ public class RecordController {
         return Result.success(recordService.getPracticeRecords(studentId));
     }
 
+    // 查询某一课程练习记录
+    @GetMapping("/practice/course/{courseId}")
+    public Result<List<PracticeRecord>> getPracticeRecordsByCourse(@PathVariable Long courseId) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long studentId = StpUtil.getLoginIdAsLong();
+        List<PracticeRecord> records = recordService.getPracticeRecordsByCourse(studentId, courseId);
+        return Result.success(records);
+    }
+
+    // 导出所有学习记录
     @GetMapping("/study/export")
     public void exportRecords(HttpServletResponse response) {
-        // 检查登录状态
         if (!StpUtil.isLogin()) {
             throw new RuntimeException("请先登录");
         }
@@ -63,6 +86,37 @@ public class RecordController {
         }
     }
 
+    // 导出某一课程的学习记录
+    @GetMapping("/study/course/{courseId}/export")
+    public void exportStudyRecordsByCourse(@PathVariable Long courseId, HttpServletResponse response) {
+        try {
+            if (!StpUtil.isLogin()) {
+                writeErrorResponse(response, "请先登录");
+                return;
+            }
+            Long studentId = StpUtil.getLoginIdAsLong();
+            byte[] data = recordService.exportStudyRecordsByCourseToExcel(studentId, courseId);
+            // 设响应头
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=course_" + courseId + "_study_records.xlsx");
+            response.setHeader("Content-Length", String.valueOf(data.length));
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setDateHeader("Expires", 0);
+            // 写入响应流
+            response.getOutputStream().write(data);
+            response.getOutputStream().flush();
+        } catch (IOException e) {
+            try {
+                writeErrorResponse(response, "导出学习记录失败: " + e.getMessage());
+            } catch (IOException ex) {
+                throw new RuntimeException("响应错误信息失败", ex);
+            }
+        }
+    }
+
+    // 导出所有练习记录
     @GetMapping("/practice/export")
     public void exportPracticeRecords(HttpServletResponse response) {
         try {
@@ -95,6 +149,40 @@ public class RecordController {
         }
     }
 
+    // 导出某一课程练习记录
+    @GetMapping("/practice/course/{courseId}/export")
+    public void exportPracticeRecordsByCourse(@PathVariable Long courseId, HttpServletResponse response) {
+        try {
+            if (!StpUtil.isLogin()) {
+                writeErrorResponse(response, "请先登录");
+                return;
+            }
+
+            Long studentId = StpUtil.getLoginIdAsLong();
+            byte[] data = recordService.exportPracticeRecordsByCourseToExcel(studentId, courseId);
+
+            // 设置响应头
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=course_" + courseId + "_practice_records.xlsx");
+            response.setHeader("Content-Length", String.valueOf(data.length));
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setDateHeader("Expires", 0);
+
+            // 写入响应流
+            response.getOutputStream().write(data);
+            response.getOutputStream().flush();
+        } catch (IOException e) {
+            try {
+                writeErrorResponse(response, "导出练习记录失败: " + e.getMessage());
+            } catch (IOException ex) {
+                throw new RuntimeException("响应错误信息失败", ex);
+            }
+        }
+    }
+
+    // 获得某次练习的报告
     @GetMapping("/practice/{practiceId}/report")
     public Result<Map<String, Object>> getPracticeReport(@PathVariable Long practiceId) {
         // 检查登录状态
@@ -114,17 +202,15 @@ public class RecordController {
         }
     }
 
+    // 导出某次练习报告
     @GetMapping("/practice/export-report/{practiceId}")
     public void exportPracticeReport(@PathVariable Long practiceId, HttpServletResponse response) {
         try {
-            // 检查登录状态
             if (!StpUtil.isLogin()) {
                 writeErrorResponse(response, "请先登录");
                 return;
             }
-
             Long studentId = StpUtil.getLoginIdAsLong();
-
             // 检查练习是否存在
             Map<String, Object> reportData = recordService.getPracticeReport(practiceId, studentId);
             if (reportData == null || reportData.isEmpty()) {
