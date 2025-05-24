@@ -69,8 +69,8 @@ CREATE TABLE Question (
     creator_id BIGINT NOT NULL,
     type ENUM('singlechoice', 'program', 'fillblank') NOT NULL,
     content TEXT NOT NULL,
-    analysis TEXT ,
-    options JSON,
+    analysis TEXT,
+    options TEXT,
     answer TEXT,
     course_id BIGINT,            -- 新增：关联课程
     section_id BIGINT,           -- 新增：关联章节
