@@ -1,0 +1,127 @@
+### 讨论主题相关接口测试
+
+### 用户登录
+POST http://localhost:8080/api/user/login
+Content-Type: application/x-www-form-urlencoded
+
+userId=u222&password=password123
+
+### 1. 创建讨论
+POST http://localhost:8080/api/discussions
+Content-Type: application/json
+
+{
+    "courseId": 1,
+    "classId": 1,
+    "creatorId": 3,
+    "title": "关于作业的讨论",
+    "content": "请问作业提交截止时间是什么时候？"
+}
+
+### 2. 更新讨论
+PUT http://localhost:8080/api/discussions/3
+Content-Type: application/json
+
+{
+    "courseId": 1,
+    "classId": 1,
+    "creatorId": 1,
+    "title": "关于作业的讨论（更新）",
+    "content": "请问作业提交截止时间是什么时候？需要提前提交吗？"
+}
+
+### 3. 删除讨论
+DELETE http://localhost:8080/api/discussions/1
+
+### 4. 获取讨论详情
+GET http://localhost:8080/api/discussions/3
+
+### 5. 获取课程下的讨论列表
+GET http://localhost:8080/api/discussions/course/1
+
+### 6. 获取班级下的讨论列表
+GET http://localhost:8080/api/discussions/class/1
+
+### 7. 获取用户创建的讨论列表
+GET http://localhost:8080/api/discussions/creator/1
+
+### 8. 获取特定课程和班级的讨论列表
+GET http://localhost:8080/api/discussions/course/1/class/1
+
+### 9. 更新讨论置顶状态
+PUT http://localhost:8080/api/discussions/1/pin?isPinned=true
+
+### 10. 更新讨论关闭状态
+PUT http://localhost:8080/api/discussions/1/close?isClosed=true
+
+### 11. 统计课程讨论数
+GET http://localhost:8080/api/discussions/course/1/count
+
+### 12. 统计班级讨论数
+GET http://localhost:8080/api/discussions/class/1/count
+
+### 讨论回复相关接口测试
+
+### 1. 创建回复
+POST http://localhost:8080/api/discussion-replies
+Content-Type: application/json
+
+{
+    "discussionId": 2,
+    "userId": 3,
+    "content": "截止时间是下周一晚上12点",
+    "isTeacherReply": false
+}
+
+### 2. 创建子回复
+POST http://localhost:8080/api/discussion-replies
+Content-Type: application/json
+
+{
+    "discussionId": 2,
+    "userId": 3,
+    "content": "谢谢老师解答！",
+    "parentReplyId": 2,
+    "isTeacherReply": false
+}
+
+### 3. 更新回复
+PUT http://localhost:8080/api/discussion-replies/2
+Content-Type: application/json
+
+{
+    "discussionId": 2,
+    "userId": 3,
+    "content": "截止时间是下周一晚上12点，请提前提交",
+    "isTeacherReply": false
+}
+
+### 4. 删除回复
+DELETE http://localhost:8080/api/discussion-replies/1
+
+### 5. 获取回复详情
+GET http://localhost:8080/api/discussion-replies/2
+
+### 6. 获取讨论下的所有回复
+GET http://localhost:8080/api/discussion-replies/discussion/2
+
+### 7. 获取用户的所有回复
+GET http://localhost:8080/api/discussion-replies/user/3
+
+### 8. 获取讨论的顶层回复
+GET http://localhost:8080/api/discussion-replies/discussion/2/top-level
+
+### 9. 获取特定回复的子回复
+GET http://localhost:8080/api/discussion-replies/parent/2
+
+### 10. 获取教师回复
+GET http://localhost:8080/api/discussion-replies/discussion/2/teacher
+
+### 11. 统计讨论的回复数
+GET http://localhost:8080/api/discussion-replies/discussion/1/count
+
+### 12. 统计用户的回复数
+GET http://localhost:8080/api/discussion-replies/user/2/count
+
+### 13. 删除讨论的所有回复
+DELETE http://localhost:8080/api/discussion-replies/discussion/1 
