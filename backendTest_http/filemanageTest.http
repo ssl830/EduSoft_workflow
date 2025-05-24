@@ -1,0 +1,9 @@
+POST http://127.0.0.1:8080/api/courses/4/filelist
+Content-Type: application/json
+{   
+    "userId":2,
+    "courseId":1,
+    "chapter":5,
+    "type":"PDF",
+    "title":""
+}
