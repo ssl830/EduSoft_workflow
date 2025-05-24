@@ -201,7 +201,6 @@ public class PracticeServiceImpl implements PracticeService {
         if (practice == null) {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
-
         return questionMapper.getQuestionsByPractice(practiceId);
     }
 
