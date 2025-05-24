@@ -69,8 +69,8 @@ CREATE TABLE Question (
     creator_id BIGINT NOT NULL,
     type ENUM('singlechoice', 'program', 'fillblank') NOT NULL,
     content TEXT NOT NULL,
-    analysis TEXT ,
-    options JSON,
+    analysis TEXT,
+    options TEXT,
     answer TEXT,
     course_id BIGINT,            -- 新增：关联课程
     section_id BIGINT,           -- 新增：关联章节
@@ -110,7 +110,7 @@ CREATE TABLE Submission (
     student_id BIGINT NOT NULL,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     score INT DEFAULT 0,
-    is_judged BOOLEAN DEFAULT FALSE, 
+    is_judged INT DEFAULT 0, 
     feedback TEXT,
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (student_id) REFERENCES User(id)
@@ -126,7 +126,7 @@ CREATE TABLE Answer (
     score INT,
     FOREIGN KEY (submission_id) REFERENCES Submission(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)
-);
+); 
 
 -- 七、学习记录
 CREATE TABLE Progress (
@@ -206,50 +206,70 @@ CREATE TABLE import_record (
 
 CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
 
--- 数据插入部分（修复 INSERT）
-INSERT INTO User (user_id, username, password_hash, role, email) 
-VALUES 
-('U001', 'teacher_zhang', 'hash123456', 'teacher', 'zhang@example.com'),
-('U002', 'student_li', 'hash789012', 'student', 'li@example.com');
+-- 1. 用户表 User
+INSERT INTO User (user_id, username, password_hash, role, email) VALUES
+('stu001', 'Alice',   'hash_pw_1', 'student', 'alice@example.com'),
+('stu002', 'Bob',     'hash_pw_2', 'student', 'bob@example.com'),
+('tea001', 'Prof.Chen', 'hash_pw_3','teacher','chen@example.edu'),
+('tut001', 'TutorLi', 'hash_pw_4','tutor',  'li@example.com');
 
-INSERT INTO Course (teacher_id, name, code, outline, objective, assessment)
-VALUES (1, '软件工程基础', 'SE101', '介绍软件开发流程', '掌握基础知识', '作业+项目+考试');
+-- 2. 课程与章节
+INSERT INTO Course (teacher_id, name, code, outline, objective, assessment) VALUES
+(3, '操作系统原理',     'OS101', '操作系统基础...', '掌握进程与内存管理', '平时测验+实验+考试'),
+(3, '数据结构与算法', 'DS102', '线性结构与树...', '熟练使用常见数据结构','平时作业+考试');
 
-INSERT INTO CourseSection (course_id, title, sort_order)
-VALUES 
-(1, '第一章：软件工程导论', 1),
-(1, '第二章：需求分析', 2);
+INSERT INTO CourseSection (course_id, title, sort_order) VALUES
+(1, '第1章 操作系统概述', 1),
+(1, '第2章 进程管理',     2),
+(2, '第1章 线性结构',     1),
+(2, '第2章 栈与队列',     2);
 
-INSERT INTO Class (course_id, name, class_code)
-VALUES (1, '软工A班', 'CLASS_A_101');
+-- 3. 班级与成员
+INSERT INTO Class (course_id, name, class_code) VALUES
+(1, '2025级01班', 'OS01'),
+(2, '2025级02班', 'DS02');
 
-INSERT INTO ClassUser (class_id, user_id)
-VALUES (1, 2);
+INSERT INTO ClassUser (class_id, user_id) VALUES
+(1, 1),
+(1, 2),
+(2, 2);
 
-INSERT INTO Question (creator_id, type, content, options, answer)
-VALUES 
-(1, 'singlechoice', '软件工程的第一步是什么？', 
-    JSON_ARRAY('需求分析', '编码', '测试', '部署'), 
-    '需求分析');
+INSERT INTO CourseClass (course_id, class_id) VALUES
+(1, 1),
+(2, 2);
 
-INSERT INTO Practice (course_id, title, start_time, end_time, allow_multiple_submission, created_by)
-VALUES 
-(1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
+-- 4. 题库与练习
+INSERT INTO Question (creator_id, type, content, analysis, options, answer, course_id, section_id) VALUES
+(3, 'singlechoice',
+ '下面哪个属于操作系统的功能？',
+ '进程管理、内存管理、文件管理都是操作系统功能。',
+ '["进程管理","数据传输","电路设计","编译优化"]',
+ '进程管理',
+ 1, 1),
 
-INSERT INTO PracticeQuestion (practice_id, question_id, score)
-VALUES (1, 1, 5);
+(3, 'program',
+ '请写一个函数，反转链表。',
+ '可采用三指针法遍历原链表，逐个翻转指针。',
+ NULL, NULL, 1, 2),
 
-INSERT INTO Submission (practice_id, student_id, score, feedback)
-VALUES (1, 2, 5, '回答正确');
+(3, 'fillblank',
+ '在 Linux 中，用于查看当前目录下所有文件（包括隐藏文件）的命令是 ______。',
+ '使用 ls -a 来显示所有文件。',
+ NULL, 'ls -a', 1, 1);
 
-INSERT INTO Answer (submission_id, question_id, answer_text, correct, score)
-VALUES (1, 1, '需求分析', TRUE, 5);
+INSERT INTO Practice (course_id, class_id, title, start_time, end_time, allow_multiple_submission, created_by) VALUES
+(1, 1, '第1章在线练习', '2025-05-20 08:00:00', '2025-05-27 23:59:59', TRUE, 3);
 
-INSERT INTO Progress (student_id, course_id, section_id, completed, completed_at)
-VALUES (2, 1, 1, TRUE, NOW());
+-- 假设 Practice.id = 1
+INSERT INTO PracticeQuestion (practice_id, question_id, score) VALUES
+(1, 1, 10),
+(1, 2, 20),
+(1, 3, 5);
 
-INSERT INTO FavoriteQuestion (student_id, question_id)
-VALUES (2, 1);
+-- 5. 学生提交与答案
+INSERT INTO Submission (practice_id, student_id, score, is_judged, feedback) VALUES
+(1, 1, 0, 0, NULL),
+(1, 2, 0, 0, NULL);
 
-INSERT INTO Notification (user_id, title, message)
-VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+-- 假设 Submission.id = 1, 2
+INSERT INTO Ans

@@ -14,7 +14,7 @@ Content-Type: application/json
 POST http://localhost:8080/api/user/login
 Content-Type: application/x-www-form-urlencoded
 
-userId=u111&password=password123
+userId=test001&password=123456
 
 ### 获取用户信息
 GET http://localhost:8080/api/user/info

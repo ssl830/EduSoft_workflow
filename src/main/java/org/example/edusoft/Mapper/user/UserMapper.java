@@ -1,7 +1,7 @@
 package org.example.edusoft.mapper.user;
 import org.example.edusoft.entity.*;
 import org.example.edusoft.entity.user.User;
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.*; 
 
 @Mapper
 public interface UserMapper {
