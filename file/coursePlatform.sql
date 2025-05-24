@@ -174,6 +174,22 @@ CREATE TABLE file_node (
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
 
+-- 十、导入记录
+CREATE TABLE import_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    class_id BIGINT NOT NULL,
+    operator_id BIGINT NOT NULL,
+    file_name VARCHAR(255),
+    total_count INT NOT NULL,
+    success_count INT NOT NULL,
+    fail_count INT NOT NULL,
+    fail_reason TEXT,
+    import_time DATETIME NOT NULL,
+    import_type VARCHAR(20) NOT NULL,
+    FOREIGN KEY (class_id) REFERENCES Class(id),
+    FOREIGN KEY (operator_id) REFERENCES User(id)
+);
+
 -- 数据插入部分（修复 INSERT）
 INSERT INTO User (user_id, username, password_hash, role, email) 
 VALUES 

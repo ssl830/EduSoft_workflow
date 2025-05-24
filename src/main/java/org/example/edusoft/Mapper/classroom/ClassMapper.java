@@ -18,4 +18,10 @@ public interface ClassMapper extends BaseMapper<Class> {
             "LEFT JOIN ClassUser cu ON c.id = cu.class_id " +
             "WHERE cu.user_id = #{studentId}")
     List<Class> getClassesByStudentId(Long studentId);
+
+    @Select("SELECT DISTINCT c.* FROM Class c " +
+            "LEFT JOIN Course co ON c.course_id = co.id " +
+            "LEFT JOIN ClassUser cu ON c.id = cu.class_id " +
+            "WHERE co.teacher_id = #{userId} OR cu.user_id = #{userId}")
+    List<Class> getClassesByUserId(Long userId);
 } 

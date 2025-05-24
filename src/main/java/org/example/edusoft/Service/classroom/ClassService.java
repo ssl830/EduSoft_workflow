@@ -58,4 +58,7 @@ public interface ClassService {
      * @return 导入记录
      */
     ImportRecord joinClassByCode(String classCode, Long studentId);
+
+    // 获取用户的班级列表（包括教师和学生的班级）
+    List<Class> getClassesByUserId(Long userId);
 } 

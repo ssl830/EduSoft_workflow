@@ -267,6 +267,7 @@ public class ClassServiceImpl implements ClassService {
 | 请求方法 | 路径 | 功能说明 |
 |---------|------|---------|
 | POST | /api/classes | 创建新班级 |
+| GET | /api/classes/user/{userId} | 获取成员的班级列表（老师和学生公用） |
 | GET | /api/classes/teacher/{teacherId} | 获取教师的班级列表 |
 | GET | /api/classes/student/{studentId} | 获取学生的班级列表 |
 | GET | /api/classes/{id} | 获取班级详情 |

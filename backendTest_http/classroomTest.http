@@ -1,0 +1,119 @@
+### 班级管理模块测试
+### 1. 创建班级
+POST http://localhost:8080/api/classes
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 1,
+    "name": "Java程序设计-202班",
+    "classCode": "JAVA2024SPG"
+}
+
+### 2. 创建第二个班级
+POST http://localhost:8080/api/classes
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 4,
+    "name": "体育",
+    "classCode": "JAVA20FALL00"
+}
+
+### 3. 获取教师的班级列表
+GET http://localhost:8080/api/classes/teacher/1
+satoken: {{token}}
+
+### 4. 获取第一个班级的详情
+GET http://localhost:8080/api/classes/2
+satoken: {{token}}
+
+### 5. 更新第一个班级的信息
+PUT http://localhost:8080/api/classes/2
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 1,
+    "name": "Java程序设计-2024（更新）",
+    "classCode": "JA20UPDATED"
+}
+
+### 5.1 测试更新班级信息时使用重复的班级代码（预期失败）
+PUT http://localhost:8080/api/classes/1
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 1,
+    "name": "Java程序设计-2024春季班（更新）",
+    "classCode": "JAVA2024FALL"  
+}
+
+### 5.2 测试更新班级信息时使用无效的课程ID（预期失败）
+PUT http://localhost:8080/api/classes/1
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 999,  
+    "name": "Java程序设计-2024春季班（更新）",
+    "classCode": "JAVA2024SPRING_11UPDATED"
+}
+
+### 5.3 测试更新不存在的班级（预期失败）
+PUT http://localhost:8080/api/classes/999
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "courseId": 1,
+    "name": "Java程序设计-2024春季班（更新）",
+    "classCode": "JAVA2024SPRING_11UPDATED"
+}
+
+### 6. 获取更新后的班级详情
+GET http://localhost:8080/api/classes/1
+satoken: {{token}}
+
+### 7. 学生加入班级（管理员添加）
+POST http://localhost:8080/api/classes/1/join/2
+satoken: {{token}}
+
+### 8. 学生通过班级代码加入班级
+POST http://localhost:8080/api/classes/join
+Content-Type: application/json
+satoken: {{token}}
+
+{
+    "classCode": "CLASS_A_101",
+    "studentId": 3
+}
+
+### 9. 获取班级成员列表
+GET http://localhost:8080/api/classes/1/users
+satoken: {{token}}
+
+### 10. 批量导入学生
+POST http://localhost:8080/api/classes/1/import
+Content-Type: application/json
+satoken: {{token}}
+
+[4, 5, 6]
+
+### 11. 学生退出班级
+DELETE http://localhost:8080/api/classes/1/leave/2
+satoken: {{token}}
+
+### 12. 删除第二个班级
+DELETE http://localhost:8080/api/classes/2
+satoken: {{token}}
+
+### 13. 验证第二个班级已被删除
+GET http://localhost:8080/api/classes/2
+satoken: {{token}}
+
+### 14. 再次获取教师的班级列表，确认更新
+GET http://localhost:8080/api/classes/teacher/1
+satoken: {{token}}
