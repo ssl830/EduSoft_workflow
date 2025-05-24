@@ -1,4 +1,4 @@
-# 用户管理模块说明文档
+# 查询记录模块说明文档
 
 ## 模块结构
 
@@ -6,9 +6,8 @@
 
 ```
 src/main/java/org/example/edusoft/
-├── entity/user/
-│   ├── User.java                 # 实体类
-|    —— UserUpdate.java           # 更新用的输入实体类
+├── entity/record/
+│   └── Record.java                 # 实体类
 ├── mapper/user/
 │   └── UserMapper.java           # 成员数据访问接口
 ├── service/user/
@@ -75,15 +74,7 @@ src/main/java/org/example/edusoft/
     "userId": "u111"
 }
 ```
-- 返回
-```json
-{
-    "code": 200,
-    "msg": "注册成功",
-    "data": null
-}
-```
-
+- 返回：请求结果
 ### 2. 登录
 - 请求方式：POST
 - 路径：/api/user/login
@@ -93,55 +84,17 @@ src/main/java/org/example/edusoft/
 
     String password
 - 返回：token和用户信息
-```json
-{
-    "code": 200,
-    "msg": "登录成功",
-    "data": {
-        "userInfo": {
-            "role": "student",
-            "id": 4,
-            "userid": "u111",
-            "email": "test@example.com",
-            "username": "testuser1"
-        },
-        "token": "fdfebfb7-6527-4644-aa1a-e971af08bd12"
-    }
-}
-```
+
 ### 3. 退出登录
 - 请求方式：POST
 - 路径：/api/user/logout
-- header：token
-- 返回
-``` json
-{
-    "code": 200,
-    "msg": "退出登录成功",
-    "data": null
-}
-```
+- 参数：无
+
 ### 4. 获取当前用户信息
 - 请求方式：GET
 - 路径：/api/user/info
-- header：token
-- 返回：
-``` json
-{
-    "code": 200,
-    "msg": "获取成功",
-    "data": {
-        "id": 4,
-        "userId": "u111",
-        "username": "testuser1",
-        "passwordHash": null,
-        "role": "student",
-        "email": "test@example.com",
-        "createdAt": "2025-05-22T17:42:48",
-        "updatedAt": "2025-05-22T17:42:48"
-    }
-}
-```
+- 参数：无
+- 返回：用户json格式信息
 
 ### 5. 更新用户信息
 - 请求方式：POST
@@ -153,35 +106,17 @@ src/main/java/org/example/edusoft/
     "username": "Test1"
 }
 ```
-- 返回
-``` json
-{
-    "code": 200,
-    "msg": "更新成功",
-    "data": null
-}
-```
 ### 6. 修改密码
 - 请求方式：POST
 - 路径：/api/user/changePassword
-- header：token
 - 参数：
 
       String oldPassword
       
       String newPassword
-- 返回
-``` json
-{
-    "code": 200,
-    "msg": "密码修改成功",
-    "data": null
-}
-```  
 ### 7. 注销当前用户
 - 请求方式：POST
 - 路径：/api/user/deactivate{userId}
-- header：token
 - 参数：输入密码
 
     String password
