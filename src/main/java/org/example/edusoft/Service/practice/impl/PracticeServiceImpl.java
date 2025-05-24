@@ -6,6 +6,7 @@ import org.example.edusoft.exception.practice.PracticeException;
 import org.example.edusoft.mapper.practice.PracticeMapper;
 import org.example.edusoft.mapper.practice.QuestionMapper;
 import org.example.edusoft.service.practice.PracticeService;
+import org.example.edusoft.utils.NotificationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,9 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private QuestionMapper questionMapper;
+
+    @Autowired
+    private NotificationUtils notificationUtils;
 
     @Override
     @Transactional
@@ -49,6 +53,19 @@ public class PracticeServiceImpl implements PracticeService {
         practice.setCreatedAt(LocalDateTime.now());
         
         practiceMapper.createPractice(practice);
+
+        // 获取班级中的所有学生ID
+        List<Long> studentIds = practiceMapper.getClassStudentIds(practice.getClassId());
+        
+        // 创建通知
+        notificationUtils.createPracticeNotification(
+            practice.getId(),
+            practice.getTitle(),
+            practice.getCourseId(),
+            practice.getClassId(),
+            studentIds
+        );
+
         return practice;
     }
 

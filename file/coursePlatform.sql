@@ -155,8 +155,11 @@ CREATE TABLE Notification (
     user_id BIGINT NOT NULL,
     title VARCHAR(200),
     message TEXT,
+    type VARCHAR(20) NOT NULL,
     read_flag BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    related_id BIGINT,
+    related_type VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 

@@ -1,13 +1,12 @@
 package org.example.edusoft.controller.practice;
 
+import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.practice.Practice;
 import org.example.edusoft.entity.practice.Question;
 import org.example.edusoft.service.practice.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,102 +18,92 @@ public class PracticeController {
     private PracticeService practiceService;
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Object>> createPractice(@RequestBody Practice practice) {
-        Practice createdPractice = practiceService.createPractice(practice);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "练习创建成功");
-        response.put("data", createdPractice);
-        return ResponseEntity.ok(response);
+    public Result<Practice> createPractice(@RequestBody Practice practice) {
+        try {
+            Practice createdPractice = practiceService.createPractice(practice);
+            return Result.success(createdPractice, "练习创建成功");
+        } catch (Exception e) {
+            return Result.error(500, "创建练习失败：" + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updatePractice(@PathVariable Long id, @RequestBody Practice practice) {
-        practice.setId(id);
-        Practice updatedPractice = practiceService.updatePractice(practice);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "练习更新成功");
-        response.put("data", updatedPractice);
-        return ResponseEntity.ok(response);
+    public Result<Practice> updatePractice(@PathVariable Long id, @RequestBody Practice practice) {
+        try {
+            practice.setId(id);
+            Practice updatedPractice = practiceService.updatePractice(practice);
+            return Result.success(updatedPractice, "练习更新成功");
+        } catch (Exception e) {
+            return Result.error(500, "更新练习失败：" + e.getMessage());
+        }
     }
 
     @GetMapping("/list")
-    public ResponseEntity<Map<String, Object>> getPracticeList(
+    public Result<List<Practice>> getPracticeList(
             @RequestParam Long courseId,
             @RequestParam Long classId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        List<Practice> practices = practiceService.getPracticeList(courseId, classId, page, size);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "获取练习列表成功");
-        response.put("data", practices);
-        return ResponseEntity.ok(response);
+        try {
+            List<Practice> practices = practiceService.getPracticeList(courseId, classId, page, size);
+            return Result.success(practices, "获取练习列表成功");
+        } catch (Exception e) {
+            return Result.error(500, "获取练习列表失败：" + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getPracticeDetail(@PathVariable Long id) {
-        Practice practice = practiceService.getPracticeDetail(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "获取练习详情成功");
-        response.put("data", practice);
-        return ResponseEntity.ok(response);
+    public Result<Practice> getPracticeDetail(@PathVariable Long id) {
+        try {
+            Practice practice = practiceService.getPracticeDetail(id);
+            return Result.success(practice, "获取练习详情成功");
+        } catch (Exception e) {
+            return Result.error(500, "获取练习详情失败：" + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deletePractice(@PathVariable Long id) {
-        practiceService.deletePractice(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "练习删除成功");
-        response.put("data", Map.of("practiceId", id));
-        return ResponseEntity.ok(response);
+    public Result<Void> deletePractice(@PathVariable Long id) {
+        try {
+            practiceService.deletePractice(id);
+            return Result.success(null, "练习删除成功");
+        } catch (Exception e) {
+            return Result.error(500, "删除练习失败：" + e.getMessage());
+        }
     }
 
-    @PostMapping("/{id}/questions")
-    public ResponseEntity<Map<String, Object>> addQuestionToPractice(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> request) {
-        Long questionId = Long.valueOf(request.get("questionId").toString());
-        Integer score = Integer.valueOf(request.get("score").toString());
-        practiceService.addQuestionToPractice(id, questionId, score);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "题目添加成功");
-        response.put("data", Map.of(
-            "practiceId", id,
-            "questionId", questionId,
-            "score", score
-        ));
-        return ResponseEntity.ok(response);
+    @PostMapping("/{practiceId}/questions/{questionId}")
+    public Result<Void> addQuestionToPractice(
+            @PathVariable Long practiceId,
+            @PathVariable Long questionId,
+            @RequestParam Integer score) {
+        try {
+            practiceService.addQuestionToPractice(practiceId, questionId, score);
+            return Result.success(null, "添加题目成功");
+        } catch (Exception e) {
+            return Result.error(500, "添加题目失败：" + e.getMessage());
+        }
     }
 
-    @DeleteMapping("/{id}/questions/{questionId}")
-    public ResponseEntity<Map<String, Object>> removeQuestionFromPractice(
-            @PathVariable Long id,
+    @DeleteMapping("/{practiceId}/questions/{questionId}")
+    public Result<Void> removeQuestionFromPractice(
+            @PathVariable Long practiceId,
             @PathVariable Long questionId) {
-        practiceService.removeQuestionFromPractice(id, questionId);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "题目移除成功");
-        response.put("data", Map.of(
-            "practiceId", id,
-            "questionId", questionId
-        ));
-        return ResponseEntity.ok(response);
+        try {
+            practiceService.removeQuestionFromPractice(practiceId, questionId);
+            return Result.success(null, "移除题目成功");
+        } catch (Exception e) {
+            return Result.error(500, "移除题目失败：" + e.getMessage());
+        }
     }
 
-    @GetMapping("/{id}/questions")
-    public ResponseEntity<Map<String, Object>> getPracticeQuestions(@PathVariable Long id) {
-        List<Question> questions = practiceService.getPracticeQuestions(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "获取练习题目列表成功");
-        response.put("data", questions);
-        return ResponseEntity.ok(response);
+    @GetMapping("/{practiceId}/questions")
+    public Result<List<Question>> getPracticeQuestions(@PathVariable Long practiceId) {
+        try {
+            List<Question> questions = practiceService.getPracticeQuestions(practiceId);
+            return Result.success(questions, "获取练习题目列表成功");
+        } catch (Exception e) {
+            return Result.error(500, "获取练习题目列表失败：" + e.getMessage());
+        }
     }
 } 

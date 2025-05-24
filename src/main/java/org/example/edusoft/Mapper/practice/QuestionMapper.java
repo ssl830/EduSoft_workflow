@@ -49,4 +49,9 @@ public interface QuestionMapper {
             "JOIN PracticeQuestion pq ON q.id = pq.question_id " +
             "WHERE pq.practice_id = #{practiceId}")
     List<Question> getQuestionsByPractice(Long practiceId);
+
+
+
+    @Select("SELECT * FROM Question WHERE id = #{id}")
+    Question findById(Long id);
 } 
