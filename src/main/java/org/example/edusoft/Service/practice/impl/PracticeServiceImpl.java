@@ -69,4 +69,10 @@ public class PracticeServiceImpl implements PracticeService {
     public void removeWrongQuestion(Long studentId, Long questionId) {
         practiceMapper.deleteWrongQuestion(studentId, questionId);
     }
+
+
+    @Override
+    public List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId) {
+        return practiceMapper.findCoursePractices(courseId, studentId);
+    }
 }

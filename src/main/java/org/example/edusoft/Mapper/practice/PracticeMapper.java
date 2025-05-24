@@ -129,4 +129,39 @@ public interface PracticeMapper {
     List<Map<String, Object>> findWrongQuestionsByCourse(
             @Param("studentId") Long studentId,
             @Param("courseId") Long courseId);
+
+    @Select("""
+                SELECT
+                    p.id,
+                    p.title,
+                    p.start_time,
+                    p.end_time,
+                    p.allow_multiple_submission,
+                    p.created_at,
+                    (
+                        SELECT COUNT(*)
+                        FROM PracticeQuestion pq
+                        WHERE pq.practice_id = p.id
+                    ) as question_count,
+                    (
+                        SELECT COUNT(*)
+                        FROM Submission s
+                        WHERE s.practice_id = p.id
+                        AND s.student_id = #{studentId}
+                    ) as submission_count,
+                    (
+                        SELECT s.score
+                        FROM Submission s
+                        WHERE s.practice_id = p.id
+                        AND s.student_id = #{studentId}
+                        ORDER BY s.submitted_at DESC
+                        LIMIT 1
+                    ) as last_score
+                FROM Practice p
+                WHERE p.course_id = #{courseId}
+                ORDER BY p.created_at DESC
+            """)
+    List<Map<String, Object>> findCoursePractices(
+            @Param("courseId") Long courseId,
+            @Param("studentId") Long studentId);
 }

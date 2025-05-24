@@ -24,4 +24,7 @@ public interface PracticeService {
     
     // 删除错题
     void removeWrongQuestion(Long studentId, Long questionId);
+
+    // 获取课程的所有练习
+    List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId);
 } 

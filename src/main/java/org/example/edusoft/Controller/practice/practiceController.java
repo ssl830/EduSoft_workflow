@@ -95,4 +95,15 @@ public class practiceController {
         return Result.success(true);
     }
 
+    // 获取课程的所有练习
+    @GetMapping("/course/{courseId}")
+    public Result<List<Map<String, Object>>> getCoursePractices(@PathVariable Long courseId) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long studentId = StpUtil.getLoginIdAsLong();
+        List<Map<String, Object>> practices = practiceService.getCoursePractices(studentId, courseId);
+        return Result.success(practices);
+    }
+
 }
