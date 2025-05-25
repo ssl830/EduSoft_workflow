@@ -88,6 +88,31 @@ public class DiscussionReplyServiceImpl implements DiscussionReplyService {
     @Override
     @Transactional
     public void deleteRepliesByDiscussion(Long discussionId) {
-        replyMapper.deleteByDiscussionId(discussionId);
+        // 先获取所有回复
+        List<DiscussionReply> allReplies = replyMapper.findByDiscussionId(discussionId);
+        
+        // 按照父子关系排序，确保先删除子回复
+        allReplies.sort((a, b) -> {
+            // 如果a是b的父回复，a应该排在后面
+            if (b.getParentReplyId() != null && b.getParentReplyId().equals(a.getId())) {
+                return 1;
+            }
+            // 如果b是a的父回复，b应该排在后面
+            if (a.getParentReplyId() != null && a.getParentReplyId().equals(b.getId())) {
+                return -1;
+            }
+            return 0;
+        });
+        
+        // 按顺序删除回复
+        for (DiscussionReply reply : allReplies) {
+            replyMapper.deleteById(reply.getId());
+        }
+        
+        // 重置讨论的回复数
+        int count = allReplies.size();
+        for (int i = 0; i < count; i++) {
+            discussionMapper.decrementReplyCount(discussionId);
+        }
     }
 } 

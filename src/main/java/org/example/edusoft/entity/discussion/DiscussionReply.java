@@ -25,6 +25,9 @@ public class DiscussionReply {
     @NotNull(message = "用户ID不能为空")
     private Long userId;
     
+    @NotNull(message = "用户编号不能为空")
+    private String userNum;
+    
     @NotBlank(message = "回复内容不能为空")
     private String content;
     

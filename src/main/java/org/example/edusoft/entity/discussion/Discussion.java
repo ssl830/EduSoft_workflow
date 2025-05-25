@@ -2,6 +2,7 @@ package org.example.edusoft.entity.discussion;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,10 @@ public class Discussion {
     
     @NotNull(message = "创建者ID不能为空")
     private Long creatorId;
+    
+    @NotNull(message = "用户编号不能为空")
+    @TableField("creator_num")
+    private String creatorNum;
     
     @NotBlank(message = "标题不能为空")
     @Size(min = 2, max = 200, message = "标题长度必须在2-200个字符之间")

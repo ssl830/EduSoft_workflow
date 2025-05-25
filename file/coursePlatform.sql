@@ -220,6 +220,43 @@ CREATE TABLE WrongQuestion (
     FOREIGN KEY (question_id) REFERENCES Question(id)
 );
 
+-- 讨论区相关表
+CREATE TABLE Discussion (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    course_id BIGINT NOT NULL,
+    class_id BIGINT NOT NULL,
+    creator_id BIGINT NOT NULL,
+    creator_num VARCHAR(15) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    is_pinned BOOLEAN DEFAULT FALSE,
+    is_closed BOOLEAN DEFAULT FALSE,
+    view_count INT DEFAULT 0,
+    reply_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES Course(id),
+    FOREIGN KEY (class_id) REFERENCES Class(id),
+    FOREIGN KEY (creator_id) REFERENCES User(id),
+    FOREIGN KEY (creator_num) REFERENCES User(user_id)
+);
+
+CREATE TABLE DiscussionReply (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    discussion_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    user_num VARCHAR(15) NOT NULL,
+    content TEXT NOT NULL,
+    parent_reply_id BIGINT,
+    is_teacher_reply BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (discussion_id) REFERENCES Discussion(id),
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (user_num) REFERENCES User(user_id),
+    FOREIGN KEY (parent_reply_id) REFERENCES DiscussionReply(id)
+); 
+
 -- 数据插入部分（修复 INSERT）
 INSERT INTO User (user_id, username, password_hash, role, email) 
 VALUES 
