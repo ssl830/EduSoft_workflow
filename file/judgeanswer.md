@@ -4,7 +4,7 @@
 
 ## 1. 手动评分接口文档 (ManualJudgeController)
 
-### 1.1 获取待评分答案
+### 1.1 获取学生答案
 - **接口URL**: `/api/judge/pending`
 - **请求方法**: GET
 - **接口描述**: 获取需要手动评分的答案列表（非单选题的答案）
@@ -24,14 +24,21 @@
         {
             "id": 1,
             "submissionId": 1,
-            "questionId": 2,
-            "answerText": "这是学生的答案内容",
-            "isJudged": false,
-            "correct": null,
-            "score": 0
+            "question": [
+                {
+                    "questionId": 2,
+                    "answerText": "学生答案内容",
+                    "isJudged": true,
+                    "correct": true,
+                    "score": 0,
+                    "maxScore": 10
+                }
+            ]
         }
     ]
 }
+
+
 ```
 
 ### 1.2 提交评分结果

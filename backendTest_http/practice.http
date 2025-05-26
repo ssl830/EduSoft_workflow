@@ -1,6 +1,11 @@
-### 1. 获取待判题信息
+### 1. 获取学生答案
 GET http://localhost:8080/api/judge/pending?practiceId=1&submissionId=1
 Content-Type: application/json
+
+### 
+GET http://localhost:8080/api/judge/pending?practiceId=1
+Content-Type: application/json
+
 
 ### 2. 提交判题结果
 POST http://localhost:8080/api/judge/judge

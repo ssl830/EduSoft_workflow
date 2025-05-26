@@ -2,6 +2,7 @@ package org.example.edusoft.mapper.practice;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.practice.Submission;
+import java.util.List;
 
 @Mapper
 public interface SubmissionMapper {
@@ -20,4 +21,7 @@ public interface SubmissionMapper {
 
     @Select("SELECT * FROM Submission WHERE id = #{id}")
     Submission selectById(Long id);
+
+    @Select("SELECT * FROM Submission WHERE practice_id = #{practiceId} AND is_judged > 0")
+    List<Submission> findByPracticeIdWithUnjudgedAnswers(Long practiceId);
 }
