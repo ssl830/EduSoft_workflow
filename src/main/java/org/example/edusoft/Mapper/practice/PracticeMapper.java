@@ -17,12 +17,8 @@ public interface PracticeMapper {
             "allow_multiple_submission = #{allowMultipleSubmission} WHERE id = #{id}")
     void updatePractice(Practice practice);
 
-    @Select("SELECT * FROM Practice WHERE course_id = #{courseId} AND class_id = #{classId} " +
-            "ORDER BY created_at DESC LIMIT #{offset}, #{size}")
-    List<Practice> getPracticeList(@Param("courseId") Long courseId, 
-                                  @Param("classId") Long classId,
-                                  @Param("offset") Integer offset,
-                                  @Param("size") Integer size);
+    @Select("SELECT * FROM Practice WHERE class_id = #{classId} ORDER BY created_at DESC")
+    List<Practice> getPracticeList(@Param("classId") Long classId);
 
     @Select("SELECT * FROM Practice WHERE id = #{id}")
     Practice getPracticeById(Long id);

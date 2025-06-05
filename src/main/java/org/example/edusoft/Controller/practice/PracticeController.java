@@ -39,13 +39,9 @@ public class PracticeController {
     }
 
     @GetMapping("/list")
-    public Result<List<Practice>> getPracticeList(
-            @RequestParam Long courseId,
-            @RequestParam Long classId,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
+    public Result<List<Practice>> getPracticeList(@RequestParam Long classId) {
         try {
-            List<Practice> practices = practiceService.getPracticeList(courseId, classId, page, size);
+            List<Practice> practices = practiceService.getPracticeList(classId);
             return Result.success(practices, "获取练习列表成功");
         } catch (Exception e) {
             return Result.error(500, "获取练习列表失败：" + e.getMessage());

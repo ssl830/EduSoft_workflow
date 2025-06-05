@@ -102,16 +102,11 @@ public class PracticeServiceImpl implements PracticeService {
     }
 
     @Override
-    public List<Practice> getPracticeList(Long courseId, Long classId, Integer page, Integer size) {
-        if (page < 1) {
-            throw new PracticeException("PRACTICE_INVALID_PAGE", "页码必须大于0");
+    public List<Practice> getPracticeList(Long classId) {
+        if (classId == null) {
+            throw new PracticeException("PRACTICE_CLASS_REQUIRED", "班级ID不能为空");
         }
-        if (size < 1) {
-            throw new PracticeException("PRACTICE_INVALID_SIZE", "每页大小必须大于0");
-        }
-
-        int offset = (page - 1) * size;
-        return practiceMapper.getPracticeList(courseId, classId, offset, size);
+        return practiceMapper.getPracticeList(classId);
     }
 
     @Override

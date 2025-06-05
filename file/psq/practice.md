@@ -166,10 +166,9 @@ src/main/java/org/example/edusoft/
 - 请求方式：GET
 - 路径：/api/practice/list
 - 参数：
-  - courseId: 课程ID
+ 
   - classId: 班级ID
-  - page: 页码
-  - size: 每页大小
+
 
 ### 5. 获取练习详情
 - 请求方式：GET

@@ -23,13 +23,10 @@ public interface PracticeService {
 
     /**
      * 获取练习列表
-     * @param courseId 课程ID
      * @param classId 班级ID
-     * @param page 页码
-     * @param size 每页大小
      * @return 练习列表
      */
-    List<Practice> getPracticeList(Long courseId, Long classId, Integer page, Integer size);
+    List<Practice> getPracticeList(Long classId);
 
     /**
      * 获取练习详情
