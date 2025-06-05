@@ -6,7 +6,6 @@ import CourseApi from '../../api/course'
 
 import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
-import CourseExerciseList from '../../components/course/CourseExerciseList.vue'
 // import CourseDiscussion from '../../components/course/CourseDiscussion.vue'
 
 const route = useRoute()
@@ -18,8 +17,8 @@ const error = ref('')
 const course = ref<any>(null)
 const activeTab = ref('syllabus') // 'syllabus', 'resources', 'exercises', 'discussion'
 
-const isTeacherOrAssistant = computed(() => {
-  return ['teacher', 'assistant'].includes(authStore.userRole)
+const isTeacherOrTutor = computed(() => {
+  return ['teacher', 'tutor'].includes(authStore.userRole)
 })
 
 onMounted(async () => {
@@ -42,7 +41,6 @@ onMounted(async () => {
     <template v-else-if="course">
       <header class="course-header">
         <h1>{{ course.name }}</h1>
-        <p class="course-code">课程代码: {{ course.code }}</p>
       </header>
 
       <div class="course-content">
@@ -52,19 +50,13 @@ onMounted(async () => {
             :class="['tab-button', { active: activeTab === 'syllabus' }]"
             @click="activeTab = 'syllabus'"
           >
-            教学目标 & 大纲
+            课程概况
           </button>
           <button
             :class="['tab-button', { active: activeTab === 'resources' }]"
             @click="activeTab = 'resources'"
           >
             教学资料
-          </button>
-          <button
-            :class="['tab-button', { active: activeTab === 'exercises' }]"
-            @click="activeTab = 'exercises'"
-          >
-            在线练习
           </button>
         </div>
 
@@ -80,30 +72,18 @@ onMounted(async () => {
           <CourseResourceList
             v-else-if="activeTab === 'resources'"
             :course-id="courseId"
-            :is-teacher="isTeacherOrAssistant"
-          />
-
-          <!-- Panel 3: Exercises -->
-          <CourseExerciseList
-            v-else-if="activeTab === 'exercises'"
-            :course-id="courseId"
-            :is-teacher="isTeacherOrAssistant"
+            :is-teacher="isTeacherOrTutor"
           />
         </div>
       </div>
 
-      <!-- Discussion section -->
-      <div class="course-discussion-section">
-        <h2>讨论区</h2>
-        <CourseDiscussion :course-id="courseId" />
-      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
 .course-detail-container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1.5rem;
 }

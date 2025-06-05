@@ -26,7 +26,7 @@ const handleLogout = async () => {
 
       <nav class="main-nav">
         <router-link to="/" class="nav-link">首页</router-link>
-        <router-link to="/question-bank" class="nav-link" v-if="isLoggedIn">题库</router-link>
+        <router-link to="/questionBank" class="nav-link" v-if="isLoggedIn">题库</router-link>
         <router-link to="/learning-records" class="nav-link" v-if="isLoggedIn">学习记录</router-link>
       </nav>
 
