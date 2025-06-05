@@ -1,8 +1,8 @@
-{  "compilerOptions": {
+{
+  "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ES2023"],
     "module": "ESNext",
-    "types": ["vite/client", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */

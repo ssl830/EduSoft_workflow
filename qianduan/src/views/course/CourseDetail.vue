@@ -6,8 +6,7 @@ import CourseApi from '../../api/course'
 
 import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
-import CourseExerciseList from '../../components/course/CourseExerciseList.vue'
-// import CourseDiscussion from '../../components/course/CourseDiscussion.vue'
+import CourseVideoList from '../../components/course/CourseVideoList.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -16,10 +15,10 @@ const courseId = computed(() => route.params.id as string)
 const loading = ref(true)
 const error = ref('')
 const course = ref<any>(null)
-const activeTab = ref('syllabus') // 'syllabus', 'resources', 'exercises', 'discussion'
+const activeTab = ref('syllabus') // 'syllabus', 'resources', 'video'
 
-const isTeacherOrAssistant = computed(() => {
-  return ['teacher', 'assistant'].includes(authStore.userRole)
+const isTeacherOrTutor = computed(() => {
+  return ['teacher', 'tutor'].includes(authStore.userRole)
 })
 
 onMounted(async () => {
@@ -42,7 +41,6 @@ onMounted(async () => {
     <template v-else-if="course">
       <header class="course-header">
         <h1>{{ course.name }}</h1>
-        <p class="course-code">课程代码: {{ course.code }}</p>
       </header>
 
       <div class="course-content">
@@ -52,7 +50,7 @@ onMounted(async () => {
             :class="['tab-button', { active: activeTab === 'syllabus' }]"
             @click="activeTab = 'syllabus'"
           >
-            教学目标 & 大纲
+            课程概况
           </button>
           <button
             :class="['tab-button', { active: activeTab === 'resources' }]"
@@ -60,12 +58,12 @@ onMounted(async () => {
           >
             教学资料
           </button>
-          <button
-            :class="['tab-button', { active: activeTab === 'exercises' }]"
-            @click="activeTab = 'exercises'"
-          >
-            在线练习
-          </button>
+            <button
+                :class="['tab-button', { active: activeTab === 'video' }]"
+                @click="activeTab = 'video'"
+            >
+                视频学习
+            </button>
         </div>
 
         <!-- Main Content - Three Panel Layout -->
@@ -80,30 +78,23 @@ onMounted(async () => {
           <CourseResourceList
             v-else-if="activeTab === 'resources'"
             :course-id="courseId"
-            :is-teacher="isTeacherOrAssistant"
+            :is-teacher="isTeacherOrTutor"
           />
-
-          <!-- Panel 3: Exercises -->
-          <CourseExerciseList
-            v-else-if="activeTab === 'exercises'"
-            :course-id="courseId"
-            :is-teacher="isTeacherOrAssistant"
-          />
+            <CourseVideoList
+                v-else-if="activeTab === 'video'"
+                :course-id="courseId"
+                :is-teacher="isTeacherOrTutor"
+            />
         </div>
       </div>
 
-      <!-- Discussion section -->
-      <div class="course-discussion-section">
-        <h2>讨论区</h2>
-        <CourseDiscussion :course-id="courseId" />
-      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
 .course-detail-container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1.5rem;
 }

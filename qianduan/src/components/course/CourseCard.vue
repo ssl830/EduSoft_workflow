@@ -1,29 +1,52 @@
 <script setup lang="ts">
+import { defineProps } from 'vue'
+
 interface Course {
-  id: string;
-  title: string;
-  description?: string;
-  teacher?: string;
+    id: number;
+    teacherID: string;
+    name: string;
+    code: string;
+    outline: string;
+    objective: string;
+    assessment: string;
+    created_at: string;
+    sections: Section[];
 }
 
-const props = defineProps<{ id: string; title: string; description?: string; teacher?: string }>();
-</script>
-<script lang="ts">
-export default {
-  name: 'CourseCard' // 显式设置组件名
+interface Section {
+    id: string;
+    title: string;
+    sortOrder: string;
 }
+
+const props = defineProps<{
+  course: Course;
+}>()
 </script>
+
 <template>
-  <router-link :to="`/course/${props.id}`" class="course-card">
+  <router-link :to="`/course/${course.id}`" class="course-card">
     <div class="course-header">
-      <h3 class="course-title">{{ props.title }}</h3>
-      <span class="course-code">{{ props.description }}</span>
+      <h3 class="course-title">{{ course.name }}</h3>
+      <span class="course-code">{{ course.code }}</span>
     </div>
-    
+
     <div class="course-content">
-      <p class="course-teacher">教师: {{ props.teacher }}</p>
+      <p class="course-teacher">教师: {{ course.teacherID }}</p>
+
+      <div v-if="course.progress !== undefined" class="course-progress">
+        <div class="progress-label">
+          学习进度: {{ course.progress }}%
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-value"
+            :style="{ width: `${course.progress}%` }"
+          ></div>
+        </div>
+      </div>
     </div>
-    
+
     <div class="card-footer">
       <span class="view-details">查看详情</span>
     </div>
@@ -71,6 +94,32 @@ export default {
 .course-teacher {
   margin: 0 0 1rem;
   font-size: 0.9375rem;
+}
+
+.course-progress {
+  margin-top: 1rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #616161;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-value {
+  height: 100%;
+  background-color: #2c6ecf;
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
 
 .card-footer {

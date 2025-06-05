@@ -1,88 +1,125 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import {ref, reactive, onMounted, watch} from 'vue'
 import { useRouter } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
+import ClassApi from "../../api/class.ts";
+import {useAuthStore} from "../../stores/auth.ts";
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 interface Question {
   type: string;
+  range: string;
   content: string;
   options?: Array<{ key: string; text: string }>;
-  answer?: string | string[];
+  explanation?: string;
+  answer?: string;
   points: number;
 }
 
 const exercise = reactive({
   title: '',
-  courseId: '',
-  classIds: [] as string[],
+  courseId: 0,
   startTime: '',
   endTime: '',
   timeLimit: 0,
-  allowedAttempts: 0,
+  allowedAttempts: true,
   questions: [] as Question[]
 })
 
 const loading = ref(false)
 const error = ref('')
-const courses = ref([])
 const classes = ref([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
 const currentStep = ref(1) // 1: Basic Info, 2: Questions
-
+const allowedAttempts = ref([
+    { id: true, name: '是' },
+    { id: false, name: '否' }
+])
 // Temporary question data for editing
+// 修改tempQuestion的响应式对象
 const tempQuestion = reactive({
-  type: 'single_choice',
-  content: '',
-  options: [
-    { key: 'A', text: '' },
-    { key: 'B', text: '' },
-    { key: 'C', text: '' },
-    { key: 'D', text: '' }
-  ],
-  answer: '',
-  points: 5
+    type: 'single_choice',
+    range: '',
+    content: '',
+    options: [
+        { key: 'A', text: '' },
+        { key: 'B', text: '' },
+        { key: 'C', text: '' },
+        { key: 'D', text: '' }
+    ],
+    explanation: '',
+    points: 5,
+    // 使用计算属性处理多选答案
+    get answerArray(): string[] {
+        return this.type === 'multiple_choice' && this.answer
+            ? this.answer.split(',')
+            : [];
+    },
+    set answerArray(values: string[]) {
+        this.answer = values.join(',');
+    },
+    answer: '' // 始终保持字符串类型
+});
+
+const fetchClasses = async () => {
+    if (authStore.isAuthenticated) {
+        try {
+            const response = await ClassApi.getUserClasses(authStore.user?.id)
+            console.log(authStore.user?.id)
+            console.log(response.data.classes)
+            classes.value = response.data.classes
+        } catch (err) {
+            error.value = '获取班级列表失败，请稍后再试'
+            console.error(err)
+        } finally {
+            loading.value = false
+        }
+    } else {
+        loading.value = false
+    }
+}
+
+// Fetch classes on component mount
+onMounted(() => {
+    fetchClasses()
 })
 
-// Fetch courses on component mount
-const fetchCourses = async () => {
-  try {
-    const response = await ExerciseApi.getTeacherCourses()
-    courses.value = response.data
-  } catch (err) {
-    error.value = '获取课程列表失败'
-    console.error(err)
-  }
-}
-
-// Fetch classes when a course is selected
-const fetchClasses = async (courseId: string) => {
-  try {
-    const response = await ExerciseApi.getCourseClasses(courseId)
-    classes.value = response.data
-    exercise.classIds = []
-  } catch (err) {
-    error.value = '获取班级列表失败'
-    console.error(err)
-  }
-}
+// TODO
+// // Fetch classes when a course is selected
+// const fetchClasses = async (courseId: string) => {
+//   try {
+//     const response = await ExerciseApi.getCourseClasses(courseId)
+//     classes.value = response.data
+//     exercise.classIds = []
+//   } catch (err) {
+//     error.value = '获取班级列表失败'
+//     console.error(err)
+//   }
+// }
 
 // Move to the next step in the exercise creation process
 const nextStep = () => {
   if (currentStep.value === 1) {
     // Validate first step
-    if (!exercise.title || !exercise.courseId || exercise.classIds.length === 0) {
+    if((exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != '') && (!exercise.title || !exercise.courseId)){
+        error.value = '截止时间应大于开始时间；请填写所有必填字段'
+        return;
+    }else if(exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != ''){
+        error.value = '截止时间应大于开始时间'
+        return;
+    }else if (!exercise.title || !exercise.courseId) { //  || exercise.classIds.length === 0 TODO:
       error.value = '请填写所有必填字段'
       return
     }
-    
+
     currentStep.value = 2
     error.value = ''
     return
   }
-  
+
   // Submit the exercise (last step)
   submitExercise()
 }
@@ -96,11 +133,11 @@ const prevStep = () => {
 // Add a new question or update an existing one
 const addOrUpdateQuestion = () => {
   // Validate question data
-  if (!tempQuestion.content || tempQuestion.points <= 0) {
-    error.value = '请完成题目内容并设置分值'
+  if (!tempQuestion.content || tempQuestion.points < 0 || !tempQuestion.range) {
+    error.value = '请完成题目内容并设置分值及公开范围'
     return
   }
-  
+
   // Validate options for choice questions
   if (['single_choice', 'multiple_choice'].includes(tempQuestion.type)) {
     const hasEmptyOption = tempQuestion.options.some(opt => !opt.text)
@@ -108,16 +145,23 @@ const addOrUpdateQuestion = () => {
       error.value = '请填写所有选项内容'
       return
     }
-    
+
     if (!tempQuestion.answer) {
       error.value = '请设置正确答案'
       return
     }
   }
-  
-  // Create a copy of the question to add to the exercise
+
+    // 处理多选题答案格式
+    if (tempQuestion.type === 'multiple_choice') {
+        if (!tempQuestion.answerArray.length) {
+            error.value = '请设置正确答案';
+            return;
+        }
+    }
+
   const questionCopy = JSON.parse(JSON.stringify(tempQuestion))
-  
+
   if (isEditingQuestion.value && selectedQuestion.value) {
     // Update existing question
     const index = exercise.questions.indexOf(selectedQuestion.value)
@@ -128,20 +172,25 @@ const addOrUpdateQuestion = () => {
     // Add new question
     exercise.questions.push(questionCopy)
   }
-  
+
   // Reset form and state
   resetQuestionForm()
   error.value = ''
 }
 
 // Edit an existing question
+// 修改编辑题目逻辑
 const editQuestion = (question: Question) => {
-  selectedQuestion.value = question
-  isEditingQuestion.value = true
-  
-  // Copy question data to temp form
-  Object.assign(tempQuestion, JSON.parse(JSON.stringify(question)))
-}
+    selectedQuestion.value = question;
+    isEditingQuestion.value = true;
+
+    // 处理答案格式转换
+    const copiedQuestion = JSON.parse(JSON.stringify(question));
+    if (question.type === 'multiple_choice') {
+        copiedQuestion.answerArray = question.answer?.split(',') || [];
+    }
+    Object.assign(tempQuestion, copiedQuestion);
+};
 
 // Remove a question
 const removeQuestion = (question: Question) => {
@@ -149,7 +198,7 @@ const removeQuestion = (question: Question) => {
   if (index !== -1) {
     exercise.questions.splice(index, 1)
   }
-  
+
   // If editing this question, reset the form
   if (selectedQuestion.value === question) {
     resetQuestionForm()
@@ -166,9 +215,9 @@ const resetQuestionForm = () => {
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
-  tempQuestion.answer = ''
+  tempQuestion.answer = tempQuestion.type === 'multiple_choice' ? [] : ''
   tempQuestion.points = 5
-  
+
   selectedQuestion.value = null
   isEditingQuestion.value = false
 }
@@ -183,7 +232,7 @@ const addOption = () => {
 const removeOption = (index: number) => {
   if (tempQuestion.options.length > 2) {
     tempQuestion.options.splice(index, 1)
-    
+
     // Re-key the options
     tempQuestion.options.forEach((opt, i) => {
       opt.key = String.fromCharCode(65 + i)
@@ -198,10 +247,10 @@ const submitExercise = async () => {
     error.value = '请至少添加一道题目'
     return
   }
-  
+
   loading.value = true
   error.value = ''
-  
+
   try {
     await ExerciseApi.createExercise(exercise)
     router.push('/') // or to a success page
@@ -212,19 +261,102 @@ const submitExercise = async () => {
     loading.value = false
   }
 }
+// 添加题目类型变化的watch
+watch(() => tempQuestion.type, (newType) => {
+    tempQuestion.answer = newType === 'multiple_choice' ? [] : '';
+});
+
+// 新增：导入QuestionApi
+import QuestionApi from '../../api/question.ts';
+
+// 新增：题库题目相关状态
+const repoQuestions = ref<any[]>([]);
+const repoLoading = ref(false);
+const repoError = ref('');
+const showRepoDetailDialog = ref(false);
+const selectedRepoQuestion = ref<any>(null);
+
+// 新增：获取题库题目
+const fetchRepoQuestions = async () => {
+    if (!exercise.courseId) {
+        repoError.value = '请先选择课程';
+        return;
+    }
+
+    repoLoading.value = true;
+    repoError.value = '';
+
+    try {
+        const response = await QuestionApi.getQuestionList({
+            courseId: exercise.courseId
+        });
+        repoQuestions.value = response.data.data.questions;
+    } catch (err) {
+        repoError.value = '获取题库题目失败，请稍后再试';
+        console.error(err);
+    } finally {
+        repoLoading.value = false;
+    }
+};
+
+// 新增：当进入题目添加步骤且课程已选择时，获取题库题目
+watch(() => currentStep.value, (newVal) => {
+    if (newVal === 2 && exercise.courseId) {
+        fetchRepoQuestions();
+    }
+});
+
+// 新增：查看题目详情
+const showRepoQuestionDetail = (question: any) => {
+    selectedRepoQuestion.value = question;
+    showRepoDetailDialog.value = true;
+};
+
+// 新增：添加题目到练习
+const addRepoQuestion = (question: any) => {
+    // 检查是否已添加
+    const exists = exercise.questions.some(q => q.id === question.id);
+    if (exists) {
+        error.value = '该题目已添加';
+        return;
+    }
+
+    // 转换为练习题目格式
+    const newQuestion: Question = {
+        id: question.id, // 保留题库ID用于检查重复
+        type: question.type,
+        range: 'public', // 默认公开
+        content: question.name,
+        options: question.options,
+        explanation: '',
+        points: question.points,
+        answer: question.answer
+    };
+
+    exercise.questions.push(newQuestion);
+};
+
+// 新增：格式化答案显示
+const formatRepoAnswer = (question: any) => {
+    if (question.type === 'multiple_choice') {
+        return question.answer.split(',').join(', ');
+    }
+    return question.answer;
+};
+
 </script>
 
 <template>
   <div class="exercise-create-container">
     <h1 class="page-title">{{ currentStep === 1 ? '创建在线练习 - 基本信息' : '创建在线练习 - 添加题目' }}</h1>
-    
+
     <div v-if="error" class="error-message">{{ error }}</div>
-    
+
     <!-- Step 1: Basic Exercise Information -->
     <div v-if="currentStep === 1" class="form-step">
       <div class="form-group">
         <label for="title">练习标题</label>
-        <input 
+        <input
           id="title"
           v-model="exercise.title"
           type="text"
@@ -232,121 +364,111 @@ const submitExercise = async () => {
           required
         />
       </div>
-      
+
       <div class="form-group">
         <label for="courseId">所属课程</label>
-        <select 
+        <select
           id="courseId"
           v-model="exercise.courseId"
           @change="fetchClasses(exercise.courseId)"
           required
         >
           <option value="" disabled>选择课程</option>
-          <option v-for="course in courses" :key="course.id" :value="course.id">
-            {{ course.name }}
+          <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
+            {{ aclass.course_name }} {{ aclass.class_name }}
           </option>
         </select>
       </div>
-      
-      <div class="form-group">
-        <label>发布班级</label>
-        <div class="checkbox-group">
-          <div v-for="classItem in classes" :key="classItem.id" class="checkbox-item">
-            <input 
-              :id="`class-${classItem.id}`"
-              type="checkbox"
-              v-model="exercise.classIds"
-              :value="classItem.id"
-            />
-            <label :for="`class-${classItem.id}`">{{ classItem.name }}</label>
-          </div>
-        </div>
-      </div>
-      
+
       <div class="form-row">
         <div class="form-group form-group-half">
           <label for="startTime">开始时间</label>
-          <input 
+          <input
             id="startTime"
             v-model="exercise.startTime"
             type="datetime-local"
           />
         </div>
-        
+
         <div class="form-group form-group-half">
           <label for="endTime">截止时间</label>
-          <input 
+          <input
             id="endTime"
             v-model="exercise.endTime"
             type="datetime-local"
           />
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-group form-group-half">
           <label for="timeLimit">答题时间限制（分钟，0表示不限时）</label>
-          <input 
+          <input
             id="timeLimit"
             v-model.number="exercise.timeLimit"
             type="number"
             min="0"
           />
         </div>
-        
+
         <div class="form-group form-group-half">
-          <label for="allowedAttempts">允许提交次数（0表示不限）</label>
-          <input 
-            id="allowedAttempts"
-            v-model.number="exercise.allowedAttempts"
-            type="number"
-            min="0"
-          />
+          <label for="allowedAttempts">是否允许多次提交</label>
+<!--            TODO:选择是否（boolean）-->
+            <select
+                id="allowedAttempts"
+                v-model="exercise.allowedAttempts"
+                required
+            >
+                <option value="" disabled>请选择</option>
+                <option v-for="type in allowedAttempts" :key="type.id" :value="type.id">
+                    {{ type.name }}
+                </option>
+            </select>
         </div>
       </div>
     </div>
-    
+
     <!-- Step 2: Question Management -->
     <div v-else-if="currentStep === 2" class="form-step">
       <!-- Question List -->
       <div class="question-list-section">
         <h2>题目列表 ({{ exercise.questions.length }})</h2>
-        
+
         <div v-if="exercise.questions.length === 0" class="empty-state">
           尚未添加题目，请使用下方表单添加题目
         </div>
-        
+
         <div v-else class="question-list">
-          <div 
-            v-for="(question, index) in exercise.questions" 
+          <div
+            v-for="(question, index) in exercise.questions"
             :key="index"
             class="question-list-item"
           >
             <div class="question-list-header">
               <span class="question-number">{{ index + 1 }}</span>
               <span class="question-type-badge" :class="question.type">
-                {{ 
-                  question.type === 'single_choice' ? '单选题' : 
-                  question.type === 'multiple_choice' ? '多选题' : 
-                  question.type === 'true_false' ? '判断题' : 
-                  question.type === 'short_answer' ? '简答题' : '填空题' 
+                {{
+                  question.type === 'single_choice' ? '单选题' :
+                  question.type === 'multiple_choice' ? '多选题' :
+                  question.type === 'true_false' ? '判断题' :
+                  question.type === 'short_answer' ? '简答题' : '填空题'
                 }}
               </span>
               <span class="question-points">{{ question.points }}分</span>
             </div>
-            
+
             <div class="question-list-content">
               <div v-html="question.content"></div>
             </div>
-            
+
             <div class="question-list-actions">
-              <button 
+              <button
                 class="btn-secondary btn-sm"
                 @click="editQuestion(question)"
               >
                 编辑
               </button>
-              <button 
+              <button
                 class="btn-danger btn-sm"
                 @click="removeQuestion(question)"
               >
@@ -356,11 +478,11 @@ const submitExercise = async () => {
           </div>
         </div>
       </div>
-      
+
       <!-- Question Form -->
-      <div class="question-form-section">
-        <h2>{{ isEditingQuestion ? '编辑题目' : '添加题目' }}</h2>
-        
+      <div class="question-form-byhand-section">
+        <h2>{{ isEditingQuestion ? '编辑题目' : '手动添加题目' }}</h2>
+
         <div class="form-group">
           <label for="questionType">题目类型</label>
           <select id="questionType" v-model="tempQuestion.type">
@@ -371,33 +493,40 @@ const submitExercise = async () => {
             <option value="fill_blank">填空题</option>
           </select>
         </div>
-        
+        <div class="form-group">
+          <label for="range">公开范围</label>
+          <select id="range" v-model="tempQuestion.range">
+              <option value="public">公开</option>
+              <option value="self">私有</option>
+          </select>
+        </div>
+
         <div class="form-group">
           <label for="questionContent">题目内容</label>
-          <textarea 
+          <textarea
             id="questionContent"
             v-model="tempQuestion.content"
             rows="4"
             placeholder="输入题目内容"
           ></textarea>
         </div>
-        
+
         <!-- Options for choice questions -->
         <div v-if="['single_choice', 'multiple_choice'].includes(tempQuestion.type)" class="form-group">
           <label>选项</label>
-          <div 
-            v-for="(option, index) in tempQuestion.options" 
+          <div
+            v-for="(option, index) in tempQuestion.options"
             :key="index"
             class="option-row"
           >
             <div class="option-key">{{ option.key }}</div>
-            <input 
+            <input
               v-model="option.text"
               type="text"
               :placeholder="`选项${option.key}内容`"
               class="option-input"
             />
-            <button 
+            <button
               type="button"
               class="btn-icon"
               @click="removeOption(index)"
@@ -406,8 +535,8 @@ const submitExercise = async () => {
               ✕
             </button>
           </div>
-          
-          <button 
+
+          <button
             type="button"
             class="btn-text"
             @click="addOption"
@@ -415,14 +544,14 @@ const submitExercise = async () => {
             + 添加选项
           </button>
         </div>
-        
+
         <!-- Answer for choice questions -->
         <div v-if="tempQuestion.type === 'single_choice'" class="form-group">
           <label for="singleAnswer">正确答案</label>
           <select id="singleAnswer" v-model="tempQuestion.answer">
             <option value="" disabled>选择正确答案</option>
-            <option 
-              v-for="option in tempQuestion.options" 
+            <option
+              v-for="option in tempQuestion.options"
               :key="option.key"
               :value="option.key"
             >
@@ -430,26 +559,25 @@ const submitExercise = async () => {
             </option>
           </select>
         </div>
-        
-        <div v-if="tempQuestion.type === 'multiple_choice'" class="form-group">
-          <label>正确答案 (多选)</label>
-          <div class="checkbox-group">
-            <div 
-              v-for="option in tempQuestion.options" 
-              :key="option.key"
-              class="checkbox-item"
-            >
-              <input 
-                :id="`answer-${option.key}`"
-                type="checkbox"
-                v-model="tempQuestion.answer"
-                :value="option.key"
-              />
-              <label :for="`answer-${option.key}`">{{ option.key }}</label>
-            </div>
+
+          <div v-if="tempQuestion.type === 'multiple_choice'" class="form-group">
+              <label>正确答案 (多选)</label>
+              <div class="checkbox-group">
+                  <div
+                      v-for="option in tempQuestion.options"
+                      :key="option.key"
+                      class="checkbox-item"
+                  >
+                      <input
+                          :id="`answer-${option.key}`"
+                          type="checkbox"
+                          v-model="tempQuestion.answerArray"
+                          :value="option.key"
+                      />
+                      <label :for="`answer-${option.key}`">{{ option.key }}</label>
+                  </div>
+              </div>
           </div>
-        </div>
-        
         <div v-if="tempQuestion.type === 'true_false'" class="form-group">
           <label for="truefalseAnswer">正确答案</label>
           <select id="truefalseAnswer" v-model="tempQuestion.answer">
@@ -458,26 +586,34 @@ const submitExercise = async () => {
             <option value="False">错误</option>
           </select>
         </div>
-        
+        <div class="form-group">
+          <label for="explanation">答案解析</label>
+          <textarea
+              id="explanation"
+              v-model="tempQuestion.explanation"
+              rows="4"
+              placeholder="输入答案解析"
+          ></textarea>
+        </div>
         <div class="form-group">
           <label for="questionPoints">分值</label>
-          <input 
+          <input
             id="questionPoints"
             v-model.number="tempQuestion.points"
             type="number"
             min="1"
           />
         </div>
-        
+
         <div class="form-actions">
-          <button 
+          <button
             type="button"
             class="btn-secondary"
             @click="resetQuestionForm"
           >
             取消
           </button>
-          <button 
+          <button
             type="button"
             class="btn-primary"
             @click="addOrUpdateQuestion"
@@ -486,11 +622,119 @@ const submitExercise = async () => {
           </button>
         </div>
       </div>
+        <div class="question-form-fromrepo-section">
+            <h2>{{ isEditingQuestion ? '编辑题目' : '从题库中选择题目' }}</h2>
+
+            <div v-if="repoError" class="error-message">{{ repoError }}</div>
+
+            <div v-if="repoLoading" class="loading-container">加载中...</div>
+            <div v-else-if="repoQuestions.length === 0" class="empty-state">
+                题库中暂无题目
+            </div>
+            <div v-else class="resource-table-wrapper">
+                <table class="resource-table">
+                    <thead>
+                    <tr>
+                        <th>题目内容</th>
+                        <th>所属课程</th>
+                        <th>所属章节</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="question in repoQuestions" :key="question.id">
+                        <td>{{ question.name }}</td>
+                        <td>{{ question.course_name }}</td>
+                        <td>{{ question.section_name || '-' }}</td>
+                        <td class="actions">
+                            <button
+                                class="btn-action preview"
+                                @click="showRepoQuestionDetail(question)"
+                                title="查看"
+                            >
+                                查看
+                            </button>
+                            <button
+                                class="btn-action add"
+                                @click="addRepoQuestion(question)"
+                                title="添加"
+                            >
+                                添加
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 新增：题目详情弹窗 -->
+        <div v-if="showRepoDetailDialog" class="modal-mask">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>题目详情</h3>
+                    <button class="modal-close" @click="showRepoDetailDialog = false">&times;</button>
+                </div>
+
+                <div class="modal-body" v-if="selectedRepoQuestion">
+                    <div class="detail-row">
+                        <label>课程名称:</label>
+                        <span>{{ selectedRepoQuestion.course_name || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>章节标题:</label>
+                        <span>{{ selectedRepoQuestion.section_name || '-' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>题目类型:</label>
+                        <span>{{
+                                selectedRepoQuestion.type === 'single_choice' ? '单选题' :
+                                    selectedRepoQuestion.type === 'multiple_choice' ? '多选题' :
+                                        selectedRepoQuestion.type === 'true_false' ? '判断题' :
+                                            selectedRepoQuestion.type === 'short_answer' ? '简答题' : '填空题'
+                            }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>题目内容:</label>
+                        <div class="content-box">{{ selectedRepoQuestion.name }}</div>
+                    </div>
+
+                    <!-- 选项展示 -->
+                    <div
+                        v-if="['single_choice', 'multiple_choice'].includes(selectedRepoQuestion.type)"
+                        class="detail-row"
+                    >
+                        <label>题目选项:</label>
+                        <div class="options-list">
+                            <div
+                                v-for="(opt, index) in selectedRepoQuestion.options"
+                                :key="index"
+                                class="option-item"
+                            >
+                                <span class="option-key">{{ opt.key }}.</span>
+                                <span class="option-text">{{ opt.text }}</span>
+                                <span
+                                    v-if="selectedRepoQuestion.answer.includes(opt.key)"
+                                    class="correct-badge"
+                                >
+                                    ✓
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <label>正确答案:</label>
+                        <span class="answer-text">{{ formatRepoAnswer(selectedRepoQuestion) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <!-- Step Navigation Buttons -->
     <div class="step-navigation">
-      <button 
+      <button
         v-if="currentStep > 1"
         type="button"
         class="btn-secondary"
@@ -499,8 +743,8 @@ const submitExercise = async () => {
       >
         返回上一步
       </button>
-      
-      <button 
+
+      <button
         type="button"
         class="btn-primary"
         @click="nextStep"
@@ -678,7 +922,7 @@ const submitExercise = async () => {
   margin-bottom: 1.25rem;
 }
 
-.question-list-section, .question-form-section {
+.question-list-section, .question-form-byhand-section, question-form-fromrepo-section {
   margin-bottom: 2rem;
 }
 
@@ -780,5 +1024,163 @@ const submitExercise = async () => {
   color: #757575;
   background-color: #f5f5f5;
   border-radius: 4px;
+}
+
+.modal-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 600px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.detail-row {
+    margin: 12px 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.detail-row label {
+    width: 100px;
+    font-weight: 500;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.content-box {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+}
+
+.options-list {
+    width: 100%;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+    padding: 8px;
+    background: #f8f8f8;
+    border-radius: 4px;
+}
+
+.option-key {
+    font-weight: 500;
+    margin-right: 10px;
+    min-width: 20px;
+}
+
+.correct-badge {
+    color: #2e7d32;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+.answer-text {
+    font-weight: 500;
+    color: #2c6ecf;
+}
+
+/* 新增：操作按钮样式 */
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-action {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-action.preview {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-action.preview:hover {
+    background-color: #bbdefb;
+}
+
+.btn-action.add {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.btn-action.add:hover {
+    background-color: #c8e6c9;
+}
+
+/* 新增：表格样式 */
+.resource-table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.resource-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.resource-table th,
+.resource-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.resource-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+.resource-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* 新增：加载状态样式 */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    color: #616161;
 }
 </style>
