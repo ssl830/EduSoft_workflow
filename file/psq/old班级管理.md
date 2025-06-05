@@ -276,7 +276,7 @@ public class ClassServiceImpl implements ClassService {
 | POST | /api/classes/{classId}/join/{userId} | 学生加入班级 |
 | DELETE | /api/classes/{classId}/leave/{userId} | 学生退出班级 |
 | GET | /api/classes/{classId}/users | 获取班级成员列表 |
-| POST | /api/classes/{classId}/import | 批量导入学生 |
+
 
 关键代码：
 ```java
