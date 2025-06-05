@@ -39,11 +39,40 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/class',
+    name: 'Class',
+    component: () => import('../views/class/ClassList.vue'),
+    meta: {
+      title: '班级列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/class/:id',
+    name: 'ClassDetail',
+    component: () => import('../views/class/ClassDetail.vue'),
+    meta: {
+      title: '班级详情',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },  {
     path: '/course/:id',
     name: 'CourseDetail',
     component: () => import('../views/course/CourseDetail.vue'),
     meta: {
       title: '课程详情',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/course/create',
+    name: 'CourseCreate',
+    component: () => import('../views/course/CourseCreate.vue'),
+    meta: {
+      title: '创建课程',
       requiresAuth: true,
       showSidebar: true
     }
@@ -55,7 +84,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '创建练习',
       requiresAuth: true,
-      roles: ['teacher', 'assistant'],
+      roles: ['teacher', 'tutor'],
       showSidebar: true
     }
   },
@@ -69,18 +98,39 @@ const routes: RouteRecordRaw[] = [
   //     showSidebar: true
   //   }
   // },
-  // {
-  //   path: '/exercise/:id/take',
-  //   name: 'ExerciseTake',
-  //   component: () => import('../views/exercise/ExerciseTake.vue'),
-  //   meta: {
-  //     title: '参与练习',
-  //     requiresAuth: true,
-  //     roles: ['student'],
-  //     showSidebar: false
-  //   }
-  // },
-  // {
+  {
+    path: '/takeExercise/:id',
+    name: 'TakeExercise',
+    component: () => import('../views/exercise/ExerciseTake.vue'),
+    meta: {
+      title: '参与练习',
+      requiresAuth: true,
+      roles: ['student', 'teacher'], // TODO
+      showSidebar: false
+    }
+  },
+  {
+    path: '/checkExercise/:practiceId/:submissionId',
+    name: 'CheckExercise',
+    component: () => import('../views/exercise/CheckExercise.vue'),
+    meta: {
+      title: '批改练习',
+      requiresAuth: true,
+      roles: ['tutor', 'teacher'], // TODO
+      showSidebar: false
+    }
+  },
+  {
+    path: '/exerciseFeedback/:practiceId/:submissionId',
+    name: 'ExerciseFeedback',
+    component: () => import('../views/exercise/ExerciseFeedback.vue'),
+    meta: {
+      title: '练习反馈',
+      requiresAuth: true,
+      roles: ['student', 'teacher'], // TODO
+      showSidebar: false
+    }
+  },  // {
   //   path: '/exercise/:id/feedback',
   //   name: 'ExerciseFeedback',
   //   component: () => import('../views/exercise/ExerciseFeedback.vue'),
@@ -90,16 +140,36 @@ const routes: RouteRecordRaw[] = [
   //     showSidebar: true
   //   }
   // },
-  // {
-  //   path: '/question-bank',
-  //   name: 'QuestionBank',
-  //   component: () => import('../views/question/QuestionBank.vue'),
-  //   meta: {
-  //     title: '题库',
-  //     requiresAuth: true,
-  //     showSidebar: true
-  //   }
-  // },
+  {
+    path: '/questionBank',
+    name: 'QuestionBank',
+    component: () => import('../views/question/QuestionBank.vue'),
+    meta: {
+      title: '题库',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/questionFavor',
+    name: 'QuestionFavor',
+    component: () => import('../views/question/QuestionFavor.vue'),
+    meta: {
+      title: '收藏题库',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/questionWrong',
+    name: 'QuestionWrong',
+    component: () => import('../views/question/QuestionWrong.vue'),
+    meta: {
+      title: '错误题库',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
   // {
   //   path: '/learning-records',
   //   name: 'LearningRecords',

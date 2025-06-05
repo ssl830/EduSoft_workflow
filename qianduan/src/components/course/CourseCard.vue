@@ -2,11 +2,21 @@
 import { defineProps } from 'vue'
 
 interface Course {
-  id: string;
-  name: string;
-  code: string;
-  creatorName: string;
-  progress?: number;
+    id: number;
+    teacherID: string;
+    name: string;
+    code: string;
+    outline: string;
+    objective: string;
+    assessment: string;
+    created_at: string;
+    sections: Section[];
+}
+
+interface Section {
+    id: string;
+    title: string;
+    sortOrder: string;
 }
 
 const props = defineProps<{
@@ -20,23 +30,23 @@ const props = defineProps<{
       <h3 class="course-title">{{ course.name }}</h3>
       <span class="course-code">{{ course.code }}</span>
     </div>
-    
+
     <div class="course-content">
-      <p class="course-teacher">教师: {{ course.creatorName }}</p>
-      
+      <p class="course-teacher">教师: {{ course.teacherID }}</p>
+
       <div v-if="course.progress !== undefined" class="course-progress">
         <div class="progress-label">
           学习进度: {{ course.progress }}%
         </div>
         <div class="progress-bar">
-          <div 
-            class="progress-value" 
+          <div
+            class="progress-value"
             :style="{ width: `${course.progress}%` }"
           ></div>
         </div>
       </div>
     </div>
-    
+
     <div class="card-footer">
       <span class="view-details">查看详情</span>
     </div>

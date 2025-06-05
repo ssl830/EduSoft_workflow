@@ -12,8 +12,10 @@ const error = ref('')
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     try {
-      const response = await CourseApi.getUserCourses()
-      courses.value = response.data
+      const response = await CourseApi.getUserCourses(authStore.user?.id)
+        console.log(authStore.user?.id)
+        console.log(response.data.courses)
+      courses.value = response.data.courses
     } catch (err) {
       error.value = '获取课程列表失败，请稍后再试'
       console.error(err)
@@ -41,12 +43,15 @@ onMounted(async () => {
     <section v-if="authStore.isAuthenticated" class="courses-section">
       <div class="section-header">
         <h2>我的课程</h2>
-        <button
-          v-if="authStore.userRole === 'teacher'"
-          class="btn-primary"
-        >
-          创建课程
-        </button>
+          <router-link to="/course/create">
+              <button
+                  v-if="authStore.userRole === 'teacher'"
+                  class="btn-primary"
+              >
+                  创建课程
+              </button>
+          </router-link>
+
       </div>
 
       <div v-if="loading" class="loading">加载中...</div>
