@@ -2,10 +2,10 @@ import axios from 'axios'
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: 'https://apifoxmock.com/m1/6380790-6077334-default',
+  baseURL: 'http://127.0.0.1:4523/m1/6341276-6036787-default',  // APIFox Mock 地址
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   }
 })
 
@@ -13,11 +13,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   config => {
     // Get token from localStorage
-    const token = localStorage.getItem('token')
-
-    // If token exists, add to headers
+    const token = localStorage.getItem('token')    // If token exists, add to headers
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.token = token  // APIFox 模拟环境使用 token 头
     }
 
     return config

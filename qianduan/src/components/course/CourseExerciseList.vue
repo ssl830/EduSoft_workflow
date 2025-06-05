@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
 
-const props = defineProps<{
-  courseId: string;
-  isTeacher: boolean;
-}>()
+const props = defineProps<{ id: string; title: string; status: string; startTime?: string; endTime?: string; totalPoints?: number; score?: number }>()
 
 const router = useRouter()
 const exercises = ref([])

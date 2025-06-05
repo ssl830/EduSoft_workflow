@@ -2,39 +2,24 @@ import axios from './axios'
 
 const CourseApi = {
   // Get all courses for current user
-  getUserCourses(id: string) {
-    return axios.get(`/api/courses/user/${id}`)
+  getUserCourses() {
+    return axios.get('/courses')
   },
 
   // Get course by ID
-  getCourseById(courseID: string) {
-    return axios.get(`/api/courses/${courseID}`)
-  },
-
-  uploadSections(courseId: bigint, data: {sections: any[] }){
-    return axios.post(`/api/courses/${courseId}/sections/`, data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  },
-
-  deleteSection(courseId: bigint, sectionId: bigint) {
-    return axios.post(`/api/courses/${courseId}/sections/${sectionId}`)
+  getCourseById(id: string) {
+    return axios.get(`/courses/${id}`)
   },
 
   // Create new course (teacher only)
   createCourse(data: {
-    teacherId: bigint;
     name: string;
     code?: string;
-    outline?: string;
-    objective?: string;
+    syllabus?: string;
+    objectives?: string;
     assessment?: string;
   }) {
-    return axios.post('/api/courses', data)
+    return axios.post('/courses', data)
   },
 
   // Update course (teacher only)
@@ -70,7 +55,7 @@ const CourseApi = {
     return axios.post('/classes/join', { class_code: classCode })
   },
 
-  // Get students in a class (teacher/tutor only)
+  // Get students in a class (teacher/assistant only)
   getClassStudents(classId: string) {
     return axios.get(`/classes/${classId}/students`)
   },
@@ -85,7 +70,17 @@ const CourseApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
-  }
+  },
+
+  // 获取用户当前所在的班级
+  getUserClasses() {
+    return axios.get('/api/user/classes')
+  },
+
+  // 获取用户的默认班级（最近活跃的班级）
+  getUserDefaultClass() {
+    return axios.get('/api/user/default-class')
+  },
 }
 
 export default CourseApi
