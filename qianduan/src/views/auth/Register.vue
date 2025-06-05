@@ -20,22 +20,22 @@ const handleRegister = async () => {
     error.value = '请填写所有必填字段'
     return
   }
-  
+
   if (password.value !== confirmPassword.value) {
     error.value = '两次输入的密码不一致'
     return
   }
-  
+
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email.value)) {
     error.value = '请输入有效的电子邮箱'
     return
   }
-  
+
   loading.value = true
   error.value = ''
-  
+
   try {
     await authStore.register({
       username: username.value,
@@ -56,13 +56,13 @@ const handleRegister = async () => {
   <div class="auth-container">
     <div class="auth-card">
       <h1 class="auth-title">注册账号</h1>
-      
+
       <div v-if="error" class="error-message">{{ error }}</div>
-      
+
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
           <label for="username">用户名</label>
-          <input 
+          <input
             id="username"
             v-model="username"
             type="text"
@@ -71,10 +71,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="email">电子邮箱</label>
-          <input 
+          <input
             id="email"
             v-model="email"
             type="email"
@@ -83,10 +83,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="password">密码</label>
-          <input 
+          <input
             id="password"
             v-model="password"
             type="password"
@@ -95,10 +95,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="confirmPassword">确认密码</label>
-          <input 
+          <input
             id="confirmPassword"
             v-model="confirmPassword"
             type="password"
@@ -107,29 +107,29 @@ const handleRegister = async () => {
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="role">角色</label>
-          <select 
+          <select
             id="role"
             v-model="role"
             :disabled="loading"
           >
             <option value="student">学生</option>
             <option value="teacher">教师</option>
-            <option value="assistant">助教</option>
+            <option value="tutor">助教</option>
           </select>
         </div>
-        
-        <button 
-          type="submit" 
-          class="btn-primary btn-full" 
+
+        <button
+          type="submit"
+          class="btn-primary btn-full"
           :disabled="loading"
         >
           {{ loading ? '注册中...' : '注册' }}
         </button>
       </form>
-      
+
       <div class="auth-actions">
         <p>
           已有账号？

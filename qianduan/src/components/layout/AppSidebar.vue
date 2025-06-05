@@ -8,7 +8,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isTeacher = computed(() => authStore.userRole === 'teacher')
-const isAssistant = computed(() => authStore.userRole === 'assistant')
+const isTutor = computed(() => authStore.userRole === 'tutor')
 const isStudent = computed(() => authStore.userRole === 'student')
 </script>
 
@@ -22,52 +22,63 @@ const isStudent = computed(() => authStore.userRole === 'student')
             <span class="icon">🏠</span> 课程中心
           </router-link>
         </li>
-        <li v-if="isTeacher">
-          <router-link to="/course/create" class="sidebar-link">
-            <span class="icon">➕</span> 创建课程
-          </router-link>
-        </li>
-        <li v-if="isTeacher || isAssistant">
-          <router-link to="/exercise/create" class="sidebar-link">
-            <span class="icon">📝</span> 创建练习
-          </router-link>
-        </li>
         <li>
-          <router-link to="/question-bank" class="sidebar-link">
+          <router-link to="/class" class="sidebar-link">
+              <span class="icon">👥</span> 班级中心
+          </router-link>
+        </li>
+
+        <li v-if="isTutor || isStudent || isTeacher">
+          <router-link to="/questionBank" class="sidebar-link">
             <span class="icon">📚</span> 题库中心
           </router-link>
         </li>
-        <li>
+          <li v-if="isTutor || isStudent || isTeacher">
+              <router-link to="/questionFavor" class="sidebar-link">
+                  <span class="icon">📚</span> 收藏题库
+              </router-link>
+          </li>
+          <li v-if="isTutor || isStudent || isTeacher">
+              <router-link to="/questionWrong" class="sidebar-link">
+                  <span class="icon">📈</span> 错误题库
+              </router-link>
+          </li>
+        <li v-if="isTutor || isStudent || isTeacher">
           <router-link to="/learning-records" class="sidebar-link">
             <span class="icon">📊</span> 学习记录
           </router-link>
         </li>
       </ul>
     </div>
-    
-    <div class="sidebar-section" v-if="isTeacher || isAssistant">
+
+    <div class="sidebar-section" v-if="isTeacher || isTutor">
       <h3 class="sidebar-title">教师工具</h3>
       <ul class="sidebar-menu">
         <li v-if="isTeacher">
-          <router-link to="/class/manage" class="sidebar-link">
-            <span class="icon">👥</span> 班级管理
+          <router-link to="/course/create" class="sidebar-link">
+              <span class="icon">➕</span> 创建课程
           </router-link>
         </li>
-        <li>
-          <router-link to="/exercise/grading" class="sidebar-link">
-            <span class="icon">✓</span> 批阅练习
+        <li v-if="isTeacher || isTutor">
+          <router-link to="/exercise/create" class="sidebar-link">
+              <span class="icon">📝</span> 创建练习
           </router-link>
         </li>
-        <li>
-          <router-link to="/statistics" class="sidebar-link">
-            <span class="icon">📈</span> 统计分析
-          </router-link>
-        </li>
+<!--        <li>-->
+<!--          <router-link to="/exercise/grading" class="sidebar-link">-->
+<!--            <span class="icon">✓</span> 批阅练习-->
+<!--          </router-link>-->
+<!--        </li>-->
+<!--        <li>-->
+<!--          <router-link to="/statistics" class="sidebar-link">-->
+<!--            <span class="icon">📈</span> 统计分析-->
+<!--          </router-link>-->
+<!--        </li>-->
       </ul>
     </div>
-    
+
     <div class="sidebar-divider"></div>
-    
+
     <div class="sidebar-section">
       <h3 class="sidebar-title">账户</h3>
       <ul class="sidebar-menu">
@@ -170,17 +181,17 @@ const isStudent = computed(() => authStore.userRole === 'student')
     border-bottom: 1px solid #e0e0e0;
     padding: 1rem 0;
   }
-  
+
   .sidebar-menu {
     display: flex;
     flex-wrap: wrap;
   }
-  
+
   .sidebar-menu li {
     flex: 1 0 50%;
     min-width: 160px;
   }
-  
+
   .sidebar-link {
     padding: 0.5rem 1rem;
   }
