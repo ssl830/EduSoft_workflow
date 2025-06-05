@@ -1,0 +1,43 @@
+### 1. 获取学生答案
+GET http://localhost:8080/api/judge/pending?practiceId=1&submissionId=1
+Content-Type: application/json
+
+### 
+GET http://localhost:8080/api/judge/pending?practiceId=1
+Content-Type: application/json
+
+
+### 2. 提交判题结果
+POST http://localhost:8080/api/judge/judge
+Content-Type: application/json
+
+[
+  {
+    "id": 1,
+    "submissionId": 1,
+    "questionId": 2,
+    "answerText": "public int add(int a, int b) { return a + b; }",
+    "isJudged": true,
+    "correct": true,
+    "score": 10
+  },
+  {
+    "id": 2,
+    "submissionId": 1,
+    "questionId": 3,
+    "answerText": "x = 5",
+    "isJudged": true,
+    "correct": false,
+    "score": 0
+  }
+]
+
+### 3. 提交学生答案
+POST http://localhost:8080/api/submission/submit?practiceId=1&studentId=2
+Content-Type: application/json
+
+{
+  "1": "需求分析",
+  "2": "public int add(int a, int b) { return a + b; }",
+  "3": "x = 5"
+}
