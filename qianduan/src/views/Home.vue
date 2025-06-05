@@ -6,7 +6,7 @@
     <div class="home-container">
       <section class="welcome-section">
         <div class="welcome-content">
-          <h1>欢迎使用课程管理平台</h1>
+          <h1>欢迎使用EduSoft平台</h1>
           <p v-if="authStore.isAuthenticated">
             {{ authStore.user?.username }}，您好！开始您的学习之旅吧。
           </p>
@@ -59,7 +59,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import CourseApi from '../api/course'
-import Background from '@/components/layout/Background.vue'
+import Background from '../components/layout/Background.vue'
 
 const authStore = useAuthStore()
 const courses = ref([])
