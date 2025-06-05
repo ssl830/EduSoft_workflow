@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ClassServiceImpl implements ClassService {
@@ -68,6 +69,18 @@ public class ClassServiceImpl implements ClassService {
             throw new BusinessException(404, "班级不存在");
         }
         return clazz;
+    }
+
+    @Override
+    public Map<String, Object> getClassDetailById(Long id) {
+        if (id == null) {
+            throw new BusinessException(400, "班级ID不能为空");
+        }
+        Map<String, Object> classDetail = classMapper.getClassDetailById(id);
+        if (classDetail == null) {
+            throw new BusinessException(404, "班级不存在");
+        }
+        return classDetail;
     }
 
     @Override

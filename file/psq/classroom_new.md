@@ -1,5 +1,37 @@
 # 班级管理接口文档
 
+## 文件树
+
+```
+src/main/java/org/example/edusoft/
+├── entity/classroom/
+│   ├── Class.java                  # 班级实体类
+│   └── ClassUser.java             # 班级成员实体类
+├── mapper/classroom/
+│   ├── ClassMapper.java           # 班级数据访问接口
+│   └── ClassUserMapper.java       # 班级成员数据访问接口
+├── service/classroom/
+│   ├── ClassService.java          # 班级服务接口
+│   └── impl/
+│       └── ClassServiceImpl.java  # 班级服务实现类
+└── controller/classroom/
+    └── ClassController.java       # 班级控制器
+```
+
+```
+src/main/java/org/example/edusoft/
+├── entity/imports/
+│   └── ImportRecord.java          # 导入记录实体类
+├── mapper/imports/
+│   └── ImportRecordMapper.java    # 导入记录数据访问接口
+├── service/imports/
+│   ├── ImportService.java         # 导入服务接口
+│   └── impl/
+│       └── ImportServiceImpl.java  # 导入服务实现类
+└── controller/imports/
+    └── ImportController.java      # 导入控制器
+```
+
 ## 班级基础管理接口
 
 ### 1. 创建班级 [已实现]
