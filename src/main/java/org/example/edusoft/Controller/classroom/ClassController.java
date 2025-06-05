@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -50,12 +51,8 @@ public class ClassController {
     }
 
     @GetMapping("/{id}")
-    public Result<Class> getClassById(@NotNull(message = "班级ID不能为空") @PathVariable Long id) {
-        try {
-            return Result.success(classService.getClassById(id));
-        } catch (IllegalArgumentException e) {
-            return Result.error(e.getMessage());
-        }
+    public Result<Map<String, Object>> getClassById(@PathVariable Long id) {
+        return Result.success(classService.getClassDetailById(id));
     }
 
     @PutMapping("/{id}")

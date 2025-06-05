@@ -4,6 +4,7 @@ import org.example.edusoft.entity.classroom.Class;
 import org.example.edusoft.entity.classroom.ClassUser;
 import org.example.edusoft.entity.imports.ImportRecord;
 import java.util.List;
+import java.util.Map;
 
 public interface ClassService {
     // 创建班级
@@ -17,6 +18,9 @@ public interface ClassService {
     
     // 获取班级详情
     Class getClassById(Long id);
+    
+    // 获取班级详情
+    Map<String, Object> getClassDetailById(Long id);
     
     // 更新班级信息
     Class updateClass(Class clazz);
