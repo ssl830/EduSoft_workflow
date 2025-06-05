@@ -16,6 +16,17 @@ public interface NotificationMapper {
     int insert(Notification notification);
 
     @Select("SELECT * FROM Notification WHERE user_id = #{userId} ORDER BY created_at DESC")
+    @Results({
+        @Result(property = "id", column = "id"),
+        @Result(property = "userId", column = "user_id"),
+        @Result(property = "title", column = "title"),
+        @Result(property = "message", column = "message"),
+        @Result(property = "type", column = "type"),
+        @Result(property = "readFlag", column = "read_flag"),
+        @Result(property = "createdAt", column = "created_at"),
+        @Result(property = "relatedId", column = "related_id"),
+        @Result(property = "relatedType", column = "related_type")
+    })
     List<Notification> findByUserId(Long userId);
 
     @Select("SELECT COUNT(*) FROM Notification WHERE user_id = #{userId} AND read_flag = false")
@@ -31,5 +42,16 @@ public interface NotificationMapper {
     int deleteById(Long id);
 
     @Select("SELECT * FROM Notification WHERE id = #{id}")
+    @Results({
+        @Result(property = "id", column = "id"),
+        @Result(property = "userId", column = "user_id"),
+        @Result(property = "title", column = "title"),
+        @Result(property = "message", column = "message"),
+        @Result(property = "type", column = "type"),
+        @Result(property = "readFlag", column = "read_flag"),
+        @Result(property = "createdAt", column = "created_at"),
+        @Result(property = "relatedId", column = "related_id"),
+        @Result(property = "relatedType", column = "related_type")
+    })
     Notification findById(Long id);
 } 
