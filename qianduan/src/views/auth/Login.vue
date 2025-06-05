@@ -7,26 +7,35 @@ const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-const username = ref('')
+const userId = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+const loginSuccess = ref(false)
+const successMessage = ref('')
 
 const handleLogin = async () => {
-  if (!username.value || !password.value) {
-    error.value = '请输入用户名和密码'
+  if (!userId.value || !password.value) {
+    error.value = '请输入用户ID和密码'
     return
   }
 
   loading.value = true
   error.value = ''
-  
-  try {
-    await authStore.login(username.value, password.value)
-    const redirectPath = route.query.redirect as string || '/'
-    router.push(redirectPath)
+    try {
+    await authStore.login(userId.value, password.value)
+    
+    // 显示成功消息
+    loginSuccess.value = true
+    successMessage.value = '登录成功'
+    
+    // 短暂延迟后跳转，以便用户看到成功消息
+    setTimeout(() => {
+      const redirectPath = route.query.redirect as string || '/'
+      router.push(redirectPath)
+    }, 1000)
   } catch (err: any) {
-    error.value = err.message || '登录失败，请检查用户名和密码'
+    error.value = err.message || '登录失败，请检查用户ID和密码'
   } finally {
     loading.value = false
   }
@@ -35,19 +44,18 @@ const handleLogin = async () => {
 
 <template>
   <div class="auth-container">
-    <div class="auth-card">
-      <h1 class="auth-title">登录</h1>
+    <div class="auth-card">      <h1 class="auth-title">登录</h1>
       
       <div v-if="error" class="error-message">{{ error }}</div>
+      <div v-if="loginSuccess" class="success-message">{{ successMessage }}</div>
       
-      <form @submit.prevent="handleLogin" class="auth-form">
-        <div class="form-group">
-          <label for="username">用户名</label>
+      <form @submit.prevent="handleLogin" class="auth-form">        <div class="form-group">
+          <label for="userId">用户ID</label>
           <input 
-            id="username"
-            v-model="username"
+            id="userId"
+            v-model="userId"
             type="text"
-            placeholder="请输入用户名"
+            placeholder="请输入用户ID"
             :disabled="loading"
             required
           />
@@ -89,8 +97,18 @@ const handleLogin = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 64px);
-  padding: 2rem;
+  height: 100vh;
+  background-image: url('src/assets/login2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  position: absolute; /* Position absolute to break out of the parent container layout */
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 1; /* Ensure it shows above other content */
 }
 
 .auth-card {
@@ -98,7 +116,8 @@ const handleLogin = async () => {
   max-width: 400px;
   padding: 2rem;
   border-radius: 8px;
-  background-color: white;
+  
+  background-color:aliceblue;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -158,6 +177,15 @@ const handleLogin = async () => {
 .error-message {
   background-color: #ffebee;
   color: #c62828;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1.25rem;

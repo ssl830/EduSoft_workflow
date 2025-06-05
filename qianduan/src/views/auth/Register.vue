@@ -7,43 +7,54 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const username = ref('')
+const userId = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const role = ref('student')
 const loading = ref(false)
 const error = ref('')
+const registerSuccess = ref(false)
+const successMessage = ref('')
 
 const handleRegister = async () => {
   // Validate inputs
-  if (!username.value || !email.value || !password.value) {
+  if (!username.value || !email.value || !password.value || !userId.value) {
     error.value = '请填写所有必填字段'
     return
   }
-
+  
   if (password.value !== confirmPassword.value) {
     error.value = '两次输入的密码不一致'
     return
   }
-
+  
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email.value)) {
     error.value = '请输入有效的电子邮箱'
     return
   }
-
+  
   loading.value = true
   error.value = ''
-
-  try {
-    await authStore.register({
+  
+  try {    await authStore.register({
       username: username.value,
+      userId: userId.value,
       email: email.value,
       password: password.value,
-      role: role.value
+      role: role.value as 'student' | 'teacher' | 'admin'
     })
-    router.push('/')
+    
+    // 显示成功消息
+    registerSuccess.value = true
+    successMessage.value = '注册成功，即将跳转到登录页面'
+    
+    // 短暂延迟后跳转到登录页面
+    setTimeout(() => {
+      router.push('/login')
+    }, 1500)
   } catch (err: any) {
     error.value = err.message || '注册失败，请稍后再试'
   } finally {
@@ -54,15 +65,27 @@ const handleRegister = async () => {
 
 <template>
   <div class="auth-container">
-    <div class="auth-card">
-      <h1 class="auth-title">注册账号</h1>
-
+    <div class="auth-card">      <h1 class="auth-title">注册账号</h1>
+      
       <div v-if="error" class="error-message">{{ error }}</div>
-
+      <div v-if="registerSuccess" class="success-message">{{ successMessage }}</div>
+      
       <form @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
+          <label for="userId">用户ID</label>
+          <input 
+            id="userId"
+            v-model="userId"
+            type="text"
+            placeholder="请输入用户ID"
+            :disabled="loading"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
           <label for="username">用户名</label>
-          <input
+          <input 
             id="username"
             v-model="username"
             type="text"
@@ -71,10 +94,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-
+        
         <div class="form-group">
           <label for="email">电子邮箱</label>
-          <input
+          <input 
             id="email"
             v-model="email"
             type="email"
@@ -83,10 +106,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-
+        
         <div class="form-group">
           <label for="password">密码</label>
-          <input
+          <input 
             id="password"
             v-model="password"
             type="password"
@@ -95,10 +118,10 @@ const handleRegister = async () => {
             required
           />
         </div>
-
+        
         <div class="form-group">
           <label for="confirmPassword">确认密码</label>
-          <input
+          <input 
             id="confirmPassword"
             v-model="confirmPassword"
             type="password"
@@ -107,29 +130,29 @@ const handleRegister = async () => {
             required
           />
         </div>
-
+        
         <div class="form-group">
           <label for="role">角色</label>
-          <select
+          <select 
             id="role"
             v-model="role"
             :disabled="loading"
           >
             <option value="student">学生</option>
             <option value="teacher">教师</option>
-            <option value="tutor">助教</option>
+            <option value="assistant">助教</option>
           </select>
         </div>
-
-        <button
-          type="submit"
-          class="btn-primary btn-full"
+        
+        <button 
+          type="submit" 
+          class="btn-primary btn-full" 
           :disabled="loading"
         >
           {{ loading ? '注册中...' : '注册' }}
         </button>
       </form>
-
+      
       <div class="auth-actions">
         <p>
           已有账号？
@@ -145,8 +168,18 @@ const handleRegister = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 64px);
-  padding: 2rem;
+  height: 100vh;
+  background-image: url('src/assets/login2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
 
 .auth-card {
@@ -154,7 +187,7 @@ const handleRegister = async () => {
   max-width: 400px;
   padding: 2rem;
   border-radius: 8px;
-  background-color: white;
+  background-color: aliceblue;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -216,6 +249,15 @@ const handleRegister = async () => {
 .error-message {
   background-color: #ffebee;
   color: #c62828;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1.25rem;
