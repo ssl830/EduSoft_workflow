@@ -3,6 +3,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,12 +24,15 @@ public class Discussion {
     private Long id;
     
     @NotNull(message = "课程ID不能为空")
+    @TableField("course_id")
     private Long courseId;
     
     @NotNull(message = "班级ID不能为空")
+    @TableField("class_id")
     private Long classId;
     
     @NotNull(message = "创建者ID不能为空")
+    @TableField("creator_id")
     private Long creatorId;
     
     @NotNull(message = "用户编号不能为空")
@@ -41,15 +46,23 @@ public class Discussion {
     @NotBlank(message = "内容不能为空")
     private String content;
     
+    @TableField("is_pinned")
     private Boolean isPinned = false;
     
+    @TableField("is_closed")
     private Boolean isClosed = false;
     
+    @TableField("view_count")
     private Integer viewCount = 0;
     
+    @TableField("reply_count")
     private Integer replyCount = 0;
     
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
     
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 } 

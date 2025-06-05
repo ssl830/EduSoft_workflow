@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class DiscussionServiceImpl implements DiscussionService {
@@ -17,6 +18,11 @@ public class DiscussionServiceImpl implements DiscussionService {
     @Override
     @Transactional
     public Discussion createDiscussion(Discussion discussion) {
+        // 设置创建时间和更新时间
+        LocalDateTime now = LocalDateTime.now();
+        discussion.setCreatedAt(now);
+        discussion.setUpdatedAt(now);
+        
         discussionMapper.insert(discussion);
         return discussion;
     }
@@ -24,6 +30,24 @@ public class DiscussionServiceImpl implements DiscussionService {
     @Override
     @Transactional
     public Discussion updateDiscussion(Discussion discussion) {
+        // 获取原有讨论信息
+        Discussion existingDiscussion = discussionMapper.selectById(discussion.getId());
+        if (existingDiscussion != null) {
+            // 保持原有的字段值
+            discussion.setCreatedAt(existingDiscussion.getCreatedAt());
+            discussion.setCreatorNum(existingDiscussion.getCreatorNum());
+            discussion.setCreatorId(existingDiscussion.getCreatorId());
+            discussion.setCourseId(existingDiscussion.getCourseId());
+            discussion.setClassId(existingDiscussion.getClassId());
+            discussion.setViewCount(existingDiscussion.getViewCount());
+            discussion.setReplyCount(existingDiscussion.getReplyCount());
+            discussion.setIsPinned(existingDiscussion.getIsPinned());
+            discussion.setIsClosed(existingDiscussion.getIsClosed());
+        }
+        
+        // 设置更新时间
+        discussion.setUpdatedAt(LocalDateTime.now());
+        
         discussionMapper.updateById(discussion);
         return discussion;
     }

@@ -93,6 +93,17 @@ public class DiscussionReplyController {
         reply.setUserNum(user.getUserId());  // 设置用户编号
         try {
             return ResponseEntity.ok(discussionReplyService.createReply(reply));
+        } catch (IllegalArgumentException e) {
+            Map<String, String> response = new HashMap<>();
+            String errorMessage = e.getMessage();
+            if ("Parent reply does not exist".equals(errorMessage)) {
+                response.put("error", "父回复不存在");
+            } else if ("Parent reply does not belong to this discussion".equals(errorMessage)) {
+                response.put("error", "父回复不属于该讨论");
+            } else {
+                response.put("error", "创建回复失败: " + errorMessage);
+            }
+            return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("创建回复失败", e);
             Map<String, String> response = new HashMap<>();

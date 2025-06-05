@@ -321,6 +321,17 @@ CREATE TABLE DiscussionReply (
     FOREIGN KEY (user_num) REFERENCES User(user_id),
     FOREIGN KEY (parent_reply_id) REFERENCES DiscussionReply(id)
 ); 
+-- 讨论点赞表
+CREATE TABLE DiscussionLike (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    discussion_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (discussion_id) REFERENCES Discussion(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_discussion_user (discussion_id, user_id)
+);
+
 
 -- 数据插入部分（修复 INSERT）
 INSERT INTO User (user_id, username, password_hash, role, email) 

@@ -7,6 +7,7 @@ import org.example.edusoft.service.discussion.DiscussionReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,6 +22,23 @@ public class DiscussionReplyServiceImpl implements DiscussionReplyService {
     @Override
     @Transactional
     public DiscussionReply createReply(DiscussionReply reply) {
+        // 设置创建时间和更新时间
+        LocalDateTime now = LocalDateTime.now();
+        reply.setCreatedAt(now);
+        reply.setUpdatedAt(now);
+        
+        // 如果是回复其他回复，验证父回复是否存在
+        if (reply.getParentReplyId() != null) {
+            DiscussionReply parentReply = replyMapper.selectById(reply.getParentReplyId());
+            if (parentReply == null) {
+                throw new IllegalArgumentException("Parent reply does not exist");
+            }
+            // 确保父回复属于同一个讨论
+            if (!parentReply.getDiscussionId().equals(reply.getDiscussionId())) {
+                throw new IllegalArgumentException("Parent reply does not belong to this discussion");
+            }
+        }
+        
         replyMapper.insert(reply);
         // 更新讨论的回复数
         discussionMapper.incrementReplyCount(reply.getDiscussionId());
@@ -30,6 +48,14 @@ public class DiscussionReplyServiceImpl implements DiscussionReplyService {
     @Override
     @Transactional
     public DiscussionReply updateReply(DiscussionReply reply) {
+        // 获取原始回复
+        DiscussionReply existingReply = replyMapper.selectById(reply.getId());
+        if (existingReply != null) {
+            // 保留原始创建时间
+            reply.setCreatedAt(existingReply.getCreatedAt());
+            // 设置新的更新时间
+            reply.setUpdatedAt(LocalDateTime.now());
+        }
         replyMapper.updateById(reply);
         return reply;
     }
