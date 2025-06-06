@@ -45,8 +45,9 @@ const uploadSections = async () => {
   }
 
   try {
-    const response = await CourseApi.uploadSections(props.course.id, uploadForm.value.sections)
+    const response = await CourseApi.uploadSections(props.course.id, {sections: uploadForm.value.sections})
     console.log(response)
+      console.log("Hereeeeeeeeee")
     showSectionForm.value = !showSectionForm.value
     // 删除section
   } catch (err) {
@@ -60,10 +61,11 @@ const courseId = computed(() => route.params.id as string)
 const fetchCourse = async() => {
   try {
     const response = await CourseApi.getCourseById(courseId.value)
-    if (response.data && response.data.code === 200) {
-      Object.assign(props.course, response.data.data)
+    if (response.code === 200) {
+      Object.assign(props.course, response.data)
     } else {
-      error.value = response.data?.message || '获取课程详情失败'
+        console.log("hereeeeeeee")
+      error.value = response.message || '获取课程详情失败'
     }
   } catch (err) {
     error.value = '获取课程详情失败，请稍后再试'

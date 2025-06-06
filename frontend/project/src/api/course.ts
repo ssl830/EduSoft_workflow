@@ -16,7 +16,7 @@ const CourseApi = {
   },
 
   uploadSections(courseId: bigint, data: {sections: any[] }){
-    return axios.post(`/api/courses/${courseId}/sections/`, data,
+    return axios.post(`/api/courses/${courseId}/sections`, data,
       {
         headers: {
           'Content-Type': 'application/json',
