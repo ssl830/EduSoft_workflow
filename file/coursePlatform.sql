@@ -99,6 +99,7 @@ CREATE TABLE PracticeQuestion (
     practice_id BIGINT,
     question_id BIGINT,
     score INT NOT NULL,
+    sort_order BIGINT,
     PRIMARY KEY (practice_id, question_id),
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)
@@ -124,6 +125,7 @@ CREATE TABLE Answer (
     is_judged BOOLEAN DEFAULT FALSE,
     correct BOOLEAN,
     score INT,
+    sort_order BIGINT,
     FOREIGN KEY (submission_id) REFERENCES Submission(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)
 ); 
@@ -321,86 +323,195 @@ CREATE TABLE DiscussionReply (
     FOREIGN KEY (user_num) REFERENCES User(user_id),
     FOREIGN KEY (parent_reply_id) REFERENCES DiscussionReply(id)
 ); 
--- 讨论点赞表
-CREATE TABLE DiscussionLike (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    discussion_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (discussion_id) REFERENCES Discussion(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_discussion_user (discussion_id, user_id)
-);
-
 
 -- 数据插入部分（修复 INSERT）
-INSERT INTO User (user_id, username, password_hash, role, email) 
-VALUES 
-('U001', 'teacher_zhang', 'hash123456', 'teacher', 'zhang@example.com'),
-('U002', 'student_li', 'hash789012', 'student', 'li@example.com');
+INSERT INTO User (user_id, username, password_hash, role, email) VALUES
+('20230001', '张三', '$2a$10$xJwL5v5zL3j2VJ5V5X5X5u', 'student', 'zhangsan@example.com'),
+('20230002', '李四', '$2a$10$xJwL5v5zL3j2VJ5V5X5X5u', 'student', 'lisi@example.com'),
+('T2023001', '王教授', '$2a$10$xJwL5v5zL3j2VJ5V5X5X5u', 'teacher', 'wang@example.com'),
+('T2023002', '李教授', '$2a$10$xJwL5v5zL3j2VJ5V5X5X5u', 'teacher', 'li@example.com'),
+('TA202301', '助教刘', '$2a$10$xJwL5v5zL3j2VJ5V5X5X5u', 'tutor', 'liu@example.com');
 
--- 2. 课程与章节
+-- 2. 课程表数据
 INSERT INTO Course (teacher_id, name, code, outline, objective, assessment) VALUES
-(3, '操作系统原理',     'OS101', '操作系统基础...', '掌握进程与内存管理', '平时测验+实验+考试'),
-(3, '数据结构与算法', 'DS102', '线性结构与树...', '熟练使用常见数据结构','平时作业+考试');
+(3, '数据库系统原理', 'CS101', '本课程介绍数据库系统的基本概念和原理', '掌握SQL语言和数据库设计', '平时作业30%，期末考试70%'),
+(3, '算法设计与分析', 'CS102', '本课程介绍常用算法和复杂度分析', '掌握基本算法设计和分析方法', '编程作业40%，期末考试60%'),
+(4, '计算机网络', 'CS201', '本课程介绍计算机网络基本原理', '理解网络协议和体系结构', '实验30%，期末考试70%'),
+(4, '操作系统', 'CS202', '本课程介绍操作系统核心概念', '理解进程管理、内存管理等', '项目40%，期末考试60%'),
+(3, '软件工程', 'CS301', '本课程介绍软件开发流程和方法', '掌握软件生命周期和设计模式', '团队项目60%，个人作业40%');
 
+-- 3. 课程章节数据
 INSERT INTO CourseSection (course_id, title, sort_order) VALUES
-(1, '第1章 操作系统概述', 1),
-(1, '第2章 进程管理',     2),
-(2, '第1章 线性结构',     1),
-(2, '第2章 栈与队列',     2);
+(1, '数据库概述', 1),
+(1, '关系数据库', 2),
+(1, 'SQL语言', 3),
+(2, '算法基础', 1),
+(2, '排序算法', 2),
+(3, '网络体系结构', 1),
+(4, '进程管理', 1),
+(5, '软件生命周期', 1);
 
--- 3. 班级与成员
+-- 4. 班级数据
 INSERT INTO Class (course_id, name, class_code) VALUES
-(1, '2025级01班', 'OS01'),
-(2, '2025级02班', 'DS02');
+(1, '数据库系统2023秋季班', 'DB2023FALL'),
+(1, '数据库系统2023春季班', 'DB2023SPR'),
+(2, '算法设计2023班', 'ALGO2023'),
+(3, '计算机网络2023班', 'NET2023'),
+(4, '操作系统2023班', 'OS2023');
 
+-- 5. 班级成员数据
 INSERT INTO ClassUser (class_id, user_id) VALUES
-(1, 1),
-(1, 2),
-(2, 2);
+(1, 1), (1, 2), (1, 3), (1, 5),
+(2, 1), (2, 3),
+(3, 1), (3, 2), (3, 4),
+(4, 2), (4, 4),
+(5, 1), (5, 4);
 
+-- 6. 课程班级关联数据
 INSERT INTO CourseClass (course_id, class_id) VALUES
-(1, 1),
-(2, 2);
+(1, 1), (1, 2),
+(2, 3),
+(3, 4),
+(4, 5);
 
--- 4. 题库与练习
+-- 7. 题库数据
 INSERT INTO Question (creator_id, type, content, analysis, options, answer, course_id, section_id) VALUES
-(3, 'singlechoice',
- '下面哪个属于操作系统的功能？',
- '进程管理、内存管理、文件管理都是操作系统功能。',
- '["进程管理","数据传输","电路设计","编译优化"]',
- '进程管理',
- 1, 1),
-INSERT INTO Practice (course_id,class_id, title, start_time, end_time, allow_multiple_submission, created_by)
-VALUES 
-(1, 1,'第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
+(3, 'singlechoice', 'SQL中用于查询数据的关键字是？', 'SELECT用于查询数据', '["INSERT", "SELECT", "UPDATE", "DELETE"]', 'SELECT', 1, 3),
+(3, 'fillblank', '关系数据库的三大范式分别是___、___和___', '第一范式、第二范式、第三范式', NULL, '第一范式,第二范式,第三范式', 1, 2),
+(4, 'program', '实现快速排序算法', '分治思想的应用', NULL, 'function quickSort(arr) {...}', 2, 2),
+(3, 'singlechoice', '以下哪个不是数据库事务的特性？', '事务特性是ACID', '["原子性", "一致性", "隔离性", "持久性", "可靠性"]', '可靠性', 1, 2),
+(4, 'fillblank', 'TCP/IP模型中，传输层的主要协议是___和___', 'TCP和UDP', NULL, 'TCP,UDP', 3, 1);
 
-(3, 'program',
- '请写一个函数，反转链表。',
- '可采用三指针法遍历原链表，逐个翻转指针。',
- NULL, NULL, 1, 2),
-
-(3, 'fillblank',
- '在 Linux 中，用于查看当前目录下所有文件（包括隐藏文件）的命令是 ______。',
- '使用 ls -a 来显示所有文件。',
- NULL, 'ls -a', 1, 1);
-
+-- 8. 练习数据
 INSERT INTO Practice (course_id, class_id, title, start_time, end_time, allow_multiple_submission, created_by) VALUES
-(1, 1, '第1章在线练习', '2025-05-20 08:00:00', '2025-05-27 23:59:59', TRUE, 3);
+(1, 1, 'SQL基础练习', '2023-09-01 00:00:00', '2023-09-30 23:59:59', TRUE, 3),
+(1, 1, '数据库设计作业', '2023-10-01 00:00:00', '2023-10-15 23:59:59', FALSE, 3),
+(2, 3, '排序算法实现', '2023-09-15 00:00:00', '2023-09-30 23:59:59', TRUE, 4),
+(3, 4, '网络协议测试', '2023-10-01 00:00:00', '2023-10-31 23:59:59', TRUE, 4),
+(4, 5, '进程同步练习', '2023-11-01 00:00:00', '2023-11-30 23:59:59', FALSE, 4);
 
--- 假设 Practice.id = 1
+-- 9. 练习题目关联数据
 INSERT INTO PracticeQuestion (practice_id, question_id, score) VALUES
-(1, 1, 10),
-(1, 2, 20),
-(1, 3, 5);
+(1, 1, 10), (1, 2, 20),
+(2, 4, 15),
+(3, 3, 30),
+(4, 5, 20),
+(5, 3, 25);
 
--- 5. 学生提交与答案
+-- 10. 提交数据
 INSERT INTO Submission (practice_id, student_id, score, is_judged, feedback) VALUES
-(1, 1, 0, 0, NULL),
-(1, 2, 0, 0, NULL);
+(1, 1, 25, 1, '完成得很好'),
+(1, 2, 20, 1, '第二题需要改进'),
+(2, 1, 15, 1, '正确'),
+(3, 1, 30, 1, '算法实现正确'),
+(4, 2, 20, 1, '回答完整');
 
+-- 11. 答案数据
+INSERT INTO Answer (submission_id, question_id, answer_text, is_judged, correct, score) VALUES
+(1, 1, 'SELECT', TRUE, TRUE, 10),
+(1, 2, '第一范式,第二范式,第三范式', TRUE, TRUE, 15),
+(2, 1, 'SELECT', TRUE, TRUE, 10),
+(2, 2, '第一范式,第二范式', TRUE, FALSE, 10),
+(3, 4, '可靠性', TRUE, TRUE, 15),
+(4, 3, 'function quickSort(arr) {...}', TRUE, TRUE, 30),
+(5, 5, 'TCP,UDP', TRUE, TRUE, 20);
 
-INSERT INTO Notification (user_id, title, message)
-VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+-- 12. 学习进度数据
+INSERT INTO Progress (student_id, course_id, section_id, completed, completed_at) VALUES
+(1, 1, 1, TRUE, '2023-09-10 10:00:00'),
+(1, 1, 2, TRUE, '2023-09-15 11:00:00'),
+(2, 1, 1, TRUE, '2023-09-12 09:00:00'),
+(1, 2, 1, TRUE, '2023-09-20 14:00:00'),
+(2, 3, 1, FALSE, NULL);
 
+-- 13. 收藏题目数据
+INSERT INTO FavoriteQuestion (student_id, question_id) VALUES
+(1, 1), (1, 3),
+(2, 2), (2, 5),
+(1, 4);
+
+-- 14. 通知数据
+INSERT INTO Notification (user_id, title, message, type, read_flag, related_id, related_type) VALUES
+(1, '作业发布', 'SQL基础练习已发布', 'practice', FALSE, 1, 'practice'),
+(2, '作业发布', 'SQL基础练习已发布', 'practice', FALSE, 1, 'practice'),
+(3, '学生提问', '学生李四在讨论区提问', 'discussion', FALSE, 1, 'discussion'),
+(1, '成绩公布', '数据库设计作业成绩已公布', 'submission', FALSE, 3, 'submission'),
+(5, '助教任务', '请批改算法作业', 'task', FALSE, 3, 'practice');
+
+-- 15. 文件节点数据
+INSERT INTO file_node (file_name, is_dir, parent_id, course_id, class_id, uploader_id, file_type, file_size, visibility, file_url, object_name) VALUES
+('课件', TRUE, NULL, 1, 1, 3, 'OTHER', 0, 'CLASS_ONLY', NULL, NULL),
+('第一章', TRUE, 1, 1, 1, 3, 'OTHER', 0, 'CLASS_ONLY', NULL, NULL),
+('数据库概述.pdf', FALSE, 2, 1, 1, 3, 'PDF', 1024, 'CLASS_ONLY', '/files/db_intro.pdf', 'course/1/section/1/db_intro.pdf'),
+('实验指导', TRUE, NULL, 1, 1, 5, 'OTHER', 0, 'CLASS_ONLY', NULL, NULL),
+('实验1.docx', FALSE, 4, 1, 1, 5, 'OTHER', 2048, 'CLASS_ONLY', '/files/lab1.docx', 'course/1/section/1/lab1.docx');
+
+-- 16. 导入记录数据
+INSERT INTO import_record (class_id, operator_id, file_name, total_count, success_count, fail_count, fail_reason, import_time, import_type) VALUES
+(1, 3, 'students.xlsx', 50, 48, 2, '2名学生学号格式错误', '2023-09-01 10:00:00', 'student'),
+(2, 3, 'students.xlsx', 30, 30, 0, NULL, '2023-03-01 09:30:00', 'student'),
+(3, 4, 'questions.xlsx', 20, 18, 2, '2道题目格式不符合要求', '2023-09-15 14:00:00', 'question'),
+(4, 4, 'students.xlsx', 40, 40, 0, NULL, '2023-09-10 11:00:00', 'student'),
+(5, 4, 'resources.zip', 15, 15, 0, NULL, '2023-10-01 16:00:00', 'resource');
+
+-- 17. 作业数据
+INSERT INTO homework (title, description, class_id, created_by, attachment_url, object_name, deadline) VALUES
+('数据库设计作业', '设计一个学生选课系统的ER图', 1, 3, '/homeworks/db_design.pdf', 'course/1/homework/db_design.pdf', '2023-10-15 23:59:59'),
+('算法实现作业', '实现归并排序算法', 3, 4, '/homeworks/merge_sort.pdf', 'course/2/homework/merge_sort.pdf', '2023-09-30 23:59:59'),
+('网络协议分析', '分析TCP三次握手过程', 4, 4, '/homeworks/tcp_analysis.pdf', 'course/3/homework/tcp_analysis.pdf', '2023-10-31 23:59:59'),
+('进程同步实验', '使用信号量解决生产者消费者问题', 5, 4, '/homeworks/producer_consumer.pdf', 'course/4/homework/producer_consumer.pdf', '2023-11-30 23:59:59'),
+('软件需求分析', '编写一个软件的需求文档', 1, 3, '/homeworks/requirements.pdf', 'course/1/homework/requirements.pdf', '2023-11-15 23:59:59');
+
+-- 18. 作业提交数据
+INSERT INTO homework_submission (homework_id, student_id, submission_type, file_url, object_name) VALUES
+(1, 1, 'file', '/submissions/db_design_zhangsan.pdf', 'course/1/submission/db_design_zhangsan.pdf'),
+(1, 2, 'file', '/submissions/db_design_lisi.docx', 'course/1/submission/db_design_lisi.docx'),
+(2, 1, 'file', '/submissions/merge_sort_zhangsan.zip', 'course/2/submission/merge_sort_zhangsan.zip'),
+(3, 2, 'file', '/submissions/tcp_analysis_lisi.pdf', 'course/3/submission/tcp_analysis_lisi.pdf'),
+(5, 1, 'file', '/submissions/requirements_zhangsan.docx', 'course/1/submission/requirements_zhangsan.docx');
+
+-- 19. 教学资源数据
+INSERT INTO teaching_resource (title, description, course_id, chapter_id, chapter_name, resource_type, file_url, object_name, duration, created_by) VALUES
+('数据库概述视频', '数据库系统介绍视频', 1, 1, '数据库概述', 'VIDEO', '/resources/db_intro.mp4', 'course/1/section/1/db_intro.mp4', 1800, 3),
+('SQL学习文档', 'SQL语言详细教程', 1, 3, 'SQL语言', 'DOCUMENT', '/resources/sql_tutorial.pdf', 'course/1/section/3/sql_tutorial.pdf', NULL, 3),
+('算法基础视频', '算法设计与分析基础', 2, 1, '算法基础', 'VIDEO', '/resources/algo_basic.mp4', 'course/2/section/1/algo_basic.mp4', 2400, 4),
+('网络协议PPT', 'TCP/IP协议详解', 3, 1, '网络体系结构', 'PPT', '/resources/tcp_ip.pptx', 'course/3/section/1/tcp_ip.pptx', NULL, 4),
+('进程管理实验', '进程同步实验指导', 4, 1, '进程管理', 'DOCUMENT', '/resources/process_lab.pdf', 'course/4/section/1/process_lab.pdf', NULL, 4);
+
+-- 20. 学习进度数据
+INSERT INTO learning_progress (resource_id, student_id, progress, last_position, watch_count, last_watch_time) VALUES
+(1, 1, 1800, 1800, 2, '2023-09-10 10:30:00'),
+(1, 2, 1200, 1200, 1, '2023-09-12 09:30:00'),
+(3, 1, 2400, 2400, 1, '2023-09-20 14:30:00'),
+(2, 1, 0, 0, 0, NULL),
+(4, 2, 600, 600, 1, '2023-10-05 15:00:00');
+
+-- 21. 错题库数据
+INSERT INTO WrongQuestion (student_id, question_id, wrong_answer, correct_answer, wrong_count) VALUES
+(1, 2, '第一范式,第二范式', '第一范式,第二范式,第三范式', 2),
+(2, 1, 'INSERT', 'SELECT', 1),
+(1, 4, '一致性', '可靠性', 1),
+(2, 5, 'TCP,IP', 'TCP,UDP', 3),
+(1, 3, 'function bubbleSort(arr) {...}', 'function quickSort(arr) {...}', 1);
+
+-- 22. 讨论区数据
+INSERT INTO Discussion (course_id, class_id, creator_id, creator_num, title, content, is_pinned, view_count, reply_count) VALUES
+(1, 1, 1, '20230001', '关于第一范式的疑问', '第一范式的定义中，属性不可再分是什么意思？', FALSE, 15, 3),
+(1, 1, 3, 'T2023001', '重要通知：作业提交延期', '因系统维护，作业提交截止时间延长至10月20日', TRUE, 30, 0),
+(2, 3, 2, '20230002', '快速排序时间复杂度问题', '为什么快速排序的平均时间复杂度是O(nlogn)?', FALSE, 20, 5),
+(3, 4, 4, 'T2023002', '实验环境配置指南', '请同学们按照以下步骤配置实验环境...', TRUE, 25, 2),
+(1, 1, 5, 'TA202301', 'SQL作业常见问题解答', '以下是同学们在SQL作业中遇到的常见问题...', FALSE, 18, 4);
+
+-- 23. 讨论回复数据
+INSERT INTO DiscussionReply (discussion_id, user_id, user_num, content, parent_reply_id, is_teacher_reply) VALUES
+(1, 3, 'T2023001', '指的是属性不能再分解为更小的数据项', NULL, TRUE),
+(1, 5, 'TA202301', '例如，地址属性可以再分为省、市、街道等', NULL, TRUE),
+(1, 2, '20230002', '明白了，谢谢老师！', 1, FALSE),
+(3, 4, 'T2023002', '这是因为快速排序采用了分治策略', NULL, TRUE),
+(5, 1, '20230001', '关于第三题，JOIN和WHERE的区别是什么？', NULL, FALSE);
+
+-- 24. 讨论点赞数据
+INSERT INTO DiscussionLike (discussion_id, user_id) VALUES
+(1, 2), (1, 5),
+(3, 1), (3, 2), (3, 5),
+(5, 1), (5, 2);
