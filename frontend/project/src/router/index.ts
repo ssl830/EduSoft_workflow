@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+// import { useAuthStore } from '../stores/auth'
 
 import Home from '../views/Home.vue'
 import Login from '../views/auth/Login.vue'
@@ -225,46 +225,6 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '通知中心',
       requiresAuth: true,
-      showSidebar: true
-    }
-  },
-  {
-    path: '/discussion-like-test',
-    name: 'DiscussionLikeTest',
-    component: () => import('../views/DiscussionLikeTest.vue'),
-    meta: {
-      title: '讨论点赞测试',
-      requiresAuth: false,
-      showSidebar: true
-    }
-  },
-  {
-    path: '/notification-test',
-    name: 'NotificationTest',
-    component: () => import('../views/NotificationTest.vue'),
-    meta: {
-      title: '通知中心测试',
-      requiresAuth: false,
-      showSidebar: true
-    }
-  },
-  {
-    path: '/deadline-reminder-test',
-    name: 'DeadlineReminderTest',
-    component: () => import('../views/DeadlineReminderTest.vue'),
-    meta: {
-      title: 'DDL提醒测试',
-      requiresAuth: false,
-      showSidebar: true
-    }
-  },
-  {
-    path: '/submission-report-test',
-    name: 'SubmissionReportTest',
-    component: () => import('../views/SubmissionReportTest.vue'),
-    meta: {
-      title: '提交报告导出测试',
-      requiresAuth: false,
       showSidebar: true
     }
   },
