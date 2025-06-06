@@ -19,7 +19,7 @@ public class Answer {
     private Long submissionId;
 
     @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    private Long questionId; 
 
     @Column(name = "answer_text")
     private String answerText;
@@ -30,4 +30,7 @@ public class Answer {
     private Boolean correct;
 
     private Integer score;
+
+    @Column(name = "sort_order")
+    private Long sortOrder;
 } 

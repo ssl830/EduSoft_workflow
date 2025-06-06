@@ -234,4 +234,18 @@ public interface PracticeMapper {
             ORDER BY p.created_at DESC
             """)
     List<PracticeListDTO> getStudentPracticeList(Long studentId, Long classId);
+    @Select("SELECT * FROM Practice WHERE id = #{id}")
+    Practice findById(Long id);
+
+    @Select("SELECT * FROM Practice WHERE class_id = #{classId}")
+    List<Practice> findByClassId(Long classId);
+
+    @Insert("INSERT INTO Practice(course_id, class_id, title, start_time, end_time, allow_multiple_submission, created_by) " +
+            "VALUES(#{courseId}, #{classId}, #{title}, #{startTime}, #{endTime}, #{allowMultipleSubmission}, #{createdBy})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    void insert(Practice practice);
+
+    @Update("UPDATE Practice SET title=#{title}, start_time=#{startTime}, end_time=#{endTime}, " +
+            "allow_multiple_submission=#{allowMultipleSubmission} WHERE id=#{id}")
+    void update(Practice practice);
 } 

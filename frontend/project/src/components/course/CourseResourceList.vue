@@ -69,7 +69,7 @@ const fetchResources = async () => {
       userid: authStore.user?.id,
     })
     // console.log(selectedChapter.value)
-    resources.value = response.data.data
+    resources.value = response.data
 
     // Extract unique chapters and types
     const chaptersSet = new Set(resources.value.map((r: any) => r.sectionId).filter(Boolean))
@@ -101,7 +101,7 @@ const fetchResourcesVer = async (title: string) => {
             title: title
         })
         // console.log(selectedChapter.value)
-        resourcesVer.value = response.data.data
+        resourcesVer.value = response.data
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
         console.error(err)
@@ -219,7 +219,7 @@ const downloadResource = async (resource: any) => {
     // link.remove()
       // 1. 获取文件直链
       const response = await ResourceApi.downloadResource(resource.id)
-      const fileUrl = response.data.url
+      const fileUrl = response.url
       const fileName = resource.title
 
       // 2. 通过 Fetch/Blob 间接下载

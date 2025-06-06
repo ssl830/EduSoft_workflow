@@ -91,8 +91,8 @@ const fetchClasses = async () => {
         try {
             const response = await ClassApi.getUserClasses(authStore.user?.id)
             console.log(authStore.user?.id)
-            console.log(response.data.classes)
-            classes.value = response.data.data
+            console.log(response.classes)
+            classes.value = response.data
         } catch (err) {
             error.value = '获取班级列表失败，请稍后再试'
             console.error(err)
@@ -149,7 +149,7 @@ const nextStep = async () => {
             });
 
             // 存储练习ID
-            exercise.practiceId = response.data.data.practiceId;
+            exercise.practiceId = response.data.practiceId;
             currentStep.value = 2;
             error.value = '';
             // console.log(response.data.data.practiceId)
@@ -384,7 +384,7 @@ const fetchRepoQuestions = async () => {
         const response = await QuestionApi.getQuestionList({
             courseId: exercise.courseId
         });
-        repoQuestions.value = response.data.data.questions;
+        repoQuestions.value = response.data.questions;
     } catch (err) {
         repoError.value = '获取题库题目失败，请稍后再试';
         console.error(err);

@@ -81,7 +81,7 @@ const fetchClasses = async () => {
 const fetchCourses = async () => {
   try {
     const response = await CourseApi.getUserCourses(authStore.user?.id)
-    courses.value = response.data.courses
+      courses.value = response.data
   } catch (err) {
     console.error('获取课程列表失败:', err)
   }

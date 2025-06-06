@@ -4,10 +4,10 @@ import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.resource.LearningProgress;
 import java.util.List;
 
-/**
+/** 
  * 学习进度数据访问接口
  */
-@Mapper
+@Mapper  
 public interface LearningProgressMapper {
     
     /**

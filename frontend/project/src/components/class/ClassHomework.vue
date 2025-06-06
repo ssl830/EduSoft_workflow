@@ -381,7 +381,7 @@ const fetchHomeworks = async () => {
     try {
         console.log(props.classId)
         const response = await ClassApi.getHomeworkList(props.classId)
-        homeworks.value = response.data.data
+        homeworks.value = response.data
     } catch (err) {
         error.value = '获取作业列表失败，请稍后再试'
         console.error(err)
@@ -436,8 +436,8 @@ const fetchSubmissions = async (homeworkId: bigint) => {
     console.log(homeworkId)
     try {
         const response = await ClassApi.fetchSubmissions(homeworkId)
-        submissions.value = response.data.data
-        console.log(response.data.data)
+        submissions.value = response.data
+        console.log(response.data)
     } catch (err) {
         submissionsError.value = '获取提交列表失败，请稍后再试'
         console.error(err)

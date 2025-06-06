@@ -91,7 +91,7 @@ const fetchQuestions = async () => {
             courseId: selectedCourse.value
         })
 
-        questions.value = response.data.data.questions
+        questions.value = response.data.questions
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
         console.error(err)
@@ -123,7 +123,7 @@ const fetchCourses = async () => {
     try {
         const response = await CourseApi.getUserCourses(authStore.user?.id)
         // 直接使用 API 返回的课程对象数组
-        courses.value = response.data.data
+        courses.value = response.data
 
         // 删除下面两行，不再需要提取课程名称
         // const courseSet = new Set(courses.value.map((r: any) => r.name).filter(Boolean))

@@ -6,15 +6,19 @@ import java.util.Map;
 import java.util.ArrayList;
 
 import org.example.edusoft.entity.practice.*;
-import org.example.edusoft.dto.practice.QuestionAnswerDTO;
-import org.example.edusoft.dto.practice.SubmissionAnswersDTO;
+import org.example.edusoft.entity.user.User;
+import org.example.edusoft.dto.practice.*;
 import org.example.edusoft.common.domain.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.*;
-
+import org.example.edusoft.mapper.user.UserMapper;
 import org.example.edusoft.mapper.practice.*;
-import org.example.edusoft.common.domain.*;
- 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.example.edusoft.dto.practice.JudgeQuestionRequest;
+
+/**
+ * 教师批改服务
+ */
 @Service
 public class ManualJudgeService {
 
@@ -27,88 +31,122 @@ public class ManualJudgeService {
     @Autowired
     private PracticeQuestionMapper practiceQuestionMapper;
 
-    public Result<Void> manualJudge(List<Answer> answers) {
-        for (Answer ans : answers) {
-            answerMapper.updateScoreAndJudgment(ans);
+    @Autowired
+    private QuestionMapper questionMapper;
 
-            Submission submission = submissionMapper.selectById(ans.getSubmissionId());
-            submission.setScore(submission.getScore() + ans.getScore());
+    @Autowired
+    private PracticeMapper practiceMapper;
 
-            if (ans.getIsJudged()) {
-                submission.setIsJudged(submission.getIsJudged() - 1);
+    @Autowired
+    private UserMapper userMapper;
+
+    /**
+     * 获取待批改的提交列表
+     */
+    public Result<List<PendingSubmissionDTO>> getPendingSubmissionList(Long practiceId, Long classId) {
+        List<Submission> submissions;
+        if (practiceId != null) {
+            // 获取指定练习的待批改提交
+            submissions = submissionMapper.findByPracticeIdWithUnjudgedAnswers(practiceId);
+        } else {
+            // 获取班级下所有练习的待批改提交
+            List<Practice> practices = practiceMapper.findByClassId(classId);
+            submissions = new ArrayList<>();
+            for (Practice practice : practices) {
+                submissions.addAll(submissionMapper.findByPracticeIdWithUnjudgedAnswers(practice.getId()));
             }
-
-            submissionMapper.update(submission);
         }
 
-        return Result.ok(null, "评分更新成功");
+        // 转换为DTO
+        List<PendingSubmissionDTO> result = submissions.stream().map(submission -> {
+            Practice practice = practiceMapper.findById(submission.getPracticeId());
+            String studentName = userMapper.findById(submission.getStudentId()).getUsername();
+            
+            return new PendingSubmissionDTO(
+                studentName,
+                practice.getTitle(),
+                submission.getId()
+            );
+        }).collect(Collectors.toList());
+
+        return Result.ok(result, "获取成功");
     }
 
-    public Result<List<SubmissionAnswersDTO>> getPendingAnswers(Long practiceId, Long submissionId) {
-        // 1. 获取练习中的所有非单选题
-        List<Question> questionList = practiceQuestionMapper.findByPracticeId(practiceId);
-        List<Long> questionIds = questionList.stream()
-            .filter(q -> q.getType() != Question.QuestionType.singlechoice)
-            .map(Question::getId)
-            .collect(Collectors.toList());
-
-        if (questionIds.isEmpty()) {
-            return Result.ok(new ArrayList<>(), "获取待评分答案成功");
+    /**
+     * 获取提交答案详情
+     */
+    public Result<List<SubmissionDetailDTO>> getSubmissionDetail(Long submissionId) {
+        // 1. 获取提交信息
+        Submission submission = submissionMapper.selectById(submissionId);
+        if (submission == null) {
+            return Result.error("提交不存在");
         }
 
-        // 2. 获取需要评分的提交记录
-        List<Answer> answers;
-        if (submissionId != null) {
-            // 如果指定了submissionId，只获取该提交的答案
-            answers = answerMapper.findunjudgedByQuestionIdsAndSubmissionId(questionIds, submissionId);
-        } else {
-            // 获取所有有未评分答案的提交记录
-            List<Submission> submissions = submissionMapper.findByPracticeIdWithUnjudgedAnswers(practiceId);
-            if (submissions.isEmpty()) {
-                return Result.ok(new ArrayList<>(), "获取待评分答案成功");
+        // 2. 获取学生信息
+        String studentName = userMapper.findById(submission.getStudentId()).getUsername();
+
+        // 3. 获取所有非单选题答案
+        List<Answer> answers = answerMapper.findBySubmissionId(submissionId);
+        List<SubmissionDetailDTO> result = new ArrayList<>();
+
+        for (Answer answer : answers) {
+            Question question = questionMapper.selectById(answer.getQuestionId());
+            // 只返回非单选题
+            if (question.getType() != Question.QuestionType.singlechoice) {
+                // 获取题目分值
+                PracticeQuestion pq = practiceQuestionMapper.findByPracticeIdAndQuestionId(
+                    submission.getPracticeId(), question.getId());
+                
+                result.add(new SubmissionDetailDTO(
+                    question.getContent(),
+                    answer.getAnswerText(),
+                    pq.getScore(),
+                    studentName,
+                    answer.getSortOrder()
+                ));
             }
-            
-            List<Long> submissionIds = submissions.stream()
-                .map(Submission::getId)
-                .collect(Collectors.toList());
-            
-            // 获取这些提交记录的所有答案
-            answers = answerMapper.findunjudgedByQuestionIdsAndSubmissionIds(questionIds, submissionIds);
         }
 
-        // 3. 获取题目分数信息
-        List<PracticeQuestion> practiceQuestions = practiceQuestionMapper.findpqByPracticeId(practiceId);
-        Map<Long, Integer> questionScores = practiceQuestions.stream()
-            .collect(Collectors.toMap(PracticeQuestion::getQuestionId, PracticeQuestion::getScore));
+        // 按题目顺序排序
+        result.sort((a, b) -> a.getSortOrder().compareTo(b.getSortOrder()));
 
-        // 4. 按提交记录分组答案
-        Map<Long, List<Answer>> answersBySubmission = answers.stream()
-            .collect(Collectors.groupingBy(Answer::getSubmissionId));
+        return Result.ok(result, "获取成功");
+    }
 
-        // 5. 转换为DTO
-        List<SubmissionAnswersDTO> result = new ArrayList<>();
-        answersBySubmission.forEach((subId, subAnswers) -> {
-            SubmissionAnswersDTO submissionDTO = new SubmissionAnswersDTO();
-            submissionDTO.setId(subId);
-            submissionDTO.setSubmissionId(subId);
+    /**
+     * 批改提交
+     */
+    @Transactional
+    public Result<Void> judgeSubmission(JudgeSubmissionRequest request) {
+        // 1. 获取提交信息
+        Submission submission = submissionMapper.selectById(request.getSubmissionId());
+        if (submission == null) {
+            return Result.error("提交不存在");
+        }
+
+        // 2. 更新每道题的得分
+        int totalScore = submission.getScore(); // 保留单选题分数
+
+        for (JudgeQuestionRequest questionRequest : request.getQuestions()) {
+            // 根据提交ID和题目顺序找到答案
+            Answer answer = answerMapper.findBySubmissionIdAndSortOrder(
+                submission.getId(), questionRequest.getSortOrder());
             
-            List<QuestionAnswerDTO> questionAnswers = subAnswers.stream()
-                .map(answer -> {
-                    QuestionAnswerDTO dto = new QuestionAnswerDTO();
-                    dto.setQuestionId(answer.getQuestionId());
-                    dto.setAnswerText(answer.getAnswerText());
-                    dto.setIsJudged(answer.getIsJudged());
-                    dto.setCorrect(answer.getCorrect());
-                    dto.setScore(answer.getScore());
-                    dto.setMaxScore(questionScores.get(answer.getQuestionId()));
-                    return dto;
-                })
-                .collect(Collectors.toList());
-            
-            submissionDTO.setQuestion(questionAnswers);
-            result.add(submissionDTO);
-        });
+            if (answer != null && !answer.getIsJudged()) {
+                answer.setScore(questionRequest.getScore());
+                answer.setIsJudged(true);
+                answerMapper.updateScoreAndJudgment(answer);
+                
+                totalScore += questionRequest.getScore();
+                //judgedCount++;
+            }
+        }
 
-        return Result.ok(result, "获取待评分答案成功");
+        // 3. 更新提交状态
+        submission.setScore(totalScore);
+        submission.setIsJudged(1);
+        submissionMapper.update(submission);
+
+        return Result.ok(null, "批改成功");
     }
 }

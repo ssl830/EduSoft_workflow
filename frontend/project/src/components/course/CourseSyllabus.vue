@@ -45,8 +45,9 @@ const uploadSections = async () => {
   }
 
   try {
-    const response = await CourseApi.uploadSections(props.course.id, uploadForm.value.sections)
+    const response = await CourseApi.uploadSections(props.course.id, {sections: uploadForm.value.sections})
     console.log(response)
+      console.log("Hereeeeeeeeee")
     showSectionForm.value = !showSectionForm.value
     // 删除section
   } catch (err) {
@@ -60,10 +61,11 @@ const courseId = computed(() => route.params.id as string)
 const fetchCourse = async() => {
   try {
     const response = await CourseApi.getCourseById(courseId.value)
-    if (response.data && response.data.code === 200) {
-      Object.assign(props.course, response.data.data)
+    if (response.code === 200) {
+      Object.assign(props.course, response.data)
     } else {
-      error.value = response.data?.message || '获取课程详情失败'
+        console.log("hereeeeeeee")
+      error.value = response.message || '获取课程详情失败'
     }
   } catch (err) {
     error.value = '获取课程详情失败，请稍后再试'
@@ -190,9 +192,9 @@ const deleteSection = async (sectionId: bigint) => {
             </tr>
             </thead>
             <tbody>
-            <tr v-for="section in course.sections" :key="section.sort_order">
-              <td>{{ section.sort_order }}</td>
-              <td>{{ section.title}}</td>
+            <tr v-for="section in course.sections" :key="section.id">
+              <td>{{ section.sortOrder }}</td>
+              <td>{{ section.title }}</td>
               <td class="actions">
                 <button
                     class="btn-action preview"
@@ -207,7 +209,7 @@ const deleteSection = async (sectionId: bigint) => {
           </table>
         </div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
-        <div v-else class="empty-state">尚未设置课程大纲</div>
+        <div v-else class="empty-state">尚未设置课程章节</div>
       </div>
     </section>
   </div>

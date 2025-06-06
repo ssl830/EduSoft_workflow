@@ -45,7 +45,7 @@ const fetchStudents = async () => {
     try {
         const response = await ClassApi.getClassStudents(props.classId)
         // console.log(selectedChapter.value)
-        students.value = response.data.students
+        students.value = response.students
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
         console.error(err)

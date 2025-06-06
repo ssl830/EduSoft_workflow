@@ -3,6 +3,8 @@ package org.example.edusoft.controller.resource;
 import org.example.edusoft.common.domain.Result;
 import org.example.edusoft.entity.resource.TeachingResource;
 import org.example.edusoft.entity.resource.LearningProgress;
+import org.example.edusoft.entity.resource.ResourceProgressDTO;
+import org.example.edusoft.entity.resource.ChapterResourceRequest;
 import org.example.edusoft.service.resource.TeachingResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,8 @@ import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.example.edusoft.common.exception.BusinessException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -107,7 +111,7 @@ public class TeachingResourceController {
         } catch (Exception e) {
             return Result.error("获取章节资源列表失败：" + e.getMessage());
         }
-    }
+    } 
 
     /**
      * 删除教学资源
@@ -172,7 +176,7 @@ public class TeachingResourceController {
             return Result.error("获取学习进度失败：" + e.getMessage());
         }
     }
-
+ 
     /**
      * 获取资源访问URL（带签名的临时访问URL，有效期1小时）
      */
@@ -194,6 +198,27 @@ public class TeachingResourceController {
         } catch (Exception e) {
             log.error("获取资源访问链接失败", e);
             return Result.error("获取资源访问链接失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取课程资源及学习进度信息
+     * @param courseId 课程ID
+     * @param request 请求参数（包含学生ID和章节ID）
+     * @return 资源及学习进度信息列表
+     */
+    @PostMapping(value = "/chapter/{courseId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Result<List<ResourceProgressDTO>>> getCourseResourcesWithProgress(
+            @PathVariable Long courseId,
+            @Valid @RequestBody ChapterResourceRequest request) {
+        try {
+            List<ResourceProgressDTO> resources = resourceService.getCourseResourcesWithProgress(
+                courseId, request.getStudentId(), request.getChapterId());
+            System.out.println(resources + "resources");    
+            return ResponseEntity.ok(Result.ok(resources, "获取课程资源及进度信息成功"));
+        } catch (Exception e) {
+            log.error("获取课程资源及进度信息失败", e);
+            return ResponseEntity.ok(Result.error("获取课程资源及进度信息失败：" + e.getMessage()));
         }
     }
 } 

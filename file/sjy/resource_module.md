@@ -74,7 +74,7 @@ CREATE TABLE learning_progress (
   - createdBy: 创建者ID
 - 返回：资源详细信息
 
-### 2. 获取课程资源列表
+### 2. 获取课程资源列表 
 - 请求方式：GET
 - 路径：/api/resources/list/{courseId}
 - 返回：课程下的所有教学资源（按章节分组）

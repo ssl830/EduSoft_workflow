@@ -7,11 +7,14 @@ import java.util.Map;
 import org.example.edusoft.common.domain.Result;
 import org.example.edusoft.common.dto.file.FileQueryRequest;
 import org.example.edusoft.common.dto.file.FileResponseDTO;
+import org.example.edusoft.entity.file.FileAccessDTO;
+import org.example.edusoft.exception.BusinessException;
 import org.example.edusoft.service.file.FileDownloadService;
 import org.example.edusoft.service.file.FileUpload;
 import org.example.edusoft.service.file.FilePreviewService;
 import org.example.edusoft.service.file.FileQueryService;
 import org.example.edusoft.service.file.FolderService;
+import org.example.edusoft.service.file.FileAccessService;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +28,15 @@ public class FileController {
     private final FileQueryService fileQueryService;
     private final FolderService folderService;
     private final FilePreviewService filePreviewService;
+    private final FileAccessService fileAccessService;
 
-    public FileController(FileDownloadService fileDownloadService, FileUpload fileUploadService, FileQueryService fileQueryService, FolderService folderService, FilePreviewService filePreviewService) {
+    public FileController(FileDownloadService fileDownloadService, FileUpload fileUploadService, FileQueryService fileQueryService, FolderService folderService, FilePreviewService filePreviewService, FileAccessService fileAccessService) {
         this.fileDownloadService = fileDownloadService;
         this.fileUploadService = fileUploadService;
         this.fileQueryService = fileQueryService;
         this.folderService = folderService;
         this.filePreviewService = filePreviewService;
+        this.fileAccessService = fileAccessService;
     }
 
     @PostMapping("/userfolders")
@@ -150,6 +155,44 @@ public class FileController {
             filePreviewService.previewFile(fileId, response);
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "无效的 resourceId 格式");
+        }
+    }
+
+    /**
+     * 获取文件下载URL
+     *
+     * @param resourceId 文件ID
+     * @return 文件下载URL及相关信息
+     */
+    @GetMapping("/resources/{resourceId}/download-url")
+    public Result<FileAccessDTO> getDownloadUrl(@PathVariable("resourceId") String resourceId) {
+        try {
+            Long fileId = Long.valueOf(resourceId);
+            FileAccessDTO accessDTO = fileAccessService.getDownloadUrl(fileId);
+            return Result.ok(accessDTO, "获取下载链接成功");
+        } catch (NumberFormatException e) {
+            return Result.error("无效的 resourceId 格式");
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取文件预览URL
+     *
+     * @param resourceId 文件ID
+     * @return 文件预览URL及相关信息
+     */
+    @GetMapping("/resources/{resourceId}/preview-url")
+    public Result<FileAccessDTO> getPreviewUrl(@PathVariable("resourceId") String resourceId) {
+        try {
+            Long fileId = Long.valueOf(resourceId);
+            FileAccessDTO accessDTO = fileAccessService.getPreviewUrl(fileId);
+            return Result.ok(accessDTO, "获取预览链接成功");
+        } catch (NumberFormatException e) {
+            return Result.error("无效的 resourceId 格式");
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
         }
     }
 }

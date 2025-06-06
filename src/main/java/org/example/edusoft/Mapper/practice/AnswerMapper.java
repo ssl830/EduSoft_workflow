@@ -8,8 +8,8 @@ import org.example.edusoft.entity.practice.*;
 @Mapper
 public interface AnswerMapper {
     @Insert({
-        "INSERT INTO Answer(submission_id, question_id, answer_text, is_judged, correct, score)",
-        "VALUES(#{submissionId}, #{questionId}, #{answerText}, #{isJudged}, #{correct}, #{score})"
+        "INSERT INTO Answer(submission_id, question_id, answer_text, is_judged, correct, score, sort_order)",
+        "VALUES(#{submissionId}, #{questionId}, #{answerText}, #{isJudged}, #{correct}, #{score}, #{sortOrder})"
     })
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Answer answer);
@@ -79,6 +79,10 @@ public interface AnswerMapper {
     List<Answer> findunjudgedByQuestionIdsAndSubmissionIds(@Param("questionIds") List<Long> questionIds,
                                                   @Param("submissionIds") List<Long> submissionIds);
 
-                                                  
+    /**
+     * 根据提交ID和题目顺序查找答案
+     */
+    @Select("SELECT * FROM Answer WHERE submission_id = #{submissionId} AND sort_order = #{sortOrder}")
+    Answer findBySubmissionIdAndSortOrder(@Param("submissionId") Long submissionId, @Param("sortOrder") Long sortOrder);
 
 }

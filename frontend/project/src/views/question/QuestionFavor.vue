@@ -20,7 +20,7 @@ const fetchQuestions = async () => {
     try {
         const response = await QuestionApi.getFavorQuestionList()
         // console.log(selectedChapter.value)
-        questions.value = response.data.data
+        questions.value = response.data
 
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'

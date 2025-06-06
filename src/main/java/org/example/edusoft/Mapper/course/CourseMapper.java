@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.example.edusoft.entity.course.Course;
 import org.example.edusoft.entity.course.CourseDetailDTO;
+import org.example.edusoft.entity.course.CourseSection;
 import java.util.List;
 
 @Mapper
@@ -33,6 +34,9 @@ public interface CourseMapper extends BaseMapper<Course> {
             WHERE c.id = #{courseId}
             """)
     CourseDetailDTO getCourseDetailById(Long courseId);
+
+    @Select("SELECT * FROM CourseSection WHERE course_id = #{courseId} ORDER BY sort_order")
+    List<CourseSection> getSectionsByCourseId(Long courseId);
 
     @Select("""
             SELECT 
