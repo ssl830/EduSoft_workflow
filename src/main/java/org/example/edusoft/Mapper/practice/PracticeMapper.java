@@ -108,6 +108,7 @@ public interface PracticeMapper {
     @Select("""
                 SELECT
                     wq.id,
+                    wq.question_id,
                     wq.wrong_answer,
                     wq.correct_answer,
                     wq.wrong_count,

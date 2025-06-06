@@ -25,13 +25,24 @@ const isTeacherOrTutor = computed(() => {
 onMounted(async () => {
     try {
         const response = await ClassApi.getClassById(aclassId.value)
-        aclass.value = response.data.aclass
-        console.log(response.data.message)
-        console.log(response.data.aclass)
-        console.log(aclass.value)
+        console.log('班级详情响应:', response)
+        
+        if (response.code === 200 && response.data) {
+            // 处理班级数据
+            aclass.value = {
+                ...response.data,
+                name: response.data.className || response.data.name || '未命名班级',
+                code: response.data.classCode || response.data.code || '无代码',
+                courseName: response.data.courseName || '未知课程'
+            }
+            console.log('处理后的班级数据:', aclass.value)
+        } else {
+            error.value = response.message || '获取班级详情失败'
+            console.error('获取班级详情失败:', response)
+        }
     } catch (err) {
         error.value = '获取班级详情失败，请稍后再试'
-        console.error(err)
+        console.error('获取班级详情错误:', err)
     } finally {
         loading.value = false
     }
@@ -44,7 +55,8 @@ onMounted(async () => {
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <template v-else-if="aclass">
             <header class="course-header">
-                <h1>{{ aclass.course_name }}  {{ aclass.class_name }}</h1>
+                <h1>{{ aclass.name || '未命名班级' }}</h1>
+                <p v-if="aclass.code" class="course-code">班级代码: {{ aclass.code }}</p>
             </header>
 
             <div class="course-content">
@@ -70,9 +82,9 @@ onMounted(async () => {
                     </button>
                 </div>
 
-<!--                 Main Content - Three Panel Layout -->
+                <!-- Main Content - Three Panel Layout -->
                 <div class="course-main-content">
-<!--                     Panel 1: 学生管理 -->
+                    <!-- Panel 1: 学生管理 -->
                     <ClassStudent
                         v-if="activeTab === 'students'"
                         :class-id="aclassId"
@@ -94,7 +106,6 @@ onMounted(async () => {
                     />
                 </div>
             </div>
-
         </template>
     </div>
 </template>

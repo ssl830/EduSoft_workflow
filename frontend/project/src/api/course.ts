@@ -3,6 +3,10 @@ import axios from './axios'
 const CourseApi = {
   // Get all courses for current user
   getUserCourses(userId: string) {
+    if (!userId) {
+      console.error('userId is required')
+      return Promise.reject(new Error('userId is required'))
+    }
     return axios.get(`/api/courses/user/${userId}`)
   },
 

@@ -55,10 +55,25 @@ const resetJoinForm = () => {
 const fetchClasses = async () => {
     try {
         const response = await ClassApi.getUserClasses(authStore.user?.id)
-        classes.value = response.data.classes
+        console.log('获取班级列表响应:', response)
+        
+        if (response.code === 200 && Array.isArray(response.data)) {
+            classes.value = response.data.map(classItem => ({
+                ...classItem,
+                name: classItem.className || '未命名班级',
+                code: classItem.classCode || '无代码',
+                courseName: classItem.courseName || '未知课程',
+                createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
+            }))
+            console.log('处理后的班级数据:', classes.value)
+        } else {
+            classes.value = []
+            error.value = response.message || '获取班级列表失败'
+        }
     } catch (err) {
+        classes.value = []
         error.value = '获取班级列表失败，请稍后再试'
-        console.error(err)
+        console.error('获取班级列表错误:', err)
     }
 }
 
@@ -139,6 +154,25 @@ const createClass = async () => {
     }
 }
 
+// 格式化日期
+const formatDate = (dateString: string) => {
+    if (!dateString) return '未知时间'
+    try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return '未知时间'
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    } catch (e) {
+        console.error('日期格式化错误:', e)
+        return '未知时间'
+    }
+}
+
 onMounted(async () => {
     if (authStore.isAuthenticated) {
         try {
@@ -171,6 +205,31 @@ onMounted(async () => {
                 >
                     创建班级
                 </button>
+            </div>
+
+            <!-- 班级列表 -->
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else-if="error" class="error-message">{{ error }}</div>
+            <div v-else-if="classes.length === 0" class="empty-state">
+                <p>您还没有参与任何班级</p>
+            </div>
+            <div v-else class="class-grid">
+                <div v-for="classItem in classes" :key="classItem.id" class="class-card">
+                    <div class="class-info">
+                        <h3>{{ classItem.name }}</h3>
+                        <p>班级代码: {{ classItem.code }}</p>
+                        <p>课程: {{ classItem.courseName }}</p>
+                        <p>创建时间: {{ formatDate(classItem.createdAt) }}</p>
+                    </div>
+                    <div class="class-actions">
+                        <router-link 
+                            :to="`/class/${classItem.id}`"
+                            class="btn-primary"
+                        >
+                            进入班级
+                        </router-link>
+                    </div>
+                </div>
             </div>
 
             <!-- 加入班级弹窗 -->
@@ -241,26 +300,89 @@ onMounted(async () => {
                     <div v-if="errorDialog" class="error-message">{{ errorDialog }}</div>
                 </div>
             </div>
-
-            <div v-if="loading" class="loading">加载中...</div>
-            <div v-else-if="error" class="error-message">{{ error }}</div>
-            <div v-else-if="classes.length === 0" class="empty-state">
-                <p>您还没有参与任何班级</p>
-            </div>
-            <div v-else class="course-grid">
-                <ClassCard
-                    v-for="aclass in classes"
-                    :key="aclass.id"
-                    :aclass="aclass"
-                />
-            </div>
         </section>
     </div>
 </template>
 
 <style scoped>
+.home-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
 
-/* 新增弹窗样式 */
+.courses-section {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.class-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.class-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.class-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.class-info p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.class-actions {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.error-message {
+    color: #e53935;
+    padding: 1rem;
+    background-color: #ffebee;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
 .dialog-overlay {
     position: fixed;
     top: 0;
@@ -275,16 +397,11 @@ onMounted(async () => {
 }
 
 .create-class-dialog {
-    background: white;
+    background: #fff;
     padding: 2rem;
     border-radius: 8px;
-    width: 400px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.create-class-dialog h3 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
+    width: 90%;
+    max-width: 500px;
 }
 
 .form-group {
@@ -294,106 +411,49 @@ onMounted(async () => {
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
+    color: #333;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 1rem;
-}
-
-select {
-    appearance: none;
-    background: white url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 0.75rem center;
-    background-size: 1em;
 }
 
 .dialog-actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.btn-secondary {
-    background-color: #f5f5f5;
-    color: #424242;
-    border: 1px solid #ddd;
-}
-
-
-
-.home-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
-
-.welcome-section {
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.course-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.feature-card {
-    padding: 1.5rem;
-    border-radius: 8px;
-    background-color: #f7f9fc;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-}
-
-.loading, .empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-}
-
-.error-message {
-    color: #e53935;
-    text-align: center;
-    padding: 1rem;
+    margin-top: 1rem;
 }
 
 .btn-primary {
-    background-color: #2c6ecf;
-    color: white;
+    background: #1976d2;
+    color: #fff;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary {
+    background: #757575;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .btn-primary:hover {
-    background-color: #215bb4;
+    background: #1565c0;
+}
+
+.btn-secondary:hover {
+    background: #616161;
 }
 </style>

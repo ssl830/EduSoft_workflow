@@ -12,6 +12,11 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(
   config => {
+    // 确保所有请求路径都以/开头
+    if (config.url && !config.url.startsWith('/')) {
+      config.url = '/' + config.url;
+    }
+    
     // 获取token
     const token = localStorage.getItem('free-fs-token')
     

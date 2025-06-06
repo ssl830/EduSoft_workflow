@@ -19,12 +19,26 @@ const fetchQuestions = async () => {
 
     try {
         const response = await QuestionApi.getWrongQuestionList()
-        // console.log(selectedChapter.value)
-        questions.value = response.data.data
-
+        console.log('错题列表响应:', response)
+        
+        if (response.code === 200 && response.data) {
+            questions.value = Array.isArray(response.data) ? response.data : []
+            console.log('错题列表数据:', questions.value)
+            if (questions.value.length > 0) {
+                const firstQuestion = questions.value[0]
+                console.log('第一个错题的完整数据结构:', JSON.stringify(firstQuestion, null, 2))
+                console.log('第一个错题的ID:', firstQuestion.id)
+                console.log('第一个错题的所有字段:', Object.keys(firstQuestion))
+            }
+        } else {
+            error.value = response.message || '获取错题列表失败'
+            console.error('获取错题列表失败:', response)
+            questions.value = []
+        }
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        error.value = '获取错题列表失败，请稍后再试'
+        console.error('获取错题列表错误:', err)
+        questions.value = []
     } finally {
         loading.value = false
     }
@@ -45,18 +59,47 @@ const showQuestionDetail = (question: any) => {
     showDetailDialog.value = true
 }
 
-const deleteQuestion = async (questionId: bigint) => {
-    const response = await QuestionApi.removeWrongQuestion(questionId);
-    console.log(response)
-    await fetchQuestions()
+const deleteQuestion = async (questionId: string) => {
+    try {
+        if (!questionId) {
+            error.value = '题目ID不能为空'
+            console.error('删除错题失败: 题目ID为空')
+            return
+        }
+        console.log('删除错题，ID:', questionId)
+        const response = await QuestionApi.removeWrongQuestion(questionId)
+        console.log('删除错题响应:', response)
+        
+        if (response.code === 200) {
+            await fetchQuestions()
+        } else {
+            error.value = response.message || '删除错题失败'
+            console.error('删除错题失败:', response)
+        }
+    } catch (err) {
+        error.value = '删除错题失败，请稍后再试'
+        console.error('删除错题错误:', err)
+    }
 }
 
 // 新增答案格式化方法
 const formatAnswer = (question: any) => {
+    if (!question) return '-'
     if (question.type === 'multiple_choice') {
-        return question.answer.split(',').join(', ')
+        return question.correct_answer.split(',').join(', ')
     }
-    return question.answer
+    return question.correct_answer || '-'
+}
+
+// 格式化选项
+const formatOptions = (options: string) => {
+    try {
+        if (!options) return []
+        return JSON.parse(options)
+    } catch (err) {
+        console.error('解析选项失败:', err)
+        return []
+    }
 }
 
 onMounted(() => {
@@ -69,14 +112,14 @@ onMounted(() => {
 <template>
     <div class="question-bank-container">
         <div class="resource-header">
-            <h2>错题集</h2>
+            <h2>错题本</h2>
         </div>
 
         <!-- Resource List -->
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div v-else-if="questions.length === 0" class="empty-state">
-            暂无教学资料
+            暂无错题记录
         </div>
         <div v-else class="resource-table-wrapper">
             <table class="resource-table">
@@ -85,6 +128,7 @@ onMounted(() => {
                     <th>题目内容</th>
                     <th>所属课程</th>
                     <th>所属章节</th>
+                    <th>所属练习</th>
                     <th>操作</th>
                 </tr>
                 </thead>
@@ -93,7 +137,7 @@ onMounted(() => {
                     <td>{{ question.content }}</td>
                     <td>{{ question.course_name }}</td>
                     <td>{{ question.section_title || '-' }}</td>
-                    <!--         aTODO: 时间-->
+                    <td>{{ question.practice_title || '-' }}</td>
                     <td class="actions">
                         <button
                             class="btn-action preview"
@@ -103,8 +147,8 @@ onMounted(() => {
                             查看
                         </button>
                         <button
-                            class="btn-action download"
-                            @click="deleteQuestion(question.id)"
+                            class="btn-action delete"
+                            @click="deleteQuestion(question.question_id)"
                             title="删除"
                         >
                             删除
@@ -487,13 +531,9 @@ select:disabled {
     background-color: #bbdefb;
 }
 
-.btn-action.download {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.btn-action.download:hover {
-    background-color: #c8e6c9;
+.btn-action.delete {
+    background: #ff4d4f;
+    color: white;
 }
 
 .empty-state {

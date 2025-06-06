@@ -10,7 +10,14 @@ const ExerciseApi = {
     type: string,
     name: string,
   }) {
-    return axios.get(`/classes/${classId}/exercises`, data)
+    return axios.get(`/api/practice/list`, {
+      params: {
+        classId: classId,
+        practiceId: data.practice_id,
+        type: data.type,
+        name: data.name
+      }
+    })
   },
 
   // Get teacher's courses (for exercise creation)

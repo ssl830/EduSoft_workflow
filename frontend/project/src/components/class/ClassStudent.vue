@@ -44,11 +44,20 @@ const fetchStudents = async () => {
 
     try {
         const response = await ClassApi.getClassStudents(props.classId)
-        // console.log(selectedChapter.value)
-        students.value = response.data.students
+        console.log('获取学生列表响应:', response)
+        
+        if (response.code === 200 && Array.isArray(response.data)) {
+            students.value = response.data
+            console.log('学生列表数据:', students.value)
+        } else {
+            students.value = []
+            error.value = response.message || '获取学生列表失败'
+            console.error('获取学生列表失败:', response)
+        }
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        students.value = []
+        error.value = '获取学生列表失败，请稍后再试'
+        console.error('获取学生列表错误:', err)
     } finally {
         loading.value = false
     }
@@ -262,362 +271,205 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="resource-list-container">
-        <div class="resource-header">
-            <h2>学生管理</h2>
-            <div class="button-group">
-                <button
-                    v-if="isTeacher"
-                    class="btn-primary"
-                    @click="toggleUploadForm"
-                >
-                    {{ showUploadFileForm ? '取消导入' : '批量导入' }}
-                </button>
-                <button
-                    v-if="isTeacher"
-                    class="btn-primary"
-                    @click="showUploadAloneForm = !showUploadAloneForm"
-                >
-                    {{ showUploadAloneForm ? '取消导入' : '手动导入' }}
-                </button>
-            </div>
-        </div>
-        <div v-if="showUploadAloneForm" class="upload-form">
-            <h3>新增学生</h3>
-            <div v-if="uploadAloneError" class="error-message">{{ uploadAloneError }}</div>
-            <div class="form-group">
-                <label>选项</label>
-                <div
-                    v-for="(student, index) in uploadAloneForm.students"
-                    :key="index"
-                    class="option-row"
-                >
-                    <input
-                        v-model="student.id"
-                        type="text"
-                        :placeholder="`学号`"
-                        class="option-input"
-                        style="max-width: 600px; margin-right: 20px"
-                    />
-                    <input
-                        v-model="student.name"
-                        type="text"
-                        :placeholder="`姓名`"
-                        class="option-input"
-                    />
-                    <button
-                        type="button"
-                        class="btn-icon"
-                        @click="deleteStudentByIndex(index)"
-                        :disabled="uploadAloneForm.students.length <= 1"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <button
-                    type="button"
-                    class="btn-text"
-                    @click="addStudent"
-                >
-                    + 添加学生
-                </button>
-            </div>
-            <div class="form-actions">
-                <button
-                    type="button"
-                    class="btn-primary"
-                    @click="uploadAloneStudents"
-                >
-                    上传
-                </button>
-            </div>
-        </div>
-        <!-- 在上传表单部分添加解析状态显示 -->
-        <div v-if="showUploadFileForm" class="upload-form">
-            <h3>批量导入学生名单</h3>
-
-            <div v-if="uploadError" class="error-message">{{ uploadError }}</div>
-            <div v-if="parsingError" class="error-message">{{ parsingError }}</div>
-
-            <div class="form-group">
-                <label for="file">选择CSV文件</label>
-                <input
-                    id="file"
-                    type="file"
-                    accept=".csv"
-                    @change="handleFileChange"
-                    required
-                />
-                <div class="file-hint">支持格式：CSV（需包含"name"和"id"列）</div>
-            </div>
-
-            <!-- 添加解析状态 -->
-            <div v-if="isParsing" class="loading-container">正在解析文件...</div>
-
-            <!-- 显示解析结果预览 -->
-            <div v-if="uploadFileForm.parsedStudents?.length" class="preview-section">
-                <h4>即将导入 {{ uploadFileForm.parsedStudents.length }} 条学生记录</h4>
-                <div class="preview-table">
-                    <div class="preview-row header">
-                        <div>姓名</div>
-                        <div>学号</div>
-                    </div>
-                    <div
-                        v-for="(student, index) in uploadFileForm.parsedStudents.slice(0,5)"
-                        :key="index"
-                        class="preview-row"
-                    >
-                        <div>{{ student.name }}</div>
-                        <div>{{ student.id }}</div>
-                    </div>
-                    <div v-if="uploadFileForm.parsedStudents.length > 5" class="preview-more">
-                        更多记录...（共 {{ uploadFileForm.parsedStudents.length }} 条）
-                    </div>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button
-                    type="button"
-                    class="btn-secondary"
-                    @click="resetUploadFileForm"
-                >
-                    重置
-                </button>
-                <button
-                    type="button"
-                    class="btn-primary"
-                    @click="uploadFileStudents"
-                >
-                    上传
-                </button>
-            </div>
-
-            <!-- ...其余上传表单内容保持不变... -->
-        </div>
-        <!-- Students List -->
-        <div v-if="loading" class="loading-container">加载中...</div>
+    <div class="class-student-container">
+        <div v-if="loading" class="loading">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
-        <div v-else-if="students.length === 0" class="empty-state">
-            暂无学生
-        </div>
-        <div v-else class="resource-table-wrapper">
-            <table class="resource-table">
-                <thead>
-                <tr>
-                    <th style="width: 25%">姓名</th>
-                    <th style="width: 25%">学号</th>
-                    <th style="width: 25%">学习进度</th>
-                    <th style="width: 25%">操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="student in students" :key="student.user_id">
-                    <td>{{ student.student_name }}</td>
-                    <td>{{ student.student_id }}</td>
-                    <td>{{ student.finishedExercise }}/{{ student.sumExercise }}</td>
-                    <!--         aTODO: 时间-->
-                    <td class="actions">
-                        <button
-                            class="btn-action preview"
-                            @click="deleteStudent(student.student_id)"
-                            title="删除"
+        <div v-else>
+            <!-- 学生列表 -->
+            <div class="student-list">
+                <h3>学生列表</h3>
+                <div v-if="students.length === 0" class="empty-state">
+                    暂无学生
+                </div>
+                <div v-else class="student-grid">
+                    <div v-for="student in students" :key="student.userId" class="student-card">
+                        <div class="student-info">
+                            <h4>{{ student.studentName }}</h4>
+                            <p>学号: {{ student.studentId }}</p>
+                            <p>加入时间: {{ new Date(student.joinedAt).toLocaleString() }}</p>
+                        </div>
+                        <div v-if="isTeacher" class="student-actions">
+                            <button 
+                                class="btn-danger" 
+                                @click="deleteStudent(student.userId)"
+                            >
+                                移除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 教师操作按钮 -->
+            <div v-if="isTeacher" class="teacher-actions">
+                <button class="btn-primary" @click="toggleUploadForm">
+                    批量导入学生
+                </button>
+                <button class="btn-primary" @click="showUploadAloneForm = true">
+                    单个添加学生
+                </button>
+            </div>
+
+            <!-- 批量导入弹窗 -->
+            <div v-if="showUploadFileForm" class="dialog-overlay">
+                <div class="upload-dialog">
+                    <h3>批量导入学生</h3>
+                    <div class="form-group">
+                        <label>选择CSV文件</label>
+                        <input
+                            id="file"
+                            type="file"
+                            accept=".csv"
+                            @change="handleFileChange"
                         >
-                            删除
+                    </div>
+                    <div v-if="parsingError" class="error-message">
+                        {{ parsingError }}
+                    </div>
+                    <div v-if="uploadError" class="error-message">
+                        {{ uploadError }}
+                    </div>
+                    <div class="dialog-actions">
+                        <button class="btn-secondary" @click="resetUploadFileForm">
+                            取消
                         </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                        <button 
+                            class="btn-primary" 
+                            @click="uploadFileStudents"
+                            :disabled="!uploadFileForm.parsedStudents.length"
+                        >
+                            上传
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 单个添加弹窗 -->
+            <div v-if="showUploadAloneForm" class="dialog-overlay">
+                <div class="upload-dialog">
+                    <h3>添加学生</h3>
+                    <div v-for="(student, index) in uploadAloneForm.students" :key="index" class="form-group">
+                        <div class="student-input-group">
+                            <input
+                                v-model="student.name"
+                                type="text"
+                                placeholder="学生姓名"
+                            >
+                            <input
+                                v-model="student.id"
+                                type="text"
+                                placeholder="学号"
+                            >
+                            <button 
+                                class="btn-danger" 
+                                @click="deleteStudentByIndex(index)"
+                                :disabled="uploadAloneForm.students.length === 1"
+                            >
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="uploadAloneError" class="error-message">
+                        {{ uploadAloneError }}
+                    </div>
+                    <div class="dialog-actions">
+                        <button class="btn-secondary" @click="resetUploadAloneForm">
+                            取消
+                        </button>
+                        <button class="btn-primary" @click="addStudent">
+                            添加一行
+                        </button>
+                        <button class="btn-primary" @click="uploadAloneStudents">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-
-.option-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
+.class-student-container {
+    padding: 1rem;
 }
 
-.option-input {
-    flex: 1;
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #757575;
-    font-size: 1rem;
-    padding: 0.5rem;
-}
-
-.btn-icon:hover {
-    color: #d32f2f;
-}
-
-.btn-icon:disabled {
-    color: #bdbdbd;
-    cursor: not-allowed;
-}
-
-.btn-text {
-    background: none;
-    border: none;
-    color: #2c6ecf;
-    padding: 0;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    margin-top: 0.5rem;
-}
-
-.btn-text:hover {
-    text-decoration: underline;
-}
-
-.file-hint {
-    font-size: 0.875rem;
+.loading {
+    text-align: center;
+    padding: 2rem;
     color: #666;
-    margin-top: 0.5rem;
 }
 
-.preview-section {
-    margin-top: 1.5rem;
-    border: 1px solid #eee;
+.error-message {
+    color: #e53935;
+    padding: 1rem;
+    background-color: #ffebee;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.student-list {
+    margin-bottom: 2rem;
+}
+
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.student-card {
+    background: #fff;
     border-radius: 8px;
     padding: 1rem;
-}
-
-.preview-section h4 {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-}
-
-.preview-table {
-    font-size: 0.875rem;
-}
-
-.preview-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-}
-
-.preview-row.header {
-    font-weight: 600;
-    background-color: #f8f8f8;
-}
-
-.preview-more {
-    text-align: center;
-    color: #666;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* 单选框样式 */
-.radio-group {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.radio-group label {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    cursor: pointer;
 }
 
-.radio-label {
-    margin-left: 0.25rem;
+.student-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
 }
 
-input[type="radio"] {
-    accent-color: #409eff; /* 与Element Plus主色一致 */
+.student-info p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.9rem;
 }
 
-.resource-list-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1.5rem;
-}
-
-.resource-table-wrapper {
-    overflow-x: auto;
-}
-
-.resource-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.resource-table th,
-.resource-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.resource-table th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-}
-
-.resource-table tr:hover {
-    background-color: #f9f9f9;
-}
-
-.actions {
+.student-actions {
     display: flex;
     gap: 0.5rem;
 }
 
-.btn-action {
-    padding: 0.375rem 0.75rem;
-    border-radius: 4px;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-action.preview {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.btn-action.preview:hover {
-    background-color: #bbdefb;
-}
-
-.resource-header {
+.teacher-actions {
     display: flex;
-    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 1.5rem;
+    z-index: 1000;
 }
 
-.resource-header h2 {
-    margin: 0;
-}
-
-.upload-form {
-    background-color: #f9f9f9;
+.upload-dialog {
+    background: #fff;
+    padding: 2rem;
     border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e0e0e0;
-}
-
-.upload-form h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
+    width: 90%;
+    max-width: 500px;
 }
 
 .form-group {
@@ -627,246 +479,61 @@ input[type="radio"] {
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
+    color: #333;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-.form-row {
+.student-input-group {
     display: flex;
-    gap: 1rem;
-}
-
-.form-group-half {
-    flex: 1;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.upload-progress {
-    margin-top: 1rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
 }
 
-.progress-value {
-    height: 100%;
-    background-color: #2c6ecf;
+.student-input-group input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
     border-radius: 4px;
 }
 
-.progress-text {
-    text-align: right;
-    font-size: 0.875rem;
-    color: #616161;
-}
-
-.resource-filters {
+.dialog-actions {
     display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
+    justify-content: flex-end;
     gap: 1rem;
-    align-items: center;
-}
-
-.filter-section {
-    display: flex;
-    align-items: center;
-}
-
-.filter-section label {
-    margin-right: 0.5rem;
-    white-space: nowrap;
-}
-
-.filter-section select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9375rem;
-}
-
-.filter-section.search {
-    flex-grow: 1;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9375rem;
-}
-
-.resource-table-wrapper {
-    overflow-x: auto;
-}
-
-.resource-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.resource-table th,
-.resource-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.resource-table th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-}
-
-.resource-table tr:hover {
-    background-color: #f9f9f9;
-}
-
-.actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-action {
-    padding: 0.375rem 0.75rem;
-    border-radius: 4px;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-action.preview {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.btn-action.preview:hover {
-    background-color: #bbdefb;
-}
-
-.btn-action.download {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.btn-action.download:hover {
-    background-color: #c8e6c9;
-}
-
-/* 黄色系按钮 */
-.btn-action.history {
-    background-color: #fff3e0;
-    color: #ffa000;
-}
-
-.btn-action.history:hover {
-    background-color: #ffe0b2;
-}
-
-.btn-action.renew {
-    background-color: #ede7f6;
-    color: #673ab7;
-}
-
-.btn-action.renew:hover {
-    background-color: #d1c4e9;
-}
-
-.empty-state {
-    padding: 2rem;
-    text-align: center;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    color: #757575;
-}
-
-.loading-container {
-    display: flex;
-    justify-content: center;
-    padding: 2rem;
-    color: #616161;
-}
-
-.error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-}
-
-.button-group {
-    display: flex;
-    gap: 10px;  /* 关键间距设置 */
-}
-
-.btn-primary, .btn-secondary {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.2s;
+    margin-top: 1rem;
 }
 
 .btn-primary {
-    background-color: #2c6ecf;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #215bb4;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .btn-secondary {
-    background-color: #f5f5f5;
-    color: #424242;
-    border: 1px solid #ddd;
+    background: #757575;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-.btn-secondary:hover {
-    background-color: #e0e0e0;
+.btn-danger {
+    background: #e53935;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-@media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .resource-filters {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filter-section {
-        width: 100%;
-    }
-
-    .filter-section select,
-    .search-input {
-        flex-grow: 1;
-    }
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    background: #f5f5f5;
+    border-radius: 8px;
 }
 </style>

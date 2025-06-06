@@ -48,28 +48,35 @@ const fetchPractices = async () => {
             type: selectedType.value,
             name: studentName.value,
         })
-        // console.log(selectedChapter.value)
-        // 更新数据结构处理
-        practices.value = response.data.practices
+        console.log('练习列表响应:', response)
+        
+        if (response.code === 200 && response.data) {
+            // 更新数据结构处理
+            practices.value = Array.isArray(response.data) ? response.data : []
+            console.log('练习列表数据:', practices.value)
 
-        // 提取唯一值（显示名称用exercise_name，值用exercise_id）
-        const practiceSet = new Map()
-        practices.value.forEach((ex: any) => {
-            if (ex.id && ex.title) {
-                practiceSet.set(ex.id, ex.title)
-            }
-        })
+            // 提取唯一值（显示名称用exercise_name，值用exercise_id）
+            const practiceSet = new Map()
+            practices.value.forEach((ex: any) => {
+                if (ex.id && ex.title) {
+                    practiceSet.set(ex.id, ex.title)
+                }
+            })
 
-        // 生成包含id和name的数组
-        practicesName.value = Array.from(practiceSet, ([id, title]) => ({id, title}))
+            // 生成包含id和name的数组
+            practicesName.value = Array.from(practiceSet, ([id, title]) => ({id, title}))
 
-        const namesSet = new Set(practices.value.map((r: any) => r.name).filter(Boolean))
-        names.value = Array.from(namesSet)
-
-
+            const namesSet = new Set(practices.value.map((r: any) => r.name).filter(Boolean))
+            names.value = Array.from(namesSet)
+        } else {
+            error.value = response.message || '获取练习列表失败'
+            console.error('获取练习列表失败:', response)
+            practices.value = []
+        }
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        error.value = '获取练习列表失败，请稍后再试'
+        console.error('获取练习列表错误:', err)
+        practices.value = []
     } finally {
         loading.value = false
     }
@@ -125,6 +132,23 @@ const exportReport = async() => {
 watch([selectedChapter, selectedType], () => {
     fetchPractices()
 })
+
+const formatDate = (dateString: string) => {
+    if (!dateString) return '-'
+    try {
+        const date = new Date(dateString)
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    } catch (err) {
+        console.error('日期格式化错误:', err)
+        return dateString
+    }
+}
 
 onMounted(() => {
     fetchPractices()
@@ -214,9 +238,9 @@ onMounted(() => {
                 <tr v-for="practice in practices" :key="practice.id">
                     <td>{{ practice.title }}</td>
                     <td>{{ practice.name || '-' }}</td>
-                    <td>{{ practice.start_time || '-' }}</td>
-                    <td>{{ practice.end_time || '-' }}</td>
-                    <td>{{ practice.submitId }}</td>
+                    <td>{{ formatDate(practice.startTime) }}</td>
+                    <td>{{ formatDate(practice.endTime) }}</td>
+                    <td>{{ practice.submitId || '-' }}</td>
                     <td>{{ practice.score || '-' }}</td>
                     <td>{{ getPracticeTypeLabel(practice.type) || '-' }}</td>
                     <td class="actions">
@@ -224,7 +248,7 @@ onMounted(() => {
                             class="btn-action preview"
                             @click="doPractice(practice.id)"
                             title="练习"
-                            :disabled="(practice.allow_multiple_submission == false && practice.type != 'unFinished') || practice.type == 'overdue'"
+                            :disabled="(practice.allowMultipleSubmission == false && practice.type != 'unFinished') || practice.type == 'overdue'"
                         >
                             练习
                         </button>
@@ -248,10 +272,10 @@ onMounted(() => {
                         <button
                             class="btn-action renew"
                             @click="downloadPracticeReport(practice.id)"
-                            title="导出"
-                            :disabled="practice.type == 'unFinished' || practice.type == 'overdue'"
+                            title="下载报告"
+                            :disabled="!practice.submitId"
                         >
-                            导出
+                            下载报告
                         </button>
                     </td>
                 </tr>

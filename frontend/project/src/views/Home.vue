@@ -32,6 +32,19 @@
         <div v-else-if="courses.length === 0" class="empty-state">
           <p>您还没有参与任何课程</p>
         </div>
+        <div v-else class="course-grid">
+          <div v-for="course in courses" :key="course.id" class="course-card">
+            <h3>{{ course.name }}</h3>
+            <p class="course-code">课程代码：{{ course.code }}</p>
+            <p class="teacher-name">教师：{{ course.teacherName }}</p>
+            <div class="course-stats">
+              <span>学生数：{{ course.studentCount }}</span>
+              <span>练习数：{{ course.practiceCount }}</span>
+              <span>作业数：{{ course.homeworkCount }}</span>
+            </div>
+            <router-link :to="'/class/' + course.id" class="btn-view">查看详情</router-link>
+          </div>
+        </div>
       </section>
 
       <section v-else class="features-section">
@@ -69,13 +82,24 @@ const error = ref('')
 onMounted(async () => {
   console.log('Home.vue mounted, Background component loaded')
   
-  if (authStore.isAuthenticated) {
+  if (authStore.isAuthenticated && authStore.user?.id) {
     try {
-      const response = await CourseApi.getUserCourses(authStore.user?.id)
-      courses.value = response.data.courses
+      console.log('获取用户课程列表，用户ID:', authStore.user.id)
+      const response = await CourseApi.getUserCourses(authStore.user.id.toString())
+      console.log('课程列表响应:', response)
+      
+      if (response.code === 200 && response.data) {
+        courses.value = Array.isArray(response.data) ? response.data : []
+        console.log('课程列表数据:', courses.value)
+      } else {
+        error.value = response.message || '获取课程列表失败'
+        console.error('获取课程列表失败:', response)
+        courses.value = []
+      }
     } catch (err) {
       error.value = '获取课程列表失败，请稍后再试'
-      console.error(err)
+      console.error('获取课程列表错误:', err)
+      courses.value = []
     } finally {
       loading.value = false
     }
@@ -411,5 +435,59 @@ h2 {
 .btn-primary {
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+.course-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.course-card h3 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.course-code, .teacher-name {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.course-stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.btn-view {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-view:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 </style>
