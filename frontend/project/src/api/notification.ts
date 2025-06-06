@@ -1,52 +1,5 @@
 import axios from './axios';
 
-<<<<<<< HEAD:frontend/project/src/api/notification.ts
-// 通知类型定义（根据后端接口规范）
-export interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  type: 'PRACTICE_NOTICE' | 'HOMEWORK_NOTICE' | 'COURSE_NOTICE' | 'SYSTEM_NOTICE' | 'DEADLINE_REMINDER';
-  readFlag: boolean;
-  createdAt: string;
-  relatedId?: number;
-  relatedType?: 'PRACTICE' | 'HOMEWORK' | 'COURSE';
-}
-
-// 任务提醒类型定义
-export interface TaskReminder {
-  id: number;
-  title: string;
-  content: string;
-  createTime: string;
-  deadline: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  completed: boolean;
-}
-
-// 创建任务提醒请求类型
-export interface CreateTaskReminderRequest {
-  title: string;
-  content: string;
-  deadline: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-}
-
-// 更新任务提醒请求类型
-export interface UpdateTaskReminderRequest {
-  title?: string;
-  content?: string;
-  deadline?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-}
-
-export const notificationApi = {
-  // ========== 通知相关接口 ==========
-  
-  // 获取用户的所有通知
-  getNotifications: async () => {
-    const response = await axios.get('/api/notifications');
-=======
 // 通知类型定义
 export interface Notification {
   id: number;
@@ -105,32 +58,17 @@ export const notificationApi = {
     offset?: number;
   }) => {
     const response = await axios.get('/notifications', { params });
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/notification.ts
     return response.data;
   },
 
   // 获取未读通知数量
   getUnreadCount: async () => {
-<<<<<<< HEAD:frontend/project/src/api/notification.ts
-    const response = await axios.get('/api/notifications/unread');
-    return response.data;
-=======
     const response = await axios.get('/notifications/unread-count');
     return response.data.count;
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/notification.ts
   },
 
   // 标记通知为已读
   markAsRead: async (id: number) => {
-<<<<<<< HEAD:frontend/project/src/api/notification.ts
-    const response = await axios.put(`/api/notifications/${id}/read`);
-    return response.data;
-  },
-
-  // 标记所有通知为已读
-  markAllAsRead: async () => {
-    const response = await axios.put('/api/notifications/read-all');
-=======
     const response = await axios.patch(`/notifications/${id}/read`);
     return response.data;
   },
@@ -138,66 +76,11 @@ export const notificationApi = {
   // 批量标记为已读
   markMultipleAsRead: async (ids: number[]) => {
     const response = await axios.patch('/notifications/batch-read', { ids });
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/notification.ts
     return response.data;
   },
 
   // 删除通知
   deleteNotification: async (id: number) => {
-<<<<<<< HEAD:frontend/project/src/api/notification.ts
-    const response = await axios.delete(`/api/notifications/${id}`);
-    return response.data;
-  },
-
-  // ========== 任务提醒相关接口 ==========
-  
-  // 创建任务提醒
-  createTaskReminder: async (data: CreateTaskReminderRequest) => {
-    const response = await axios.post('/api/task-reminders', data);
-    return response.data;
-  },
-
-  // 更新任务提醒
-  updateTaskReminder: async (id: number, data: UpdateTaskReminderRequest) => {
-    const response = await axios.put(`/api/task-reminders/${id}`, data);
-    return response.data;
-  },
-
-  // 获取任务提醒列表
-  getTaskReminders: async (userId: number) => {
-    const response = await axios.get(`/api/task-reminders/user/${userId}`);
-    return response.data;
-  },
-
-  // 标记任务完成
-  markTaskComplete: async (id: number) => {
-    const response = await axios.put(`/api/task-reminders/${id}/complete`);
-    return response.data;
-  },
-
-  // 标记任务未完成
-  markTaskUncomplete: async (id: number) => {
-    const response = await axios.put(`/api/task-reminders/${id}/uncomplete`);
-    return response.data;
-  },
-
-  // 删除任务提醒
-  deleteTaskReminder: async (id: number) => {
-    const response = await axios.delete(`/api/task-reminders/${id}`);
-    return response.data;
-  },
-  // ========== DDL自动提醒功能 ==========
-  
-  // 获取即将到期的任务（前端轮询用）
-  getUpcomingDeadlines: async (days: number = 3) => {
-    const response = await axios.get(`/api/task-reminders/upcoming?days=${days}`);
-    return response.data;
-  },
-
-  // 检查并生成DDL提醒（系统调用）
-  checkAndGenerateDeadlineReminders: async () => {
-    const response = await axios.post('/api/notifications/auto-generate/deadline-reminders');
-=======
     const response = await axios.delete(`/notifications/${id}`);
     return response.data;
   },
@@ -272,7 +155,6 @@ export const notificationApi = {
   // 更新通知设置
   updateNotificationSettings: async (settings: any) => {
     const response = await axios.patch('/notifications/settings', settings);
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/notification.ts
     return response.data;
   }
 };

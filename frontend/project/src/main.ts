@@ -53,12 +53,12 @@ const pinia = createPinia()
 
 // 使用各种插件
 app.use(pinia)
-   .use(router)
-   .use(ElementPlus)
-   .use(Quasar)
-   .use(Varlet)
-   .component('ProgressKnob', ProgressKnob)
-   .component('WriteBoard', WriteBoard)
+    .use(router)
+    .use(ElementPlus)
+    .use(Quasar)
+    .use(Varlet)
+    .component('ProgressKnob', ProgressKnob)
+    .component('WriteBoard', WriteBoard)
 
 // 注册全局实例
 

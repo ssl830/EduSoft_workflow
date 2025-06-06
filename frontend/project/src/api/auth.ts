@@ -25,8 +25,6 @@ interface UserResponse {
     passwordHash: string | null;
     role: string;
     email: string;
-    avatar?: string; // 头像URL，可选字段
-    bio?: string; // 用户简介，可选字段
     createdAt: string;
     updatedAt: string;
   };
@@ -45,16 +43,16 @@ const AuthApi = {
     const formData = new URLSearchParams();
     formData.append('userId', data.userId);
     formData.append('password', data.password);
-    
+
     return axios.post<LoginResponse>('/api/user/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     })
   },
-  
+
   // Register
-  register(data: { 
+  register(data: {
     username: string;
     passwordHash: string;
     role: string;
@@ -64,39 +62,23 @@ const AuthApi = {
   }) {
     return axios.post<CommonResponse>('/api/user/register', data)
   },
-  
+
   // Update Profile
   updateProfile(data: {
     email?: string;
     username?: string;
-    bio?: string;
   }) {
     return axios.post<CommonResponse>('/api/user/update', data)
   },
-  
+
   // Change Password
   changePassword(data: {
     oldPassword: string;
     newPassword: string;
   }) {
-    console.log('发送密码修改请求到APIfox:', data);
-    
-    const formData = new URLSearchParams();
-    formData.append('oldPassword', data.oldPassword);
-    formData.append('newPassword', data.newPassword);
-    
-    return axios.post<CommonResponse>('/api/user/changePassword', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    return axios.post<CommonResponse>('/api/user/changePassword', data)
   },
-  
-  // Get Current User Profile
-  getProfile() {
-    return axios.get<UserResponse>('/api/user/info')
-  },
-  
+
   // Upload Avatar
   uploadAvatar(formData: FormData) {
     return axios.post<CommonResponse>('/api/user/avatar', formData, {
@@ -104,6 +86,11 @@ const AuthApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+
+  // Get Current User Profile
+  getProfile() {
+    return axios.get<UserResponse>('/api/user/info')
   },
 
   // Logout

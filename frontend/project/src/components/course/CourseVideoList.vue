@@ -17,7 +17,7 @@ const selectedChapter = ref('')
 const searchQuery = ref('')
 
 // Chapters (will be populated from videos)
-const chapters = ref([])
+const chapters = ref<Array<{id: number, name: string}>>([]) // 修改为对象数组
 
 // Video player modal
 const showVideoModal = ref(false)
@@ -30,19 +30,14 @@ const playerRef = ref<HTMLVideoElement | null>(null)
 const showUploadForm = ref(false)
 const uploadForm = ref({
     courseId: 0,
-    sectionId: 0,
-    uploaderId: 0,
+    chapterId: -1, // 默认改为-1 (无章节)
+    createdBy: 0,
     title: '',
+    description: '',
     file: null as File | null,
-    visibility: '',
 })
 const uploadProgress = ref(0)
 const uploadError = ref('')
-
-const visibilityOptions = ref([
-    { value: 'PUBLIC', label: '公开' },
-    { value: 'COURSE-ONLY', label: '仅课程成员' }
-])
 
 const authStore = useAuthStore()
 
@@ -52,31 +47,35 @@ const fetchVideos = async () => {
     error.value = ''
 
     try {
-        // Filter by type=VIDEO
-        const response = await ResourceApi.getCourseResources(props.courseId, {
-            chapter: selectedChapter.value,
-            type: 'VIDEO',
-            title: searchQuery.value,
-            userid: authStore.user?.id,
+        const response = await ResourceApi.getChapterResources(props.courseId, {
+            studentId: authStore.user?.id.toString(),
+            chapterId: selectedChapter.value || -1
         })
 
         videos.value = response.data.data.map((video: any) => {
-            // Calculate progress percentage
-            const progress = video.watchedDuration && video.duration
-                ? Math.min(100, Math.round((video.watchedDuration / video.duration) * 100))
+            const progress = video.lastWatch && video.duration
+                ? Math.min(100, Math.round((video.lastWatch / video.duration) * 100))
                 : 0
 
             return {
                 ...video,
                 progress,
                 formattedDuration: formatDuration(video.duration),
-                formattedWatched: formatDuration(video.watchedDuration || 0)
+                formattedWatched: formatDuration(video.lastWatch || 0)
             }
         })
 
-        // Extract unique chapters
-        const chaptersSet = new Set(videos.value.map((v: any) => v.sectionId).filter(Boolean))
-        chapters.value = Array.from(chaptersSet)
+        // 提取章节信息 - 修改为对象数组
+        const chapterMap = new Map<number, string>();
+        videos.value.forEach(video => {
+            if (video.chapterId && video.chapterName) {
+                chapterMap.set(video.chapterId, video.chapterName);
+            }
+        });
+
+        // 转换为数组并排序
+        chapters.value = Array.from(chapterMap, ([id, name]) => ({ id, name }))
+            .sort((a, b) => a.id - b.id);
 
     } catch (err) {
         error.value = '获取视频列表失败，请稍后再试'
@@ -85,6 +84,7 @@ const fetchVideos = async () => {
         loading.value = false
     }
 }
+
 
 // Format seconds to MM:SS
 const formatDuration = (seconds: number) => {
@@ -98,7 +98,8 @@ const formatDuration = (seconds: number) => {
 const openVideoPlayer = (video: any) => {
     currentVideo.value = video
     showVideoModal.value = true
-    watchedDuration.value = video.watchedDuration || 0
+    // 使用 lastWatch 字段
+    watchedDuration.value = video.lastWatch || 0
     videoProgress.value = video.progress || 0
 }
 
@@ -106,11 +107,13 @@ const openVideoPlayer = (video: any) => {
 const closeVideoPlayer = async () => {
     if (currentVideo.value && watchedDuration.value > 0) {
         try {
-            // Save watch progress to backend
-            await ResourceApi.recordWatchProgress(currentVideo.value.id, {
-                watchedDuration: watchedDuration.value
+            // 使用新的进度记录接口
+            await ResourceApi.recordWatchProgress({
+                resourceId: currentVideo.value.id,
+                studentId: authStore.user?.id,
+                progress: watchedDuration.value, // 实际进度
+                position: watchedDuration.value // 当前位置
             })
-            // Refresh video list to update progress
             fetchVideos()
         } catch (err) {
             console.error('保存观看进度失败:', err)
@@ -150,27 +153,21 @@ const uploadVideo = async () => {
 
     uploadProgress.value = 0
     uploadError.value = ''
+    console.log(props.courseId)
 
     const formData = new FormData()
-    formData.append('title', uploadForm.value.title)
     formData.append('file', uploadForm.value.file)
-    formData.append('type', 'VIDEO') // Fixed type for videos
+    formData.append('courseId', props.courseId) // 注意字段名
+    formData.append('chapterId', uploadForm.value.chapterId.toString()) // 注意字段名
+    formData.append('createdBy', uploadForm.value.createdBy.toString()) // 注意字段名
+    formData.append('title', uploadForm.value.title)
 
-    if (uploadForm.value.courseId) {
-        formData.append('courseId', uploadForm.value.courseId.toString())
-    }
-    if (uploadForm.value.sectionId) {
-        formData.append('sectionId', uploadForm.value.sectionId.toString())
-    }
-    if (uploadForm.value.uploaderId) {
-        formData.append('uploaderId', uploadForm.value.uploaderId.toString())
-    }
-    if (uploadForm.value.visibility) {
-        formData.append('visibility', uploadForm.value.visibility)
+    if (uploadForm.value.description) {
+        formData.append('description', uploadForm.value.description)
     }
 
     try {
-        await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
+        await ResourceApi.uploadVideo(formData, (progress) => {
             uploadProgress.value = progress
         })
 
@@ -189,11 +186,11 @@ const uploadVideo = async () => {
 const resetUploadForm = () => {
     uploadForm.value = {
         courseId: 0,
-        sectionId: 0,
-        uploaderId: 0,
+        chapterId: -1, // 默认改为-1 (无章节)
+        createdBy: authStore.user?.id || 0,
         title: '',
-        file: null,
-        visibility: ''
+        description: '',
+        file: null
     }
     uploadProgress.value = 0
     uploadError.value = ''
@@ -205,6 +202,8 @@ watch([selectedChapter, searchQuery], () => {
 })
 
 onMounted(() => {
+    // 设置上传者ID
+    uploadForm.value.createdBy = authStore.user?.id || 0
     fetchVideos()
 })
 </script>
@@ -213,8 +212,8 @@ onMounted(() => {
     <div class="video-list-container">
         <div class="video-header">
             <h2>课程视频</h2>
+            <!--                v-if="isTeacher"-->
             <button
-                v-if="isTeacher"
                 class="btn-primary"
                 @click="showUploadForm = !showUploadForm"
             >
@@ -239,29 +238,43 @@ onMounted(() => {
                 />
             </div>
 
+            <!-- 新增描述字段 -->
+            <div class="form-group">
+                <label for="description">视频描述</label>
+                <textarea
+                    id="description"
+                    v-model="uploadForm.description"
+                    placeholder="输入视频描述"
+                ></textarea>
+            </div>
+
             <div class="form-row">
                 <div class="form-group form-group-half">
-                    <label for="sectionId">所属章节（-1表示无章节属性）</label>
-                    <input
-                        id="sectionId"
-                        v-model="uploadForm.sectionId"
-                        type="number"
-                    />
-                </div>
-
-                <!-- 可见性单选框 -->
-                <div class="form-group form-group-half">
-                    <label>可见性</label>
-                    <div class="radio-group">
-                        <label v-for="option in visibilityOptions" :key="option.value">
-                            <input
-                                type="radio"
-                                v-model="uploadForm.visibility"
-                                :value="option.value"
-                            />
-                            <span class="radio-label">{{ option.label }}</span>
-                        </label>
-                    </div>
+                    <!-- 改为 chapterId -->
+<!--                    <label for="chapterId">所属章节</label>-->
+<!--                    <input-->
+<!--                        id="chapterId"-->
+<!--                        v-model="uploadForm.chapterId"-->
+<!--                        type="number"-->
+<!--                        placeholder="输入章节ID"-->
+<!--                        required-->
+<!--                    />-->
+                    <!-- 修改为下拉框 -->
+                    <label for="chapterId">所属章节</label>
+                    <select
+                        id="chapterId"
+                        v-model="uploadForm.chapterId"
+                        required
+                    >
+                        <option :value="-1">无章节属性</option>
+                        <option
+                            v-for="chapter in chapters"
+                            :key="chapter.id"
+                            :value="chapter.id"
+                        >
+                            {{ chapter.name }}
+                        </option>
+                    </select>
                 </div>
             </div>
 
@@ -313,12 +326,12 @@ onMounted(() => {
                     v-model="selectedChapter"
                 >
                     <option value="">所有章节</option>
-                    <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">
-                        {{ sectionId }}
+                    <!-- 修改为显示章节名称 -->
+                    <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
+                        {{ chapter.name }}
                     </option>
                 </select>
             </div>
-
         </div>
 
         <!-- Video List -->
@@ -341,7 +354,7 @@ onMounted(() => {
                 <tbody>
                 <tr v-for="video in videos" :key="video.id">
                     <td>{{ video.title }}</td>
-                    <td>{{ video.sectionId || '-' }}</td>
+                    <td>{{ video.chapterId }}.{{ video.chapterName  || '-' }}</td>
                     <td>{{ video.formattedDuration }}</td>
                     <td>
                         <div class="progress-container">
@@ -390,6 +403,9 @@ onMounted(() => {
                 </div>
 
                 <div class="progress-info">
+                    <div class = "progress-container">
+                        {{currentVideo.description}}
+                    </div>
                     <div class="progress-container">
                         <div class="progress-bar">
                             <div

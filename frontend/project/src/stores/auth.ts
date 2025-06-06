@@ -14,25 +14,25 @@ export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
-  
+
   // Initialize state from localStorage
   if (typeof window !== 'undefined') {
     const savedUser = localStorage.getItem('user')
     const savedToken = localStorage.getItem('free-fs-token')
-    
+
     if (savedUser) user.value = JSON.parse(savedUser)
     if (savedToken) token.value = savedToken
   }
-  
+
   // Computed
   const isAuthenticated = computed(() => !!token.value)
   const userRole = computed(() => user.value?.role || '')
-  
+
   // Actions
   const login = async (userId: string, password: string) => {
     try {
       const response = await authApi.login({ userId, password })
-      
+
       if (response.code === 200) {
         const userData = {
           id: response.data.userInfo.id,
@@ -41,14 +41,14 @@ export const useAuthStore = defineStore('auth', () => {
           email: response.data.userInfo.email,
           role: response.data.userInfo.role
         }
-        
+
         user.value = userData
         token.value = response.data.token
-        
+
         // Save to localStorage
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('free-fs-token', response.data.token)
-        
+
         return response
       } else {
         throw new Error(response.msg || '登录失败')
@@ -58,7 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
       throw error
     }
   }
-  
+
   const register = async (data: {
     username: string;
     password: string;
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
       delete (registerData as any).password // 删除 password 字段
 
       const response = await authApi.register(registerData)
-      
+
       if (response.code === 200) {
         return response
       } else {
@@ -86,7 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
       throw error
     }
   }
-  
+
   const logout = async () => {
     // 先检查是否有token
     const currentToken = localStorage.getItem('free-fs-token');
@@ -119,12 +119,12 @@ export const useAuthStore = defineStore('auth', () => {
       window.location.href = '/login';
     }
   }
-    const fetchUserInfo = async () => {
+  const fetchUserInfo = async () => {
     try {
       const response = await authApi.getProfile()
-      
+
       console.log('获取用户信息响应:', response);
-      
+
       // 检查响应数据
       if (response && response.code === 200) {
         // 确保response.data存在
@@ -142,14 +142,14 @@ export const useAuthStore = defineStore('auth', () => {
           createdAt: response.data.createdAt,
           updatedAt: response.data.updatedAt
         }
-        
+
         console.log('处理后的用户数据:', userData);
-        
+
         // 更新状态
         user.value = userData
         // 更新本地存储
         localStorage.setItem('user', JSON.stringify(userData))
-        
+
         return userData
       } else {
         console.error('API返回错误:', response);
@@ -157,7 +157,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error: any) {
       console.error('获取用户信息错误:', error);
-      
+
       if (error.response) {
         // API返回了错误响应
         console.error('API错误响应:', error.response);
@@ -173,14 +173,14 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
   }
-    const updateProfile = async (data: {
+  const updateProfile = async (data: {
     email?: string;
     username?: string;
     bio?: string;
   }) => {
     try {
       const response = await authApi.updateProfile(data)
-      
+
       if (response.code === 200) {
         // 更新成功后重新获取用户信息
         await fetchUserInfo()
@@ -193,14 +193,14 @@ export const useAuthStore = defineStore('auth', () => {
       throw error
     }
   }
-    const changePassword = async (oldPassword: string, newPassword: string) => {
+  const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
       console.log('密码修改请求: 发送到APIfox');
-      
+
       const response = await authApi.changePassword({ oldPassword, newPassword })
-      
+
       console.log('APIfox 密码修改响应:', response);
-      
+
       if (response.code === 200) {
         return response
       } else {
@@ -216,13 +216,13 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authApi.uploadAvatar(formData);
       console.log('上传头像响应:', response);
-      
+
       if (response.code === 200) {
         // 更新本地存储的用户信息
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         userInfo.avatar = response.data.avatar;
         localStorage.setItem('userInfo', JSON.stringify(userInfo));
-        
+
         return response.data;
       } else {
         throw new Error(response.msg || '上传头像失败');

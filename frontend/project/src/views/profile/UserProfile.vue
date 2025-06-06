@@ -19,11 +19,12 @@
       <div v-if="loading" class="loading-container">
         <div class="loading-spinner"></div>
       </div>
+      
       <div v-else-if="error" class="error-message">
         <p class="error-title">获取信息失败</p>
         <p>{{ error }}</p>
       </div>
-      <div v-else class="profile-content">
+        <div v-else class="profile-content">
         <!-- 左侧信息卡片 -->
         <div class="profile-sidebar">
           <div class="profile-card">
@@ -35,8 +36,7 @@
                   class="avatar-image"
                   @error="handleAvatarError"
                 />
-              </div>
-              <div class="file-input-container">
+              </div>              <div class="file-input-container">
                 <input 
                   type="file" 
                   @change="handleFileChange" 
@@ -44,13 +44,11 @@
                   class="file-input" 
                   id="avatarUpload"
                 />
-                <label for="avatarUpload" class="upload-label">选择头像</label>
-                <p class="upload-hint">支持JPG、PNG格式，最大5MB</p>
+                <label for="avatarUpload" class="upload-label">选择文件</label>
               </div>
             </div>
             <h2 class="user-name">{{ userProfile.username }}</h2>
-            <span class="user-id">ID: {{ userProfile.userId }}</span>
-            <span class="user-role" :class="getRoleClass()">
+            <span class="user-role">
               {{ roleText }}
             </span>
             <div class="user-info">
@@ -105,9 +103,10 @@
                     type="text"
                     id="username"
                     v-model="userProfile.username"
-                    class="form-input"
-                    required
+                    class="form-input disabled"
+                    disabled
                   />
+                  <p class="form-help-text">用户名注册后不可更改</p>
                 </div>
                 
                 <div class="form-group">
@@ -122,18 +121,6 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="userId" class="form-label">用户ID</label>
-                  <input
-                    type="text"
-                    id="userId"
-                    :value="userProfile.userId"
-                    class="form-input disabled"
-                    disabled
-                  />
-                  <p class="form-help-text">用户ID不可更改</p>
-                </div>
-                
-                <div class="form-group">
                   <label for="role" class="form-label">学院</label>
                   <input
                     type="text"
@@ -142,6 +129,25 @@
                     class="form-input disabled"
                     disabled
                   />
+                </div>
+                
+                <div class="form-group">
+                  <label for="bio" class="form-label">简介</label>
+                  <textarea
+                    id="bio"
+                    v-model="userProfile.bio"
+                    rows="4"
+                    class="form-textarea"
+                    placeholder="介绍一下自己..."
+                  ></textarea>
+                </div>
+                  <div class="form-group" v-if="updateMessage">
+                  <div :class="[
+                    'message-alert', 
+                    updateSuccess ? 'success' : 'error'
+                  ]">
+                    {{ updateMessage }}
+                  </div>
                 </div>
                 
                 <div class="form-actions">
@@ -154,7 +160,7 @@
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {{ updating ? '更新中...' : '保存修改' }}
+                    {{ updating ? '保存中...' : '保存' }}
                   </button>
                   <button type="button" class="cancel-button">取消</button>
                 </div>
@@ -253,20 +259,20 @@ const passwordSuccess = ref(false);
 interface UserProfileData {
   username: string;
   email: string;
+  bio: string;
+  avatar: string;
   role: string;
   createdAt: string;
-  userId: string;
-  avatar: string;
 }
 
 // 用户个人信息
 const userProfile = reactive<UserProfileData>({
   username: '',
   email: '',
+  bio: '',
+  avatar: '',
   role: '',
-  createdAt: '',
-  userId: '',
-  avatar: ''
+  createdAt: ''
 });
 
 // 密码修改数据
@@ -302,15 +308,6 @@ const passwordMismatch = computed(() => {
 });
 
 // 方法
-const getRoleClass = () => {
-  switch(userProfile.role) {
-    case 'teacher': return 'teacher';
-    case 'assistant': return 'assistant';
-    case 'student': return 'student';
-    default: return 'default';
-  }
-};
-
 const fetchUserProfile = async () => {
   loading.value = true;
   error.value = null;
@@ -319,18 +316,13 @@ const fetchUserProfile = async () => {
     // 使用auth store获取用户信息
     const userData = await authStore.fetchUserInfo();
     
-    // 更新本地数据
+    // 更新本地数据，使用默认值处理可能缺失的字段
     userProfile.username = userData.username || '';
     userProfile.email = userData.email || '';
+    userProfile.bio = ''; // 暂时使用空字符串，后续可从后端获取
+    userProfile.avatar = ''; // 暂时使用空字符串，后续可从后端获取
     userProfile.role = userData.role || '';
     userProfile.createdAt = userData.createdAt || '';
-    userProfile.userId = userData.userId || '';
-    
-    // 从localStorage获取头像
-    const savedAvatar = localStorage.getItem('userAvatar');
-    if (savedAvatar) {
-      userProfile.avatar = savedAvatar;
-    }
   } catch (err: any) {
     console.error('获取用户信息失败:', err);
     error.value = err.message || '无法加载用户信息，请稍后再试';
@@ -361,7 +353,7 @@ const updateProfile = async () => {
   } catch (err: any) {
     console.error('更新个人资料失败:', err);
     updateSuccess.value = false;
-    updateMessage.value = err?.response?.data?.msg || err.message || '更新个人资料失败，请稍后再试';
+    updateMessage.value = err.message || '更新个人资料失败，请稍后再试';
   } finally {
     updating.value = false;
   }
@@ -404,59 +396,23 @@ const changePassword = async () => {
 
 const handleFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
-  if (!target.files || !target.files[0]) return;
+  if (!target) return;
   
-  const file = target.files[0];
-  
-  // 检查文件类型
-  if (!file.type.startsWith('image/')) {
-    updateSuccess.value = false;
-    updateMessage.value = '请选择图片文件';
-    return;
-  }
-  
-  // 检查文件大小（5MB）
-  if (file.size > 5 * 1024 * 1024) {
-    updateSuccess.value = false;
-    updateMessage.value = '图片大小不能超过5MB';
-    return;
-  }
+  // 立即重置文件输入以避免重复选择同一文件的问题
+  target.value = '';
   
   try {
-    updating.value = true;
-    updateMessage.value = '正在处理头像...';
-    
-    // 将文件转换为Base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64String = e.target?.result as string;
-      // 存储到localStorage
-      localStorage.setItem('userAvatar', base64String);
-      // 更新显示
-      userProfile.avatar = base64String;
-      
-      updateSuccess.value = true;
-      updateMessage.value = '头像更新成功';
-      
-      // 3秒后清除消息
-      setTimeout(() => {
-        updateMessage.value = '';
-      }, 3000);
-    };
-    
-    reader.onerror = () => {
-      throw new Error('读取文件失败');
-    };
-    
-    reader.readAsDataURL(file);
-  } catch (err: any) {
-    console.error('处理头像失败:', err);
     updateSuccess.value = false;
-    updateMessage.value = err.message || '处理头像失败，请稍后再试';
-  } finally {
-    updating.value = false;
-    // 重置文件输入
-    target.value = '';
+    updateMessage.value = '头像上传功能暂未开放';
+    
+    // 3秒后清除消息
+    setTimeout(() => {
+      updateMessage.value = '';
+    }, 3000);
+  } catch (error) {
+    console.error('处理文件选择时出错:', error);
+    updateSuccess.value = false;
+    updateMessage.value = '处理文件时出错，请稍后再试';
   }
 };
 
@@ -590,22 +546,6 @@ onMounted(() => {
   margin-bottom: 5px;
 }
 
-.retry-button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  background-color: #0055a2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.retry-button:hover {
-  background-color: #003c72;
-}
-
 /* 个人资料内容布局 */
 .profile-content {
   display: flex;
@@ -707,25 +647,11 @@ onMounted(() => {
   background-color: #003c72;
 }
 
-.upload-hint {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 5px;
-  margin-bottom: 0;
-  text-align: center;
-}
-
 .user-name {
   font-size: 1.5rem;
   font-weight: 500;
   color: var(--text-primary);
   margin: 10px 0 5px;
-}
-
-.user-id {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin-bottom: 15px;
 }
 
 .user-role {

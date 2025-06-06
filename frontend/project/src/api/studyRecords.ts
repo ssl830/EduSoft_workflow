@@ -3,50 +3,6 @@ import axios from './axios'
 // 练习报告导出格式
 export type ExportFormat = 'excel' | 'pdf'
 
-<<<<<<< HEAD:frontend/project/src/api/studyRecords.ts
-// 学习记录接口
-export interface StudyRecord {
-  id: number;
-  studentId: number;
-  courseId: number;
-  sectionId: number;
-  completed: boolean;
-  completedAt: string;
-  courseName: string;
-  sectionTitle: string;
-}
-
-// 练习记录中的题目接口
-export interface PracticeQuestion {
-  id: number;
-  sectionId: number;
-  courseId: number;
-  content: string;
-  type: string;
-  options: string;
-  studentAnswer: string;
-  correctAnswer: string;
-  isCorrect: boolean;
-  analysis: string;
-  score: number;
-}
-
-// 练习记录接口
-export interface PracticeRecord {
-  id: number;
-  practiceId: number;
-  studentId: number;
-  submittedAt: string;
-  score: number;
-  feedback: string;
-  questions: PracticeQuestion[];
-  practiceTitle: string;
-  courseName: string;
-  className: string;
-}
-
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/studyRecords.ts
 // 练习报告接口
 export interface ExerciseReport {
   exerciseId: string;
@@ -74,32 +30,8 @@ export interface ExerciseReport {
 }
 
 // API 实现
-<<<<<<< HEAD:frontend/project/src/api/studyRecords.ts
-const StudyRecordsApi = {  // 获取所有学习记录
-  getAllStudyRecords() {
-    return axios.get('/record/study');
-  },
-
-  // 获取指定课程的学习记录
-  getStudyRecordsByCourse(courseId: string) {
-    return axios.get(`/record/study/course/${courseId}`);
-  },
-
-  // 获取所有练习记录
-  getAllPracticeRecords() {
-    return axios.get('/record/practice');
-  },
-
-  // 获取指定课程的练习记录
-  getPracticeRecordsByCourse(courseId: string) {
-    return axios.get(`/record/practice/course/${courseId}`);
-  },
-
-  // 获取学生的学习记录列表（包含筛选和分页）- 保留兼容性
-=======
 const StudyRecordsApi = {
   // 获取学生的学习记录列表（包含筛选和分页）
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/studyRecords.ts
   getStudentStudyRecords(params: {
     exerciseName?: string;
     status?: string;
@@ -123,37 +55,6 @@ const StudyRecordsApi = {
       }
     });
   },
-<<<<<<< HEAD:frontend/project/src/api/studyRecords.ts
-  // 导出练习提交报告（通过submissionId）
-  exportSubmissionReport(submissionId: string) {
-    return axios.get(`/api/record/submission/${submissionId}/export-report`, {
-      responseType: 'blob',
-      headers: {
-        Accept: 'application/pdf'
-      }
-    });
-  },
-
-  // 导出指定课程的学习记录（Excel 格式）
-  exportStudyRecordsByCourse(courseId: string, params: {
-    format?: ExportFormat;
-    startDate?: string;
-    endDate?: string;
-  } = {}) {
-    return axios.get(`/api/record/study/course/${courseId}/export`, {
-      params: {
-        format: params.format || 'excel',
-        startDate: params.startDate,
-        endDate: params.endDate
-      },
-      responseType: 'blob',
-      headers: {
-        Accept: params.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      }
-    });
-  },
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/studyRecords.ts
 
   // 学生导出学习记录（Excel 格式）
   exportStudentStudyRecords(params: {

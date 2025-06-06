@@ -86,24 +86,6 @@ export interface UpdateReplyRequest {
   content: string;
 }
 
-// 点赞记录信息
-export interface DiscussionLike {
-  id: number;
-  discussionId: number;
-  userId: number;
-  createdAt: string;
-}
-
-// 点赞数量响应
-export interface LikeCountResponse {
-  count: number;
-}
-
-// 点赞检查响应
-export interface LikeCheckResponse {
-  hasLiked: boolean;
-}
-
 // 通用成功响应
 export interface SuccessResponse {
   message: string;
@@ -205,48 +187,6 @@ const discussionApi = {
   // 9. 删除讨论的所有回复（教师权限）
   deleteAllReplies: (discussionId: number) => {
     return apiClient.delete<SuccessResponse>(`/api/discussion-reply/discussion/${discussionId}`);
-  },
-
-  // ==================== 点赞相关接口 ====================
-
-  // 1. 点赞讨论
-  likeDiscussion: (discussionId: number) => {
-    return apiClient.post<DiscussionLike>(`/api/discussion-like/discussion/${discussionId}`);
-  },
-
-  // 2. 取消点赞
-  unlikeDiscussion: (likeId: number) => {
-    return apiClient.delete<SuccessResponse>(`/api/discussion-like/${likeId}`);
-  },
-
-  // 3. 获取点赞记录
-  getLikeRecord: (likeId: number) => {
-    return apiClient.get<DiscussionLike>(`/api/discussion-like/${likeId}`);
-  },
-
-  // 4. 获取讨论的所有点赞
-  getDiscussionLikes: (discussionId: number) => {
-    return apiClient.get<DiscussionLike[]>(`/api/discussion-like/discussion/${discussionId}`);
-  },
-
-  // 5. 获取用户的所有点赞
-  getUserLikes: (userId: number) => {
-    return apiClient.get<DiscussionLike[]>(`/api/discussion-like/user/${userId}`);
-  },
-
-  // 6. 获取讨论点赞数
-  getDiscussionLikeCount: (discussionId: number) => {
-    return apiClient.get<LikeCountResponse>(`/api/discussion-like/discussion/${discussionId}/count`);
-  },
-
-  // 7. 获取用户点赞数
-  getUserLikeCount: (userId: number) => {
-    return apiClient.get<LikeCountResponse>(`/api/discussion-like/user/${userId}/count`);
-  },
-
-  // 8. 检查是否已点赞
-  checkIfLiked: (discussionId: number) => {
-    return apiClient.get<LikeCheckResponse>(`/api/discussion-like/discussion/${discussionId}/check`);
   }
 };
 

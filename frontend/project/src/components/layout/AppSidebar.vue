@@ -22,7 +22,7 @@ export default {
 <template>
   <aside class="app-sidebar">
     <div class="sidebar-section">
-      <h3 class="sidebar-title">快速导航</h3>      
+      <h3 class="sidebar-title">快速导航</h3>
       <ul class="sidebar-menu">
         <li>
           <router-link to="/" class="sidebar-link">
@@ -31,7 +31,7 @@ export default {
         </li>
         <li>
           <router-link to="/class" class="sidebar-link">
-              <span class="icon">👥</span> 班级中心
+            <span class="icon">👥</span> 班级中心
           </router-link>
         </li>
 
@@ -40,16 +40,16 @@ export default {
             <span class="icon">📚</span> 题库中心
           </router-link>
         </li>
-          <li v-if="isTutor || isStudent || isTeacher">
-              <router-link to="/questionFavor" class="sidebar-link">
-                  <span class="icon">📚</span> 收藏题库
-              </router-link>
-          </li>
-          <li v-if="isTutor || isStudent || isTeacher">
-              <router-link to="/questionWrong" class="sidebar-link">
-                  <span class="icon">📈</span> 错误题库
-              </router-link>
-          </li>      
+        <li v-if="isTutor || isStudent || isTeacher">
+          <router-link to="/questionFavor" class="sidebar-link">
+            <span class="icon">📚</span> 收藏题库
+          </router-link>
+        </li>
+        <li v-if="isTutor || isStudent || isTeacher">
+          <router-link to="/questionWrong" class="sidebar-link">
+            <span class="icon">📈</span> 错误题库
+          </router-link>
+        </li>
         <li>
           <router-link to="/learning-records" class="sidebar-link">
             <span class="icon">📊</span> 学习记录
@@ -67,7 +67,7 @@ export default {
         </li>
       </ul>
     </div>
-    
+
     <div class="sidebar-section" v-if="isTeacher || isAssistant">
       <h3 class="sidebar-title">教师工具</h3>
       <ul class="sidebar-menu">
@@ -93,28 +93,28 @@ export default {
       <ul class="sidebar-menu">
         <li v-if="isTeacher">
           <router-link to="/course/create" class="sidebar-link">
-              <span class="icon">➕</span> 创建课程
+            <span class="icon">➕</span> 创建课程
           </router-link>
         </li>
         <li v-if="isTeacher || isTutor">
           <router-link to="/exercise/create" class="sidebar-link">
-              <span class="icon">📝</span> 创建练习
+            <span class="icon">📝</span> 创建练习
           </router-link>
         </li>
-<!--        <li>-->
-<!--          <router-link to="/exercise/grading" class="sidebar-link">-->
-<!--            <span class="icon">✓</span> 批阅练习-->
-<!--          </router-link>-->
-<!--        </li>-->
-<!--        <li>-->
-<!--          <router-link to="/statistics" class="sidebar-link">-->
-<!--            <span class="icon">📈</span> 统计分析-->
-<!--          </router-link>-->
-<!--        </li>-->
+        <!--        <li>-->
+        <!--          <router-link to="/exercise/grading" class="sidebar-link">-->
+        <!--            <span class="icon">✓</span> 批阅练习-->
+        <!--          </router-link>-->
+        <!--        </li>-->
+        <!--        <li>-->
+        <!--          <router-link to="/statistics" class="sidebar-link">-->
+        <!--            <span class="icon">📈</span> 统计分析-->
+        <!--          </router-link>-->
+        <!--        </li>-->
       </ul>
     </div>
     <div class="sidebar-divider"></div>
-    
+
     <div class="sidebar-section">
       <h3 class="sidebar-title">账户</h3>
       <ul class="sidebar-menu">
@@ -225,17 +225,17 @@ export default {
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
   }
-  
+
   .sidebar-menu {
     display: flex;
     flex-wrap: wrap;
   }
-  
+
   .sidebar-menu li {
     flex: 1 0 50%;
     min-width: 160px;
   }
-  
+
   .sidebar-link {
     padding: 0.5rem 1rem;
   }

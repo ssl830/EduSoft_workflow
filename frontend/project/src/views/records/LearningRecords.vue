@@ -15,21 +15,9 @@
       <div v-else-if="(userRole === 'teacher' || userRole === 'assistant') && classError" class="class-error">
         <span class="error-text">{{ classError }}</span>
       </div>
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-    </header>    <section class="filter-section">
-      <div class="filter-controls">
-        <input type="text" v-model="filters.exerciseName" placeholder="练习名称" class="filter-input">
-        <select v-model="filters.courseId" class="filter-select" :disabled="coursesLoading">
-          <option value="">所有课程</option>
-          <option v-for="course in courses" :key="course.id" :value="course.id">
-            {{ course.name }}
-          </option>
-        </select>
-=======
     </header><section class="filter-section">
       <div class="filter-controls">
         <input type="text" v-model="filters.exerciseName" placeholder="练习名称" class="filter-input">
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
         <select v-model="filters.status" class="filter-select">
           <option value="">所有完成状态</option>
           <option value="completed">已完成</option>
@@ -46,9 +34,6 @@
           :disabled="downloadStatus.loading"
         >{{ downloadStatus.loading ? '导出中...' : '导出全部记录' }}</button>
       </div>
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-    </section>    <section class="records-list-section">
-=======
     </section>
 
     <section class="records-list-section">
@@ -57,60 +42,30 @@
           <span class="course-badge-text">课程A</span>
         </span>
       </div>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
       <div v-if="loading" class="loading-indicator">加载中...</div>
       <div v-else-if="error" class="error-message">{{ error }}</div>
       <div v-else-if="records.length === 0" class="empty-state">
         <p>暂无学习记录。</p>
       </div>
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-      <div v-else><table class="records-table">
-          <thead>
-            <tr>
-              <th>练习名称</th>
-              <th>课程名称</th>
-=======
       <div v-else>
         <table class="records-table">
           <thead>
             <tr>
               <th>练习名称</th>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
               <th v-if="userRole === 'teacher' || userRole === 'assistant'">姓名</th>
               <th>完成状态</th>
               <th>得分</th>
               <th>操作</th>
             </tr>
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-          </thead>          <tbody>
-            <tr v-for="record in records" :key="record.id">
-              <td>{{ record.title }}</td>
-              <td>{{ record.courseName }}</td>
-              <td v-if="userRole === 'teacher' || userRole === 'assistant'">{{ record.student_name }}</td>
-              <td>
-=======
           </thead>
           <tbody>
             <tr v-for="record in records" :key="record.id">
               <td>{{ record.exercise_title }}</td>
               <td v-if="userRole === 'teacher' || userRole === 'assistant'">{{ record.student_name }}</td>              <td>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
                 <div class="status-wrapper">
                   <span :class="['status-badge', getStatusStyle(record.status)]">
                     {{ getStatusText(record.status) }}
                   </span>
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-                  <ProgressKnob :value="record.percent || 61" :show-text="false" />
-                </div>
-              </td>
-              <td>{{ record.score !== null ? record.score : '-' }}</td>
-              <td class="actions-cell actions-cell-center">
-                <button @click="doExercise(record.id)" class="btn btn-action btn-exercise">练习</button>
-                <button @click="viewRecordDetail(record.id)" class="btn btn-action btn-view">查看</button>
-                <button @click="correct(record.id)" class="btn btn-action btn-correct">批改</button>
-                <button 
-                  @click="exportRecord(record.id)" 
-=======
                   <ProgressKnob :value="record.percent || 61" />
                 </div>
               </td>
@@ -120,21 +75,13 @@
                 <button @click="correct(record.exercise_id)" class="btn btn-action btn-correct">批改</button>
                 <button 
                   @click="exportRecord(record.exercise_id)" 
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
                   class="btn btn-action btn-export-blue"
                   :disabled="downloadStatus.loading"
                 >{{ downloadStatus.loading ? '导出中...' : '导出记录' }}</button>
                 <button 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-                  @click="downloadReport(record.id)" 
-                  class="btn btn-action btn-export"
-                  :disabled="downloadStatus.loading || !record.submission_id"
-                  :title="!record.submission_id ? '暂无提交记录' : '导出提交报告'"
-=======
                   @click="downloadReport(record.exercise_id)" 
                   class="btn btn-action btn-export"
                   :disabled="downloadStatus.loading"
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
                 >{{ downloadStatus.loading ? '下载中...' : '导出报告' }}</button>
               </td>
             </tr>
@@ -188,20 +135,6 @@ import CourseApi from '../../api/course'
 
 const ProgressKnob = defineAsyncComponent(() => import('../../components/littlecomponents/ProgressKnob.vue'))
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-// 统一的记录显示接口
-interface RecordDisplay {
-  id: string;
-  title: string; // 学习记录：sectionTitle，练习记录：practiceTitle
-  courseName: string;
-  status: 'completed' | 'in-progress' | 'not-started';
-  score: number | null;
-  completedAt: string | null;
-  type: 'study' | 'practice'; // 区分是学习记录还是练习记录
-  percent?: number;
-  submission_id?: string; // 提交记录ID，用于导出报告
-  student_name?: string; // 用于教师/助教查看
-=======
 interface ExerciseRecord {
   id: string;
   exercise_id: string;
@@ -211,7 +144,6 @@ interface ExerciseRecord {
   score: number | null;
   rank: number | null;
   percent?: number;
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
 }
 
 const router = useRouter()
@@ -223,21 +155,6 @@ const currentClass = ref<{classId: string; className: string; courseId: string; 
 const classLoading = ref(false)
 const classError = ref<string | null>(null)
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-// 学习记录数据状态
-const records = ref<RecordDisplay[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-// 课程列表状态
-const courses = ref<Array<{id: string; name: string}>>([])
-const coursesLoading = ref(false)
-
-const filters = ref({
-  exerciseName: '',
-  courseId: '', // 添加课程筛选
-  status: '' as RecordDisplay['status'] | '',
-=======
 // mock数据
 const mockRecords = [
   {
@@ -259,36 +176,14 @@ const error = ref<string | null>(null)
 const filters = ref({
   exerciseName: '',
   status: '' as ExerciseRecord['status'] | '',
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   studentName: ''
 })
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-const totalRecords = ref(0)
-const totalPages = computed(() => Math.ceil(totalRecords.value / pageSize.value))
-
-// 获取课程列表
-const fetchCourses = async () => {
-  try {
-    coursesLoading.value = true
-    const response = await CourseApi.getAllCourses()
-    courses.value = response.data.data || response.data || []
-    console.log('获取课程列表成功:', courses.value.length, '门课程')
-  } catch (err: any) {
-    console.error('获取课程列表失败:', err)
-    courses.value = []
-  } finally {
-    coursesLoading.value = false
-  }
-}
-
-=======
 const totalRecords = ref(1)
 const totalPages = computed(() => Math.ceil(totalRecords.value / pageSize.value))
 
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
 // 获取用户当前班级
 const fetchUserClass = async () => {
   try {
@@ -325,191 +220,6 @@ const fetchUserClass = async () => {
 }
 
 const fetchRecords = async () => {
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-  try {
-    loading.value = true
-    error.value = null
-    
-    const allRecords: RecordDisplay[] = [];
-    
-    // 根据是否选择了课程筛选来决定调用哪个API
-    const courseId = filters.value.courseId;
-      // 获取学习记录
-    try {
-      let studyResponse;
-      if (courseId) {
-        studyResponse = await StudyRecordsApi.getStudyRecordsByCourse(courseId);
-      } else {
-        studyResponse = await StudyRecordsApi.getAllStudyRecords();
-      }
-        console.log('学习记录API响应:', studyResponse);
-      
-      // 更安全的数据解析 - 处理多种可能的响应格式
-      let studyRecords = [];
-      if (studyResponse.data) {
-        // 检查是否是标准的API响应格式 {code: 200, data: [...]}
-        if (studyResponse.data.code === 200 && studyResponse.data.data) {
-          if (Array.isArray(studyResponse.data.data)) {
-            studyRecords = studyResponse.data.data;
-          } else if (studyResponse.data.data.records && Array.isArray(studyResponse.data.data.records)) {
-            studyRecords = studyResponse.data.data.records;
-          } else if (studyResponse.data.data.list && Array.isArray(studyResponse.data.data.list)) {
-            studyRecords = studyResponse.data.data.list;
-          }
-        }
-        // 直接是数组格式
-        else if (Array.isArray(studyResponse.data)) {
-          studyRecords = studyResponse.data;
-        }
-        // 其他嵌套格式
-        else if (studyResponse.data.data && Array.isArray(studyResponse.data.data)) {
-          studyRecords = studyResponse.data.data;
-        } else if (studyResponse.data.records && Array.isArray(studyResponse.data.records)) {
-          studyRecords = studyResponse.data.records;
-        } else if (studyResponse.data.list && Array.isArray(studyResponse.data.list)) {
-          studyRecords = studyResponse.data.list;
-        } else {
-          console.warn('学习记录数据格式不正确:', studyResponse.data);
-          studyRecords = [];
-        }
-      }
-        if (Array.isArray(studyRecords) && studyRecords.length > 0) {
-        console.log('解析到的学习记录数量:', studyRecords.length);
-        console.log('第一条学习记录样例:', studyRecords[0]);
-        studyRecords.forEach((record: any) => {
-          allRecords.push({
-            id: record.id?.toString() || '',
-            title: record.sectionTitle || record.section_title || record.title || '未知章节',
-            courseName: record.courseName || record.course_name || '未知课程',
-            status: record.completed ? 'completed' : 'in-progress',
-            score: null, // 学习记录没有分数
-            completedAt: record.completedAt || record.completed_at,
-            type: 'study',
-            percent: record.completed ? 100 : 50, // 简单的完成度计算
-          });
-        });
-      } else {
-        console.log('未找到有效的学习记录数据');
-      }
-    } catch (studyErr: any) {
-      console.warn('获取学习记录失败:', studyErr);
-      if (studyErr.response) {
-        console.error('学习记录API错误响应:', studyErr.response.status, studyErr.response.data);
-      } else {
-        console.error('学习记录网络错误:', studyErr.message);
-      }
-    }
-      // 获取练习记录
-    try {
-      let practiceResponse;
-      if (courseId) {
-        practiceResponse = await StudyRecordsApi.getPracticeRecordsByCourse(courseId);
-      } else {
-        practiceResponse = await StudyRecordsApi.getAllPracticeRecords();
-      }
-        console.log('练习记录API响应:', practiceResponse);
-      
-      // 更安全的数据解析 - 处理多种可能的响应格式
-      let practiceRecords = [];
-      if (practiceResponse.data) {
-        // 检查是否是标准的API响应格式 {code: 200, data: [...]}
-        if (practiceResponse.data.code === 200 && practiceResponse.data.data) {
-          if (Array.isArray(practiceResponse.data.data)) {
-            practiceRecords = practiceResponse.data.data;
-          } else if (practiceResponse.data.data.records && Array.isArray(practiceResponse.data.data.records)) {
-            practiceRecords = practiceResponse.data.data.records;
-          } else if (practiceResponse.data.data.list && Array.isArray(practiceResponse.data.data.list)) {
-            practiceRecords = practiceResponse.data.data.list;
-          }
-        }
-        // 直接是数组格式
-        else if (Array.isArray(practiceResponse.data)) {
-          practiceRecords = practiceResponse.data;
-        }
-        // 其他嵌套格式
-        else if (practiceResponse.data.data && Array.isArray(practiceResponse.data.data)) {
-          practiceRecords = practiceResponse.data.data;
-        } else if (practiceResponse.data.records && Array.isArray(practiceResponse.data.records)) {
-          practiceRecords = practiceResponse.data.records;
-        } else if (practiceResponse.data.list && Array.isArray(practiceResponse.data.list)) {
-          practiceRecords = practiceResponse.data.list;
-        } else {
-          console.warn('练习记录数据格式不正确:', practiceResponse.data);
-          practiceRecords = [];
-        }
-      }
-        if (Array.isArray(practiceRecords) && practiceRecords.length > 0) {
-        console.log('解析到的练习记录数量:', practiceRecords.length);
-        console.log('第一条练习记录样例:', practiceRecords[0]);
-        practiceRecords.forEach((record: any) => {
-          allRecords.push({
-            id: record.id?.toString() || record.exerciseId?.toString() || '',
-            title: record.practiceTitle || record.exerciseTitle || record.title || '未知练习',
-            courseName: record.courseName || record.course_name || '未知课程',
-            status: 'completed', // 练习记录都是已完成的
-            score: record.score || record.final_score || null,
-            completedAt: record.submittedAt || record.submitted_at || record.completedAt,
-            type: 'practice',
-            percent: 100, // 练习记录都是完成的
-            submission_id: record.submission_id?.toString() || record.id?.toString() || '',
-            student_name: record.className || record.class_name || record.studentName || '', // 显示班级或学生名称
-          });
-        });
-      } else {
-        console.log('未找到有效的练习记录数据');
-      }} catch (practiceErr: any) {
-      console.warn('获取练习记录失败:', practiceErr);
-      // 详细错误日志
-      if (practiceErr.response) {
-        console.error('练习记录API错误响应:', practiceErr.response.status, practiceErr.response.data);
-      } else {
-        console.error('练习记录网络错误:', practiceErr.message);
-      }
-    }
-    
-    // 应用其他筛选条件
-    let filteredRecords = allRecords;
-    
-    // 按练习名称筛选
-    if (filters.value.exerciseName.trim()) {
-      const searchTerm = filters.value.exerciseName.trim().toLowerCase();
-      filteredRecords = filteredRecords.filter(record => 
-        record.title.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    // 按状态筛选
-    if (filters.value.status) {
-      filteredRecords = filteredRecords.filter(record => 
-        record.status === filters.value.status
-      );
-    }
-    
-    // 按学生姓名筛选（仅教师/助教可见）
-    if (filters.value.studentName.trim() && (userRole.value === 'teacher' || userRole.value === 'assistant')) {
-      const searchTerm = filters.value.studentName.trim().toLowerCase();
-      filteredRecords = filteredRecords.filter(record => 
-        record.student_name?.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    records.value = filteredRecords;
-    totalRecords.value = filteredRecords.length;
-    
-    console.log('获取学习记录成功:', records.value.length, '条记录');
-    
-  } catch (err: any) {
-    console.error('获取学习记录失败:', err);
-    error.value = err.response?.data?.message || err.message || '获取学习记录失败，请稍后再试';
-    records.value = [];
-    totalRecords.value = 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-const getStatusText = (status: RecordDisplay['status']) => {
-=======
   // 这里用mock数据
   loading.value = false
   error.value = null
@@ -518,7 +228,6 @@ const getStatusText = (status: RecordDisplay['status']) => {
 }
 
 const getStatusText = (status: ExerciseRecord['status']) => {
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   switch (status) {
     case 'completed': return '已完成'
     case 'in-progress': return '进行中'
@@ -527,11 +236,7 @@ const getStatusText = (status: ExerciseRecord['status']) => {
   }
 }
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-const getStatusStyle = (status: RecordDisplay['status']) => {
-=======
 const getStatusStyle = (status: ExerciseRecord['status']) => {
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   switch (status) {
     case 'completed': return 'status-completed'
     case 'in-progress': return 'status-progress'
@@ -616,43 +321,12 @@ const handleFileDownload = (blob: Blob, filename: string) => {
   }
 };
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-// 导出记录（Excel 格式）- 重新设计，去掉本地数据依赖
-const exportRecord = async (recordId: string) => {
-=======
 // 导出记录（Excel 格式）
 const exportRecord = async (exerciseId: string) => {
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   try {
     downloadStatus.value.loading = true;
     downloadStatus.value.error = null;
     
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    
-    // 根据用户角色决定调用不同的导出方法
-    if (userRole.value === 'student') {
-      // 学生导出自己的练习记录
-      const response = await StudyRecordsApi.downloadStudentExerciseReport(recordId, 'excel');
-      handleFileDownload(response.data, `我的练习记录_${recordId}_${timestamp}.xlsx`);
-    } else if (userRole.value === 'teacher' || userRole.value === 'assistant') {
-      // 教师/助教导出班级练习记录
-      const classId = currentClass.value?.classId;
-      if (!classId) {
-        throw new Error('未获取到班级信息，无法导出班级练习记录');
-      }
-      
-      const response = await StudyRecordsApi.exportClassExerciseReport({
-        classId: classId,
-        exerciseId: recordId,
-        format: 'excel'
-      });
-      handleFileDownload(response.data, `班级练习记录_${recordId}_${timestamp}.xlsx`);
-    } else {
-      throw new Error('权限不足，无法导出记录');
-    }
-    
-=======
     // 根据用户角色决定调用不同的导出方法
     if (userRole.value === 'student') {
       const response = await StudyRecordsApi.downloadStudentExerciseReport(exerciseId, 'excel');
@@ -666,7 +340,6 @@ const exportRecord = async (exerciseId: string) => {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       handleFileDownload(response.data, `班级练习记录_${exerciseId}_${timestamp}.xlsx`);
     }
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   } catch (err: any) {
     console.error('导出记录失败:', err);
     
@@ -687,35 +360,12 @@ const exportRecord = async (exerciseId: string) => {
   }
 };
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-// 下载报告（PDF 格式）- 使用提交ID导出
-const downloadReport = async (recordId: string) => {
-=======
 // 下载报告（PDF 格式）
 const downloadReport = async (exerciseId: string) => {
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   try {
     downloadStatus.value.loading = true;
     downloadStatus.value.error = null;
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-    // 查找对应的记录获取 submission_id
-    const record = records.value.find(r => r.id === recordId);
-    if (!record || !record.submission_id) {
-      throw new Error('未找到提交记录，无法导出报告');
-    }
-
-    // 使用新的提交报告导出API
-    const response = await StudyRecordsApi.exportSubmissionReport(record.submission_id);
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    const filename = `提交报告_${record.submission_id}_${timestamp}.pdf`;
-    
-    handleFileDownload(response.data, filename);
-    
-    // 显示成功提示
-    console.log(`成功导出提交报告: ${filename}`);
-    
-=======
     // 根据用户角色决定调用不同的下载方法
     if (userRole.value === 'student') {
       const response = await StudyRecordsApi.downloadStudentExerciseReport(exerciseId, 'pdf');
@@ -735,7 +385,6 @@ const downloadReport = async (exerciseId: string) => {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       handleFileDownload(response.data, `学生练习报告_${exerciseId}_${timestamp}.pdf`);
     }
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   } catch (err: any) {
     console.error('下载报告失败:', err);
     
@@ -745,11 +394,7 @@ const downloadReport = async (exerciseId: string) => {
     } else if (err.response?.status === 403) {
       downloadStatus.value.error = '权限不足，无法下载报告';
     } else if (err.response?.status === 404) {
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-      downloadStatus.value.error = '提交记录不存在或报告未生成';
-=======
       downloadStatus.value.error = '练习报告不存在';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
     } else if (err.response?.data && typeof err.response.data === 'string') {
       downloadStatus.value.error = err.response.data;
     } else {
@@ -766,20 +411,6 @@ const exportAllRecords = async () => {
     downloadStatus.value.loading = true;
     downloadStatus.value.error = null;
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-    // 如果选择了特定课程，使用课程导出接口
-    if (filters.value.courseId) {
-      const response = await StudyRecordsApi.exportStudyRecordsByCourse(filters.value.courseId, {
-        format: 'excel'
-      });
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-      const courseName = courses.value.find(c => c.id === filters.value.courseId)?.name || '课程';
-      handleFileDownload(response.data, `${courseName}_学习记录_${timestamp}.xlsx`);
-      return;
-    }
-
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
     // 根据用户角色决定调用不同的导出方法
     if (userRole.value === 'student') {
       const response = await StudyRecordsApi.exportStudentStudyRecords({
@@ -787,20 +418,9 @@ const exportAllRecords = async () => {
         status: filters.value.status
       });
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-      handleFileDownload(response.data, `学习记录_${timestamp}.xlsx`);    } else if (userRole.value === 'teacher' || userRole.value === 'assistant') {      
-      const classId = currentClass.value?.classId;
-      if (!classId) {
-        throw new Error('未获取到班级信息，无法导出全部学习记录');
-      }
-      
-      const response = await StudyRecordsApi.exportTeacherStudyRecords({
-        classId: classId,
-=======
       handleFileDownload(response.data, `学习记录_${timestamp}.xlsx`);
     } else if (userRole.value === 'teacher' || userRole.value === 'assistant') {      const response = await StudyRecordsApi.exportTeacherStudyRecords({
         classId: currentClass.value?.classId || '1', // 使用动态获取的班级ID，如果没有则回退到默认值
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
         exerciseName: filters.value.exerciseName,
         studentName: filters.value.studentName,
         status: filters.value.status
@@ -833,30 +453,12 @@ watch([filters, currentPage], () => {
   fetchRecords()
 })
 
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-// 监听课程筛选变化，自动重新获取数据
-watch(() => filters.value.courseId, () => {
-  if (currentPage.value === 1) {
-    fetchRecords()
-  } else {
-    currentPage.value = 1
-    fetchRecords()
-  }
-})
-
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
 // 组件挂载时获取数据
 onMounted(async () => {
   // 首先获取用户班级信息（如果需要的话）
   if (userRole.value === 'teacher' || userRole.value === 'assistant') {
     await fetchUserClass()
   }
-<<<<<<< HEAD:frontend/project/src/views/records/LearningRecords.vue
-  // 获取课程列表
-  await fetchCourses()
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/records/LearningRecords.vue
   // 然后获取学习记录
   fetchRecords()
 })

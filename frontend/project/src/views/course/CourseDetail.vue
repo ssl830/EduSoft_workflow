@@ -45,7 +45,7 @@ onMounted(async () => {
     console.log('开始获取课程详情，课程ID:', courseId.value)
     const response = await CourseApi.getCourseById(courseId.value.toString()) as unknown as ApiResponse<Course>
     console.log('课程详情响应:', response)
-    
+
     if (response && response.code === 200 && response.data) {
       course.value = response.data
       console.log('设置课程数据:', course.value)

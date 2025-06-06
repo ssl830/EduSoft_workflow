@@ -65,71 +65,71 @@ const handleRegister = async () => {
         <div class="form-group">
           <label for="userId">用户ID</label>
           <input
-            id="userId"
-            v-model="userId"
-            type="text"
-            placeholder="请输入用户ID"
-            :disabled="loading"
-            required
+              id="userId"
+              v-model="userId"
+              type="text"
+              placeholder="请输入用户ID"
+              :disabled="loading"
+              required
           />
         </div>
 
         <div class="form-group">
           <label for="username">用户名</label>
           <input
-            id="username"
-            v-model="username"
-            type="text"
-            placeholder="请输入用户名"
-            :disabled="loading"
-            required
+              id="username"
+              v-model="username"
+              type="text"
+              placeholder="请输入用户名"
+              :disabled="loading"
+              required
           />
         </div>
 
         <div class="form-group">
           <label for="email">电子邮箱</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="请输入电子邮箱"
-            :disabled="loading"
-            required
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="请输入电子邮箱"
+              :disabled="loading"
+              required
           />
         </div>
 
         <div class="form-group">
           <label for="password">密码</label>
           <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="请输入密码"
-            :disabled="loading"
-            required
-            autocomplete="new-password"
+              id="password"
+              v-model="password"
+              type="password"
+              placeholder="请输入密码"
+              :disabled="loading"
+              required
+              autocomplete="new-password"
           />
         </div>
 
         <div class="form-group">
           <label for="confirmPassword">确认密码</label>
           <input
-            id="confirmPassword"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="请再次输入密码"
-            :disabled="loading"
-            required
-            autocomplete="new-password"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="请再次输入密码"
+              :disabled="loading"
+              required
+              autocomplete="new-password"
           />
         </div>
 
         <div class="form-group">
           <label for="role">角色</label>
           <select
-            id="role"
-            v-model="role"
-            :disabled="loading"
+              id="role"
+              v-model="role"
+              :disabled="loading"
           >
             <option value="student">学生</option>
             <option value="teacher">教师</option>
@@ -138,9 +138,9 @@ const handleRegister = async () => {
         </div>
 
         <button
-          type="submit"
-          class="btn-primary btn-full"
-          :disabled="loading"
+            type="submit"
+            class="btn-primary btn-full"
+            :disabled="loading"
         >
           {{ loading ? '注册中...' : '注册' }}
         </button>

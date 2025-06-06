@@ -10,11 +10,6 @@ const CourseApi = {
     return axios.get(`/api/courses/user/${userId}`)
   },
 
-  // Get all courses list (for filtering purposes)
-  getAllCourses() {
-    return axios.get('/api/courses')
-  },
-
   // Get course by ID
   getCourseById(id: string) {
     return axios.get(`/api/courses/${id}`)

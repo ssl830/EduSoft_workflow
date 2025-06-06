@@ -4,15 +4,15 @@ const authStore = useAuthStore()
 
 const QuestionApi = {
   getQuestionList(data: {
-    courseId: number,
-    sectionId: number,
+    courseId: number
   }){
-    return axios.get('/api/question/list', {
-      params: data
-    })
+    return axios.get('/api/question/list', data)
   },
   uploadQuestion(data){
     return axios.post('/api/question/upload', data)
+  },
+  createQuestion(data){
+    return axios.post('/api/practice/question/create', data)
   },
   getFavorQuestionList(){
     return axios.get('/api/practice/questions/favorites',{
@@ -32,6 +32,13 @@ const QuestionApi = {
     return axios.delete(`/api/practice/questions/${questionId}/wrong`, {
       headers: {
         "free-fs-token": authStore.token  // APIKey
+      }
+    })
+  },
+  addWrongQuestion(questionId: number, data: { wrongAnswer: string}) {
+    return axios.post(`/api/practice/questions/${questionId}/wrong`, data, {
+      headers: {
+        "free-fs-token": authStore.token
       }
     })
   }

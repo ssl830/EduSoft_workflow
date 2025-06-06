@@ -20,7 +20,7 @@ const handleLogin = async () => {
 
   loading.value = true
   error.value = ''
-  
+
   try {
     await authStore.login(username.value, password.value)
     const redirectPath = route.query.redirect as string || '/'
@@ -37,43 +37,43 @@ const handleLogin = async () => {
   <div class="auth-container">
     <div class="auth-card">
       <h1 class="auth-title">登录</h1>
-      
+
       <div v-if="error" class="error-message">{{ error }}</div>
-      
+
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
           <label for="username">用户ID</label>
-          <input 
-            id="username"
-            v-model="username"
-            type="text"
-            placeholder="请输入用户ID"
-            :disabled="loading"
-            required
+          <input
+              id="username"
+              v-model="username"
+              type="text"
+              placeholder="请输入用户ID"
+              :disabled="loading"
+              required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="password">密码</label>
-          <input 
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="请输入密码"
-            :disabled="loading"
-            required
+          <input
+              id="password"
+              v-model="password"
+              type="password"
+              placeholder="请输入密码"
+              :disabled="loading"
+              required
           />
         </div>
-        
-        <button 
-          type="submit" 
-          class="btn-primary btn-full" 
-          :disabled="loading"
+
+        <button
+            type="submit"
+            class="btn-primary btn-full"
+            :disabled="loading"
         >
           {{ loading ? '登录中...' : '登录' }}
         </button>
       </form>
-      
+
       <div class="auth-actions">
         <p>
           还没有账号？

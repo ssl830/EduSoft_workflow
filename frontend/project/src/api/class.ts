@@ -17,7 +17,7 @@ const ClassApi = {
   },
 
   // Get class by ID
-  getClassById(id: string) {
+  getClassById(id: bigint) {
     return axios.get(`/api/classes/${id}`)
   },
 
@@ -30,8 +30,8 @@ const ClassApi = {
     return axios.post('/api/classes', data)
   },
 
-  getHomeworkList(classID: bigint) {
-    return axios.get(`/api/homework/list?classId=${classID}`)
+  getHomeworkList(classId: bigint) {
+    return axios.get(`/api/homework/list?classId=${classId}`)
   },
 
   deleteHomework(homeworkId: bigint) {

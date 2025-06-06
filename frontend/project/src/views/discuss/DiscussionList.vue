@@ -12,18 +12,20 @@
             </h1>
           </div>
           <div class="toolbar-right">
-            <!-- <button 
             <button 
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
               @click="showCreateInput = true"
               class="create-discussion-btn"
             >
               <i class="fa fa-plus"></i>
               发起讨论
-            </button> -->
+            </button>
             
-            <!-- <div class="action-buttons">
-            </div> -->
+            <div class="action-buttons">
+              <button @click="refreshDiscussions" class="action-btn" :disabled="loading">
+                <i class="fa fa-refresh" :class="{ 'fa-spin': loading }"></i>
+                刷新
+              </button>
+            </div>
           </div>
         </div>
         
@@ -124,9 +126,7 @@
             <i class="fa fa-plus-circle"></i>
             发起第一个讨论
           </button>
-        </div>        
-        <div v-else>          
-          <div
+        </div>        <div v-else>          <div
             v-for="thread in filteredThreads"
             :key="thread.id"
             class="discussion-card"
