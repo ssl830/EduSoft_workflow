@@ -65,9 +65,9 @@ public class HomeworkController {
      * @return 作业列表
      */
     @GetMapping("/list")
-    public Result<List<HomeworkDTO>> getHomeworkList(@RequestParam Long class_id) {
+    public Result<List<HomeworkDTO>> getHomeworkList(@RequestParam Long classId) {
         try {
-            List<HomeworkDTO> homeworkList = homeworkService.getHomeworkList(class_id);
+            List<HomeworkDTO> homeworkList = homeworkService.getHomeworkList(classId);
             return Result.ok(homeworkList, "获取作业列表成功");
         } catch (Exception e) {
             return Result.error("获取作业列表失败：" + e.getMessage());
