@@ -17,29 +17,37 @@ public class CourseSectionServiceImpl implements CourseSectionService {
 
     @Override
     @Transactional
-    public CourseSection createSection(CourseSection section) {
-        // 参数检查
-        if (section == null) {
+    public void createSections(List<CourseSection> sections) {
+        if (sections == null || sections.isEmpty()) {
             throw new CourseSectionException("SECTION_001", "章节信息不能为空");
-        }
-        if (section.getCourseId() == null) {
-            throw new CourseSectionException("SECTION_002", "课程ID不能为空");
-        }
-        if (!StringUtils.hasText(section.getTitle())) {
-            throw new CourseSectionException("SECTION_003", "章节标题不能为空");
         }
 
         // 获取当前课程的最大排序号
-        List<CourseSection> sections = courseSectionMapper.getSectionsByCourseId(section.getCourseId());
-        int maxSortOrder = sections.stream()
+        Long courseId = sections.get(0).getCourseId();
+        List<CourseSection> existingSections = courseSectionMapper.getSectionsByCourseId(courseId);
+        int maxSortOrder = existingSections.stream()
                 .mapToInt(CourseSection::getSortOrder)
                 .max()
                 .orElse(0);
-        section.setSortOrder(maxSortOrder + 1);
-        
+
+        // 验证并设置排序号
+        for (CourseSection section : sections) {
+            if (section.getCourseId() == null) {
+                throw new CourseSectionException("SECTION_002", "课程ID不能为空");
+            }
+            if (!StringUtils.hasText(section.getTitle())) {
+                throw new CourseSectionException("SECTION_003", "章节标题不能为空");
+            }
+            if (section.getSortOrder() == null) {
+                maxSortOrder++;
+                section.setSortOrder(maxSortOrder);
+            }
+        }
+
         try {
-            courseSectionMapper.insert(section);
-            return section;
+            for (CourseSection section : sections) {
+                courseSectionMapper.insert(section);
+            }
         } catch (Exception e) {
             throw new CourseSectionException("SECTION_004", "创建章节失败：" + e.getMessage());
         }
