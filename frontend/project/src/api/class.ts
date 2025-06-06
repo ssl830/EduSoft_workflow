@@ -17,11 +17,7 @@ const ClassApi = {
   },
 
   // Get class by ID
-<<<<<<< HEAD:frontend/project/src/api/class.ts
-  getClassById(id: bigint) {
-=======
   getClassById(id: string) {
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/class.ts
     return axios.get(`/api/classes/${id}`)
   },
 

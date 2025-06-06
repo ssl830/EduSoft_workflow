@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Initialize state from localStorage
   if (typeof window !== 'undefined') {
     const savedUser = localStorage.getItem('user')
-    const savedToken = localStorage.getItem('token')
+    const savedToken = localStorage.getItem('free-fs-token')
     
     if (savedUser) user.value = JSON.parse(savedUser)
     if (savedToken) token.value = savedToken
@@ -33,25 +33,25 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authApi.login({ userId, password })
       
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         const userData = {
-          id: response.data.data.userInfo.id,
-          userId: response.data.data.userInfo.userid,
-          username: response.data.data.userInfo.username,
-          email: response.data.data.userInfo.email,
-          role: response.data.data.userInfo.role
+          id: response.data.userInfo.id,
+          userId: response.data.userInfo.userId,
+          username: response.data.userInfo.username,
+          email: response.data.userInfo.email,
+          role: response.data.userInfo.role
         }
         
         user.value = userData
-        token.value = response.data.data.token
+        token.value = response.data.token
         
         // Save to localStorage
         localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('token', response.data.data.token)
+        localStorage.setItem('free-fs-token', response.data.token)
         
-        return response.data
+        return response
       } else {
-        throw new Error(response.data.msg || '登录失败')
+        throw new Error(response.msg || '登录失败')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -76,10 +76,10 @@ export const useAuthStore = defineStore('auth', () => {
 
       const response = await authApi.register(registerData)
       
-      if (response.data.code === 200) {
-        return response.data
+      if (response.code === 200) {
+        return response
       } else {
-        throw new Error(response.data.msg || '注册失败')
+        throw new Error(response.msg || '注册失败')
       }
     } catch (error) {
       console.error('Register error:', error)
@@ -88,144 +88,148 @@ export const useAuthStore = defineStore('auth', () => {
   }
   
   const logout = async () => {
+    // 先检查是否有token
+    const currentToken = localStorage.getItem('free-fs-token');
+    if (!currentToken) {
+      console.log('用户未登录，直接清除本地数据');
+      // 清除所有用户相关数据
+      localStorage.removeItem('free-fs-token');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('user');
+      user.value = null;
+      token.value = null;
+      // 重定向到登录页
+      window.location.href = '/login';
+      return;
+    }
+
     try {
-      if (token.value) {
-        const response = await authApi.logout()
-        if (response.data.code !== 200) {
-          console.warn('Logout API failed:', response.data.msg)
-        }
-      }
-      
-      // Clear local state
-      user.value = null
-      token.value = null
-      
-      // Clear localStorage
-      localStorage.removeItem('user')
-      localStorage.removeItem('token')
+      // 发送退出登录请求
+      await authApi.logout();
     } catch (error) {
-      console.error('Logout error:', error)
-      // 即使API调用失败，也需要清除本地状态
-      user.value = null
-      token.value = null
-      localStorage.removeItem('user')
-      localStorage.removeItem('token')
-      throw error
+      console.error('退出登录请求失败:', error);
+    } finally {
+      // 无论请求成功与否，都清除所有数据
+      localStorage.removeItem('free-fs-token');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('user');
+      user.value = null;
+      token.value = null;
+      // 重定向到登录页
+      window.location.href = '/login';
     }
   }
     const fetchUserInfo = async () => {
     try {
       const response = await authApi.getProfile()
       
-      console.log('API响应:', response.data);
+      console.log('获取用户信息响应:', response);
       
-      if (response.data.code === 200) {
+      // 检查响应数据
+      if (response && response.code === 200) {
+        // 确保response.data存在
+        if (!response.data) {
+          console.error('API返回数据为空');
+          throw new Error('获取用户信息失败：返回数据为空');
+        }
+
         const userData = {
-          id: response.data.data.id,
-          userId: response.data.data.userId,
-          username: response.data.data.username,
-          email: response.data.data.email,
-          role: response.data.data.role
+          id: response.data.id,
+          userId: response.data.userId,
+          username: response.data.username,
+          email: response.data.email,
+          role: response.data.role,
+          createdAt: response.data.createdAt,
+          updatedAt: response.data.updatedAt
         }
         
+        console.log('处理后的用户数据:', userData);
+        
+        // 更新状态
         user.value = userData
-        // Update localStorage
+        // 更新本地存储
         localStorage.setItem('user', JSON.stringify(userData))
         
-        return response.data.data
+        return userData
       } else {
-        // 处理非200响应
-        const errorMsg = response.data.msg || '获取用户信息失败';
-        console.error('API返回错误:', errorMsg);
-        throw new Error(errorMsg)
+        console.error('API返回错误:', response);
+        throw new Error(response?.msg || '获取用户信息失败');
       }
     } catch (error: any) {
-      console.error('Fetch user info error:', error)
+      console.error('获取用户信息错误:', error);
       
-      // 检查是否是网络错误或API错误
       if (error.response) {
         // API返回了错误响应
-        const errorMsg = error.response.data?.msg || error.response.data?.message || '服务器错误';
-        throw new Error(errorMsg)
+        console.error('API错误响应:', error.response);
+        throw new Error(error.response.data?.msg || '服务器错误');
       } else if (error.request) {
         // 请求发出但没有收到响应
-        throw new Error('网络连接失败，请检查网络连接')
+        console.error('网络错误:', error.request);
+        throw new Error('网络连接失败，请检查网络连接');
       } else {
         // 其他错误
-        throw error
+        console.error('其他错误:', error);
+        throw error;
       }
     }
   }
     const updateProfile = async (data: {
     email?: string;
     username?: string;
-    bio?: string; // 添加简介字段
+    bio?: string;
   }) => {
     try {
       const response = await authApi.updateProfile(data)
       
-      if (response.data.code === 200) {
+      if (response.code === 200) {
         // 更新成功后重新获取用户信息
         await fetchUserInfo()
-        return response.data
+        return response
       } else {
-        throw new Error(response.data.msg || '更新用户信息失败')
+        throw new Error(response.msg || '更新用户信息失败')
       }
     } catch (error) {
       console.error('Update profile error:', error)
       throw error
-    }  }
+    }
+  }
     const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
       console.log('密码修改请求: 发送到APIfox');
       
       const response = await authApi.changePassword({ oldPassword, newPassword })
       
-      console.log('APIfox 密码修改响应:', response.status, response.data);
+      console.log('APIfox 密码修改响应:', response);
       
-      // 检查APIfox响应格式
-      const responseData = response.data as any;
-      const isSuccess = response.status === 200 || 
-                       responseData?.code === 200 || 
-                       responseData?.code === '200' ||
-                       responseData?.success === true ||
-                       (!responseData?.error && !responseData?.err);
-      
-      if (isSuccess) {
-        console.log('APIfox: 密码修改成功');
-        return response.data
+      if (response.code === 200) {
+        return response
       } else {
-        const errorMsg = responseData?.msg || responseData?.message || responseData?.error || responseData?.err || '密码修改失败';
-        console.error('Auth store: 密码修改API返回错误:', errorMsg);
-        throw new Error(errorMsg)
-      }    } catch (error: any) {
-      console.log('APIfox 密码修改错误:', error.response?.status || 'Network Error');
-      
-      if (error.response) {
-        const errorMsg = error.response.data?.msg || error.response.data?.message || '服务器返回错误';
-        throw new Error(errorMsg)
-      } else if (error.request) {
-        throw new Error('网络连接失败，请检查网络连接')
-      } else {
-        throw error
+        throw new Error(response.msg || '修改密码失败')
       }
+    } catch (error) {
+      console.error('Change password error:', error)
+      throw error
     }
   }
 
-  const uploadAvatar = async (file: File) => {
+  const uploadAvatar = async (formData: FormData) => {
     try {
-      const response = await authApi.uploadAvatar(file)
+      const response = await authApi.uploadAvatar(formData);
+      console.log('上传头像响应:', response);
       
-      if (response.data.code === 200) {
-        // 上传成功后重新获取用户信息
-        await fetchUserInfo()
-        return response.data
+      if (response.code === 200) {
+        // 更新本地存储的用户信息
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        userInfo.avatar = response.data.avatar;
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        
+        return response.data;
       } else {
-        throw new Error(response.data.msg || '头像上传失败')
+        throw new Error(response.msg || '上传头像失败');
       }
-    } catch (error) {
-      console.error('Upload avatar error:', error)
-      throw error
+    } catch (error: any) {
+      console.error('上传头像失败:', error);
+      throw error;
     }
   }
 

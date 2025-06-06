@@ -13,34 +13,21 @@ declare module 'vue' {
     AppSidebar: typeof import('./src/components/layout/AppSidebar.vue')['default']
     Background: typeof import('./src/components/layout/Background.vue')['default']
     Calendar: typeof import('./src/components/littlecomponents/Calendar.vue')['default']
-<<<<<<< HEAD:frontend/project/components.d.ts
     ClassCard: typeof import('./src/components/class/ClassCard.vue')['default']
     ClassExerciseList: typeof import('./src/components/class/ClassExerciseList.vue')['default']
     ClassHomework: typeof import('./src/components/class/ClassHomework.vue')['default']
     ClassProcessing: typeof import('./src/components/class/ClassProcessing.vue')['default']
     ClassStudent: typeof import('./src/components/class/ClassStudent.vue')['default']
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/components.d.ts
     CourseCard: typeof import('./src/components/course/CourseCard.vue')['default']
-    CourseExerciseList: typeof import('./src/components/course/CourseExerciseList.vue')['default']
     CourseResourceList: typeof import('./src/components/course/CourseResourceList.vue')['default']
     CourseSyllabus: typeof import('./src/components/course/CourseSyllabus.vue')['default']
-<<<<<<< HEAD:frontend/project/components.d.ts
     CourseVideoList: typeof import('./src/components/course/CourseVideoList.vue')['default']
     DeadlineReminder: typeof import('./src/components/DeadlineReminder.vue')['default']
     DiscussionLikeDemo: typeof import('./src/components/DiscussionLikeDemo.vue')['default']
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/components.d.ts
-    ElButton: typeof import('element-plus/es')['ElButton']
-    ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
-    ElCalendar: typeof import('element-plus/es')['ElCalendar']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']
-<<<<<<< HEAD:frontend/project/components.d.ts
     NotificationCenter: typeof import('./src/components/NotificationCenter.vue')['default']
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/components.d.ts
     ProgressKnob: typeof import('./src/components/littlecomponents/ProgressKnob.vue')['default']
     RichTextEditor: typeof import('./src/components/RichTextEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

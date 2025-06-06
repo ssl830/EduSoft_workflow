@@ -4,14 +4,11 @@ const CourseApi = {
   // Get all courses for current user
   getUserCourses(userId: string) {
     return axios.get(`/api/courses/user/${userId}`)
-<<<<<<< HEAD:frontend/project/src/api/course.ts
   },
 
   // Get all courses list (for filtering purposes)
   getAllCourses() {
     return axios.get('/api/courses')
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/course.ts
   },
 
   // Get course by ID

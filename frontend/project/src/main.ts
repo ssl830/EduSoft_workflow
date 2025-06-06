@@ -49,9 +49,10 @@ const applyThemeClass = (theme: string) => {
 
 applyThemeClass(savedTheme)
 const app = createApp(App)
+const pinia = createPinia()
 
 // 使用各种插件
-app.use(createPinia())
+app.use(pinia)
    .use(router)
    .use(ElementPlus)
    .use(Quasar)
@@ -62,10 +63,9 @@ app.use(createPinia())
 // 注册全局实例
 
 //全局注册组件
-app.component('ProgressKnob', ProgressKnob)
-app.component('WriteBoard', WriteBoard)
-app.use(createPinia())
-app.use(router)
+// app.component('ProgressKnob', ProgressKnob)  // 删除重复注册
+// app.component('WriteBoard', WriteBoard)      // 删除重复注册
+// app.use(createPinia())  // 删除重复创建
 app.use(Varlet)
 app.use(ElementPlus)
 app.use(Quasar, {

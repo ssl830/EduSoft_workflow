@@ -19,27 +19,15 @@
       <div v-if="loading" class="loading-container">
         <div class="loading-spinner"></div>
       </div>
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-        <div v-else-if="error" class="error-message">
-        <p class="error-title">获取信息失败</p>
-        <p>{{ error }}</p>
-        <button @click="fetchUserProfile" class="retry-button">重试</button>
-=======
-      
       <div v-else-if="error" class="error-message">
         <p class="error-title">获取信息失败</p>
         <p>{{ error }}</p>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
       </div>
-        <div v-else class="profile-content">
+      <div v-else class="profile-content">
         <!-- 左侧信息卡片 -->
         <div class="profile-sidebar">
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-          <div class="profile-card">            <div class="avatar-container">
-=======
           <div class="profile-card">
             <div class="avatar-container">
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
               <div class="avatar-wrapper">
                 <img 
                   :src="userProfile.avatar || defaultAvatar" 
@@ -47,7 +35,8 @@
                   class="avatar-image"
                   @error="handleAvatarError"
                 />
-              </div>              <div class="file-input-container">
+              </div>
+              <div class="file-input-container">
                 <input 
                   type="file" 
                   @change="handleFileChange" 
@@ -55,30 +44,15 @@
                   class="file-input" 
                   id="avatarUpload"
                 />
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
                 <label for="avatarUpload" class="upload-label">选择头像</label>
                 <p class="upload-hint">支持JPG、PNG格式，最大5MB</p>
               </div>
             </div>
-            <h2 class="user-name">{{ userProfile.username }}</h2>            <span class="user-role" :class="getRoleClass()">
-              {{ roleText }}
-            </span>
-              <!-- 开发调试：角色测试按钮 -->
-            <div class="debug-buttons" v-if="true">
-              <button @click="testSetRole('student')" class="debug-btn">学生</button>
-              <button @click="testSetRole('teacher')" class="debug-btn">教师</button>
-              <button @click="testSetRole('assistant')" class="debug-btn">助教</button>
-              <button @click="testSetRole('')" class="debug-btn">重置</button>
-            </div>
-=======
-                <label for="avatarUpload" class="upload-label">选择文件</label>
-              </div>
-            </div>
             <h2 class="user-name">{{ userProfile.username }}</h2>
-            <span class="user-role">
+            <span class="user-id">ID: {{ userProfile.userId }}</span>
+            <span class="user-role" :class="getRoleClass()">
               {{ roleText }}
             </span>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
             <div class="user-info">
               <div class="info-item">
                 <svg xmlns="http://www.w3.org/2000/svg" class="info-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,10 +105,9 @@
                     type="text"
                     id="username"
                     v-model="userProfile.username"
-                    class="form-input disabled"
-                    disabled
+                    class="form-input"
+                    required
                   />
-                  <p class="form-help-text">用户名注册后不可更改</p>
                 </div>
                 
                 <div class="form-group">
@@ -149,6 +122,18 @@
                 </div>
                 
                 <div class="form-group">
+                  <label for="userId" class="form-label">用户ID</label>
+                  <input
+                    type="text"
+                    id="userId"
+                    :value="userProfile.userId"
+                    class="form-input disabled"
+                    disabled
+                  />
+                  <p class="form-help-text">用户ID不可更改</p>
+                </div>
+                
+                <div class="form-group">
                   <label for="role" class="form-label">学院</label>
                   <input
                     type="text"
@@ -157,25 +142,6 @@
                     class="form-input disabled"
                     disabled
                   />
-                </div>
-                
-                <div class="form-group">
-                  <label for="bio" class="form-label">简介</label>
-                  <textarea
-                    id="bio"
-                    v-model="userProfile.bio"
-                    rows="4"
-                    class="form-textarea"
-                    placeholder="介绍一下自己..."
-                  ></textarea>
-                </div>
-                  <div class="form-group" v-if="updateMessage">
-                  <div :class="[
-                    'message-alert', 
-                    updateSuccess ? 'success' : 'error'
-                  ]">
-                    {{ updateMessage }}
-                  </div>
                 </div>
                 
                 <div class="form-actions">
@@ -188,7 +154,7 @@
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {{ updating ? '保存中...' : '保存' }}
+                    {{ updating ? '更新中...' : '保存修改' }}
                   </button>
                   <button type="button" class="cancel-button">取消</button>
                 </div>
@@ -287,20 +253,20 @@ const passwordSuccess = ref(false);
 interface UserProfileData {
   username: string;
   email: string;
-  bio: string;
-  avatar: string;
   role: string;
   createdAt: string;
+  userId: string;
+  avatar: string;
 }
 
 // 用户个人信息
 const userProfile = reactive<UserProfileData>({
   username: '',
   email: '',
-  bio: '',
-  avatar: '',
   role: '',
-  createdAt: ''
+  createdAt: '',
+  userId: '',
+  avatar: ''
 });
 
 // 密码修改数据
@@ -312,21 +278,11 @@ const passwordData = reactive({
 
 // 计算属性
 const roleText = computed(() => {
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-  console.log('当前用户角色:', userProfile.role);
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   switch(userProfile.role) {
     case 'teacher': return '教师';
     case 'assistant': return '助教';
     case 'student': return '学生';
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-    default: 
-      console.log('未识别的角色，使用默认值:', userProfile.role);
-      return '用户';
-=======
     default: return '用户';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   }
 });
 
@@ -346,7 +302,6 @@ const passwordMismatch = computed(() => {
 });
 
 // 方法
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
 const getRoleClass = () => {
   switch(userProfile.role) {
     case 'teacher': return 'teacher';
@@ -356,139 +311,29 @@ const getRoleClass = () => {
   }
 };
 
-// 测试函数：手动设置角色用于调试
-const testSetRole = (role: string) => {
-  userProfile.role = role;
-  console.log('手动设置角色为:', role);
-};
-
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
 const fetchUserProfile = async () => {
   loading.value = true;
   error.value = null;
   
   try {
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-    // 检查是否已登录
-    if (!authStore.isAuthenticated) {
-      throw new Error('用户未登录，请先登录');
-    }
-
-    // 检查是否有token
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('登录状态已失效，请重新登录');
-    }
-    
-    console.log('当前用户状态:', authStore.user);
-    console.log('Token状态:', !!token);
-    
-    // 优先尝试从API获取最新用户信息
-    try {
-      console.log('尝试从API获取用户信息...');
-      const userData = await authStore.fetchUserInfo();
-      console.log('API返回的用户数据:', userData);      // 更新本地数据
-      userProfile.username = userData.username || '';
-      userProfile.email = userData.email || '';
-      userProfile.bio = userData.bio || ''; // 简介字段，如果后端提供
-      userProfile.avatar = userData.avatar || ''; // 头像字段，如果后端提供头像URL  
-      userProfile.role = userData.role || '';
-      userProfile.createdAt = userData.createdAt || '';
-      
-      console.log('用户信息加载成功，角色为:', userProfile.role);
-      return;
-    } catch (apiError: any) {
-      console.warn('API获取用户信息失败，尝试使用缓存数据:', apiError);
-      
-      // 如果API失败且是Lorem Ipsum错误，使用缓存数据
-      const errorMsg = apiError?.response?.data?.msg || apiError.message || '';
-      const isLoremError = errorMsg.includes('aliquip') || 
-                          errorMsg.includes('Lorem') || 
-                          errorMsg.includes('incididunt') ||
-                          errorMsg.includes('dolor');
-        if (isLoremError && authStore.user) {
-        console.log('检测到Lorem Ipsum错误，使用store中的缓存数据:', authStore.user);
-        userProfile.username = authStore.user.username || '';
-        userProfile.email = authStore.user.email || '';
-        userProfile.bio = ''; 
-        // 尝试从localStorage获取头像
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          try {
-            const userData = JSON.parse(savedUser);
-            userProfile.avatar = userData.avatar || '';
-          } catch (parseError) {
-            console.error('解析localStorage用户数据失败:', parseError);
-            userProfile.avatar = '';
-          }
-        } else {
-          userProfile.avatar = '';
-        }
-        userProfile.role = authStore.user.role || '';
-        userProfile.createdAt = '';
-        return;
-      }
-      
-      // 如果不是Lorem错误，重新抛出
-      throw apiError;
-    }
-    
-  } catch (err: any) {
-    console.error('获取用户信息失败:', err);
-    
-    // 最后的兜底策略：尝试使用localStorage中的数据
-    const localUser = localStorage.getItem('user');
-    if (localUser) {      try {
-        const savedUser = JSON.parse(localUser);
-        console.log('使用localStorage中的用户数据:', savedUser);
-        console.log('localStorage中的角色信息:', savedUser.role);
-        userProfile.username = savedUser.username || '';
-        userProfile.email = savedUser.email || '';
-        userProfile.bio = '';
-        userProfile.avatar = savedUser.avatar || ''; // 加载保存的头像
-        userProfile.role = savedUser.role || '';
-        userProfile.createdAt = '';
-        console.log('设置的用户角色为:', userProfile.role);
-        return;
-      } catch (parseError) {
-        console.error('解析localStorage用户数据失败:', parseError);
-      }
-    }
-    
-    // 设置具体的错误信息
-    if (err.message?.includes('登录')) {
-      error.value = err.message;
-    } else if (err?.response?.status === 401) {
-      error.value = '登录状态已失效，请重新登录';
-      authStore.logout().catch(console.error);
-    } else if (err?.response?.status === 403) {
-      error.value = '没有访问权限';
-    } else if (err?.response?.status >= 500) {
-      error.value = '服务器错误，请稍后再试';
-    } else {
-      const errorMsg = err?.response?.data?.msg || err.message || '';
-      if (errorMsg.includes('aliquip') || errorMsg.includes('Lorem') || errorMsg.includes('incididunt')) {
-        error.value = '模拟API返回测试数据，请检查API配置或联系管理员';
-      } else {
-        error.value = errorMsg || '无法加载用户信息，请稍后再试';
-      }
-    }
-=======
     // 使用auth store获取用户信息
     const userData = await authStore.fetchUserInfo();
     
-    // 更新本地数据，使用默认值处理可能缺失的字段
+    // 更新本地数据
     userProfile.username = userData.username || '';
     userProfile.email = userData.email || '';
-    userProfile.bio = ''; // 暂时使用空字符串，后续可从后端获取
-    userProfile.avatar = ''; // 暂时使用空字符串，后续可从后端获取
     userProfile.role = userData.role || '';
     userProfile.createdAt = userData.createdAt || '';
+    userProfile.userId = userData.userId || '';
+    
+    // 从localStorage获取头像
+    const savedAvatar = localStorage.getItem('userAvatar');
+    if (savedAvatar) {
+      userProfile.avatar = savedAvatar;
+    }
   } catch (err: any) {
     console.error('获取用户信息失败:', err);
     error.value = err.message || '无法加载用户信息，请稍后再试';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   } finally {
     loading.value = false;
   }
@@ -499,30 +344,11 @@ const updateProfile = async () => {
   updateMessage.value = '';
   
   try {
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-    // 准备更新数据：邮箱和简介
-    const updateData: { email?: string; username?: string; bio?: string } = {};
-    
-    // 检查邮箱是否有效
-    if (userProfile.email && userProfile.email.trim()) {
-      updateData.email = userProfile.email.trim();
-    } else {
-      throw new Error('邮箱不能为空');
-    }
-    
-    // 添加简介字段（允许为空）
-    updateData.bio = userProfile.bio?.trim() || '';
-    
-    console.log('准备更新的数据:', updateData);
-    
-    await authStore.updateProfile(updateData);
-=======
     // 只更新邮箱和用户名
     await authStore.updateProfile({
       email: userProfile.email,
       username: userProfile.username
     });
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
     
     // 更新成功
     updateSuccess.value = true;
@@ -535,11 +361,7 @@ const updateProfile = async () => {
   } catch (err: any) {
     console.error('更新个人资料失败:', err);
     updateSuccess.value = false;
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
     updateMessage.value = err?.response?.data?.msg || err.message || '更新个人资料失败，请稍后再试';
-=======
-    updateMessage.value = err.message || '更新个人资料失败，请稍后再试';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   } finally {
     updating.value = false;
   }
@@ -552,37 +374,10 @@ const changePassword = async () => {
     return;
   }
   
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-  // 基本验证
-  if (!passwordData.oldPassword.trim()) {
-    passwordSuccess.value = false;
-    passwordMessage.value = '请输入当前密码';
-    return;
-  }
-  
-  if (!passwordData.newPassword.trim()) {
-    passwordSuccess.value = false;
-    passwordMessage.value = '请输入新密码';
-    return;
-  }
-  
-  if (passwordData.newPassword.length < 6) {
-    passwordSuccess.value = false;
-    passwordMessage.value = '新密码长度至少为6位';
-    return;
-  }
-  
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   updatingPassword.value = true;
   passwordMessage.value = '';
   
   try {
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-    console.log('尝试修改密码...');
-    
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
     // 调用auth store的修改密码方法
     await authStore.changePassword(passwordData.oldPassword, passwordData.newPassword);
     
@@ -598,45 +393,10 @@ const changePassword = async () => {
     setTimeout(() => {
       passwordMessage.value = '';
     }, 3000);
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-    
-  } catch (err: any) {
-    console.error('修改密码失败:', err);
-    
-    // 改进错误处理
-    let errorMessage = '密码修改失败';
-    
-    if (err?.response?.data?.msg) {
-      const apiError = err.response.data.msg;
-      // 检查是否是Lorem Ipsum错误
-      if (apiError.includes('mollit') || 
-          apiError.includes('deserunt') || 
-          apiError.includes('Lorem') || 
-          apiError.includes('ipsum')) {
-        errorMessage = '模拟API返回错误数据，密码修改功能需要真实后端API支持';
-      } else {
-        errorMessage = apiError;
-      }
-    } else if (err?.response?.status === 401) {
-      errorMessage = '当前密码不正确';
-    } else if (err?.response?.status === 400) {
-      errorMessage = '请求参数错误，请检查输入';
-    } else if (err?.response?.status === 404) {
-      errorMessage = '密码修改接口不存在，请联系管理员';
-    } else if (err?.response?.status >= 500) {
-      errorMessage = '服务器错误，请稍后再试';
-    } else if (err.message) {
-      errorMessage = err.message;
-    }
-    
-    passwordSuccess.value = false;
-    passwordMessage.value = errorMessage;
-=======
   } catch (err: any) {
     console.error('修改密码失败:', err);
     passwordSuccess.value = false;
     passwordMessage.value = err.message || '密码修改失败，请确认当前密码是否正确';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
   } finally {
     updatingPassword.value = false;
   }
@@ -644,94 +404,59 @@ const changePassword = async () => {
 
 const handleFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-  if (!target || !target.files || target.files.length === 0) return;
+  if (!target.files || !target.files[0]) return;
   
   const file = target.files[0];
   
-  // 验证文件类型
+  // 检查文件类型
   if (!file.type.startsWith('image/')) {
     updateSuccess.value = false;
     updateMessage.value = '请选择图片文件';
-    target.value = ''; // 重置文件输入
     return;
   }
   
-  // 验证文件大小 (限制为5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
+  // 检查文件大小（5MB）
+  if (file.size > 5 * 1024 * 1024) {
     updateSuccess.value = false;
-    updateMessage.value = '图片文件大小不能超过5MB';
-    target.value = ''; // 重置文件输入
+    updateMessage.value = '图片大小不能超过5MB';
     return;
   }
   
   try {
     updating.value = true;
     updateMessage.value = '正在处理头像...';
-    updateSuccess.value = false;
     
-    console.log('开始处理头像:', file.name);
-    
-    // 创建本地预览URL
+    // 将文件转换为Base64
     const reader = new FileReader();
     reader.onload = (e) => {
-      if (e.target?.result) {
-        // 更新头像显示
-        userProfile.avatar = e.target.result as string;
-        updateSuccess.value = true;
-        updateMessage.value = '头像已更新（注意：这是本地预览，实际上传功能需要后端支持）';
-        
-        // 保存到localStorage作为临时存储
-        const currentUser = localStorage.getItem('user');
-        if (currentUser) {
-          try {
-            const userData = JSON.parse(currentUser);
-            userData.avatar = e.target.result;
-            localStorage.setItem('user', JSON.stringify(userData));
-          } catch (error) {
-            console.error('保存头像到localStorage失败:', error);
-          }
-        }
-        
-        // 3秒后清除消息
-        setTimeout(() => {
-          updateMessage.value = '';
-        }, 3000);
-      }
+      const base64String = e.target?.result as string;
+      // 存储到localStorage
+      localStorage.setItem('userAvatar', base64String);
+      // 更新显示
+      userProfile.avatar = base64String;
+      
+      updateSuccess.value = true;
+      updateMessage.value = '头像更新成功';
+      
+      // 3秒后清除消息
+      setTimeout(() => {
+        updateMessage.value = '';
+      }, 3000);
     };
+    
+    reader.onerror = () => {
+      throw new Error('读取文件失败');
+    };
+    
     reader.readAsDataURL(file);
-    
-    // 注释掉实际的API调用，因为后端可能不支持
-    // await authStore.uploadAvatar(file);
-    
-    console.log('头像处理成功');
-  } catch (error: any) {
-    console.error('头像处理失败:', error);
+  } catch (err: any) {
+    console.error('处理头像失败:', err);
     updateSuccess.value = false;
-    updateMessage.value = error?.response?.data?.msg || error.message || '头像处理失败，请稍后再试';
+    updateMessage.value = err.message || '处理头像失败，请稍后再试';
   } finally {
     updating.value = false;
-    target.value = ''; // 重置文件输入
-=======
-  if (!target) return;
-  
-  // 立即重置文件输入以避免重复选择同一文件的问题
-  target.value = '';
-  
-  try {
-    updateSuccess.value = false;
-    updateMessage.value = '头像上传功能暂未开放';
-    
-    // 3秒后清除消息
-    setTimeout(() => {
-      updateMessage.value = '';
-    }, 3000);
-  } catch (error) {
-    console.error('处理文件选择时出错:', error);
-    updateSuccess.value = false;
-    updateMessage.value = '处理文件时出错，请稍后再试';
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
+    // 重置文件输入
+    target.value = '';
   }
 };
 
@@ -865,7 +590,6 @@ onMounted(() => {
   margin-bottom: 5px;
 }
 
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
 .retry-button {
   margin-top: 10px;
   padding: 8px 16px;
@@ -882,8 +606,6 @@ onMounted(() => {
   background-color: #003c72;
 }
 
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
 /* 个人资料内容布局 */
 .profile-content {
   display: flex;
@@ -985,7 +707,6 @@ onMounted(() => {
   background-color: #003c72;
 }
 
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
 .upload-hint {
   font-size: 12px;
   color: var(--text-tertiary);
@@ -994,8 +715,6 @@ onMounted(() => {
   text-align: center;
 }
 
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
 .user-name {
   font-size: 1.5rem;
   font-weight: 500;
@@ -1003,66 +722,14 @@ onMounted(() => {
   margin: 10px 0 5px;
 }
 
+.user-id {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+}
+
 .user-role {
   display: inline-block;
-<<<<<<< HEAD:frontend/project/src/views/profile/UserProfile.vue
-  padding: 4px 12px;
-  border-radius: 50px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 15px;
-}
-
-/* 根据角色设置不同的颜色 */
-.user-role.teacher {
-  background-color: #e8f5e8;
-  color: #2e7d2e;
-  border: 1px solid #4caf50;
-}
-
-.user-role.assistant {
-  background-color: #fff3e0;
-  color: #e65100;
-  border: 1px solid #ff9800;
-}
-
-.user-role.student {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--primary);
-}
-
-.user-role.default {
-  background-color: #f5f5f5;
-  color: #666666;
-  border: 1px solid #cccccc;
-}
-
-/* 调试按钮样式 */
-.debug-buttons {
-  margin-top: 10px;
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-
-.debug-btn {
-  padding: 2px 8px;
-  font-size: 12px;
-  border: 1px solid #ccc;
-  background-color: #f8f9fa;
-  color: #666;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.debug-btn:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
-}
-
-=======
   background-color: var(--primary-light);
   color: var(--primary);
   padding: 4px 12px;
@@ -1071,7 +738,6 @@ onMounted(() => {
   margin-bottom: 15px;
 }
 
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/profile/UserProfile.vue
 .user-info {
   width: 100%;
   margin-top: 15px;

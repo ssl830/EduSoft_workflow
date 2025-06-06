@@ -5,6 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import cn.dev33.satoken.SaManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @SpringBootApplication
 @MapperScan("org.example.edusoft.mapper")  // 告诉 Spring 和 MyBatis 去指定包路径下扫描所有的 Mapper 接口，并将它们注册为 Spring 容器中的 Bean
@@ -16,6 +20,29 @@ public class EduSoftApplication {
         System.out.println("启动成功，Sa-Token 配置如下：" + SaManager.getConfig());
     }
 
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        
+        // 允许所有源
+        config.addAllowedOriginPattern("*");
+        
+        // 允许所有请求头
+        config.addAllowedHeader("*");
+        
+        // 允许所有方法
+        config.addAllowedMethod("*");
+        
+        // 允许携带cookie
+        config.setAllowCredentials(true);
+        
+        // 暴露所有响应头
+        config.addExposedHeader("*");
+        
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 }
 
 

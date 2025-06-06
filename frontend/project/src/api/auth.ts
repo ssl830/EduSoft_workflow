@@ -69,7 +69,7 @@ const AuthApi = {
   updateProfile(data: {
     email?: string;
     username?: string;
-    bio?: string; // 添加简介字段
+    bio?: string;
   }) {
     return axios.post<CommonResponse>('/api/user/update', data)
   },
@@ -98,11 +98,8 @@ const AuthApi = {
   },
   
   // Upload Avatar
-  uploadAvatar(file: File) {
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
-    return axios.post<CommonResponse>('/api/user/uploadAvatar', formData, {
+  uploadAvatar(formData: FormData) {
+    return axios.post<CommonResponse>('/api/user/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

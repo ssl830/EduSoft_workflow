@@ -11,12 +11,13 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const role = ref('student')
+const userId = ref('')
 const loading = ref(false)
 const error = ref('')
 
 const handleRegister = async () => {
   // Validate inputs
-  if (!username.value || !email.value || !password.value) {
+  if (!username.value || !email.value || !password.value || !userId.value) {
     error.value = '请填写所有必填字段'
     return
   }
@@ -41,7 +42,8 @@ const handleRegister = async () => {
       username: username.value,
       email: email.value,
       password: password.value,
-      role: role.value
+      role: role.value,
+      userId: userId.value
     })
     router.push('/')
   } catch (err: any) {
@@ -60,6 +62,18 @@ const handleRegister = async () => {
       <div v-if="error" class="error-message">{{ error }}</div>
 
       <form @submit.prevent="handleRegister" class="auth-form">
+        <div class="form-group">
+          <label for="userId">用户ID</label>
+          <input
+            id="userId"
+            v-model="userId"
+            type="text"
+            placeholder="请输入用户ID"
+            :disabled="loading"
+            required
+          />
+        </div>
+
         <div class="form-group">
           <label for="username">用户名</label>
           <input
@@ -93,6 +107,7 @@ const handleRegister = async () => {
             placeholder="请输入密码"
             :disabled="loading"
             required
+            autocomplete="new-password"
           />
         </div>
 
@@ -105,6 +120,7 @@ const handleRegister = async () => {
             placeholder="请再次输入密码"
             :disabled="loading"
             required
+            autocomplete="new-password"
           />
         </div>
 

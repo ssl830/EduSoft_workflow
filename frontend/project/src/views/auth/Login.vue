@@ -14,7 +14,7 @@ const error = ref('')
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
-    error.value = '请输入用户名和密码'
+    error.value = '请输入用户ID和密码'
     return
   }
 
@@ -26,7 +26,7 @@ const handleLogin = async () => {
     const redirectPath = route.query.redirect as string || '/'
     router.push(redirectPath)
   } catch (err: any) {
-    error.value = err.message || '登录失败，请检查用户名和密码'
+    error.value = err.message || '登录失败，请检查用户ID和密码'
   } finally {
     loading.value = false
   }
@@ -42,12 +42,12 @@ const handleLogin = async () => {
       
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username">用户ID</label>
           <input 
             id="username"
             v-model="username"
             type="text"
-            placeholder="请输入用户名"
+            placeholder="请输入用户ID"
             :disabled="loading"
             required
           />

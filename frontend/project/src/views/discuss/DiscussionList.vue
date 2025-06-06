@@ -12,9 +12,7 @@
             </h1>
           </div>
           <div class="toolbar-right">
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
             <!-- <button 
-=======
             <button 
 >>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
               @click="showCreateInput = true"
@@ -22,24 +20,10 @@
             >
               <i class="fa fa-plus"></i>
               发起讨论
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
             </button> -->
             
             <!-- <div class="action-buttons">
-=======
-            </button>
-            
-            <div class="action-buttons">
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
-              <button @click="refreshDiscussions" class="action-btn" :disabled="loading">
-                <i class="fa fa-refresh" :class="{ 'fa-spin': loading }"></i>
-                刷新
-              </button>
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
             </div> -->
-=======
-            </div>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
           </div>
         </div>
         
@@ -137,19 +121,12 @@
             清除搜索
           </button>
           <button v-else @click="showCreateInput = true" class="start-btn">
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
-            
+            <i class="fa fa-plus-circle"></i>
             发起第一个讨论
           </button>
         </div>        
         <div v-else>          
           <div
-=======
-            <i class="fa fa-plus-circle"></i>
-            发起第一个讨论
-          </button>
-        </div>        <div v-else>          <div
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
             v-for="thread in filteredThreads"
             :key="thread.id"
             class="discussion-card"
@@ -546,11 +523,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="action-icon" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
-        <span class="action-label">发起讨论</span>
-=======
         <span class="action-label">创建</span>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
       </div>
       <div class="action-nav-item" @click="showUserRecordPane = true">
         <svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -562,11 +535,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
-<<<<<<< HEAD:frontend/project/src/views/discuss/DiscussionList.vue
-        <span class="action-label">我的信息</span>
-=======
         <span class="action-label">通知</span>
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/views/discuss/DiscussionList.vue
         <span v-if="unreadNotificationsCount > 0" class="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{{ unreadNotificationsCount }}</span>
       </div>
     </nav>

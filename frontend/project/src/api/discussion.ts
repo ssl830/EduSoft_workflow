@@ -86,7 +86,6 @@ export interface UpdateReplyRequest {
   content: string;
 }
 
-<<<<<<< HEAD:frontend/project/src/api/discussion.ts
 // 点赞记录信息
 export interface DiscussionLike {
   id: number;
@@ -105,8 +104,6 @@ export interface LikeCheckResponse {
   hasLiked: boolean;
 }
 
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/discussion.ts
 // 通用成功响应
 export interface SuccessResponse {
   message: string;
@@ -208,7 +205,6 @@ const discussionApi = {
   // 9. 删除讨论的所有回复（教师权限）
   deleteAllReplies: (discussionId: number) => {
     return apiClient.delete<SuccessResponse>(`/api/discussion-reply/discussion/${discussionId}`);
-<<<<<<< HEAD:frontend/project/src/api/discussion.ts
   },
 
   // ==================== 点赞相关接口 ====================
@@ -251,8 +247,6 @@ const discussionApi = {
   // 8. 检查是否已点赞
   checkIfLiked: (discussionId: number) => {
     return apiClient.get<LikeCheckResponse>(`/api/discussion-like/discussion/${discussionId}/check`);
-=======
->>>>>>> 5468ddbcb29f92919cffedbc7b4859832e875670:qianduan/src/api/discussion.ts
   }
 };
 
