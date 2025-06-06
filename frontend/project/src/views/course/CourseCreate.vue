@@ -46,10 +46,11 @@ const submitCourse = async () => {
 
     try {
         const response = await CourseApi.createCourse(course);
-        if (response.data.code !== 200) {
+        console.log(response.code)
+        if (response.code !== 200) {
             // 请求失败时回滚状态
-            console.error('操作失败:', response.data.message);
-            error.value = response.data.message || '创建课程失败，请稍后再试';
+            console.error('操作失败:', response.message);
+            error.value = response.message || '创建课程失败，请稍后再试';
         }else{
             await router.push('/') // or to a success page
             resetCourse()   // TODO

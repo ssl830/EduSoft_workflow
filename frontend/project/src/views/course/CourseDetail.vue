@@ -8,6 +8,7 @@ import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
 import CourseVideoList from '../../components/course/CourseVideoList.vue'
 
+// 类型定义
 interface ApiResponse<T> {
   code: number
   message: string
@@ -29,7 +30,7 @@ interface Course {
 
 const route = useRoute()
 const authStore = useAuthStore()
-const courseId = computed(() => Number(route.params.id))
+const courseId = computed(() => route.params.id as string)
 
 const loading = ref(true)
 const error = ref('')
@@ -42,13 +43,10 @@ const isTeacherOrTutor = computed(() => {
 
 onMounted(async () => {
   try {
-    console.log('开始获取课程详情，课程ID:', courseId.value)
-    const response = await CourseApi.getCourseById(courseId.value.toString()) as unknown as ApiResponse<Course>
-    console.log('课程详情响应:', response)
-
+    // 兼容类型
+    const response = await CourseApi.getCourseById(courseId.value) as unknown as ApiResponse<Course>
     if (response && response.code === 200 && response.data) {
       course.value = response.data
-      console.log('设置课程数据:', course.value)
     } else {
       error.value = '获取课程详情失败'
       console.error('获取课程详情失败: 响应数据格式不正确', response)
@@ -68,8 +66,8 @@ onMounted(async () => {
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <template v-else-if="course">
       <header class="course-header">
-        <h1>{{ course.name }}</h1>
-        <div class="course-info">
+        <h1>{{ course.name }} {{ course.code }}</h1>
+        <div class="course-info" v-if="activeTab === 'syllabus'">
           <p class="info-item">课程代码: {{ course.code }}</p>
           <p class="info-item">教师: {{ course.teacherName }}</p>
           <p class="info-item">学生人数: {{ course.studentCount }}人</p>
@@ -81,9 +79,47 @@ onMounted(async () => {
         </div>
       </header>
 
-      <main class="course-content">
-        <CourseSyllabus :course="course" />
-      </main>
+      <div class="course-content">
+        <!-- 左侧 Tab -->
+        <div class="course-tabs">
+          <button
+            :class="['tab-button', { active: activeTab === 'syllabus' }]"
+            @click="activeTab = 'syllabus'"
+          >
+            课程概况
+          </button>
+          <button
+            :class="['tab-button', { active: activeTab === 'resources' }]"
+            @click="activeTab = 'resources'"
+          >
+            教学资料
+          </button>
+          <button
+            :class="['tab-button', { active: activeTab === 'video' }]"
+            @click="activeTab = 'video'"
+          >
+            视频学习
+          </button>
+        </div>
+
+        <!-- 右侧内容区 -->
+        <div class="course-main-content">
+          <CourseSyllabus
+            v-if="activeTab === 'syllabus'"
+            :course="course"
+          />
+          <CourseResourceList
+            v-else-if="activeTab === 'resources'"
+            :course-id="courseId"
+            :is-teacher="isTeacherOrTutor"
+          />
+          <CourseVideoList
+            v-else-if="activeTab === 'video'"
+            :course-id="courseId"
+            :is-teacher="isTeacherOrTutor"
+          />
+        </div>
+      </div>
     </template>
   </div>
 </template>
