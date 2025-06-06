@@ -18,7 +18,7 @@ public class Submission {
 
     @Column(name = "practice_id", nullable = false)
     private Long practiceId;
-
+ 
     @Column(name = "student_id", nullable = false)
     private Long studentId;
 

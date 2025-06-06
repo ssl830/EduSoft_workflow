@@ -24,17 +24,13 @@ public class HomeworkSubmission {
     private Long studentId;
     
     /**
-     * 提交类型
-     */
-    private String submissionType;
-    
-    /**
      * 提交文件URL（阿里云OSS）
      */
     private String fileUrl;
     
     /**
      * 对象存储中的文件路径
+     * 格式：homework/submission/{homeworkId}/{studentId}_{fileName}
      */
     private String objectName;
     

@@ -1,13 +1,15 @@
 package org.example.edusoft.controller.homework;
 
+import lombok.RequiredArgsConstructor;
 import org.example.edusoft.common.domain.Result;
-import org.example.edusoft.entity.homework.Homework;
-import org.example.edusoft.entity.homework.HomeworkSubmission;
+import org.example.edusoft.dto.homework.HomeworkDTO;
+import org.example.edusoft.dto.homework.HomeworkSubmissionDTO;
 import org.example.edusoft.service.homework.HomeworkService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.edusoft.entity.homework.Homework;
+import org.example.edusoft.entity.homework.HomeworkSubmission;
 
 import java.util.List;
 
@@ -16,23 +18,23 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/homework")
+@RequiredArgsConstructor
 public class HomeworkController {
 
-    @Autowired
-    private HomeworkService homeworkService;
+    private final HomeworkService homeworkService;
 
     /**
      * 创建作业
-     * @param homework 作业信息
-     * @param file 附件文件
-     * @return 作业ID
      */
     @PostMapping("/create")
     public Result<Long> createHomework(
-            @RequestPart("homework") Homework homework,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+            @RequestParam("class_id") Long classId,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "end_time", required = false) String endTime,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
         try {
-            Long homeworkId = homeworkService.createHomework(homework, file);
+            Long homeworkId = homeworkService.createHomework(classId, title, description, endTime, file);
             return Result.ok(homeworkId, "作业创建成功");
         } catch (Exception e) {
             return Result.error("作业创建失败：" + e.getMessage());
@@ -45,9 +47,9 @@ public class HomeworkController {
      * @return 作业信息
      */
     @GetMapping("/{id}")
-    public Result<Homework> getHomework(@PathVariable Long id) {
+    public Result<HomeworkDTO> getHomework(@PathVariable Long id) {
         try {
-            Homework homework = homeworkService.getHomework(id);
+            HomeworkDTO homework = homeworkService.getHomework(id);
             if (homework == null) {
                 return Result.error("作业不存在");
             }
@@ -58,14 +60,14 @@ public class HomeworkController {
     }
 
     /**
-     * 获取班级作业列表
+     * 获取班级作业列表 
      * @param classId 班级ID
      * @return 作业列表
      */
     @GetMapping("/list")
-    public Result<List<Homework>> getHomeworkList(@RequestParam Long classId) {
+    public Result<List<HomeworkDTO>> getHomeworkList(@RequestParam Long class_id) {
         try {
-            List<Homework> homeworkList = homeworkService.getHomeworkList(classId);
+            List<HomeworkDTO> homeworkList = homeworkService.getHomeworkList(class_id);
             return Result.ok(homeworkList, "获取作业列表成功");
         } catch (Exception e) {
             return Result.error("获取作业列表失败：" + e.getMessage());
@@ -83,11 +85,10 @@ public class HomeworkController {
     @PostMapping("/submit/{homeworkId}")
     public Result<Long> submitHomework(
             @PathVariable Long homeworkId,
-            @RequestParam Long studentId,
-            @RequestParam String submissionType,
+            @RequestParam Long student_id,
             @RequestPart("file") MultipartFile file) {
         try {
-            Long submissionId = homeworkService.submitHomework(homeworkId, studentId, submissionType, file);
+            Long submissionId = homeworkService.submitHomework(homeworkId, student_id, file);
             return Result.ok(submissionId, "作业提交成功");
         } catch (Exception e) {
             return Result.error("作业提交失败：" + e.getMessage());
@@ -100,9 +101,9 @@ public class HomeworkController {
      * @return 提交记录列表
      */
     @GetMapping("/submissions/{homeworkId}")
-    public Result<List<HomeworkSubmission>> getSubmissionList(@PathVariable Long homeworkId) {
+    public Result<List<HomeworkSubmissionDTO>> getSubmissionList(@PathVariable Long homeworkId) {
         try {
-            List<HomeworkSubmission> submissions = homeworkService.getSubmissionList(homeworkId);
+            List<HomeworkSubmissionDTO> submissions = homeworkService.getSubmissionList(homeworkId);
             return Result.ok(submissions, "获取提交列表成功");
         } catch (Exception e) {
             return Result.error("获取提交列表失败：" + e.getMessage());
@@ -116,11 +117,11 @@ public class HomeworkController {
      * @return 提交记录
      */
     @GetMapping("/submission")
-    public Result<HomeworkSubmission> getStudentSubmission(
+    public Result<HomeworkSubmissionDTO> getStudentSubmission(
             @RequestParam Long homeworkId,
             @RequestParam Long studentId) {
         try {
-            HomeworkSubmission submission = homeworkService.getStudentSubmission(homeworkId, studentId);
+            HomeworkSubmissionDTO submission = homeworkService.getStudentSubmission(homeworkId, studentId);
             if (submission == null) {
                 return Result.error("未找到提交记录");
             }

@@ -12,4 +12,16 @@ public interface PracticeQuestionMapper {
 
     @Select("SELECT * FROM PracticeQuestion pq WHERE pq.practice_id = #{practiceId}")
     List<PracticeQuestion> findpqByPracticeId(Long practiceId);
+
+    /**
+     * 按照sort_order字段顺序获取练习中的题目
+     */
+    @Select("SELECT * FROM PracticeQuestion WHERE practice_id = #{practiceId} ORDER BY sort_order ASC")
+    List<PracticeQuestion> findpqByPracticeIdOrdered(Long practiceId);
+
+    /**
+     * 获取练习中指定题目的信息
+     */
+    @Select("SELECT * FROM PracticeQuestion WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
+    PracticeQuestion findByPracticeIdAndQuestionId(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId);
 }

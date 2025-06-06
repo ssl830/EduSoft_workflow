@@ -2,6 +2,7 @@ package org.example.edusoft.service.resource;
 
 import org.example.edusoft.entity.resource.TeachingResource;
 import org.example.edusoft.entity.resource.LearningProgress;
+import org.example.edusoft.entity.resource.ResourceProgressDTO;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
@@ -86,4 +87,13 @@ public interface TeachingResourceService {
      * @return 带签名的临时访问URL
      */
     String getSignedResourceUrl(Long resourceId);
+
+    /**
+     * 获取课程资源及学习进度信息
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param chapterId 章节ID（-1表示不筛选章节）
+     * @return 资源及学习进度信息列表
+     */
+    List<ResourceProgressDTO> getCourseResourcesWithProgress(Long courseId, Long studentId, Long chapterId);
 } 

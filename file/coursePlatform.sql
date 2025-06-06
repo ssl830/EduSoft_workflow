@@ -98,6 +98,7 @@ CREATE TABLE Practice (
 CREATE TABLE PracticeQuestion (
     practice_id BIGINT,
     question_id BIGINT,
+    sort_order BIGINT,
     score INT NOT NULL,
     sort_order BIGINT,
     PRIMARY KEY (practice_id, question_id),
@@ -227,11 +228,10 @@ CREATE TABLE IF NOT EXISTS homework (
 );
 
 -- Create HomeworkSubmission table
-CREATE TABLE IF NOT EXISTShomework_submission (
+CREATE TABLE IF NOT EXISTS homeworksubmission (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     homework_id BIGINT NOT NULL,
     student_id BIGINT NOT NULL,
-    submission_type VARCHAR(50) NOT NULL,
     file_url VARCHAR(255),
     object_name VARCHAR(255),
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,

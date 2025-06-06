@@ -73,4 +73,22 @@ public interface TeachingResourceMapper {
         "WHERE id = #{id}"
     })
     int update(TeachingResource resource);
+
+    /**
+     * 根据课程ID和可选的章节ID查询教学资源
+     * @param courseId 课程ID
+     * @param chapterId 章节ID（-1表示不筛选章节）
+     * @return 教学资源列表
+     */
+    @Select({
+        "<script>",
+        "SELECT * FROM teaching_resource",
+        "WHERE course_id = #{courseId}",
+        "<if test='chapterId != -1'>",
+        "AND chapter_id = #{chapterId}",
+        "</if>",
+        "ORDER BY chapter_id, created_at",
+        "</script>"
+    })
+    List<TeachingResource> selectByCourseAndChapter(@Param("courseId") Long courseId, @Param("chapterId") Long chapterId);
 } 

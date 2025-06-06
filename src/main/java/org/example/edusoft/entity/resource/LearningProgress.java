@@ -2,7 +2,7 @@ package org.example.edusoft.entity.resource;
 
 import lombok.Data;
 import java.time.LocalDateTime;
-
+ 
 /**
  * 学习进度实体类
  */

@@ -40,6 +40,7 @@ public class Homework {
     
     /**
      * 对象存储中的文件路径
+     * 格式：homework/{classId}/{fileName}
      */
     private String objectName;
     

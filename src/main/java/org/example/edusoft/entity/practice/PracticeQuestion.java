@@ -22,6 +22,9 @@ public class PracticeQuestion {
 
     @Column(nullable = false)
     private Integer score;
+
+    @Column(name = "sort_order")
+    private Long sortOrder;
 }
 
 @Data

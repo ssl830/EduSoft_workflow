@@ -10,13 +10,11 @@ import java.util.List;
 @Mapper
 public interface HomeworkSubmissionMapper {
     /**
-     * 创建作业提交记录
+     * 创建提交记录
      */
     @Insert({
-        "INSERT INTO HomeworkSubmission(homework_id, student_id, submission_type,",
-        "file_url, object_name, submitted_at)",
-        "VALUES(#{homeworkId}, #{studentId}, #{submissionType},",
-        "#{fileUrl}, #{objectName}, #{submittedAt})"
+        "INSERT INTO homeworksubmission(homework_id, student_id, file_url, object_name, submitted_at)",
+        "VALUES(#{homeworkId}, #{studentId}, #{fileUrl}, #{objectName}, #{submittedAt})"
     })
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(HomeworkSubmission submission);
@@ -24,43 +22,30 @@ public interface HomeworkSubmissionMapper {
     /**
      * 根据ID查询提交记录
      */
-    @Select("SELECT * FROM HomeworkSubmission WHERE id = #{id}")
+    @Select("SELECT * FROM homeworksubmission WHERE id = #{id}")
     HomeworkSubmission selectById(Long id);
 
     /**
      * 根据作业ID查询所有提交记录
      */
-    @Select("SELECT * FROM HomeworkSubmission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
+    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
     List<HomeworkSubmission> selectByHomeworkId(Long homeworkId);
 
     /**
-     * 查询学生的提交记录
+     * 根据作业ID和学生ID查询提交记录
      */
-    @Select("SELECT * FROM HomeworkSubmission WHERE homework_id = #{homeworkId} AND student_id = #{studentId}")
+    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} AND student_id = #{studentId}")
     HomeworkSubmission selectByHomeworkAndStudent(@Param("homeworkId") Long homeworkId, @Param("studentId") Long studentId);
-
-    /**
-     * 更新提交记录
-     */
-    @Update({
-        "UPDATE HomeworkSubmission",
-        "SET submission_type = #{submissionType},",
-        "    file_url = #{fileUrl},",
-        "    object_name = #{objectName},",
-        "    submitted_at = #{submittedAt}",
-        "WHERE id = #{id}"
-    })
-    void update(HomeworkSubmission submission);
 
     /**
      * 删除提交记录
      */
-    @Delete("DELETE FROM HomeworkSubmission WHERE id = #{id}")
+    @Delete("DELETE FROM homeworksubmission WHERE id = #{id}")
     void deleteById(Long id);
 
     /**
-     * 统计作业的提交数量
+     * 删除作业的所有提交记录
      */
-    @Select("SELECT COUNT(*) FROM HomeworkSubmission WHERE homework_id = #{homeworkId}")
-    int countSubmissions(Long homeworkId);
+    @Delete("DELETE FROM homeworksubmission WHERE homework_id = #{homeworkId}")
+    void deleteByHomeworkId(Long homeworkId);
 } 
