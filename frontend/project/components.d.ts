@@ -19,6 +19,7 @@ declare module 'vue' {
     ClassProcessing: typeof import('./src/components/class/ClassProcessing.vue')['default']
     ClassStudent: typeof import('./src/components/class/ClassStudent.vue')['default']
     CourseCard: typeof import('./src/components/course/CourseCard.vue')['default']
+    CourseExerciseList: typeof import('./src/components/course/CourseExerciseList.vue')['default']
     CourseResourceList: typeof import('./src/components/course/CourseResourceList.vue')['default']
     CourseSyllabus: typeof import('./src/components/course/CourseSyllabus.vue')['default']
     CourseVideoList: typeof import('./src/components/course/CourseVideoList.vue')['default']

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import authApi from '../api/auth'
+import apiClient from '../api/axios'
 
 interface User {
   id: number;
@@ -195,11 +196,25 @@ export const useAuthStore = defineStore('auth', () => {
   }
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
-      console.log('密码修改请求: 发送到APIfox');
+      console.log('=== 开始修改密码 ===');
+      console.log('auth store中的密码数据:', { oldPassword, newPassword });
 
-      const response = await authApi.changePassword({ oldPassword, newPassword })
+      // 直接使用URLSearchParams构建请求数据
+      const formData = new URLSearchParams();
+      formData.append('oldPassword', oldPassword);
+      formData.append('newPassword', newPassword);
+      
+      console.log('构建的表单数据:', formData.toString());
+      console.log('发送请求到:', '/api/user/changePassword');
 
-      console.log('APIfox 密码修改响应:', response);
+      const response = await apiClient.post('/api/user/changePassword', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      console.log('密码修改响应:', response);
+      console.log('=== 修改密码结束 ===');
 
       if (response.code === 200) {
         return response

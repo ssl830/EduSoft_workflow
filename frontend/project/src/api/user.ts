@@ -1,4 +1,5 @@
 import apiClient from './axios'
+import axios from 'axios'
 
 // 用户信息接口
 export interface User {
@@ -87,7 +88,18 @@ const userApi = {
 
   // 修改密码
   changePassword: (data: ChangePasswordRequest) => {
-    return apiClient.post<ApiResponse<null>>('/api/user/changePassword', data);
+    console.log('发送的密码数据:', data);
+    const params = new URLSearchParams();
+    params.append('oldPassword', data.oldPassword);
+    params.append('newPassword', data.newPassword);
+    
+    console.log('转换后的参数:', params.toString());
+    
+    return apiClient.post<ApiResponse<null>>('/api/user/changePassword', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
   }
 };
 
