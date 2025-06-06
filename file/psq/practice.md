@@ -124,12 +124,21 @@ src/main/java/org/example/edusoft/
 ```json
 {
     "title": "练习标题",
-    "courseId": 1,
     "classId": 1,
     "startTime": "2024-03-20T10:00:00",
     "endTime": "2024-03-27T10:00:00",
     "allowMultipleSubmission": true,
     "createdBy": 1
+}
+```
+- 响应：
+```json
+{
+    "code": 200,
+    "message": "练习创建成功",
+    "data": {
+        "practiceId": 1
+    }
 }
 ```
 
@@ -149,6 +158,16 @@ src/main/java/org/example/edusoft/
     "creatorId": 1
 }
 ```
+- 响应：
+```json
+{
+    "code": 200,
+    "message": "题目创建成功",
+    "data": {
+        "questionId": 1
+    }
+}
+```
 
 ### 3. 从题库导入题目
 - 请求方式：POST
@@ -159,6 +178,45 @@ src/main/java/org/example/edusoft/
     "practiceId": 1,
     "questionIds": [1, 2, 3],
     "scores": [10, 10, 10]
+    //
+}
+```
+
+### 4. 获取题目列表
+- 请求方式：GET
+- 路径：/api/practice/question/list
+- 参数：
+  - teacherId: 教师ID
+  - courseId: 课程ID
+  - sectionId: 章节ID
+- 响应：
+```json
+{
+    "code": 200,
+    "message": "获取题目列表成功",
+    "data": {
+        "questions": [
+            {
+                "id": 1,
+                "name": "题目内容",
+                "course_id": 1,
+                "section_id": 1,
+                "teacher_id": 1,
+                "type": "singlechoice",
+                "options": [
+                    {
+                        "key": "A",
+                        "text": "选项A"
+                    },
+                    {
+                        "key": "B",
+                        "text": "选项B"
+                    }
+                ],
+                "answer": "A"
+            }
+        ]
+    }
 }
 ```
 

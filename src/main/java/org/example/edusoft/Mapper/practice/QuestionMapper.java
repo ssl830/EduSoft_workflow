@@ -3,6 +3,7 @@ package org.example.edusoft.mapper.practice;
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.practice.Question;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface QuestionMapper {
@@ -57,4 +58,20 @@ public interface QuestionMapper {
 
     @Select("SELECT * FROM Question WHERE id = #{id}")
     Question findById(Long id);
+
+    @Select("SELECT * FROM Question WHERE creator_id = #{teacherId} AND course_id = #{courseId} AND section_id = #{sectionId}")
+    List<Question> getQuestionsByTeacherAndSection(
+            @Param("teacherId") Long teacherId,
+            @Param("courseId") Long courseId,
+            @Param("sectionId") Long sectionId);
+
+    @Select("""
+            SELECT q.*, c.name as course_name, cs.title as section_name 
+            FROM Question q
+            LEFT JOIN Course c ON q.course_id = c.id
+            LEFT JOIN CourseSection cs ON q.section_id = cs.id
+            WHERE q.course_id = #{courseId}
+            ORDER BY q.created_at DESC
+            """)
+    List<Map<String, Object>> getQuestionListWithNames(@Param("courseId") Long courseId);
 } 

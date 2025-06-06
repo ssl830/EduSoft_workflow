@@ -1,6 +1,7 @@
 package org.example.edusoft.service.practice.impl;
 
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.QuestionListDTO;
 import org.example.edusoft.exception.practice.PracticeException;
 import org.example.edusoft.mapper.practice.QuestionMapper;
 import org.example.edusoft.service.practice.QuestionService;
@@ -9,8 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionServiceImpl implements QuestionService {
@@ -240,5 +245,63 @@ public class QuestionServiceImpl implements QuestionService {
             && question.getOptions() != null) {
             question.setOptionsList(Arrays.asList(question.getOptions().split(OPTION_SEPARATOR)));
         }
+    }
+
+    @Override
+    public List<Question> getQuestionListByTeacherAndSection(Long teacherId, Long courseId, Long sectionId) {
+        if (teacherId == null) {
+            throw new PracticeException("TEACHER_ID_REQUIRED", "教师ID不能为空");
+        }
+        if (courseId == null) {
+            throw new PracticeException("COURSE_ID_REQUIRED", "课程ID不能为空");
+        }
+        if (sectionId == null) {
+            throw new PracticeException("SECTION_ID_REQUIRED", "章节ID不能为空");
+        }
+        
+        List<Question> questions = questionMapper.getQuestionsByTeacherAndSection(teacherId, courseId, sectionId);
+        // 处理选项
+        for (Question question : questions) {
+            processQuestionOptions(question);
+        }
+        return questions;
+    }
+
+    @Override
+    public List<QuestionListDTO> getQuestionListByCourse(Long courseId) {
+        if (courseId == null) {
+            throw new PracticeException("COURSE_ID_REQUIRED", "课程ID不能为空");
+        }
+        
+        List<Map<String, Object>> questions = questionMapper.getQuestionListWithNames(courseId);
+        return questions.stream().map(q -> {
+            QuestionListDTO dto = new QuestionListDTO();
+            dto.setId(((Number) q.get("id")).longValue());
+            dto.setName((String) q.get("content"));
+            dto.setCourseId(((Number) q.get("course_id")).longValue());
+            dto.setCourseName((String) q.get("course_name"));
+            dto.setSectionId(((Number) q.get("section_id")).longValue());
+            dto.setSectionName((String) q.get("section_name"));
+            dto.setTeacherId(String.valueOf(q.get("creator_id")));
+            dto.setType(String.valueOf(q.get("type")));
+            dto.setAnswer((String) q.get("answer"));
+            
+            // 处理选项
+            if ("singlechoice".equals(q.get("type")) && q.get("options") != null) {
+                String[] options = ((String) q.get("options")).split("\\|\\|\\|");
+                List<Map<String, String>> formattedOptions = new ArrayList<>();
+                for (int i = 0; i < options.length; i++) {
+                    Map<String, String> option = new HashMap<>();
+                    option.put("key", String.valueOf((char)('A' + i)));
+                    option.put("text", options[i]);
+                    formattedOptions.add(option);
+                }
+                dto.setOptions(formattedOptions);
+            } else {
+                dto.setOptions(new ArrayList<>());
+            }
+            
+            return dto;
+        }).collect(Collectors.toList());
     }
 } 

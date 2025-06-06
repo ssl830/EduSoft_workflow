@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import cn.dev33.satoken.stp.StpUtil;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/practice")
@@ -19,10 +20,12 @@ public class PracticeController {
     private PracticeService practiceService;
 
     @PostMapping("/create")
-    public Result<Practice> createPractice(@RequestBody Practice practice) {
+    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice) {
         try {
             Practice createdPractice = practiceService.createPractice(practice);
-            return Result.success(createdPractice, "练习创建成功");
+            Map<String, Object> response = new HashMap<>();
+            response.put("practiceId", createdPractice.getId());
+            return Result.success(response, "练习创建成功");
         } catch (Exception e) {
             return Result.error(500, "创建练习失败：" + e.getMessage());
         }
