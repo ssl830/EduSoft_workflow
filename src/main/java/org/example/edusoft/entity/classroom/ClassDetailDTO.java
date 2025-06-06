@@ -8,6 +8,7 @@ public class ClassDetailDTO {
     private Long courseId;
     private String courseName;
     private Long teacherId;
-    private String className;//Class表里面的name
+    private String teacherName;
+    private String className;
     private String classCode;
 } 

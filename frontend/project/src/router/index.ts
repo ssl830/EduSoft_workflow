@@ -181,15 +181,6 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
-  },  {
-    path: '/CourseCalendar',
-    name: 'CourseCalendar',
-    component: () => import('../views/CourseCalendar/CourseCalendar.vue'),
-    meta: {
-      title: '课程表',
-      requiresAuth: true,
-      showSidebar: true
-    }
   },
   {
     path: '/profile',
@@ -200,9 +191,10 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
-  },  {
+  },
+  {
     path: '/courses/:courseId/discussions',
-    name: 'CourseDiscussionList', // 重命名以区分
+    name: 'CourseDiscussionList',
     component: DiscussionList,
     props: true,
     meta: { requiresAuth: true }

@@ -33,7 +33,7 @@
           <p>您还没有参与任何课程</p>
         </div>
         <div v-else class="course-grid">
-          <div v-for="course in courses" :key="course.id" class="course-card">
+          <div v-for="course in courses" :key="course.id" class="course-card" @click="goToCourseDetail(course.id)">
             <h3>{{ course.name }}</h3>
             <p class="course-code">课程代码：{{ course.code }}</p>
             <p class="teacher-name">教师：{{ course.teacherName }}</p>
@@ -42,7 +42,6 @@
               <span>练习数：{{ course.practiceCount }}</span>
               <span>作业数：{{ course.homeworkCount }}</span>
             </div>
-            <router-link :to="'/class/' + course.id" class="btn-view">查看详情</router-link>
           </div>
         </div>
       </section>
@@ -71,13 +70,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 import CourseApi from '../api/course'
 import Background from '../components/layout/Background.vue'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const courses = ref([])
 const loading = ref(true)
 const error = ref('')
+
+const goToCourseDetail = (courseId: number) => {
+  router.push(`/course/${courseId}`)
+}
 
 onMounted(async () => {
   console.log('Home.vue mounted, Background component loaded')

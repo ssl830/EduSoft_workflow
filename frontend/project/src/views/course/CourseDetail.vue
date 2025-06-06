@@ -8,13 +8,32 @@ import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
 import CourseVideoList from '../../components/course/CourseVideoList.vue'
 
+interface ApiResponse<T> {
+  code: number
+  message: string
+  data: T
+}
+
+interface Course {
+  id: number
+  name: string
+  code: string
+  teacherName: string
+  studentCount: number
+  practiceCount: number
+  homeworkCount: number
+  objective: string
+  outline: string
+  assessment: string
+}
+
 const route = useRoute()
 const authStore = useAuthStore()
-const courseId = computed(() => route.params.id as string)
+const courseId = computed(() => Number(route.params.id))
 
 const loading = ref(true)
 const error = ref('')
-const course = ref<any>(null)
+const course = ref<Course | null>(null)
 const activeTab = ref('syllabus') // 'syllabus', 'resources', 'video'
 
 const isTeacherOrTutor = computed(() => {
@@ -23,11 +42,20 @@ const isTeacherOrTutor = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await CourseApi.getCourseById(courseId.value)
-    course.value = response.data.course
+    console.log('开始获取课程详情，课程ID:', courseId.value)
+    const response = await CourseApi.getCourseById(courseId.value.toString()) as unknown as ApiResponse<Course>
+    console.log('课程详情响应:', response)
+    
+    if (response && response.code === 200 && response.data) {
+      course.value = response.data
+      console.log('设置课程数据:', course.value)
+    } else {
+      error.value = '获取课程详情失败'
+      console.error('获取课程详情失败: 响应数据格式不正确', response)
+    }
   } catch (err) {
     error.value = '获取课程详情失败，请稍后再试'
-    console.error(err)
+    console.error('获取课程详情错误:', err)
   } finally {
     loading.value = false
   }
@@ -41,53 +69,21 @@ onMounted(async () => {
     <template v-else-if="course">
       <header class="course-header">
         <h1>{{ course.name }}</h1>
+        <div class="course-info">
+          <p class="info-item">课程代码: {{ course.code }}</p>
+          <p class="info-item">教师: {{ course.teacherName }}</p>
+          <p class="info-item">学生人数: {{ course.studentCount }}人</p>
+          <p class="info-item">练习题数: {{ course.practiceCount }}题</p>
+          <p class="info-item">作业数量: {{ course.homeworkCount }}个</p>
+          <p class="info-item">课程目标: {{ course.objective }}</p>
+          <p class="info-item">课程大纲: {{ course.outline }}</p>
+          <p class="info-item">考核方式: {{ course.assessment }}</p>
+        </div>
       </header>
 
-      <div class="course-content">
-        <!-- Left Sidebar - Tabs -->
-        <div class="course-tabs">
-          <button
-            :class="['tab-button', { active: activeTab === 'syllabus' }]"
-            @click="activeTab = 'syllabus'"
-          >
-            课程概况
-          </button>
-          <button
-            :class="['tab-button', { active: activeTab === 'resources' }]"
-            @click="activeTab = 'resources'"
-          >
-            教学资料
-          </button>
-            <button
-                :class="['tab-button', { active: activeTab === 'video' }]"
-                @click="activeTab = 'video'"
-            >
-                视频学习
-            </button>
-        </div>
-
-        <!-- Main Content - Three Panel Layout -->
-        <div class="course-main-content">
-          <!-- Panel 1: Syllabus, objectives, assessment -->
-          <CourseSyllabus
-            v-if="activeTab === 'syllabus'"
-            :course="course"
-          />
-
-          <!-- Panel 2: Teaching resources -->
-          <CourseResourceList
-            v-else-if="activeTab === 'resources'"
-            :course-id="courseId"
-            :is-teacher="isTeacherOrTutor"
-          />
-            <CourseVideoList
-                v-else-if="activeTab === 'video'"
-                :course-id="courseId"
-                :is-teacher="isTeacherOrTutor"
-            />
-        </div>
-      </div>
-
+      <main class="course-content">
+        <CourseSyllabus :course="course" />
+      </main>
     </template>
   </div>
 </template>

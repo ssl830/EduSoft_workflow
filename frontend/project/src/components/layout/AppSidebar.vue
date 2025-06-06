@@ -51,11 +51,6 @@ export default {
               </router-link>
           </li>      
         <li>
-          <router-link to="/CourseCalendar" class="sidebar-link">
-            <i class="fa fa-calendar-check-o fa-lg"></i><span class="icon-text-spacer"></span>我的课表
-          </router-link>
-        </li>
-        <li>
           <router-link to="/learning-records" class="sidebar-link">
             <span class="icon">📊</span> 学习记录
           </router-link>

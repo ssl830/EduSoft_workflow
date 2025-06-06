@@ -60,7 +60,11 @@ const courseId = computed(() => route.params.id as string)
 const fetchCourse = async() => {
     try {
         const response = await CourseApi.getCourseById(courseId.value)
-        props.course.value = response.data.course
+        if (response.data && response.data.code === 200) {
+            Object.assign(props.course, response.data.data)
+        } else {
+            error.value = response.data?.message || '获取课程详情失败'
+        }
     } catch (err) {
         error.value = '获取课程详情失败，请稍后再试'
         console.error(err)

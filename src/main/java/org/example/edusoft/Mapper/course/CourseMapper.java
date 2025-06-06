@@ -24,8 +24,9 @@ public interface CourseMapper extends BaseMapper<Course> {
                  JOIN Class cl ON cu.class_id = cl.id 
                  WHERE cl.course_id = c.id) as studentCount,
                 (SELECT COUNT(*) FROM Practice p WHERE p.course_id = c.id) as practiceCount,
-                (SELECT COUNT(*) FROM Practice p WHERE p.class_id IN 
-                    (SELECT id FROM Class WHERE course_id = c.id)) as homeworkCount,
+                (SELECT COUNT(*) FROM Homework h 
+                 JOIN Class cl ON h.class_id = cl.id 
+                 WHERE cl.course_id = c.id) as homeworkCount,
                 0 as resourceCount
             FROM Course c
             LEFT JOIN User u ON c.teacher_id = u.id
@@ -42,8 +43,9 @@ public interface CourseMapper extends BaseMapper<Course> {
                  JOIN Class cl ON cu.class_id = cl.id 
                  WHERE cl.course_id = c.id) as studentCount,
                 (SELECT COUNT(*) FROM Practice p WHERE p.course_id = c.id) as practiceCount,
-                (SELECT COUNT(*) FROM Practice p WHERE p.class_id IN 
-                    (SELECT id FROM Class WHERE course_id = c.id)) as homeworkCount,
+                (SELECT COUNT(*) FROM Homework h 
+                 JOIN Class cl ON h.class_id = cl.id 
+                 WHERE cl.course_id = c.id) as homeworkCount,
                 0 as resourceCount
             FROM Course c
             LEFT JOIN User u ON c.teacher_id = u.id

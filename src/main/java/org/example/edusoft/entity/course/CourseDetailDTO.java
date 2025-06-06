@@ -29,4 +29,4 @@ public class CourseDetailDTO {
         private String classCode;
         private Integer studentCount;
     }
-} 
+}

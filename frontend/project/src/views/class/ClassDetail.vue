@@ -55,8 +55,12 @@ onMounted(async () => {
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <template v-else-if="aclass">
             <header class="course-header">
-                <h1>{{ aclass.name || '未命名班级' }}</h1>
-                <p v-if="aclass.code" class="course-code">班级代码: {{ aclass.code }}</p>
+                <h1>{{ aclass.className || '未命名班级' }}</h1>
+                <div class="class-info">
+                    <p class="info-item">班级代码: {{ aclass.classCode || '无代码' }}</p>
+                    <p class="info-item">课程名称: {{ aclass.courseName || '未知课程' }}</p>
+                    <p class="info-item">教师: {{ aclass.teacherName || '未知教师' }}</p>
+                </div>
             </header>
 
             <div class="course-content">
@@ -189,6 +193,27 @@ onMounted(async () => {
     margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e0e0e0;
+}
+
+.class-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+.info-item {
+    margin: 0.5rem 0;
+    color: #424242;
+    font-size: 0.95rem;
+}
+
+.info-item:first-child {
+    margin-top: 0;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
