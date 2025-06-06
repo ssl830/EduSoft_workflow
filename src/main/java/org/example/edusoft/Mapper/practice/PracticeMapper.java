@@ -2,6 +2,7 @@ package org.example.edusoft.mapper.practice;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.practice.Practice;
+import org.example.edusoft.entity.practice.PracticeListDTO;
 import java.util.List;
 import java.util.Map;
 
@@ -219,4 +220,17 @@ public interface PracticeMapper {
             @Param("courseId") Long courseId,
             @Param("classId") Long classId,
             @Param("studentId") Long studentId);
+
+    @Select("""
+            SELECT 
+                p.*,
+                CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END as isCompleted,
+                (SELECT COUNT(*) FROM Submission s2 WHERE s2.practice_id = p.id AND s2.student_id = #{studentId}) as submissionCount,
+                (SELECT MAX(score) FROM Submission s3 WHERE s3.practice_id = p.id AND s3.student_id = #{studentId}) as score
+            FROM Practice p
+            LEFT JOIN Submission s ON p.id = s.practice_id AND s.student_id = #{studentId}
+            WHERE p.class_id = #{classId}
+            ORDER BY p.created_at DESC
+            """)
+    List<PracticeListDTO> getStudentPracticeList(Long studentId, Long classId);
 } 

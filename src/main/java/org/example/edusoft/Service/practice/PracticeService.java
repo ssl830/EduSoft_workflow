@@ -2,6 +2,7 @@ package org.example.edusoft.service.practice;
 
 import org.example.edusoft.entity.practice.Practice;
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.PracticeListDTO;
 import java.util.List;
 import java.util.Map;
 
@@ -86,4 +87,12 @@ public interface PracticeService {
 
     // 获取课程的所有练习
     List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId);
+
+    /**
+     * 获取学生的练习列表
+     * @param studentId 学生ID
+     * @param classId 班级ID
+     * @return 练习列表，包含完成状态
+     */
+    List<PracticeListDTO> getStudentPracticeList(Long studentId, Long classId);
 } 

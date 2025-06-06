@@ -9,12 +9,14 @@ import java.util.List;
 @Mapper
 public interface ClassUserMapper extends BaseMapper<ClassUser> {
     
-    @Select("SELECT cu.* FROM ClassUser cu " +
+    @Select("SELECT cu.class_id, cu.user_id, cu.joined_at, " +
+            "u.username as studentName, u.user_id as studentId " +
+            "FROM ClassUser cu " +
+            "LEFT JOIN User u ON cu.user_id = u.id " +
             "WHERE cu.class_id = #{classId}")
     List<ClassUser> getClassUsersByClassId(Long classId);
     
-    @Select("SELECT COUNT(*) FROM ClassUser " +
-            "WHERE class_id = #{classId} AND user_id = #{userId}")
+    @Select("SELECT COUNT(*) FROM ClassUser WHERE class_id = #{classId} AND user_id = #{userId}")
     int checkUserInClass(Long classId, Long userId);
 
     @Select("SELECT COUNT(*) FROM User WHERE id = #{userId}")

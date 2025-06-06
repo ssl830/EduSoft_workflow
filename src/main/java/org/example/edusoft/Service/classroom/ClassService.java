@@ -1,10 +1,10 @@
 package org.example.edusoft.service.classroom;
 
 import org.example.edusoft.entity.classroom.Class;
+import org.example.edusoft.entity.classroom.ClassDetailDTO;
 import org.example.edusoft.entity.classroom.ClassUser;
 import org.example.edusoft.entity.imports.ImportRecord;
 import java.util.List;
-import java.util.Map;
 
 public interface ClassService {
     // 创建班级
@@ -16,11 +16,11 @@ public interface ClassService {
     // 获取学生的班级列表
     List<Class> getClassesByStudentId(Long studentId);
     
-    // 获取班级详情
+    // 获取班级基本信息
     Class getClassById(Long id);
     
-    // 获取班级详情
-    Map<String, Object> getClassDetailById(Long id);
+    // 获取班级详细信息（包含课程信息）
+    ClassDetailDTO getClassDetailById(Long id);
     
     // 更新班级信息
     Class updateClass(Class clazz);
@@ -64,5 +64,5 @@ public interface ClassService {
     ImportRecord joinClassByCode(String classCode, Long studentId);
 
     // 获取用户的班级列表（包括教师和学生的班级）
-    List<Class> getClassesByUserId(Long userId);
+    List<ClassDetailDTO> getClassesByUserId(Long userId);
 } 

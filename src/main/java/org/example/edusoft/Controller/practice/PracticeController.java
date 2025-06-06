@@ -3,6 +3,7 @@ package org.example.edusoft.controller.practice;
 import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.practice.Practice;
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.PracticeListDTO;
 import org.example.edusoft.service.practice.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -192,5 +193,25 @@ public class PracticeController {
         Long studentId = StpUtil.getLoginIdAsLong();
         List<Map<String, Object>> practices = practiceService.getCoursePractices(studentId, courseId);
         return Result.success(practices);
+    }
+
+    /**
+     * 获取学生的练习列表
+     * @param studentId 学生ID
+     * @param classId 班级ID
+     * @return 练习列表，包含完成状态
+     */
+    @GetMapping("/student/list")
+    public Result<List<PracticeListDTO>> getStudentPracticeList(
+            @RequestParam Long studentId,
+            @RequestParam Long classId) {
+        try {
+            List<PracticeListDTO> practiceList = practiceService.getStudentPracticeList(studentId, classId);
+            return Result.success(practiceList);
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
+        } catch (Exception e) {
+            return Result.error(500, "获取练习列表失败：" + e.getMessage());
+        }
     }
 }

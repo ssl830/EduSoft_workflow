@@ -166,11 +166,53 @@ src/main/java/org/example/edusoft/
 - 请求方式：GET
 - 路径：/api/practice/list
 - 参数：
- 
   - classId: 班级ID
 
+### 5. 获取学生练习列表
+- 请求方式：GET
+- 路径：/api/practice/student/list
+- 参数：
+  - studentId: 学生ID
+  - classId: 班级ID
+- 响应示例：
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": [
+        {
+            "id": 1,
+            "courseId": 1,
+            "classId": 1,
+            "title": "第1章在线练习",
+            "startTime": "2024-03-20T10:00:00",
+            "endTime": "2024-03-27T10:00:00",
+            "allowMultipleSubmission": true,
+            "createdBy": 1,
+            "createdAt": "2024-03-20T10:00:00",
+            "isCompleted": true,
+            "submissionCount": 2,
+            "score": 85
+        },
+        {
+            "id": 2,
+            "courseId": 1,
+            "classId": 1,
+            "title": "第2章在线练习",
+            "startTime": "2024-03-21T10:00:00",
+            "endTime": "2024-03-28T10:00:00",
+            "allowMultipleSubmission": true,
+            "createdBy": 1,
+            "createdAt": "2024-03-21T10:00:00",
+            "isCompleted": false,
+            "submissionCount": 0,
+            "score": null
+        }
+    ]
+}
+```
 
-### 5. 获取练习详情
+### 6. 获取练习详情
 - 请求方式：GET
 - 路径：/api/practice/{id}
 - 返回：练习详细信息，包含题目列表 

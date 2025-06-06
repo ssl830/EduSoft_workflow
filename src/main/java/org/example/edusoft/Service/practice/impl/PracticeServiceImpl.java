@@ -2,6 +2,7 @@ package org.example.edusoft.service.practice.impl;
 
 import org.example.edusoft.entity.practice.Practice;
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.PracticeListDTO;
 import org.example.edusoft.exception.practice.PracticeException;
 import org.example.edusoft.mapper.practice.PracticeMapper;
 import org.example.edusoft.mapper.practice.QuestionMapper;
@@ -260,5 +261,13 @@ public class PracticeServiceImpl implements PracticeService {
 
         // 根据班级ID和课程ID查询练习，同时传入studentId
         return practiceMapper.findCoursePractices(courseId, classId, studentId);
+    }
+
+    @Override
+    public List<PracticeListDTO> getStudentPracticeList(Long studentId, Long classId) {
+        if (studentId == null || classId == null) {
+            throw new IllegalArgumentException("学生ID和班级ID不能为空");
+        }
+        return practiceMapper.getStudentPracticeList(studentId, classId);
     }
 }

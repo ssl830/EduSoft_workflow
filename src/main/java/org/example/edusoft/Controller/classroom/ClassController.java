@@ -8,7 +8,7 @@ import org.example.edusoft.service.classroom.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
+import org.example.edusoft.entity.classroom.ClassDetailDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,7 +31,7 @@ public class ClassController {
             return Result.error(e.getMessage());
         }
     }
-
+//这两个接口不用
     @GetMapping("/teacher/{teacherId}")
     public Result<List<Class>> getClassesByTeacherId(@NotNull(message = "教师ID不能为空") @PathVariable Long teacherId) {
         try {
@@ -49,9 +49,11 @@ public class ClassController {
             return Result.error(e.getMessage());
         }
     }
+//上面两个接口不用
 
+//获取班级详情
     @GetMapping("/{id}")
-    public Result<Map<String, Object>> getClassById(@PathVariable Long id) {
+    public Result<ClassDetailDTO> getClassById(@PathVariable Long id) {
         return Result.success(classService.getClassDetailById(id));
     }
 
@@ -146,9 +148,11 @@ public class ClassController {
             return Result.error(e.getMessage());
         }
     }
-
+//使用统一接口，根据用户id获取用户的班级列表，返回id、course_id、course_name、teacherID、class_name、class_code
+//如果是老师返回老师教的班级列表，如果是学生返回学生所在的班级列表
+//你可以更改classDetail类（在保证与上面的接口兼容的情况下）
     @GetMapping("/user/{userId}")
-    public Result<List<Class>> getClassesByUserId(@PathVariable Long userId) {
+    public Result<List<ClassDetailDTO>> getClassesByUserId(@PathVariable Long userId) {
         return Result.success(classService.getClassesByUserId(userId));
     }
 } 

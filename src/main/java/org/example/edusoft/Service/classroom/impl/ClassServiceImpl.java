@@ -3,6 +3,7 @@ package org.example.edusoft.service.classroom.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.example.edusoft.common.exception.BusinessException;
 import org.example.edusoft.entity.classroom.Class;
+import org.example.edusoft.entity.classroom.ClassDetailDTO;
 import org.example.edusoft.entity.classroom.ClassUser;
 import org.example.edusoft.entity.imports.ImportRecord;
 import org.example.edusoft.mapper.classroom.ClassMapper;
@@ -16,7 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+//import java.util.Map;
 
 @Service
 public class ClassServiceImpl implements ClassService {
@@ -72,14 +73,23 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public Map<String, Object> getClassDetailById(Long id) {
+    public ClassDetailDTO getClassDetailById(Long id) {
         if (id == null) {
             throw new BusinessException(400, "班级ID不能为空");
         }
-        Map<String, Object> classDetail = classMapper.getClassDetailById(id);
-        if (classDetail == null) {
+        
+        // 先检查班级是否存在
+        Class clazz = classMapper.selectById(id);
+        if (clazz == null) {
             throw new BusinessException(404, "班级不存在");
         }
+        
+        // 获取班级详细信息
+        ClassDetailDTO classDetail = classMapper.getClassDetailById(id);
+        if (classDetail == null) {
+            throw new BusinessException(500, "获取班级详情失败");
+        }
+        
         return classDetail;
     }
 
@@ -303,8 +313,20 @@ public class ClassServiceImpl implements ClassService {
         return classMapper.selectCount(wrapper) > 0;
     }
 
-    @Override
+    /*@Override
     public List<Class> getClassesByUserId(Long userId) {
         return classMapper.getClassesByUserId(userId);
+    }*/
+
+    @Override
+    public List<ClassDetailDTO> getClassesByUserId(Long userId) {
+        if (userId == null) {
+            throw new BusinessException(400, "用户ID不能为空");
+        }
+        List<ClassDetailDTO> classes = classMapper.getClassesByUserId(userId);
+        if (classes == null || classes.isEmpty()) {
+            throw new BusinessException(404, "未找到相关班级信息");
+        }
+        return classes;
     }
 } 
