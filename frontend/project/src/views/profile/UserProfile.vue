@@ -52,15 +52,7 @@
             <span class="user-id">ID: {{ userProfile.userId }}</span>
             <span class="user-role" :class="getRoleClass()">
               {{ roleText }}
-            </span>
-            <div class="user-info">
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" class="info-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span class="info-text">{{ userProfile.email }}</span>
-              </div>
-              
+            </span>            <div class="user-info">
               <div class="info-item">
                 <svg xmlns="http://www.w3.org/2000/svg" class="info-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -132,13 +124,12 @@
                   />
                   <p class="form-help-text">用户ID不可更改</p>
                 </div>
-                
-                <div class="form-group">
+                  <div class="form-group">
                   <label for="role" class="form-label">学院</label>
                   <input
                     type="text"
                     id="role"
-                    :value="roleText"
+                    value=""
                     class="form-input disabled"
                     disabled
                   />
@@ -236,7 +227,7 @@ import { useAuthStore } from '../../stores/auth';
 const authStore = useAuthStore();
 
 // 默认头像def
-const defaultAvatar = '/assets/defaultProfile.jpg';
+const defaultAvatar = '/src/assets/head.png';
 
 // 状态管理
 const loading = ref(true);

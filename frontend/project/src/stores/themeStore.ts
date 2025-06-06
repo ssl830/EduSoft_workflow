@@ -39,7 +39,7 @@ export const vantaThemes: Record<string, VantaTheme> = {
   sunset: {
     name: 'sunset',
     colors: [0xffab91, 0xff8a65, 0xff7043, 0xff5722],
-    backgroundColor: 0xbf360c,
+    backgroundColor: 0x09F1D35,
     maxDistance: 22,
     spacing: 16,
     points: 10
