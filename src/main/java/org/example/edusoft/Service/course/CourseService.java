@@ -1,6 +1,7 @@
 package org.example.edusoft.service.course;
 
 import org.example.edusoft.entity.course.Course;
+import org.example.edusoft.entity.course.CourseDetailDTO;
 import java.util.List;
 
 public interface CourseService {
@@ -12,6 +13,12 @@ public interface CourseService {
     
     // 获取课程详情
     Course getCourseById(Long id);
+    
+    // 获取课程详细信息（包含教师信息、学生数量等）
+    CourseDetailDTO getCourseDetailById(Long id);
+    
+    // 获取用户的课程详细信息列表
+    List<CourseDetailDTO> getCourseDetailsByUserId(Long userId);
     
     // 更新课程信息
     Course updateCourse(Course course);

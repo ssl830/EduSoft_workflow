@@ -2,6 +2,7 @@ package org.example.edusoft.service.course.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.example.edusoft.entity.course.Course;
+import org.example.edusoft.entity.course.CourseDetailDTO;
 import org.example.edusoft.mapper.course.CourseMapper;
 import org.example.edusoft.service.course.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +110,25 @@ public class CourseServiceImpl implements CourseService {
         QueryWrapper<Course> wrapper = new QueryWrapper<>();
         wrapper.eq("code", code);
         return courseMapper.selectCount(wrapper) > 0;
+    }
+
+    @Override
+    public CourseDetailDTO getCourseDetailById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        CourseDetailDTO course = courseMapper.getCourseDetailById(id);
+        if (course == null) {
+            throw new IllegalArgumentException("课程不存在");
+        }
+        return course;
+    }
+
+    @Override
+    public List<CourseDetailDTO> getCourseDetailsByUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
+        }
+        return courseMapper.getCourseDetailsByUserId(userId);
     }
 } 
