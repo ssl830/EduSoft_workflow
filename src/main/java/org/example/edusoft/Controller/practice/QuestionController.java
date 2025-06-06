@@ -1,11 +1,13 @@
 package org.example.edusoft.controller.practice;
 
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.QuestionListDTO;
 import org.example.edusoft.service.practice.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +26,7 @@ public class QuestionController {
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "题目创建成功");
-        response.put("data", createdQuestion);
+        response.put("data", Map.of("questionId", createdQuestion.getId()));
         return ResponseEntity.ok(response);
     }
 
@@ -40,15 +42,12 @@ public class QuestionController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<Map<String, Object>> getQuestionList(
-            @RequestParam Long courseId,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
-        List<Question> questions = questionService.getQuestionList(courseId, page, size);
+    public ResponseEntity<Map<String, Object>> getQuestionList(@RequestParam Long courseId) {
+        List<QuestionListDTO> questions = questionService.getQuestionListByCourse(courseId);
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "获取题目列表成功");
-        response.put("data", questions);
+        response.put("data", Map.of("questions", questions));
         return ResponseEntity.ok(response);
     }
 

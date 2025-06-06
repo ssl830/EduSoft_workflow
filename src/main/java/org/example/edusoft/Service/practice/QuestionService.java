@@ -1,6 +1,7 @@
 package org.example.edusoft.service.practice;
 
 import org.example.edusoft.entity.practice.Question;
+import org.example.edusoft.entity.practice.QuestionListDTO;
 import java.util.List;
 import java.util.Map;
 
@@ -64,4 +65,20 @@ public interface QuestionService {
      * @return 创建后的题目列表
      */
     List<Question> batchCreateQuestions(List<Question> questions);
+
+    /**
+     * 获取教师在特定章节下的题目列表
+     * @param teacherId 教师ID
+     * @param courseId 课程ID
+     * @param sectionId 章节ID
+     * @return 题目列表
+     */
+    List<Question> getQuestionListByTeacherAndSection(Long teacherId, Long courseId, Long sectionId);
+
+    /**
+     * 获取课程下的题目列表
+     * @param courseId 课程ID
+     * @return 题目列表DTO
+     */
+    List<QuestionListDTO> getQuestionListByCourse(Long courseId);
 } 
