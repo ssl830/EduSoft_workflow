@@ -162,10 +162,10 @@ const toggleFavorite = async (question: Question) => {
 
         const response = await apiMethod(question.id);
 
-        if (response.data.code !== 200) {
+        if (response.code !== 200) {
             // 请求失败时回滚状态
             question.isFavorited = originalState;
-            console.error('操作失败:', response.data.message);
+            console.error('操作失败:', response.message);
         }
     } catch (err) {
         // 请求异常时回滚状态

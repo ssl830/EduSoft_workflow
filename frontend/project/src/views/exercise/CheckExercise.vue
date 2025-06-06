@@ -54,11 +54,11 @@ const fetchPendingAnswers = async () => {
         const response = await ExerciseApi.fetchPendingAnswers({
                 submissionId: submissionId,
         });
-        console.log(response.data.code)
-        if (response.data.code === 200) {
-            questions.value = response.data.data;
+        console.log(response.code)
+        if (response.code === 200) {
+            questions.value = response.data;
         } else {
-            console.error('获取待评分答案失败:', response.data.message);
+            console.error('获取待评分答案失败:', response.message);
         }
     } catch (error) {
         console.error('请求失败:', error);
@@ -95,10 +95,10 @@ const submitScores = async () => {
 
     try {
         const response = await Exercise.gradeAnswer(requestData);
-        if (response.data.code === 200) {
+        if (response.code === 200) {
             router.push('/')
         } else {
-            error.value = '评分提交失败：' + response.data.message;
+            error.value = '评分提交失败：' + response.message;
         }
     } catch (err) {
         error.value = '请求失败，请稍后重试';

@@ -52,7 +52,7 @@ const fetchVideos = async () => {
             chapterId: selectedChapter.value || -1
         })
 
-        videos.value = response.data.data.map((video: any) => {
+        videos.value = response.data.map((video: any) => {
             const progress = video.lastWatch && video.duration
                 ? Math.min(100, Math.round((video.lastWatch / video.duration) * 100))
                 : 0

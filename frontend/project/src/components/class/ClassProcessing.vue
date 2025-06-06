@@ -53,12 +53,12 @@ const fetchPractices = async () => {
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeList(props.classId)
             // 更新数据结构处理
-            practices.value = response.data.practices
+            practices.value = response.practices
         }else{ // 老师视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeTeachList(props.classId)
             // 更新数据结构处理
-            practices.value = response.data.practices
+            practices.value = response.practices
         }
 
         // // 提取唯一练习名称
@@ -94,7 +94,7 @@ const fetchPendingCorrections = async () => {
             practiced: selectedExer.value === -1 ? undefined : selectedExer.value
         })
         // 更新数据结构
-        pendingCorrections.value = response.data.data
+        pendingCorrections.value = response.data
         console.log(pendingCorrections.value)
 
     } catch (err) {

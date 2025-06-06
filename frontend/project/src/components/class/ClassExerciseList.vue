@@ -21,7 +21,7 @@ const fetchExercises = async () => {
 
     try {
         const response = await ExerciseApi.getClassExercises(props.classId)
-        exercises.value = response.data.practices
+        exercises.value = response.practices
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
         console.error(err)
