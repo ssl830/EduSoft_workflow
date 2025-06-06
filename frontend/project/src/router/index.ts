@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+// import { useAuthStore } from '../stores/auth'
 
 import Home from '../views/Home.vue'
 import Login from '../views/auth/Login.vue'
