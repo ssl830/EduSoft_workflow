@@ -192,9 +192,9 @@ const deleteSection = async (sectionId: bigint) => {
             </tr>
             </thead>
             <tbody>
-            <tr v-for="section in course.sections" :key="section.sort_order">
-              <td>{{ section.sort_order }}</td>
-              <td>{{ section.title}}</td>
+            <tr v-for="section in course.sections" :key="section.id">
+              <td>{{ section.sortOrder }}</td>
+              <td>{{ section.title }}</td>
               <td class="actions">
                 <button
                     class="btn-action preview"
@@ -209,7 +209,7 @@ const deleteSection = async (sectionId: bigint) => {
           </table>
         </div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
-        <div v-else class="empty-state">尚未设置课程大纲</div>
+        <div v-else class="empty-state">尚未设置课程章节</div>
       </div>
     </section>
   </div>
