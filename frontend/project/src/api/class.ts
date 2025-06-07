@@ -6,7 +6,7 @@ const ClassApi = {
     return axios.get(`/api/classes/user/${id}`)
   },
 
-  uploadStudents(data: { classId: string, operatorId: string, students: any[] }) {
+  uploadStudents(data: { classId: string, operatorId: string|number, importType: string, studentData: any[] }) {
     return axios.post(`/api/imports/students`, data,
       {
         headers: {

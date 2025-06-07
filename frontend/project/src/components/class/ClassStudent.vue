@@ -5,6 +5,7 @@ import ClassApi from '../../api/class'
 import {useAuthStore} from "../../stores/auth.ts";
 
 import Papa from 'papaparse'  // CSV解析库
+import * as XLSX from 'xlsx'  // 新增：xlsx解析库
 
 const props = defineProps<{
     classId: string;
@@ -63,40 +64,83 @@ const fetchStudents = async () => {
 const isParsing = ref(false)
 const parsingError = ref('')
 
-// 修改文件处理函数
+// 新增：下载模板方法
+const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+        ['name', 'id'],
+        ['张三', '20230001'],
+        ['李四', '20230002']
+    ])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '模板')
+    XLSX.writeFile(wb, '学生导入模板.xlsx')
+}
+
+// 新增：下载CSV模板方法
+const downloadCSVTemplate = () => {
+    const csvContent = 'name,id\n张三,20230001\n李四,20230002\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', '学生导入模板.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 修改文件处理函数，支持xlsx和csv
 const handleFileChange = async (event: Event) => {
     const input = event.target as HTMLInputElement
     if (!input.files || input.files.length === 0) return
 
     const file = input.files[0]
+    const fileName = file.name.toLowerCase()
 
-    // 验证文件类型
-    if (!validateCSVFile(file)) {
-        uploadError.value = '仅支持CSV格式文件'
-        return
-    }
-
-    // 重置状态
-    parsingError.value = ''
-    isParsing.value = true
-
-    try {
+    // 支持csv和xlsx
+    if (fileName.endsWith('.csv')) {
         // 解析CSV为JSON
-        const parsedData = await parseCSV(file)
-
-        // 验证数据格式
-        if (!validateStudentData(parsedData)) {
-            throw new Error('CSV格式错误：必须包含"name"和"id"列')
+        try {
+            const parsedData = await parseCSV(file)
+            if (!validateStudentData(parsedData)) {
+                throw new Error('CSV格式错误：必须包含"name"和"id"列')
+            }
+            uploadFileForm.value.parsedStudents = parsedData
+            uploadError.value = ''
+        } catch (err) {
+            parsingError.value = err instanceof Error ? err.message : '文件解析失败'
+            uploadFileForm.value.parsedStudents = []
         }
-
-        // 存储解析结果
-        uploadFileForm.value.parsedStudents = parsedData
-        uploadError.value = ''
-    } catch (err) {
-        parsingError.value = err instanceof Error ? err.message : '文件解析失败'
+    } else if (fileName.endsWith('.xlsx')) {
+        // 解析XLSX为JSON
+        try {
+            const data = await file.arrayBuffer()
+            const workbook = XLSX.read(data, { type: 'array' })
+            const sheetName = workbook.SheetNames[0]
+            const sheet = workbook.Sheets[sheetName]
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 })
+            // 第一行为表头
+            const [header, ...rows] = json
+            if (!header || !header.includes('name') || !header.includes('id')) {
+                throw new Error('XLSX格式错误：必须包含"name"和"id"表头')
+            }
+            const nameIdx = header.indexOf('name')
+            const idIdx = header.indexOf('id')
+            const parsedData = rows.filter(r => r.length >= 2).map(r => ({
+                name: r[nameIdx],
+                id: r[idIdx]
+            }))
+            if (!validateStudentData(parsedData)) {
+                throw new Error('XLSX内容错误：必须包含"name"和"id"列')
+            }
+            uploadFileForm.value.parsedStudents = parsedData
+            uploadError.value = ''
+        } catch (err) {
+            parsingError.value = err instanceof Error ? err.message : '文件解析失败'
+            uploadFileForm.value.parsedStudents = []
+        }
+    } else {
+        uploadError.value = '仅支持CSV或XLSX格式文件'
         uploadFileForm.value.parsedStudents = []
-    } finally {
-        isParsing.value = false
     }
 }
 
@@ -107,18 +151,22 @@ const validateCSVFile = (file: File) => {
     return validTypes.includes(file.type) || validExtension
 }
 
-// CSV解析函数
+// 修正parseCSV，自动检测分隔符，增强兼容性
 const parseCSV = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
         Papa.parse(file, {
             header: true,        // 使用第一行为header
             skipEmptyLines: true,
-            delimiter: ',', // 明确指定分隔符为逗号
+            delimiter: '', // 让PapaParse自动检测分隔符
             complete: (results) => {
                 if (results.errors.length > 0) {
-                    console.log(results.errors)
-                    const firstError = results.errors[0]
-                    reject(`解析错误（行 ${firstError.row}）: ${firstError.message}`)
+                    // 只要有一行是FieldMismatch就友好提示
+                    const fieldMismatch = results.errors.find(e => e.code === 'TooManyFields' || e.code === 'TooFewFields')
+                    if (fieldMismatch) {
+                        reject('CSV文件格式有误，请确保首行为表头且分隔符为英文逗号（,），可下载模板参考。')
+                    } else {
+                        reject(results.errors[0].message)
+                    }
                 } else {
                     resolve(results.data)
                 }
@@ -138,32 +186,49 @@ const validateStudentData = (data: any[]) => {
     )
 }
 
-// 修改上传函数
+// 新增：导入错误弹窗状态
+const showImportErrorDialog = ref(false)
+
+// 修改上传函数，确保studentData包含student_id和student_name字段
 const uploadFileStudents = async () => {
     if (!uploadFileForm.value.parsedStudents?.length) {
         uploadError.value = '请先上传并解析有效文件'
+        showImportErrorDialog.value = true
         return
     }
 
     uploadProgress.value = 0
     uploadError.value = ''
+    showImportErrorDialog.value = false
 
     try {
-        // 改为发送JSON数据
-        await ClassApi.uploadStudents(
-            {
-                classId: props.classId,
-                operatorId: authStore.user?.id,
-                students: uploadFileForm.value.parsedStudents
-            }
-        )
+        // 适配后端参数：student_id和student_name
+        await ClassApi.uploadStudents({
+            classId: props.classId,
+            operatorId: authStore.user?.id,
+            importType: 'FILE', // 文件导入
+            studentData: uploadFileForm.value.parsedStudents.map(s => ({
+                ...s,
+                student_id: s.id, // 后端要求
+                student_name: s.name // 后端如需
+            }))
+        })
 
         showUploadFileForm.value = false
         resetUploadFileForm()
         fetchStudents()  // 刷新列表
-    } catch (err) {
-        uploadError.value = '上传失败，请稍后再试'
-        console.error(err)
+    } catch (err: any) {
+        // 兼容多种后端/拦截器格式，保证message一定有值
+        const msg =
+            err?.data?.message ||
+            err?.data?.msg ||
+            err?.data?.data?.message ||
+            err?.response?.data?.message ||
+            err?.response?.data?.msg ||
+            '上传失败，请稍后再试';
+        uploadError.value = msg;
+        showImportErrorDialog.value = true;
+        console.error(err);
     }
 }
 
@@ -175,32 +240,41 @@ const uploadAloneStudents = async () => {
 
     if (hasEmptyField) {
         uploadAloneError.value = '请补全所有学生的姓名和学号'
+        showImportErrorDialog.value = true
         return
     }
 
     uploadProgress.value = 0
     uploadAloneError.value = ''
+    showImportErrorDialog.value = false
 
     try {
-        // 改为发送JSON数据
-        await ClassApi.uploadStudents(
-            {
-                classId: props.classId,
-                operatorId: authStore.user?.id,
-                students: uploadAloneForm.students.map(s => ({
-                    // 转换字段命名风格（根据后端需要）
-                    student_name: s.name,
-                    student_id: s.id
-                }))
-            }
-        )
+        // 适配后端参数：student_id和student_name
+        await ClassApi.uploadStudents({
+            classId: props.classId,
+            operatorId: authStore.user?.id,
+            importType: 'MANUAL', // 手动导入
+            studentData: uploadAloneForm.students.map(s => ({
+                student_id: s.id, // 后端要求
+                student_name: s.name // 后端如需
+            }))
+        })
 
         showUploadAloneForm.value = false
         resetUploadAloneForm()
         fetchStudents()  // 刷新列表
-    } catch (err) {
-        uploadAloneError.value = '上传失败，请稍后再试'
-        console.error(err)
+    } catch (err: any) {
+        // 兼容多种后端/拦截器格式，保证message一定有值
+        const msg =
+            err?.data?.message ||
+            err?.data?.msg ||
+            err?.data?.data?.message ||
+            err?.response?.data?.message ||
+            err?.response?.data?.msg ||
+            '上传失败，请稍后再试';
+        uploadAloneError.value = msg;
+        showImportErrorDialog.value = true;
+        console.error(err);
     }
 }
 
@@ -361,11 +435,14 @@ onMounted(() => {
                 <input
                     id="file"
                     type="file"
-                    accept=".csv"
+                    accept=".csv,.xlsx"
                     @change="handleFileChange"
                     required
                 />
-                <div class="file-hint">支持格式：CSV（需包含"name"和"id"列）</div>
+                <div class="file-hint">支持格式：CSV/XLSX（需包含"name"和"id"列）
+                    <button type="button" class="btn-text" @click="downloadTemplate">下载XLSX模板</button>
+                    <button type="button" class="btn-text" @click="downloadCSVTemplate">下载CSV模板</button>
+                </div>
             </div>
 
             <!-- 添加解析状态 -->
@@ -450,6 +527,18 @@ onMounted(() => {
                 </tr>
                 </tbody>
             </table>
+        </div>
+        <!-- 在<template>末尾添加弹窗组件 -->
+        <div v-if="showImportErrorDialog" class="dialog-overlay">
+            <div class="create-class-dialog">
+                <h3>导入失败</h3>
+                <div class="error-message">
+                    {{ uploadError || uploadAloneError || '未知错误' }}
+                </div>
+                <div class="dialog-actions">
+                    <button class="btn-primary" @click="showImportErrorDialog = false">确定</button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
