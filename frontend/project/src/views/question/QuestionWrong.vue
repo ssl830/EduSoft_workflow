@@ -99,7 +99,7 @@ const formatOptions = (options: string) => {
     }
 }
 
-// 类似题目弹窗相关状态
+// ���似题目弹窗相关状态
 const showSimilarDialog = ref(false)
 const similarApiKey = ref('')
 const similarLoading = ref(false)
@@ -133,7 +133,7 @@ const generateSimilarQuestion = async () => {
 
     similarLoading.value = true
     try {
-        const prompt = `请根据以下题目，生成一道风格、难度和知识点类似的新题目（不要与原题重复），返回题目和答案即可：\n${similarSourceQuestion.value.content}`
+        const prompt = `请根据以下题目，生成一道风格、难度和知识点类似的新题目（不要与原题重复），请不要返回markdown格式，返回普通格式即可，返回题目和答案即可：\n${similarSourceQuestion.value.content}`
 
         // 修复：正确的API端点
         const resp = await fetch('https://api.deepseek.com/chat/completions', {
@@ -304,9 +304,27 @@ const generateSimilarQuestion = async () => {
               <label>原题目:</label>
               <div class="content-box" style="flex:1;">{{ similarSourceQuestion?.content }}</div>
             </div>
-            <div class="detail-row">
-              <label for="api-key-input">Deepseek API-Key:</label>
-              <input id="api-key-input" v-model="similarApiKey" type="password" placeholder="请输入您的API-Key" style="flex:1;" />
+            <!-- 优化API-Key输入区域 -->
+            <div class="form-group" style="margin-bottom:0.5rem;">
+              <label for="api-key-input" style="font-weight:500;">Deepseek API-Key:</label>
+              <input
+                id="api-key-input"
+                v-model="similarApiKey"
+                type="password"
+                placeholder="请输入您的API-Key"
+                class="input-api-key"
+                autocomplete="off"
+              />
+              <div style="margin-top:0.25rem;">
+                <a
+                  href="https://platform.deepseek.com/api_keys"
+                  target="_blank"
+                  rel="noopener"
+                  style="color:#2c6ecf;text-decoration:underline;font-size:0.95em;"
+                >
+                  获取您的API-KEY
+                </a>
+              </div>
             </div>
             <div class="form-actions" style="margin-top:1rem;">
               <button class="btn-primary" @click="generateSimilarQuestion" :disabled="similarLoading">
@@ -688,6 +706,16 @@ select:disabled {
 
 .btn-secondary:hover {
   background-color: #e0e0e0;
+}
+
+.input-api-key {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {

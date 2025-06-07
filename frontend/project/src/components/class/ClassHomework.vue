@@ -26,6 +26,7 @@
                 <tr>
                     <th>作业名称</th>
                     <th>截止时间</th>
+                    <th v-if="!isTeacher">提交状态</th>
                     <th>操作</th>
                 </tr>
                 </thead>
@@ -41,6 +42,10 @@
                         </div>
                     </td>
                     <td>{{ hw.endTime }}</td>
+                    <td v-if="!isTeacher">
+                        <span v-if="studentSubmissions[hw.homeworkId]" style="color: #4CAF50;">已提交</span>
+                        <span v-else style="color: #f44336;">未提交</span>
+                    </td>
                     <td class="actions">
                         <button class="btn-view" @click="viewHomework(hw)">
                             <i class="icon-view"></i> 查看
@@ -382,6 +387,8 @@ const fetchHomeworks = async () => {
         console.log(props.classId)
         const response = await ClassApi.getHomeworkList(props.classId)
         homeworks.value = response.data
+        // 新增：学生端查提交状态
+        await fetchStudentSubmissions()
     } catch (err) {
         error.value = '获取作业列表失败，请稍后再试'
         console.error(err)
@@ -433,13 +440,47 @@ const createHomework = async () => {
     }
 }
 
-// 查看作业
-const viewHomework = (hw: Homework) => {
+// 新增：学生作业提交状态映射
+const studentSubmissions = ref<{ [key: string]: boolean }>({})
+
+// 批量获取学生每个作业的提交状态
+const fetchStudentSubmissions = async () => {
+    if (props.isTeacher || !authStore.user?.id) return
+    const response = ClassApi.getStudentSubmission(5, authStore.user?.id)
+    console.log(response)
+    const promises = homeworks.value.map(hw =>
+        ClassApi.getStudentSubmission(hw.homeworkId, authStore.user?.id)
+            .then(res => ({ id: hw.homeworkId, submitted: res.code === 200 && res.data }))
+            .catch(() => ({ id: hw.homeworkId, submitted: false }))
+    )
+    const results = await Promise.all(promises)
+    const map: { [key: string]: boolean } = {}
+    results.forEach(r => { map[r.id] = r.submitted })
+    studentSubmissions.value = map
+    console.log("HERRRRRRR")
+    console.log(studentSubmissions.value)
+}
+
+// 单独查某个作业的提交状态
+const fetchStudentSubmissionFor = async (homeworkId: bigint) => {
+    if (props.isTeacher || !authStore.user?.id) return
+    try {
+        const res = await ClassApi.getStudentSubmission(homeworkId, authStore.user?.id)
+        studentSubmissions.value[homeworkId] = (res.data && res.code === 200)
+        console.log(`作业 ${homeworkId} 提交状态:`, studentSubmissions.value[homeworkId])
+    } catch {
+        studentSubmissions.value[homeworkId] = false
+    }
+}
+
+// 查看作业时刷新该作业的提交状态
+const viewHomework = async (hw: Homework) => {
     currentHomework.value = hw
     if (props.isTeacher) {
         fetchSubmissions(hw.homeworkId)
         showSubmissionDialog.value = true
     } else {
+        await fetchStudentSubmissionFor(hw.homeworkId)
         showDetailDialog.value = true
     }
 }
@@ -460,6 +501,7 @@ const fetchSubmissions = async (homeworkId: bigint) => {
         submissionsLoading.value = false
     }
 }
+
 const authStore = useAuthStore()
 
 // 提交作业（学生）
@@ -485,6 +527,8 @@ const submitHomework = async () => {
             return
         }else{
             closeDetailDialog()
+            // 修改：提交后刷新作业列表和提交状态
+            await fetchHomeworks()
         }
     } catch (err) {
         submitError.value = '提交作业失败，请稍后再试'
