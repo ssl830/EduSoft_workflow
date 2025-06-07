@@ -2,6 +2,8 @@ package org.example.edusoft.mapper.homework;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.homework.HomeworkSubmission;
+// import org.example.edusoft.entity.homework.HomeworkSubmissionWithName;
+
 import java.util.List;
 
 /**
@@ -25,10 +27,20 @@ public interface HomeworkSubmissionMapper {
     @Select("SELECT * FROM homeworksubmission WHERE id = #{id}")
     HomeworkSubmission selectById(Long id);
 
+//     /**
+//      * 根据作业ID查询所有提交记录
+//      */
+//     @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
+//     List<HomeworkSubmission> selectByHomeworkId(Long homeworkId);
+
     /**
-     * 根据作业ID查询所有提交记录
+     * 根据作业ID查询所有提交记录（带学生姓名）
      */
-    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
+    @Select("SELECT hs.*, u.username AS student_name " +
+            "FROM homeworksubmission hs " +
+            "LEFT JOIN user u ON hs.student_id = u.id " +
+            "WHERE hs.homework_id = #{homeworkId} " +
+            "ORDER BY hs.submitted_at DESC")
     List<HomeworkSubmission> selectByHomeworkId(Long homeworkId);
 
     /**
@@ -48,4 +60,6 @@ public interface HomeworkSubmissionMapper {
      */
     @Delete("DELETE FROM homeworksubmission WHERE homework_id = #{homeworkId}")
     void deleteByHomeworkId(Long homeworkId);
-} 
+
+
+}

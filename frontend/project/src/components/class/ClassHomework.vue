@@ -40,7 +40,7 @@
                 </span>
                         </div>
                     </td>
-                    <td>{{ formatDate(hw.end_time) }}</td>
+                    <td>{{ hw.endTime }}</td>
                     <td class="actions">
                         <button class="btn-view" @click="viewHomework(hw)">
                             <i class="icon-view"></i> 查看
@@ -107,7 +107,7 @@
                                 <label>截止时间 *</label>
                                 <input
                                     type="datetime-local"
-                                    v-model="createForm.end_time"
+                                    v-model="createForm.endTime"
                                     required
                                 >
                             </div>
@@ -146,7 +146,7 @@
                     <div class="homework-info">
                         <div class="info-item">
                             <label>截止时间：</label>
-                            <span>{{ formatDate(currentHomework.end_time) }}</span>
+                            <span>{{ currentHomework.endTime }}</span>
                         </div>
                         <div class="info-item">
                             <label>作业状态：</label>
@@ -246,10 +246,10 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="sub in submissions" :key="sub.id">
+                            <tr v-for="sub in submissions" :key="sub.submissionId">
                                 <td>{{ sub.studentId }}</td>
                                 <td>{{ sub.studentName }}</td>
-                                <td>{{ formatDateTime(sub.submit_time) }}</td>
+                                <td>{{ sub.submitTime }}</td>
                                 <td>
                                     <button
                                         class="btn-download"
@@ -310,7 +310,7 @@ interface Homework {
     description: string
     fileUrl: string | null
     fileName: string | null
-    end_time: string
+    endTime: string
 }
 
 // 定义提交类型
@@ -320,7 +320,7 @@ interface Submission {
     studentName: string
     fileUrl: string
     fileName: string
-    submit_time: string
+    submitTime: string
 }
 
 // 组件属性
@@ -359,7 +359,7 @@ const createForm = ref({
     description: '',
     file: null as File | null,
     start_time: '',
-    end_time: ''
+    endTime: ''
 })
 
 const submitForm = ref({
@@ -397,19 +397,34 @@ const createHomework = async () => {
 
     try {
         const formData = new FormData()
-        formData.append('class_id', props.classId)
-        formData.append('title', createForm.value.title)
-        formData.append('description', createForm.value.description)
-        formData.append('end_time', createForm.value.end_time)
+        formData.append('class_id', String(props.classId))
+        formData.append('title', String(createForm.value.title))
+        formData.append('description', String(createForm.value.description || ''))
 
-        if (createForm.value.file) {
+        // 修正时间格式，仅在有值时append
+        let endTime = createForm.value.endTime
+        if (endTime && endTime.includes('T')) {
+            const [date, time] = endTime.split('T')
+            endTime = `${date} ${time.length === 5 ? time + ':00' : time}`
+        }
+        if (endTime) {
+            formData.append('end_time', endTime)
+        }
+
+        // 只在file为File实例时append
+        if (createForm.value.file instanceof File) {
             formData.append('file', createForm.value.file)
         }
 
-        await ClassApi.createHomework(formData)
-
-        closeCreateDialog()
-        await fetchHomeworks()
+        // 不要手动设置Content-Type，axios会自动处理
+        const response = await ClassApi.createHomework(formData)
+        if(response.code != 200){
+            createError.value = response.msg || '创建作业失败，请稍后再试'
+            return
+        }else{
+            closeCreateDialog()
+            await fetchHomeworks()
+        }
     } catch (err) {
         createError.value = '创建作业失败，请稍后再试'
         console.error(err)
@@ -449,6 +464,8 @@ const authStore = useAuthStore()
 
 // 提交作业（学生）
 const submitHomework = async () => {
+    console.log(currentHomework.value)
+    console.log("herrrrrrrrrrrrrrrr")
     if (!submitForm.value.file) {
         submitError.value = '请选择要提交的文件'
         return
@@ -462,9 +479,13 @@ const submitHomework = async () => {
         formData.append('student_id', authStore.user?.id)
         formData.append('file', submitForm.value.file)
 
-        await ClassApi.uploadSubmissionFile(currentHomework.value?.id, formData)
-
-        closeDetailDialog()
+        const response = await ClassApi.uploadSubmissionFile(currentHomework.value?.homeworkId, formData)
+        if(response.code != 200){
+            submitError.value = response.msg || '提交作业失败，请稍后再试'
+            return
+        }else{
+            closeDetailDialog()
+        }
     } catch (err) {
         submitError.value = '提交作业失败，请稍后再试'
         console.error(err)
@@ -484,11 +505,12 @@ const deleteHomework = async () => {
 
     deleting.value = true
     try {
-        await ClassApi.deleteHomework(homeworkToDelete.value.id)
+        const response = await ClassApi.deleteHomework(homeworkToDelete.value.homeworkId)
         homeworks.value = homeworks.value.filter(
-            hw => hw.id !== homeworkToDelete.value?.id
+            hw => hw.homeworkId !== homeworkToDelete.value?.homeworkId
         )
         showDeleteConfirm.value = false
+        console.log(response)
     } catch (err) {
         console.error('删除作业失败:', err)
     } finally {
@@ -577,7 +599,7 @@ const closeCreateDialog = () => {
         description: '',
         file: null,
         start_time: '',
-        end_time: ''
+        endTime: ''
     }
     createError.value = null
 }
@@ -595,17 +617,17 @@ const closeSubmissionDialog = () => {
     submissions.value = []
 }
 
-// 工具函数
-const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'yyyy-MM-dd HH:mm')
-}
-
-const formatDateTime = (dateString: string) => {
-    return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss')
-}
+// // 工具函数
+// const formatDate = (dateString: string) => {
+//     return format(new Date(dateString), 'yyyy-MM-dd HH:mm')
+// }
+//
+// const formatDateTime = (dateString: string) => {
+//     return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss')
+// }
 
 const getStatusClass = (hw: Homework) => {
-    const end = new Date(hw.end_time)
+    const end = new Date(hw.endTime)
 
     if (currentTime.value <= end) {
         return 'status-ongoing'
@@ -615,12 +637,8 @@ const getStatusClass = (hw: Homework) => {
 }
 
 const getStatusText = (hw: Homework) => {
-    const start = new Date(hw.start_time)
-    const end = new Date(hw.end_time)
-
-    if (currentTime.value < start) {
-        return '未开始'
-    } else if (currentTime.value >= start && currentTime.value <= end) {
+    const end = new Date(hw.endTime)
+    if (currentTime.value <= end) {
         return '进行中'
     } else {
         return '已截止'
@@ -628,7 +646,7 @@ const getStatusText = (hw: Homework) => {
 }
 
 const canSubmit = (hw: Homework) => {
-    const end = new Date(hw.end_time)
+    const end = new Date(hw.endTime)
     return currentTime.value <= end
 }
 
