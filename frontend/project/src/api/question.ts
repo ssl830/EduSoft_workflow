@@ -6,7 +6,7 @@ const QuestionApi = {
   getQuestionList(data: {
     courseId: number
   }){
-    return axios.get('/api/question/list', data)
+    return axios.get('/api/practice/question/list', { params: data })
   },
   uploadQuestion(data){
     return axios.post('/api/question/upload', data)

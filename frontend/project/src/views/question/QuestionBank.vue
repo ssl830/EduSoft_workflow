@@ -86,20 +86,40 @@ const fetchQuestions = async () => {
     error.value = ''
 
     try {
-        // 使用课程ID而不是名称
-        const response = await QuestionApi.getQuestionList({
-            courseId: selectedCourse.value
-        })
-
-        // 防御性处理，确保 response.data 和 response.data.questions 存在
-        if (response && response.data && Array.isArray(response.data.questions)) {
-            questions.value = response.data.questions
+        // 如果没有选择课程，获取所有课程的题目
+        if (!tempQuestion.value.courseId) {
+            const allQuestions = []
+            for (const course of courses.value) {
+                try {
+                    const response = await QuestionApi.getQuestionList({
+                        courseId: course.id
+                    })
+                    console.log(`获取课程 ${course.name} 的题目列表响应:`, response)
+                    
+                    if (response && response.data && response.data.data && Array.isArray(response.data.data.questions)) {
+                        allQuestions.push(...response.data.data.questions)
+                    }
+                } catch (err) {
+                    console.error(`获取课程 ${course.name} 的题目列表失败:`, err)
+                }
+            }
+            questions.value = allQuestions
         } else {
-            questions.value = []
+            // 获取单个课程的题目
+            const response = await QuestionApi.getQuestionList({
+                courseId: tempQuestion.value.courseId
+            })
+            console.log('获取题目列表响应:', response)
+
+            if (response && response.data && response.data.data && Array.isArray(response.data.data.questions)) {
+                questions.value = response.data.data.questions
+            } else {
+                questions.value = []
+            }
         }
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        console.error('获取题目列表失败:', err)
         questions.value = []
     } finally {
         loading.value = false
@@ -141,10 +161,17 @@ const fetchCourses = async () => {
 
 // 监听课程选择变化
 watch(() => tempQuestion.value.courseId, (newCourseId) => {
-    const selectedCourse = courses.value.find(c => c.id === newCourseId)
-    sections.value = selectedCourse?.sections || []
-    console.log(sections.value)
-    tempQuestion.value.sectionId = 0 // 重置章节选择
+    if (newCourseId) {
+        const selectedCourse = courses.value.find(c => c.id === newCourseId)
+        sections.value = selectedCourse?.sections || []
+        console.log('章节列表:', sections.value)
+        tempQuestion.value.sectionId = 0 // 重置章节选择
+    } else {
+        sections.value = [] // 清空章节列表
+        tempQuestion.value.sectionId = 0 // 重置章节选择
+    }
+    // 当课程变化时，重新获取题目列表
+    fetchQuestions()
 })
 
 // watch(() => tempQuestion.value.courseId, (newCourseId) => {
