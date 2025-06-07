@@ -230,4 +230,17 @@ public class PracticeController {
             return Result.error(500, "获取练习列表失败：" + e.getMessage());
         }
     }
+
+    @PutMapping("/{practiceId}/questions/{questionId}")
+    public Result<Void> updateQuestionScore(
+            @PathVariable Long practiceId,
+            @PathVariable Long questionId,
+            @RequestParam Integer score) {
+        try {
+            practiceService.addQuestionToPractice(practiceId, questionId, score);
+            return Result.success(null, "题目分值更新成功");
+        } catch (Exception e) {
+            return Result.error(500, "题目分值更新失败：" + e.getMessage());
+        }
+    }
 }

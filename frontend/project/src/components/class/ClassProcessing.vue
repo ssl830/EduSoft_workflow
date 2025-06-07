@@ -171,6 +171,11 @@ const viewPracticeDetail = (practiceId) => {
     router.push({ name: 'PracticeDetail', params: { id: practiceId } })
 }
 
+// 在<script setup>中添加：
+const editPractice = (practiceId) => {
+    router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
+}
+
 onMounted(() => {
     fetchData()
 })
@@ -326,6 +331,16 @@ onMounted(() => {
                                 title="查看题目"
                             >
                                 查看题目
+                            </button>
+
+                            <!-- 老师端：编辑按钮 -->
+                            <button
+                                v-if="isTeacher"
+                                class="btn-action preview"
+                                @click="editPractice(practice.id)"
+                                title="编辑练习"
+                            >
+                                编辑
                             </button>
 
                             <!-- 批改按钮 (老师) -->
