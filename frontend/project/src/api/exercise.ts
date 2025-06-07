@@ -135,6 +135,25 @@ const ExerciseApi = {
 
   // Grade a subjective answer (teacher/tutor)
 
+  // 获取某个练习的题目列表
+  getPracticeQuestions(practiceId: number|string) {
+    return axios.get(`/api/practice/${practiceId}/questions`)
+  },
+
+  // 更新练习基本信息
+  updateExercise(practiceId: number|string, data: any) {
+    return axios.put(`/api/practice/${practiceId}`, data)
+  },
+
+  // 修改练习中题目的分值
+  updatePracticeQuestionScore(practiceId: number|string, questionId: number|string, score: number) {
+    return axios.put(`/api/practice/${practiceId}/questions/${questionId}?score=${score}`)
+  },
+
+  // 移除练习中的题目
+  removePracticeQuestion(practiceId: number|string, questionId: number|string) {
+    return axios.delete(`/api/practice/${practiceId}/questions/${questionId}`)
+  },
 }
 
 export default ExerciseApi

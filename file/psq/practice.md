@@ -274,3 +274,37 @@ src/main/java/org/example/edusoft/
 - 请求方式：GET
 - 路径：/api/practice/{id}
 - 返回：练习详细信息，包含题目列表 
+
+### 7. 修改练习基本信息
+- 请求方式：PUT
+- 路径：/api/practice/{id}
+- 请求体：
+```json
+{
+    "title": "练习标题",
+    "startTime": "2024-03-20T10:00:00",
+    "endTime": "2024-03-27T10:00:00",
+    "allowMultipleSubmission": true
+}
+```
+- 响应：
+```json
+{
+    "code": 200,
+    "message": "练习更新成功",
+    "data": { /* 练习对象 */ }
+}
+```
+
+### 8. 修改练习中题目的分值
+- 请求方式：PUT
+- 路径：/api/practice/{practiceId}/questions/{questionId}
+- 参数：score（题目分值，必填，query参数）
+- 响应：
+```json
+{
+    "code": 200,
+    "message": "题目分值更新成功",
+    "data": null
+}
+``` 

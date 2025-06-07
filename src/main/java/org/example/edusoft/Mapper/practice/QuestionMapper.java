@@ -65,13 +65,18 @@ public interface QuestionMapper {
             @Param("courseId") Long courseId,
             @Param("sectionId") Long sectionId);
 
-    @Select("""
-            SELECT q.*, c.name as course_name, cs.title as section_name 
-            FROM Question q
-            LEFT JOIN Course c ON q.course_id = c.id
-            LEFT JOIN CourseSection cs ON q.section_id = cs.id
-            WHERE q.course_id = #{courseId}
-            ORDER BY q.created_at DESC
-            """)
+    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
+            "FROM Question q " +
+            "LEFT JOIN Course c ON q.course_id = c.id " +
+            "LEFT JOIN CourseSection cs ON q.section_id = cs.id " +
+            "ORDER BY q.created_at DESC")
+    List<Map<String, Object>> getAllQuestionsWithNames();
+
+    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
+            "FROM Question q " +
+            "LEFT JOIN Course c ON q.course_id = c.id " +
+            "LEFT JOIN CourseSection cs ON q.section_id = cs.id " +
+            "WHERE q.course_id = #{courseId} " +
+            "ORDER BY q.created_at DESC")
     List<Map<String, Object>> getQuestionListWithNames(@Param("courseId") Long courseId);
 } 

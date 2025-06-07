@@ -42,8 +42,13 @@ public class QuestionController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<Map<String, Object>> getQuestionList(@RequestParam Long courseId) {
-        List<QuestionListDTO> questions = questionService.getQuestionListByCourse(courseId);
+    public ResponseEntity<Map<String, Object>> getQuestionList(@RequestParam(required = false) Long courseId) {
+        List<QuestionListDTO> questions;
+        if (courseId != null) {
+            questions = questionService.getQuestionListByCourse(courseId);
+        } else {
+            questions = questionService.getAllQuestions();
+        }
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "获取题目列表成功");

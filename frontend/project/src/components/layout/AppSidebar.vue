@@ -35,17 +35,17 @@ export default {
           </router-link>
         </li>
 
-        <li v-if="isTutor || isStudent || isTeacher">
+        <li v-if="isTutor || isTeacher">
           <router-link to="/questionBank" class="sidebar-link">
             <span class="icon">📚</span> 题库中心
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent || isTeacher">
+        <li v-if="isTutor || isStudent">
           <router-link to="/questionFavor" class="sidebar-link">
             <span class="icon">📚</span> 收藏题库
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent || isTeacher">
+        <li v-if="isTutor || isStudent">
           <router-link to="/questionWrong" class="sidebar-link">
             <span class="icon">📈</span> 错误题库
           </router-link>
@@ -67,30 +67,14 @@ export default {
         </li>
       </ul>
     </div>
-
-    <div class="sidebar-section" v-if="isTeacher || isAssistant">
+    <div class="sidebar-section" v-if="isTeacher || isTutor">
       <h3 class="sidebar-title">教师工具</h3>
       <ul class="sidebar-menu">
         <li v-if="isTeacher">
-          <router-link to="/class/manage" class="sidebar-link">
-            <span class="icon">👥</span> 班级管理
-          </router-link>
-        </li>
-        <li>
           <router-link to="/exercise/grading" class="sidebar-link">
             <span class="icon">✓</span> 批阅练习
           </router-link>
         </li>
-        <li>
-          <router-link to="/statistics" class="sidebar-link">
-            <span class="icon">📈</span> 统计分析
-          </router-link>
-        </li>
-      </ul>
-    </div>
-    <div class="sidebar-section" v-if="isTeacher || isTutor">
-      <h3 class="sidebar-title">教师工具</h3>
-      <ul class="sidebar-menu">
         <li v-if="isTeacher">
           <router-link to="/course/create" class="sidebar-link">
             <span class="icon">➕</span> 创建课程

@@ -39,4 +39,7 @@ public class Practice {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Transient
+    private java.util.List<Question> questions;
 } 

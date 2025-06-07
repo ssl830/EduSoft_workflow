@@ -20,6 +20,9 @@ public interface CourseService {
     // 获取用户的课程详细信息列表
     List<CourseDetailDTO> getCourseDetailsByUserId(Long userId);
     
+    // 获取所有课程的详细信息列表
+    List<CourseDetailDTO> getAllCourses();
+    
     // 更新课程信息
     Course updateCourse(Course course);
     

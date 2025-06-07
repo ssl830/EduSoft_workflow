@@ -1,8 +1,9 @@
 package org.example.edusoft.mapper.course;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
+import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.course.Course;
 import org.example.edusoft.entity.course.CourseDetailDTO;
 import org.example.edusoft.entity.course.CourseSection;
@@ -60,4 +61,48 @@ public interface CourseMapper extends BaseMapper<Course> {
             )
             """)
     List<CourseDetailDTO> getCourseDetailsByUserId(Long userId);
+
+    @Insert("INSERT INTO course (name, code, teacher_id, outline, objective, assessment) " +
+            "VALUES (#{name}, #{code}, #{teacherId}, #{outline}, #{objective}, #{assessment})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insert(Course course);
+
+    @Select("SELECT * FROM course WHERE id = #{id}")
+    Course selectById(Long id);
+
+    @Select("SELECT c.*, " +
+            "t.name as teacher_name, " +
+            "s.name as section_name " +
+            "FROM course c " +
+            "LEFT JOIN teacher t ON c.teacher_id = t.id " +
+            "LEFT JOIN section s ON c.section_id = s.id " +
+            "WHERE c.id = #{id}")
+    CourseDetailDTO selectCourseDetailById(Long id);
+
+    @Select("SELECT c.*, " +
+            "t.name as teacher_name, " +
+            "s.name as section_name " +
+            "FROM course c " +
+            "LEFT JOIN teacher t ON c.teacher_id = t.id " +
+            "LEFT JOIN section s ON c.section_id = s.id " +
+            "WHERE c.teacher_id = #{teacherId} " +
+            "ORDER BY c.id DESC")
+    List<CourseDetailDTO> getCourseDetailsByTeacherId(Long teacherId);
+
+    @Select("SELECT c.*, " +
+            "u.username as teacher_name " +
+            "FROM course c " +
+            "LEFT JOIN user u ON c.teacher_id = u.id " +
+            "WHERE 1=1 " +
+            "${ew.customSqlSegment}")
+    List<CourseDetailDTO> selectAllCoursesWithNames(@Param(Constants.WRAPPER) Wrapper<Course> queryWrapper);
+
+    @Update("UPDATE course SET name = #{name}, code = #{code}, " +
+            "teacher_id = #{teacherId}, outline = #{outline}, " +
+            "objective = #{objective}, assessment = #{assessment} " +
+            "WHERE id = #{id}")
+    int update(Course course);
+
+    @Delete("DELETE FROM course WHERE id = #{id}")
+    int deleteById(Long id);
 } 

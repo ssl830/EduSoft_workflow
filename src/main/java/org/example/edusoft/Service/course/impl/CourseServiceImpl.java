@@ -131,4 +131,9 @@ public class CourseServiceImpl implements CourseService {
         }
         return courseMapper.getCourseDetailsByUserId(userId);
     }
+
+    @Override
+    public List<CourseDetailDTO> getAllCourses() {
+        return courseMapper.selectAllCoursesWithNames(new QueryWrapper<Course>().orderByDesc("id"));
+    }
 } 

@@ -42,7 +42,7 @@ public class HomeworkServiceImpl implements HomeworkService {
 
     @Override
     @Transactional
-    public Long createHomework(Long classId, String title, String description, 
+    public Long createHomework(Long classId, String title, String description,
                              String endTime, MultipartFile file) {
         // 参数校验
         if (classId == null || title == null || title.trim().isEmpty()) {
@@ -55,7 +55,7 @@ public class HomeworkServiceImpl implements HomeworkService {
         homework.setTitle(title);
         homework.setDescription(description);
         homework.setCreatedBy(1L);
-        
+
         // 设置截止时间
         if (endTime != null && !endTime.trim().isEmpty()) {
             homework.setDeadline(LocalDateTime.parse(endTime, DATE_TIME_FORMATTER));
@@ -71,7 +71,7 @@ public class HomeworkServiceImpl implements HomeworkService {
             String uniqueName = String.format("homework/%d/%s", classId, file.getOriginalFilename());
             IFileStorage storage = storageProvider.getStorage();
             FileBo fileBo = storage.upload(file, uniqueName, FileType.PDF);
-            
+
             homework.setObjectName(fileBo.getFileName());
             homework.setAttachmentUrl(fileBo.getUrl());
         }
@@ -101,9 +101,9 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
 
         // 上传文件
-        String uniqueName = String.format("homework/submission/%d/%d_%s", 
+        String uniqueName = String.format("homework/submission/%d/%d_%s",
             homeworkId, studentId, file.getOriginalFilename());
-        
+
         IFileStorage storage = storageProvider.getStorage();
         FileBo fileBo = storage.upload(file, uniqueName, FileType.PDF);
 
@@ -126,16 +126,16 @@ public class HomeworkServiceImpl implements HomeworkService {
         List<Homework> homeworkList = homeworkMapper.selectByClassId(classId);
         System.out.println("homeworkList: " + homeworkList);
         return homeworkList.stream().map(homework -> {
-            String fileUrl = homework.getObjectName() != null ? 
+            String fileUrl = homework.getObjectName() != null ?
                 fileAccessService.getDownloadUrlByObjectName(homework.getObjectName()).getUrl() : null;
-                
+
             return HomeworkDTO.builder()
                 .homeworkId(homework.getId())
                 .title(homework.getTitle())
                 .description(homework.getDescription())
                 .fileUrl(fileUrl)
                 .fileName(homework.getObjectName())
-                .endTime(homework.getDeadline() != null ? 
+                .endTime(homework.getDeadline() != null ?
                     homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
                 .build();
         }).collect(Collectors.toList());
@@ -144,14 +144,15 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     public List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId) {
         List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
-        
+
         return submissions.stream().map(submission -> {
-            String fileUrl = submission.getObjectName() != null ? 
+            String fileUrl = submission.getObjectName() != null ?
                 fileAccessService.getDownloadUrlByObjectName(submission.getObjectName()).getUrl() : null;
-                
+
             return HomeworkSubmissionDTO.builder()
                 .submissionId(submission.getId())
                 .studentId(String.valueOf(submission.getStudentId()))
+                .studentName(submission.getStudentName())
                 .fileUrl(fileUrl)
                 .fileName(submission.getObjectName())
                 .submitTime(submission.getSubmittedAt().format(DATE_TIME_FORMATTER))
@@ -176,7 +177,7 @@ public class HomeworkServiceImpl implements HomeworkService {
 
         // 获取所有提交记录
         List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
-        
+
         // 删除所有提交的文件
         IFileStorage storage = storageProvider.getStorage();
         for (HomeworkSubmission submission : submissions) {
@@ -199,16 +200,16 @@ public class HomeworkServiceImpl implements HomeworkService {
             return null;
         }
 
-        String fileUrl = homework.getObjectName() != null ? 
+        String fileUrl = homework.getObjectName() != null ?
             fileAccessService.getDownloadUrl(homework.getId()).getUrl() : null;
-            
+
         return HomeworkDTO.builder()
             .homeworkId(homework.getId())
             .title(homework.getTitle())
             .description(homework.getDescription())
             .fileUrl(fileUrl)
             .fileName(homework.getObjectName())
-            .endTime(homework.getDeadline() != null ? 
+            .endTime(homework.getDeadline() != null ?
                 homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
             .build();
     }
@@ -220,9 +221,9 @@ public class HomeworkServiceImpl implements HomeworkService {
             return null;
         }
 
-        String fileUrl = submission.getObjectName() != null ? 
+        String fileUrl = submission.getObjectName() != null ?
             fileAccessService.getDownloadUrl(submission.getId()).getUrl() : null;
-            
+
         return HomeworkSubmissionDTO.builder()
             .submissionId(submission.getId())
             .studentId(String.valueOf(submission.getStudentId()))
@@ -238,7 +239,7 @@ public class HomeworkServiceImpl implements HomeworkService {
         if (homework == null || homework.getObjectName() == null) {
             throw new BusinessException("作业附件不存在");
         }
-        
+
         IFileStorage storage = storageProvider.getStorage();
         storage.download(homework.getObjectName(), response);
     }
@@ -249,8 +250,8 @@ public class HomeworkServiceImpl implements HomeworkService {
         if (submission == null || submission.getObjectName() == null) {
             throw new BusinessException("提交文件不存在");
         }
-        
+
         IFileStorage storage = storageProvider.getStorage();
         storage.download(submission.getObjectName(), response);
     }
-} 
+}

@@ -79,6 +79,7 @@ public class Question {
 
     public enum QuestionType {
         singlechoice,
+        multiplechoice,
         program,
         fillblank
     }

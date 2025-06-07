@@ -238,6 +238,17 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/exercise/edit/:id',
+    name: 'ExerciseEdit',
+    component: () => import('../views/exercise/ExerciseEdit.vue'),
+    meta: {
+      title: '编辑练习',
+      requiresAuth: true,
+      roles: ['teacher', 'tutor'],
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

@@ -67,4 +67,14 @@ public class CourseController {
             return Result.error(500, "删除课程失败：" + e.getMessage());
         }
     }
+
+    @GetMapping("/list")
+    public Result<List<CourseDetailDTO>> getAllCourses() {
+        try {
+            List<CourseDetailDTO> courses = courseService.getAllCourses();
+            return Result.success(courses);
+        } catch (Exception e) {
+            return Result.error(500, "获取课程列表失败：" + e.getMessage());
+        }
+    }
 } 
