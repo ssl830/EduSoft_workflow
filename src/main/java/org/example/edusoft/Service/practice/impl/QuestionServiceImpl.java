@@ -304,4 +304,38 @@ public class QuestionServiceImpl implements QuestionService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    public List<QuestionListDTO> getAllQuestions() {
+        List<Map<String, Object>> questions = questionMapper.getAllQuestionsWithNames();
+        return questions.stream().map(q -> {
+            QuestionListDTO dto = new QuestionListDTO();
+            dto.setId(((Number) q.get("id")).longValue());
+            dto.setName((String) q.get("content"));
+            dto.setCourseId(((Number) q.get("course_id")).longValue());
+            dto.setCourseName((String) q.get("course_name"));
+            dto.setSectionId(((Number) q.get("section_id")).longValue());
+            dto.setSectionName((String) q.get("section_name"));
+            dto.setTeacherId(String.valueOf(q.get("creator_id")));
+            dto.setType(String.valueOf(q.get("type")));
+            dto.setAnswer((String) q.get("answer"));
+            
+            // 处理选项
+            if ("singlechoice".equals(q.get("type")) && q.get("options") != null) {
+                String[] options = ((String) q.get("options")).split("\\|\\|\\|");
+                List<Map<String, String>> formattedOptions = new ArrayList<>();
+                for (int i = 0; i < options.length; i++) {
+                    Map<String, String> option = new HashMap<>();
+                    option.put("key", String.valueOf((char)('A' + i)));
+                    option.put("text", options[i]);
+                    formattedOptions.add(option);
+                }
+                dto.setOptions(formattedOptions);
+            } else {
+                dto.setOptions(new ArrayList<>());
+            }
+            
+            return dto;
+        }).collect(Collectors.toList());
+    }
 } 

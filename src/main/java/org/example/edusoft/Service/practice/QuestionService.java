@@ -81,4 +81,10 @@ public interface QuestionService {
      * @return 题目列表DTO
      */
     List<QuestionListDTO> getQuestionListByCourse(Long courseId);
+
+    /**
+     * 获取所有题目列表
+     * @return 题目列表DTO
+     */
+    List<QuestionListDTO> getAllQuestions();
 } 

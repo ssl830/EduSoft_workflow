@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import {ref, onMounted, watch} from 'vue'
-import QuestionApi from '../../api/question.ts'
-import {useAuthStore} from "../../stores/auth.ts";
-import CourseApi from "../../api/course.ts";
+import {ref, onMounted, watch, onBeforeMount, reactive} from 'vue'
+import {useRouter} from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from "../../stores/auth"
+import QuestionApi from '../../api/question'
+import CourseApi from '../../api/course'
+import request from '../../api/axios'
 
 const authStore = useAuthStore()
 const isTeacher = authStore.userRole === 'teacher'
@@ -19,7 +22,7 @@ const selectedCourse = ref()
 
 // Chapters and types (will be populated from questions)
 const chapters = ref([])
-const courses = ref([])
+const courses = ref<Course[]>([])
 
 // File upload
 const showUploadForm = ref(false)
@@ -36,8 +39,22 @@ const uploadProgress = ref(0)
 const uploadError = ref('')
 
 // Temporary question data for editing
+interface Question {
+    type: string;
+    content: string;
+    options: { key: string; text: string; }[];
+    answer: string;
+    courseId: number;
+    sectionId: number;
+    analysis: string;
+    creatorId: number | undefined;
+    answerArray: string[];
+    range?: string;
+}
+
+// 临时存储题目数据
 const tempQuestion = ref({
-    type: 'single_choice',
+    type: 'singlechoice',
     content: '',
     options: [
         { key: 'A', text: '' },
@@ -45,31 +62,34 @@ const tempQuestion = ref({
         { key: 'C', text: '' },
         { key: 'D', text: '' }
     ],
-    answer: '', // 始终保持字符串类型
-    courseId: 0,
-    sectionId: 0,
     analysis: '',
+    courseId: null as number | null,
+    sectionId: null as number | null,
     creatorId: authStore.user?.id,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
-        return this.type === 'multiple_choice' && this.answer
+        return this.type === 'multiplechoice' && this.answer
             ? this.answer.split(',')
             : [];
     },
     set answerArray(values: string[]) {
         this.answer = values.join(',');
     },
-
+    answer: '' // 始终保持字符串类型
 })
 
 // Add an option for choice questions
 const addOption = () => {
+    console.warn('=== 添加选项 ===')
     const nextKey = String.fromCharCode(65 + tempQuestion.value.options.length)
     tempQuestion.value.options.push({ key: nextKey, text: '' })
+    console.warn('当前选项列表:', JSON.stringify(tempQuestion.value.options, null, 2))
 }
 
 // Remove an option
 const removeOption = (index: number) => {
+    console.warn('=== 删除选项 ===')
+    console.warn('要删除的选项索引:', index)
     if (tempQuestion.value.options.length > 2) {
         tempQuestion.value.options.splice(index, 1)
 
@@ -77,6 +97,7 @@ const removeOption = (index: number) => {
         tempQuestion.value.options.forEach((opt, i) => {
             opt.key = String.fromCharCode(65 + i)
         })
+        console.warn('删除后的选项列表:', JSON.stringify(tempQuestion.value.options, null, 2))
     }
 }
 
@@ -86,36 +107,49 @@ const fetchQuestions = async () => {
     error.value = ''
 
     try {
-        // 如果没有选择课程，获取所有课程的题目
-        if (!tempQuestion.value.courseId) {
-            const allQuestions = []
-            for (const course of courses.value) {
-                try {
-                    const response = await QuestionApi.getQuestionList({
-                        courseId: course.id
-                    })
-                    console.log(`获取课程 ${course.name} 的题目列表响应:`, response)
-                    
-                    if (response && response.data && response.data.data && Array.isArray(response.data.data.questions)) {
-                        allQuestions.push(...response.data.data.questions)
-                    }
-                } catch (err) {
-                    console.error(`获取课程 ${course.name} 的题目列表失败:`, err)
-                }
-            }
-            questions.value = allQuestions
-        } else {
-            // 获取单个课程的题目
-            const response = await QuestionApi.getQuestionList({
-                courseId: tempQuestion.value.courseId
-            })
-            console.log('获取题目列表响应:', response)
+        console.log('开始获取题目，selectedCourse:', selectedCourse.value)
 
-            if (response && response.data && response.data.data && Array.isArray(response.data.data.questions)) {
-                questions.value = response.data.data.questions
-            } else {
+        let params = {}
+        // 只在选中课程时传 courseId，否则查全部
+        if (selectedCourse.value) {
+            const courseId = Number(selectedCourse.value)
+            if (isNaN(courseId)) {
+                console.log('无效的courseId:', selectedCourse.value)
                 questions.value = []
+                return
             }
+            params = { courseId }
+        }
+
+        const response = await QuestionApi.getQuestionList(params)
+        console.log('获取题目列表响应:', response)
+
+        // 兼容所有课程和单课程的响应结构
+        let questionsData = []
+        if (response?.code === 200) {
+            if (response.data?.questions) {
+                questionsData = response.data.questions
+            } else if (Array.isArray(response.data)) {
+                questionsData = response.data
+            }
+        }
+
+        if (Array.isArray(questionsData) && questionsData.length > 0) {
+            questions.value = questionsData.map(q => {
+                let optionsArray = []
+                try {
+                    if (q.options && q.options[0] && q.options[0].text) {
+                        optionsArray = JSON.parse(q.options[0].text)
+                    }
+                } catch (e) {
+                    console.error('解析选项失败:', e)
+                }
+                return { ...q, optionsArray }
+            })
+            console.log('设置questions.value:', questions.value)
+        } else {
+            console.log('题目数据为空数组')
+            questions.value = []
         }
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
@@ -146,32 +180,34 @@ const sections = ref<Section[]>([])
 
 // 获取教师课程列表
 const fetchCourses = async () => {
-    try {
-        const response = await CourseApi.getUserCourses(authStore.user?.id)
-        // 直接使用 API 返回的课程对象数组
-        courses.value = response.data
-
-        // 删除下面两行，不再需要提取课程名称
-        // const courseSet = new Set(courses.value.map((r: any) => r.name).filter(Boolean))
-        // courses.value = Array.from(courseSet)
-    } catch (err) {
-        console.error('获取课程列表失败:', err)
+  try {
+    loading.value = true
+    const response = await CourseApi.getAllCourses()
+    const responseData = response?.data
+    if (responseData?.code === 200) {
+      // 添加"所有课程"选项
+      const courseList = [
+        { id: 0, name: '所有课程', code: 'all' },
+        ...(responseData.data || [])
+      ]
+      courses.value = courseList
+      console.log('成功获取课程列表:', courseList)
+    } else {
+      console.error('获取课程列表失败:', responseData)
+      courses.value = []
     }
+  } catch (error) {
+    console.error('获取课程列表失败:', error)
+    courses.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 // 监听课程选择变化
-watch(() => tempQuestion.value.courseId, (newCourseId) => {
-    if (newCourseId) {
-        const selectedCourse = courses.value.find(c => c.id === newCourseId)
-        sections.value = selectedCourse?.sections || []
-        console.log('章节列表:', sections.value)
-        tempQuestion.value.sectionId = 0 // 重置章节选择
-    } else {
-        sections.value = [] // 清空章节列表
-        tempQuestion.value.sectionId = 0 // 重置章节选择
-    }
-    // 当课程变化时，重新获取题目列表
-    fetchQuestions()
+watch(selectedCourse, (newCourse) => {
+  console.log('课程选择变化:', newCourse)
+  fetchQuestions() // 无论是否选中课程都获取题目列表
 })
 
 // watch(() => tempQuestion.value.courseId, (newCourseId) => {
@@ -190,36 +226,52 @@ watch(() => tempQuestion.value.courseId, (newCourseId) => {
 //     tempQuestion.value.sectionId = 0
 // })
 
-// 在onMounted中添加
+// 在组件挂载时获取课程列表
 onMounted(() => {
+    console.log('组件挂载')
     fetchCourses()
-    fetchQuestions()
+    // 如果有选中的课程，获取题目列表
+    if (selectedCourse.value) {
+        fetchQuestions()
+    }
+})
+
+// 添加生命周期钩子
+onBeforeMount(() => {
+    console.warn('组件即将挂载 - 测试控制台输出')
 })
 
 const addQuestion = async () => {
+    console.warn('=== 开始创建题目 ===')
+    console.warn('当前题目数据:', JSON.stringify(tempQuestion.value, null, 2))
+
     // Validate question data
     if (!tempQuestion.value.content) {
+        console.warn('题目内容为空')
         error.value = '请完成题目内容并设置分值'
         return
     }
 
     // Validate options for choice questions
-    if (['single_choice', 'multiple_choice'].includes(tempQuestion.value.type)) {
+    if (['singlechoice', 'multiplechoice'].includes(tempQuestion.value.type)) {
         const hasEmptyOption = tempQuestion.value.options.some(opt => !opt.text)
         if (hasEmptyOption) {
+            console.warn('存在空选项')
             error.value = '请填写所有选项内容'
             return
         }
 
         if (!tempQuestion.value.answer) {
+            console.warn('未设置答案')
             error.value = '请设置正确答案'
             return
         }
     }
 
     // 处理多选题答案格式
-    if (tempQuestion.value.type === 'multiple_choice') {
+    if (tempQuestion.value.type === 'multiplechoice') {
         if (!tempQuestion.value.answerArray.length) {
+            console.warn('多选题未设置答案')
             error.value = '请设置正确答案';
             return;
         }
@@ -227,16 +279,54 @@ const addQuestion = async () => {
 
     // 添加验证
     if (!tempQuestion.value.courseId) {
+        console.warn('未选择课程')
         error.value = '请选择所属课程'
         return
     }
 
+    // 处理选项格式
+    const formattedOptions = tempQuestion.value.options
+        .filter((opt: { key: string; text: string }) => opt.text.trim() !== '')  // 过滤掉空选项
+        .map((opt: { key: string; text: string }) => opt.text)
+
+    console.warn('格式化后的选项:', JSON.stringify(formattedOptions, null, 2))
+
+    // 验证选项
+    if (['singlechoice', 'multiplechoice'].includes(tempQuestion.value.type)) {
+        if (formattedOptions.length === 0) {
+            console.warn('没有有效选项')
+            error.value = '请至少添加一个选项'
+            return
+        }
+    }
+
+    // 处理答案格式
+    let formattedAnswer;
+    if (tempQuestion.value.type === 'multiplechoice') {
+        formattedAnswer = tempQuestion.value.answerArray;
+    } else {
+        formattedAnswer = tempQuestion.value.answer;
+    }
+
+    console.warn('格式化后的答案:', JSON.stringify(formattedAnswer, null, 2))
+
+    const questionData = {
+        type: tempQuestion.value.type,
+        content: tempQuestion.value.content,
+        options: formattedOptions,  // 直接发送字符串数组
+        answer: formattedAnswer,
+        courseId: tempQuestion.value.courseId,
+        sectionId: tempQuestion.value.sectionId,
+        analysis: tempQuestion.value.analysis,
+        creatorId: tempQuestion.value.creatorId
+    }
+
+    console.warn('准备发送到后端的数据:', JSON.stringify(questionData, null, 2))
+
     try {
-        console.log(tempQuestion.value)
-        const res = await QuestionApi.createQuestion({
-            ...tempQuestion.value,
-        })
-        console.log(res)
+        console.warn('开始发送请求')
+        const res = await QuestionApi.createQuestion(questionData)
+        console.warn('后端返回数据:', JSON.stringify(res, null, 2))
 
         // Reset form and refresh list
         resetUploadForm()
@@ -244,29 +334,38 @@ const addQuestion = async () => {
         fetchQuestions()
 
     } catch (err) {
+        console.error('创建题目失败:', err)
         uploadError.value = '上传问题失败，请稍后再试'
-        console.error(err)
     }
 }
 
 // Reset upload form
 const resetUploadForm = () => {
     tempQuestion.value = {
-        type: 'single_choice',
-        range: '',
+        type: 'singlechoice',
         content: '',
-        teacherId: authStore.user?.id,
         options: [
             { key: 'A', text: '' },
             { key: 'B', text: '' },
             { key: 'C', text: '' },
             { key: 'D', text: '' }
         ],
+        answer: '',
+        courseId: 0,
+        sectionId: 0,
         analysis: '',
-        answer: ''
+        creatorId: authStore.user?.id,
+        get answerArray(): string[] {
+            return this.type === 'multiplechoice' && this.answer
+                ? this.answer.split(',')
+                : [];
+        },
+        set answerArray(values: string[]) {
+            this.answer = values.join(',');
+        },
     }
-    uploadProgress.value = 0
     uploadError.value = ''
+    uploadProgress.value = 0
 }
 
 // 新增弹窗相关状态
@@ -281,7 +380,7 @@ const showQuestionDetail = (question: any) => {
 
 // 新增答案格式化方法
 const formatAnswer = (question: any) => {
-    if (question.type === 'multiple_choice') {
+    if (question.type === 'multiplechoice') {
         return question.answer.split(',').join(', ')
     }
     return question.answer
@@ -296,6 +395,55 @@ onMounted(() => {
     fetchQuestions()
 })
 
+// 获取课程相关的题目列表
+const fetchCourseQuestions = async () => {
+  try {
+    loading.value = true
+    const response = await QuestionApi.getQuestionList({
+      courseId: selectedCourse.value
+    })
+    console.log('获取到的题目列表:', response)
+    if (response.data.code === 200 && response.data.data) {
+      // 直接使用返回的questions数组
+      questions.value = response.data.data.questions.map((q: any) => {
+        // 解析选项JSON字符串
+        let optionsArray = []
+        try {
+          if (q.options && q.options[0] && q.options[0].text) {
+            optionsArray = JSON.parse(q.options[0].text)
+          }
+        } catch (e) {
+          console.error('解析选项失败:', e)
+        }
+
+        return {
+          id: q.id,
+          type: q.type,
+          content: q.name, // 使用name作为content
+          options: optionsArray.map((text: string, index: number) => ({
+            key: String.fromCharCode(65 + index), // A, B, C, D...
+            text: text
+          })),
+          answer: q.answer,
+          courseId: q.courseId,
+          courseName: q.courseName,
+          sectionId: q.sectionId,
+          sectionName: q.sectionName,
+          teacherId: q.teacherId
+        }
+      })
+      console.log('处理后的题目列表:', questions.value)
+    } else {
+      console.error('获取题目列表失败:', response.data.message)
+      error.value = response.data.message || '获取题目列表失败'
+    }
+  } catch (err: any) {
+    console.error('获取题目列表出错:', err)
+    error.value = err.message || '获取题目列表失败'
+  } finally {
+    loading.value = false
+  }
+}
 
 </script>
 
@@ -324,8 +472,8 @@ onMounted(() => {
                 <div class="form-group">
                     <label for="questionType">题目类型</label>
                     <select id="questionType" v-model="tempQuestion.type">
-                        <option value="single_choice">单选题</option>
-                        <option value="multiple_choice">多选题</option>
+                        <option value="singlechoice">单选题</option>
+                        <option value="multiplechoice">多选题</option>
                         <option value="true_false">判断题</option>
                         <option value="short_answer">简答题</option>
                         <option value="fill_blank">填空题</option>
@@ -384,7 +532,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Options for choice questions -->
-                <div v-if="['single_choice', 'multiple_choice'].includes(tempQuestion.type)" class="form-group">
+                <div v-if="['singlechoice', 'multiplechoice'].includes(tempQuestion.type)" class="form-group">
                     <label>选项</label>
                     <div
                         v-for="(option, index) in tempQuestion.options"
@@ -418,7 +566,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Answer for choice questions -->
-                <div v-if="tempQuestion.type === 'single_choice'" class="form-group">
+                <div v-if="tempQuestion.type === 'singlechoice'" class="form-group">
                     <label for="singleAnswer">正确答案</label>
                     <select id="singleAnswer" v-model="tempQuestion.answer">
                         <option value="" disabled>选择正确答案</option>
@@ -432,7 +580,7 @@ onMounted(() => {
                     </select>
                 </div>
 
-                <div v-if="tempQuestion.type === 'multiple_choice'" class="form-group">
+                <div v-if="tempQuestion.type === 'multiplechoice'" class="form-group">
                     <label>正确答案 (多选)</label>
                     <div class="checkbox-group">
                         <div
@@ -491,17 +639,29 @@ onMounted(() => {
         <!-- Filter Section -->
         <div class="resource-filters">
             <div class="filter-section">
-                <label for="typeFilter">按课程筛选:</label>
-                <select
-                    id="typeFilter"
-                    v-model="selectedCourse"
-                >
-                    <option value="">所有课程</option>
-                    <!-- 显示课程名称，绑定值为课程ID -->
-                    <option v-for="course in courses" :key="course.id" :value="course.id">
-                        {{ course.name }}
-                    </option>
-                </select>
+                <div class="filter-item">
+                    <label for="course">课程</label>
+                    <select id="course" v-model="selectedCourse" @change="fetchQuestions">
+                        <option value="">所有课程</option>
+                        <option v-for="course in courses" :key="course.id" :value="course.id">
+                            {{ course.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label for="typeFilter">按课程筛选:</label>
+                    <select
+                        id="typeFilter"
+                        v-model="selectedCourse"
+                    >
+                        <option value="">所有课程</option>
+                        <!-- 显示课程名称，绑定值为课程ID -->
+                        <option v-for="course in courses" :key="course.id" :value="course.id">
+                            {{ course.name }}
+                        </option>
+                    </select>
+                </div>
             </div>
 
 <!--            <div class="filter-section">-->
@@ -521,12 +681,19 @@ onMounted(() => {
         <!-- Resource List -->
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
-        <div v-else-if="questions.length === 0" class="empty-state">
-            暂无教学资料
-        </div>
-        <div v-else-if="!selectedCourse" class="error-message">请选择课程再查看题库</div>
         <div v-else class="resource-table-wrapper">
-            <table class="resource-table">
+            <!-- 添加调试信息 -->
+            <div style="background: #f5f5f5; padding: 10px; margin-bottom: 10px;">
+                <p>调试信息：</p>
+                <p>selectedCourse: {{ selectedCourse }}</p>
+                <p>questions长度: {{ questions.length }}</p>
+                <pre>{{ JSON.stringify(questions, null, 2) }}</pre>
+            </div>
+
+            <div v-if="questions.length === 0" class="empty-state">
+                暂无教学资料
+            </div>
+            <table v-else class="resource-table">
                 <thead>
                 <tr>
                     <th>题目内容</th>
@@ -540,7 +707,6 @@ onMounted(() => {
                     <td>{{ question.name }}</td>
                     <td>{{ question.courseName }}</td>
                     <td>{{ question.sectionName || '-' }}</td>
-                    <!--         aTODO: 时间-->
                     <td class="actions">
                         <button
                             class="btn-action preview"
@@ -573,8 +739,8 @@ onMounted(() => {
                         <div class="detail-row">
                             <label>题目类型:</label>
                             <span>{{
-                                    selectedQuestion.type === 'single_choice' ? '单选题' :
-                                        selectedQuestion.type === 'multiple_choice' ? '多选题' :
+                                    selectedQuestion.type === 'singlechoice' ? '单选题' :
+                                        selectedQuestion.type === 'multiplechoice' ? '多选题' :
                                             selectedQuestion.type === 'true_false' ? '判断题' :
                                                 selectedQuestion.type === 'short_answer' ? '简答题' : '填空题'
                                 }}</span>
@@ -585,16 +751,16 @@ onMounted(() => {
                         </div>
 
                         <!-- 选项展示 -->
-                        <div v-if="['single_choice', 'multiple_choice'].includes(selectedQuestion.type)"
+                        <div v-if="['singlechoice', 'multiplechoice'].includes(selectedQuestion.type)"
                              class="detail-row">
                             <label>题目选项:</label>
                             <div class="options-list">
-                                <div v-for="(opt, index) in selectedQuestion.options"
+                                <div v-for="(opt, index) in selectedQuestion.optionsArray"
                                      :key="index"
                                      class="option-item">
-                                    <span class="option-key">{{ opt.key }}.</span>
-                                    <span class="option-text">{{ opt.text }}</span>
-                                    <span v-if="selectedQuestion.answer.includes(opt.key)"
+                                    <span class="option-key">{{ String.fromCharCode(65 + index) }}.</span>
+                                    <span class="option-text">{{ opt }}</span>
+                                    <span v-if="selectedQuestion.answer === opt"
                                           class="correct-badge">✓</span>
                                 </div>
                             </div>
@@ -602,7 +768,7 @@ onMounted(() => {
 
                         <div class="detail-row">
                             <label>正确答案:</label>
-                            <span class="answer-text">{{ formatAnswer(selectedQuestion) }}</span>
+                            <span class="answer-text">{{ selectedQuestion.answer }}</span>
                         </div>
                     </div>
                 </div>
@@ -1037,12 +1203,12 @@ select:disabled {
     color: #1565c0;
 }
 
-.question-type-badge.single_choice {
+.question-type-badge.singlechoice {
     background-color: #e3f2fd;
     color: #1565c0;
 }
 
-.question-type-badge.multiple_choice {
+.question-type-badge.multiplechoice {
     background-color: #e8f5e9;
     color: #2e7d32;
 }
