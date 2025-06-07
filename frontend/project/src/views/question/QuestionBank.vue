@@ -183,22 +183,21 @@ const fetchCourses = async () => {
   try {
     loading.value = true
     const response = await CourseApi.getAllCourses()
-    const responseData = response?.data
-    if (responseData?.code === 200) {
+    if (response?.code === 200) {
       // 添加"所有课程"选项
       const courseList = [
         { id: 0, name: '所有课程', code: 'all' },
-        ...(responseData.data || [])
+        ...response.data
       ]
       courses.value = courseList
       console.log('成功获取课程列表:', courseList)
     } else {
-      console.error('获取课程列表失败:', responseData)
       courses.value = []
+      console.error('获取课程列表失败:', response)
     }
   } catch (error) {
-    console.error('获取课程列表失败:', error)
     courses.value = []
+    console.error('获取课程列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -230,10 +229,7 @@ watch(selectedCourse, (newCourse) => {
 onMounted(() => {
     console.log('组件挂载')
     fetchCourses()
-    // 如果有选中的课程，获取题目列表
-    if (selectedCourse.value) {
-        fetchQuestions()
-    }
+    fetchQuestions()
 })
 
 // 添加生命周期钩子
@@ -640,22 +636,11 @@ const fetchCourseQuestions = async () => {
         <div class="resource-filters">
             <div class="filter-section">
                 <div class="filter-item">
-                    <label for="course">课程</label>
-                    <select id="course" v-model="selectedCourse" @change="fetchQuestions">
-                        <option value="">所有课程</option>
-                        <option v-for="course in courses" :key="course.id" :value="course.id">
-                            {{ course.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="filter-item">
                     <label for="typeFilter">按课程筛选:</label>
                     <select
                         id="typeFilter"
                         v-model="selectedCourse"
                     >
-                        <option value="">所有课程</option>
                         <!-- 显示课程名称，绑定值为课程ID -->
                         <option v-for="course in courses" :key="course.id" :value="course.id">
                             {{ course.name }}
@@ -682,13 +667,6 @@ const fetchCourseQuestions = async () => {
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div v-else class="resource-table-wrapper">
-            <!-- 添加调试信息 -->
-            <div style="background: #f5f5f5; padding: 10px; margin-bottom: 10px;">
-                <p>调试信息：</p>
-                <p>selectedCourse: {{ selectedCourse }}</p>
-                <p>questions长度: {{ questions.length }}</p>
-                <pre>{{ JSON.stringify(questions, null, 2) }}</pre>
-            </div>
 
             <div v-if="questions.length === 0" class="empty-state">
                 暂无教学资料
