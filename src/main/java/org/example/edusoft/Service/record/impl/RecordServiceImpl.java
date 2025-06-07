@@ -99,25 +99,40 @@ public class RecordServiceImpl implements RecordService {
     @Override
     public byte[] exportStudyRecordsByCourseToExcel(Long studentId, Long courseId) {
         List<StudyRecord> studyRecords = getStudyRecordsByCourse(studentId, courseId);
+        System.out.println("查询到的学习记录数量: " + (studyRecords != null ? studyRecords.size() : 0));
+        if (studyRecords != null && !studyRecords.isEmpty()) {
+            System.out.println("第一条记录: " + studyRecords.get(0));
+        }
+        
         try (Workbook workbook = new XSSFWorkbook()) {
             // 创建学习记录sheet
             Sheet studySheet = workbook.createSheet("学习记录");
             Row headerRow = studySheet.createRow(0);
             headerRow.createCell(0).setCellValue("课程");
             headerRow.createCell(1).setCellValue("章节");
-            headerRow.createCell(2).setCellValue("完成状态");
-            headerRow.createCell(3).setCellValue("完成时间");
+            headerRow.createCell(2).setCellValue("资源标题");
+            headerRow.createCell(3).setCellValue("学习进度");
+            headerRow.createCell(4).setCellValue("观看次数");
+            headerRow.createCell(5).setCellValue("最后观看时间");
+            headerRow.createCell(6).setCellValue("最后观看位置(秒)");
+            
             int rowNum = 1;
             for (StudyRecord record : studyRecords) {
                 Row row = studySheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(record.getCourseName());
-                row.createCell(1).setCellValue(record.getSectionTitle());
-                row.createCell(2).setCellValue(record.getCompleted() ? "已完成" : "未完成");
-                row.createCell(3).setCellValue(
-                        record.getCompletedAt() != null
-                                ? record.getCompletedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                : "");
+                row.createCell(0).setCellValue(record.getCourseName() != null ? record.getCourseName() : "");
+                row.createCell(1).setCellValue(record.getSectionTitle() != null ? record.getSectionTitle() : "");
+                row.createCell(2).setCellValue(record.getResourceTitle() != null ? record.getResourceTitle() : "");
+                row.createCell(3).setCellValue(record.getFormattedProgress());
+                row.createCell(4).setCellValue(record.getWatchCount() != null ? record.getWatchCount() : 0);
+                row.createCell(5).setCellValue(record.getFormattedLastWatchTime());
+                row.createCell(6).setCellValue(record.getLastPosition() != null ? record.getLastPosition() : 0);
             }
+            
+            // 自动调整列宽
+            for (int i = 0; i < 7; i++) {
+                studySheet.autoSizeColumn(i);
+            }
+            
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             return outputStream.toByteArray();

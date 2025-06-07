@@ -1,22 +1,33 @@
 package org.example.edusoft.entity.record;
+
 import java.time.LocalDateTime;
 import lombok.Data;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import javax.persistence.*;
 
-@NoArgsConstructor  // 添加无参构造函数
-@AllArgsConstructor // 添加全参构造函数
-@Entity
 @Data
 public class StudyRecord {
     private Long id;
+    private Long resourceId;
     private Long studentId;
-    private Long courseId;
-    private Long sectionId;
-    private Boolean completed;
-    private LocalDateTime completedAt;
-    // 关联属性
+    private Double progress;
+    private Integer lastPosition;
+    private Integer watchCount;
+    private LocalDateTime lastWatchTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+    // 关联字段
+    private String resourceTitle;
     private String courseName;
     private String sectionTitle;
+    
+    // 用于Excel导出的格式化方法
+    public String getFormattedProgress() {
+        return String.format("%.2f%%", progress * 100);
+    }
+    
+    public String getFormattedLastWatchTime() {
+        return lastWatchTime != null ? 
+            lastWatchTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : 
+            "";
+    }
 }

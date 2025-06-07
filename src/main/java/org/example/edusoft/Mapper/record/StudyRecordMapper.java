@@ -9,22 +9,48 @@ import org.example.edusoft.entity.record.StudyRecord; // Make sure this path mat
 @Mapper
 public interface StudyRecordMapper {
     @Select("""
-                SELECT p.*, c.name as course_name, cs.title as section_title
-                FROM Progress p
-                LEFT JOIN Course c ON p.course_id = c.id
-                LEFT JOIN CourseSection cs ON p.section_id = cs.id
-                WHERE p.student_id = #{studentId}
-                ORDER BY p.completed_at DESC
+                SELECT 
+                    lp.id,
+                    lp.resource_id,
+                    lp.student_id,
+                    lp.progress,
+                    lp.last_position,
+                    lp.watch_count,
+                    lp.last_watch_time,
+                    lp.created_at,
+                    lp.updated_at,
+                    tr.title as resource_title,
+                    c.name as course_name,
+                    cs.title as section_title
+                FROM learning_progress lp
+                LEFT JOIN teaching_resource tr ON lp.resource_id = tr.id
+                LEFT JOIN CourseSection cs ON tr.chapter_id = cs.id
+                LEFT JOIN Course c ON cs.course_id = c.id
+                WHERE lp.student_id = #{studentId}
+                ORDER BY lp.last_watch_time DESC
             """)
     List<StudyRecord> findStudyRecords(@Param("studentId") Long studentId);
 
     @Select("""
-                SELECT p.*, c.name as course_name, cs.title as section_title
-                FROM Progress p
-                LEFT JOIN Course c ON p.course_id = c.id
-                LEFT JOIN CourseSection cs ON p.section_id = cs.id
-                WHERE p.student_id = #{studentId} and p.course_id=#{courseId}
-                ORDER BY p.completed_at DESC
+                SELECT 
+                    lp.id,
+                    lp.resource_id,
+                    lp.student_id,
+                    lp.progress,
+                    lp.last_position,
+                    lp.watch_count,
+                    lp.last_watch_time,
+                    lp.created_at,
+                    lp.updated_at,
+                    tr.title as resource_title,
+                    c.name as course_name,
+                    cs.title as section_title
+                FROM learning_progress lp
+                LEFT JOIN teaching_resource tr ON lp.resource_id = tr.id
+                LEFT JOIN CourseSection cs ON tr.chapter_id = cs.id
+                LEFT JOIN Course c ON cs.course_id = c.id
+                WHERE lp.student_id = #{studentId} AND c.id = #{courseId}
+                ORDER BY lp.last_watch_time DESC
             """)
     List<StudyRecord> findByStudentIdAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
