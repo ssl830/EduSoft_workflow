@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import ClassCard from '../../components/class/ClassCard.vue'
 import ClassApi from '../../api/class'
 import CourseApi from '../../api/course'  // 新增课程API引入
+import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
 const classes = ref([])
@@ -116,49 +117,27 @@ const createClass = async () => {
     return
   }
 
-  const timeFormat = /^\d{4}-\d{4}$/
-  if (!timeFormat.test(newClass.value.classTime)) {
-    errorDialog.value = '时间格式应为 0800-0935 格式'
-    return
-  }
-
-  // 在格式验证后添加时间有效性检查
-  const [startTime, endTime] = newClass.value.classTime.split('-')
-  if (!isValidTime(startTime) || !isValidTime(endTime)) {
-    errorDialog.value = '无效的时间值（时间范围应为0000-2359）'
-    return
-  }
-
-  const toMinutes = (time: string) => {
-    const hours = parseInt(time.slice(0, 2))
-    const minutes = parseInt(time.slice(2))
-    return hours * 60 + minutes
-  }
-
-  const startMinutes = toMinutes(startTime)
-  const endMinutes = toMinutes(endTime)
-
-  // 验证时间顺序
-  if (startMinutes >= endMinutes) {
-    errorDialog.value = '开始时间必须早于结束时间'
-    return
-  }
-
   try {
-    await ClassApi.createClass({
+    const classData = {
       courseId: newClass.value.courseId,
-      name: newClass.value.classTime,
-      code: newClass.value.classCode,
-    })
+      name: `${courses.value.find(c => c.id === newClass.value.courseId)?.name || ''} ${newClass.value.classTime}`,
+      classCode: newClass.value.classCode
+    }
 
-    // 重置表单
-    resetUploadForm()
-
-    // 刷新列表
-    await fetchClasses()
-  } catch (err) {
-    errorDialog.value = '创建班级失败: ' + (err.response?.data?.message || '请稍后再试')
-    console.error(err)
+    console.log('发送的班级数据:', classData)
+    const response = await ClassApi.createClass(classData)
+    
+    // 检查响应状态
+    if (response?.data) {
+      ElMessage.success('班级创建成功')
+      resetUploadForm()
+      fetchClasses()
+    } else {
+      errorDialog.value = '创建班级失败'
+    }
+  } catch (error) {
+    console.error('创建班级失败:', error)
+    errorDialog.value = '创建班级失败，请重试'
   }
 }
 
