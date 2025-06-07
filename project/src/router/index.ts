@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-// import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 import Home from '../views/Home.vue'
 import Login from '../views/auth/Login.vue'
@@ -81,6 +81,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/exercise/create',
+    name: 'ExerciseCreate',
     component: () => import('../views/exercise/ExerciseCreate.vue'),
     meta: {
       title: '创建练习',
@@ -180,6 +181,15 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
+  },  {
+    path: '/CourseCalendar',
+    name: 'CourseCalendar',
+    component: () => import('../views/CourseCalendar/CourseCalendar.vue'),
+    meta: {
+      title: '课程表',
+      requiresAuth: true,
+      showSidebar: true
+    }
   },
   {
     path: '/profile',
@@ -190,10 +200,9 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
-  },
-  {
+  },  {
     path: '/courses/:courseId/discussions',
-    name: 'CourseDiscussionList',
+    name: 'CourseDiscussionList', // 重命名以区分
     component: DiscussionList,
     props: true,
     meta: { requiresAuth: true }
@@ -202,7 +211,7 @@ const routes: RouteRecordRaw[] = [
     path: '/discussions',
     name: 'GeneralDiscussionList',
     component: DiscussionList,
-    meta: {
+    meta: { 
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
     }
@@ -212,19 +221,9 @@ const routes: RouteRecordRaw[] = [
     name: 'ThreadDetail',
     component: ThreadDetail,
     props: true, // Pass route params as props to the component
-    meta: {
+    meta: { 
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
-    }  
-  },
-  {
-    path: '/help',
-    name: 'HelpAndFeedback',
-    component: () => import('../views/help/HelpAndFeedback.vue'), // Changed path
-    meta: {
-      title: '帮助与反馈',
-      requiresAuth: false,
-      showSidebar: true
     }
   },
   {
@@ -237,6 +236,7 @@ const routes: RouteRecordRaw[] = [
       showSidebar: true
     }
   },
+  
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',

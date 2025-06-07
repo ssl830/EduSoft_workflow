@@ -8,18 +8,8 @@
           通知中心
           <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
         </h1>
-      </div>
-      <div class="toolbar-right">
-        <!-- 教师/助教发送通知按钮 -->
-        <button 
-          v-if="userRole === 'teacher' || userRole === 'assistant'" 
-          @click="showCreateNotificationModal = true"
-          class="create-notification-btn"
-        >
-          <i class="fa fa-plus"></i>
-          发送通知
-        </button>
-          <!-- 操作按钮 -->
+      </div>      <div class="toolbar-right">
+        <!-- 操作按钮 -->
         <div class="action-buttons">
           <button @click="markAllAsRead" class="action-btn" :disabled="unreadCount === 0">
             <i class="fa fa-check-double"></i>
@@ -97,7 +87,8 @@
       <div v-if="loading" class="loading-state">
         <i class="fa fa-spinner fa-spin fa-2x"></i>
         <p>正在加载通知...</p>
-      </div>      <!-- 通知列表 -->
+      </div>     
+       <!-- 通知列表 -->
       <div v-else-if="filteredNotifications.length" class="notification-list">
         <div 
           v-for="notification in filteredNotifications" 
@@ -263,75 +254,7 @@
         <i class="fa fa-tasks fa-2x"></i>
         <p>{{ showCompletedTasks ? '没有已完成的任务' : '还没有个人任务，添加一个开始吧！' }}</p>
       </div>
-    </div>
-
-    <!-- 创建通知模态框 -->
-    <Teleport to="body">
-      <div v-if="showCreateNotificationModal" class="modal-overlay" @click.self="closeCreateNotificationModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>发送通知</h3>
-            <button @click="closeCreateNotificationModal" class="modal-close">
-              <i class="fa fa-times"></i>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="createNotification">
-              <div class="form-group">
-                <label>通知类型:</label>                <select v-model="newNotification.type" required>
-                  <option value="task">任务通知</option>
-                  <option value="course">课程通知</option>
-                  <option value="deadline">DDL提醒</option>
-                  <option value="system_notice">系统通知</option> <!-- 使用system_notice类型，最终映射为COURSE_NOTICE -->
-                </select>
-              </div>
-              <div class="form-group">
-                <label>标题:</label>
-                <input v-model="newNotification.title" type="text" required />
-              </div>
-              <div class="form-group">
-                <label>内容:</label>
-                <textarea v-model="newNotification.content" rows="4" required></textarea>
-              </div>
-              <div class="form-group" v-if="newNotification.type === 'task' || newNotification.type === 'deadline'">
-                <label>截止日期:</label>
-                <input v-model="newNotification.dueDate" type="datetime-local" />
-              </div>
-              <div class="form-group">
-                <label>优先级:</label>
-                <select v-model="newNotification.priority">
-                  <option value="low">低</option>
-                  <option value="medium">中</option>
-                  <option value="high">高</option>
-                  <option value="urgent">紧急</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>发送范围:</label>
-                <select v-model="newNotification.targetType">
-                  <option value="class">当前班级</option>
-                  <option value="individual">指定学生</option>
-                  <option value="all">所有学生</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>任务链接（可选）:</label>
-                <input v-model="newNotification.link" type="url" placeholder="https://..." />
-              </div>
-              <div class="form-actions">
-                <button type="button" @click="closeCreateNotificationModal" class="cancel-btn">取消</button>
-                <button type="submit" class="submit-btn" :disabled="creatingNotification">
-                  <i v-if="creatingNotification" class="fa fa-spinner fa-spin"></i>
-                  发送通知
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- 编辑任务模态框 -->
+    </div>    <!-- 编辑任务模态框 -->
     <Teleport to="body">
       <div v-if="showEditTaskModal" class="modal-overlay" @click.self="closeEditTaskModal">
         <div class="modal-content">
@@ -413,7 +336,7 @@
                 <span class="toggle-label">{{ notificationSettings.enableDeadlineReminders ? '已启用' : '已禁用' }}</span>
               </div>
               <div class="form-group" v-if="notificationSettings.enableDeadlineReminders">
-                <label>提醒时间:</label>
+                <label>提醒时间:</label>                
                 <div class="reminder-times">
                   <div v-for="(_, index) in notificationSettings.reminderDays" :key="index" class="reminder-time">
                     <input 
@@ -470,45 +393,28 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import notificationApi, { 
-  type Notification, 
-  type PersonalTask, 
-  NotificationType
-} from '../../api/notification';
+import { notificationApi } from '../../api/notification';
+import type { FrontendNotification, PersonalTask } from '../../api/notification';
 import { useAuthStore } from '../../stores/auth';
 
 // 使用认证状态管理
 const authStore = useAuthStore();
 
 // 响应式数据
-const notifications = ref<Notification[]>([]);
+const notifications = ref<FrontendNotification[]>([]);
 const personalTasks = ref<PersonalTask[]>([]);
 const activeFilter = ref('all');
 const loading = ref(false);
 const error = ref<string | null>(null);
 const unreadCount = ref(0);
+
+// 个人任务相关状态
 const showCompletedTasks = ref(false);
 
-// 从认证状态获取用户角色
-const userRole = computed(() => authStore.user?.role || 'student');
-
 // 模态框状态
-const showCreateNotificationModal = ref(false);
 const showEditTaskModal = ref(false);
 const showSettingsModal = ref(false);
-const creatingNotification = ref(false);
 const updatingSettings = ref(false);
-
-// 新建通知
-const newNotification = ref({
-  type: 'task' as const,
-  title: '',
-  content: '',
-  dueDate: '',
-  priority: 'medium' as const,
-  targetType: 'class' as const,
-  link: ''
-});
 
 // 新建任务
 const newTaskTitle = ref('');
@@ -519,8 +425,8 @@ const newTaskPriority = ref('medium');
 const editingTask = ref<Partial<PersonalTask>>({});
 
 // 定时器
-let deadlineCheckInterval: number | null = null;
-let notificationUpdateInterval: number | null = null;
+let deadlineCheckInterval: NodeJS.Timeout | null = null;
+let notificationUpdateInterval: NodeJS.Timeout | null = null;
 let websocket: WebSocket | null = null;
 
 // 筛选器配置
@@ -530,23 +436,21 @@ const filters = [
   { key: 'task', label: '任务', icon: 'fa fa-tasks' },
   { key: 'deadline', label: 'DDL提醒', icon: 'fa fa-clock-o' },
   { key: 'course', label: '课程通知', icon: 'fa fa-graduation-cap' },
-  { key: 'system_notice', label: '系统通知', icon: 'fa fa-cog' }, // 不使用'system'类型，避免与后端枚举不匹配
-  { key: 'discussion', label: '讨论回复', icon: 'fa fa-comments' }, // 添加讨论回复过滤器
-  { key: 'assignment', label: '作业通知', icon: 'fa fa-file-text-o' } // 添加作业通知过滤器
+  { key: 'system', label: '系统通知', icon: 'fa fa-cog' }
 ];
 
 // 计算属性
 const filteredNotifications = computed(() => {
-  let filtered = notifications.value;    switch (activeFilter.value) {
+  let filtered = notifications.value;
+  
+  switch (activeFilter.value) {
     case 'unread':
       filtered = filtered.filter(n => !n.read);
       break;
     case 'task':
     case 'deadline':
     case 'course':
-    case 'system_notice': // 使用system_notice代替system
-    case 'discussion': // 添加讨论回复过滤
-    case 'assignment': // 添加作业通知过滤
+    case 'system':
       filtered = filtered.filter(n => n.type === activeFilter.value);
       break;
   }
@@ -592,9 +496,8 @@ const getTypeIcon = (type: string) => {
     task: 'fa fa-tasks',
     deadline: 'fa fa-clock-o',
     course: 'fa fa-graduation-cap',
-    system_notice: 'fa fa-cog', // 使用system_notice代替system
-    assignment: 'fa fa-file-text-o',
-    discussion: 'fa fa-comments' // 添加讨论回复图标
+    system: 'fa fa-cog',
+    assignment: 'fa fa-file-text-o'
   };
   return icons[type as keyof typeof icons] || 'fa fa-bell';
 };
@@ -604,9 +507,8 @@ const getTypeLabel = (type: string) => {
     task: '新任务',
     deadline: 'DDL提醒',
     course: '课程通知',
-    system_notice: '系统通知', // 使用system_notice代替system
-    assignment: '作业通知',
-    discussion: '讨论回复' // 添加讨论回复标签
+    system: '系统通知',
+    assignment: '作业通知'
   };
   return labels[type as keyof typeof labels] || '通知';
 };
@@ -615,10 +517,7 @@ const getSenderRoleLabel = (role: string) => {
   const labels = {
     teacher: '教师',
     assistant: '助教',
-    system: '系统', // 这里保留'system'因为这是发送者角色，不是通知类型
-    course: '系统', // 添加'course'作为系统角色的别名，增强兼容性
-    student: '同学', // 讨论回复可能来自学生
-    discussion: '讨论区' // 讨论区系统通知
+    system: '系统'
   };
   return labels[role as keyof typeof labels] || '';
 };
@@ -694,12 +593,8 @@ const getEmptyMessage = () => {
       return '没有DDL提醒';
     case 'course':
       return '没有课程通知';
-    case 'system_notice': // 使用system_notice代替system
+    case 'system':
       return '没有系统通知';
-    case 'discussion': // 添加讨论回复的提示
-      return '没有讨论回复';
-    case 'assignment': // 添加作业通知的提示
-      return '没有作业通知';
     default:
       return '暂无通知';
   }
@@ -708,19 +603,11 @@ const getEmptyMessage = () => {
 // 通知操作
 const markAsRead = async (id: number) => {
   try {
-    const success = await notificationApi.markAsRead(id);
-    if (success) {
-      const notification = notifications.value.find(n => n.id === id);
-      if (notification && !notification.read) {
-        notification.read = true;
-        // 同时更新readFlag，保持一致性
-        if ('readFlag' in notification) {
-          notification.readFlag = true;
-        }
-        unreadCount.value = Math.max(0, unreadCount.value - 1);
-      }
-    } else {
-      throw new Error('操作失败');
+    await notificationApi.markAsRead(id);
+    const notification = notifications.value.find(n => n.id === id);
+    if (notification && !notification.read) {
+      notification.read = true;
+      unreadCount.value = Math.max(0, unreadCount.value - 1);
     }
   } catch (err) {
     console.error('标记通知已读失败:', err);
@@ -731,26 +618,14 @@ const markAsRead = async (id: number) => {
 
 const markAllAsRead = async () => {
   try {
-    if (unreadCount.value === 0) return;
+    const unreadIds = notifications.value.filter(n => !n.read).map(n => n.id);
+    if (unreadIds.length === 0) return;
     
-    // 使用后端的全部标记已读API
-    const success = await notificationApi.markAllAsRead();
-    
-    if (success) {
-      // 更新前端状态
-      notifications.value.forEach(n => {
-        if (!n.read) {
-          n.read = true;
-          // 同时更新readFlag，保持一致性
-          if ('readFlag' in n) {
-            n.readFlag = true;
-          }
-        }
-      });
-      unreadCount.value = 0;
-    } else {
-      throw new Error('操作失败');
-    }
+    await notificationApi.markMultipleAsRead(unreadIds);
+    notifications.value.forEach(n => {
+      if (!n.read) n.read = true;
+    });
+    unreadCount.value = 0;
   } catch (err) {
     console.error('批量标记已读失败:', err);
     error.value = '批量标记已读失败，请重试';
@@ -761,18 +636,14 @@ const deleteNotification = async (id: number) => {
   if (!confirm('确定要删除这条通知吗？')) return;
   
   try {
-    const success = await notificationApi.deleteNotification(id);
-    if (success) {
-      const index = notifications.value.findIndex(n => n.id === id);
-      if (index > -1) {
-        const notification = notifications.value[index];
-        if (!notification.read) {
-          unreadCount.value = Math.max(0, unreadCount.value - 1);
-        }
-        notifications.value.splice(index, 1);
+    await notificationApi.deleteNotification(id);
+    const index = notifications.value.findIndex(n => n.id === id);
+    if (index > -1) {
+      const notification = notifications.value[index];
+      if (!notification.read) {
+        unreadCount.value = Math.max(0, unreadCount.value - 1);
       }
-    } else {
-      throw new Error('操作失败');
+      notifications.value.splice(index, 1);
     }
   } catch (err) {
     console.error('删除通知失败:', err);
@@ -790,52 +661,6 @@ const refreshNotifications = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-// 创建通知
-const createNotification = async () => {
-  if (!newNotification.value.title.trim() || !newNotification.value.content.trim()) {
-    error.value = '标题和内容不能为空';
-    return;
-  }
-  
-  creatingNotification.value = true;
-  try {
-    // 将前端通知格式转换为后端格式
-    await notificationApi.createNotification({
-      title: newNotification.value.title,
-      message: newNotification.value.content, // 对应后端message字段
-      readFlag: false, // 对应后端readFlag字段
-      type: mapFrontendTypeToBackend(newNotification.value.type), // 映射类型
-      // 其他必要字段
-      senderRole: userRole.value as any,
-      senderId: authStore.user?.id?.toString(),
-      autoGenerated: false
-    });
-    
-    closeCreateNotificationModal();
-    await refreshNotifications();
-    error.value = null;
-  } catch (err) {
-    console.error('创建通知失败:', err);
-    error.value = '创建通知失败，请重试';
-  } finally {
-    creatingNotification.value = false;
-  }
-};
-
-const closeCreateNotificationModal = () => {
-  showCreateNotificationModal.value = false;
-  // 重置表单
-  newNotification.value = {
-    type: 'task',
-    title: '',
-    content: '',
-    dueDate: '',
-    priority: 'medium',
-    targetType: 'class',
-    link: ''
-  };
 };
 
 // 个人任务操作
@@ -944,33 +769,34 @@ const notificationSettings = ref({
   }
 });
 
-// 加载通知设置
-const loadNotificationSettings = async () => {
+const closeSettingsModal = () => {
+  showSettingsModal.value = false;
+};
+
+// 加载通知设置（从本地存储）
+const loadNotificationSettingsFromLocal = () => {
   try {
-    const settings = await notificationApi.getNotificationSettings();
-    notificationSettings.value = { ...notificationSettings.value, ...settings };
+    const stored = localStorage.getItem('notificationSettings');
+    if (stored) {
+      const settings = JSON.parse(stored);
+      notificationSettings.value = { ...notificationSettings.value, ...settings };
+    }
   } catch (err) {
     console.error('加载通知设置失败:', err);
   }
 };
 
-// 保存通知设置
+// 保存通知设置（到本地存储）
 const saveNotificationSettings = async () => {
-  updatingSettings.value = true;
   try {
-    await notificationApi.updateNotificationSettings(notificationSettings.value);
+    localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings.value));
     closeSettingsModal();
-    error.value = null;
+    // 可以在这里添加成功提示
+    console.log('通知设置已保存');
   } catch (err) {
     console.error('保存通知设置失败:', err);
     error.value = '保存设置失败，请重试';
-  } finally {
-    updatingSettings.value = false;
   }
-};
-
-const closeSettingsModal = () => {
-  showSettingsModal.value = false;
 };
 
 // 批量操作
@@ -1004,26 +830,21 @@ const deleteSelectedNotifications = async () => {
   
   try {
     // 并行删除所有选中的通知
-    const results = await Promise.all(
+    await Promise.all(
       selectedNotifications.value.map(id => notificationApi.deleteNotification(id))
     );
     
-    // 检查结果
-    if (results.every(success => success)) {
-      // 更新本地状态
-      selectedNotifications.value.forEach(id => {
-        const index = notifications.value.findIndex(n => n.id === id);
-        if (index > -1) {
-          const notification = notifications.value[index];
-          if (!notification.read) {
-            unreadCount.value = Math.max(0, unreadCount.value - 1);
-          }
-          notifications.value.splice(index, 1);
+    // 更新本地状态
+    selectedNotifications.value.forEach(id => {
+      const index = notifications.value.findIndex(n => n.id === id);
+      if (index > -1) {
+        const notification = notifications.value[index];
+        if (!notification.read) {
+          unreadCount.value = Math.max(0, unreadCount.value - 1);
         }
-      });
-    } else {
-      throw new Error('部分删除操作失败');
-    }
+        notifications.value.splice(index, 1);
+      }
+    });
     
     selectedNotifications.value = [];
     error.value = null;
@@ -1045,27 +866,19 @@ const markSelectedAsRead = async () => {
     
     if (unreadSelectedIds.length === 0) return;
     
-    const success = await notificationApi.markMultipleAsRead(unreadSelectedIds);
+    await notificationApi.markMultipleAsRead(unreadSelectedIds);
     
-    if (success) {
-      // 更新本地状态
-      unreadSelectedIds.forEach(id => {
-        const notification = notifications.value.find(n => n.id === id);
-        if (notification && !notification.read) {
-          notification.read = true;
-          // 同时更新readFlag，保持一致性
-          if ('readFlag' in notification) {
-            notification.readFlag = true;
-          }
-          unreadCount.value = Math.max(0, unreadCount.value - 1);
-        }
-      });
-      
-      selectedNotifications.value = [];
-      error.value = null;
-    } else {
-      throw new Error('批量操作失败');
-    }
+    // 更新本地状态
+    unreadSelectedIds.forEach(id => {
+      const notification = notifications.value.find(n => n.id === id);
+      if (notification && !notification.read) {
+        notification.read = true;
+        unreadCount.value = Math.max(0, unreadCount.value - 1);
+      }
+    });
+    
+    selectedNotifications.value = [];
+    error.value = null;
   } catch (err) {
     console.error('批量标记已读失败:', err);
     error.value = '批量标记已读失败，请重试';
@@ -1076,121 +889,29 @@ const markSelectedAsRead = async () => {
 const loadNotifications = async () => {
   try {
     error.value = null;
-    loading.value = true;
-    
-    // API现在返回 {notifications, total} 对象格式
-    const result = await notificationApi.getNotifications();
-    
-    // 从API返回的对象中提取notifications数组
-    // 确保 result 和 result.notifications 都存在
-    if (result && Array.isArray(result.notifications)) {
-      notifications.value = result.notifications;
-    } else {
-      // 如果API返回的不是预期的格式，或者notifications不是数组，则设置为空数组并记录警告
-      console.warn('loadNotifications: Received unexpected data format from API. Expected { notifications: [], ... } but got:', result);
-      notifications.value = [];
-    }
-    
-    // 获取未读通知数量
-    try {
-      // getUnreadCount 现在直接返回数字
-      const count = await notificationApi.getUnreadCount();
-      if (typeof count === 'number') {
-        unreadCount.value = count;
-      } else {
-        // 如果返回的不是数字，记录警告并设为0
-        console.warn('loadNotifications: getUnreadCount did not return a number. Received:', count);
-        unreadCount.value = 0;
-      }
-    } catch (unreadErr) {
-      console.error('获取未读通知数量失败 (in loadNotifications):', unreadErr);
-      error.value = unreadErr instanceof Error ? unreadErr.message : '获取未读数量失败';
-      unreadCount.value = 0; // 发生错误时，将未读数量设为0
-    }
+    const data = await notificationApi.getNotifications();
+    notifications.value = data;
+    unreadCount.value = await notificationApi.getUnreadCount();
   } catch (err) {
-    // API层抛出的异常统一在这里处理
-    console.error('加载通知失败 (in loadNotifications):', err);
-    error.value = err instanceof Error ? err.message : '加载通知失败，请检查网络连接后重试';
-    notifications.value = []; // 清空通知列表
+    console.error('加载通知失败:', err);
+    error.value = '加载通知失败，请检查网络连接后重试';
+    notifications.value = [];
     unreadCount.value = 0;
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 辅助函数：将前端通知类型映射为后端类型
-const mapFrontendTypeToBackend = (frontendType: string): string => {
-  // 确保前端类型非空
-  if (!frontendType) {
-    console.warn('前端通知类型为空，默认使用系统通知类型');
-    return NotificationType.SYSTEM;
-  }
-  
-  try {
-    switch (frontendType) {
-      case 'task':
-        return NotificationType.TASK;
-      case 'deadline':
-        return NotificationType.DDL_REMINDER;
-      case 'course':
-        return NotificationType.COURSE_NOTICE;
-      case 'assignment':
-        return NotificationType.ASSIGNMENT; // 默认使用ASSIGNMENT类型
-      case 'discussion': // 新增讨论回复类型
-        return NotificationType.DISCUSSION_REPLY;
-      case 'system_notice': // 使用system_notice代替system
-        return NotificationType.SYSTEM; // 现在可以直接映射到SYSTEM类型
-      default:
-        console.warn(`未识别的前端通知类型: ${frontendType}，默认使用系统通知类型`);
-        return NotificationType.SYSTEM; // 默认使用系统通知类型
-    }
-  } catch (e) {
-    console.error('映射前端通知类型时出错:', e);
-    return NotificationType.SYSTEM; // 发生错误时默认使用系统通知类型
-  }
-};
-
-// 辅助函数：根据通知类型获取优先级
-const getPriorityByType = (type: string): 'low' | 'medium' | 'high' | 'urgent' => {
-  // 确保type非空
-  if (!type) {
-    console.warn('通知类型为空，默认使用低优先级');
-    return 'low';
-  }
-  
-  try {
-    // 确保type是NotificationType枚举中的值
-    const validType = Object.values(NotificationType).includes(type as any) 
-      ? type 
-      : NotificationType.SYSTEM; // 如果类型无效，默认为系统通知
-    
-    switch (validType) {
-      case NotificationType.DDL_REMINDER:
-      case NotificationType.HOMEWORK:
-      case NotificationType.ASSIGNMENT: // 作业分配通知设为高优先级
-        return 'high';
-      case NotificationType.TASK_REMINDER:
-        return 'urgent';
-      case NotificationType.DISCUSSION_REPLY: // 讨论回复设为中优先级
-      case NotificationType.PRACTICE_NOTICE:
-      case NotificationType.PRACTICE:
-        return 'medium';
-      case NotificationType.COURSE_NOTICE:
-      case NotificationType.TASK:
-      case NotificationType.SYSTEM: // 系统通知设为低优先级
-      default:
-        return 'low';
-    }
-  } catch (e) {
-    console.error('确定通知优先级时出错:', e);
-    return 'low'; // 发生错误时默认使用低优先级
+    throw err;
   }
 };
 
 const loadPersonalTasks = async () => {
   try {
-    const data = await notificationApi.getPersonalTasks();
-    personalTasks.value = data.tasks || [];
+    // 从 authStore 获取 userId
+    const userId = authStore.user?.id;
+    if (!userId) {
+      console.error('用户未登录，无法加载个人任务');
+      personalTasks.value = [];
+      return;
+    }
+    const data = await notificationApi.getPersonalTasks(userId);
+    personalTasks.value = data;
   } catch (err) {
     console.error('加载个人任务失败:', err);
     personalTasks.value = [];
@@ -1213,10 +934,10 @@ const initRealtimeNotifications = () => {
   // 如果支持WebSocket，使用WebSocket进行实时更新
   if (typeof WebSocket !== 'undefined') {
     try {
-      // 使用固定的WebSocket URL
-      const wsUrl = window.location.protocol === 'https:' 
-        ? 'wss://' + window.location.host + '/notifications' 
-        : 'ws://' + window.location.host + '/notifications';
+      // 从环境变量获取WebSocket URL，回退到默认值
+      const wsUrl = process.env.NODE_ENV === 'development' 
+        ? 'ws://localhost:3000/notifications' 
+        : 'wss://your-production-domain.com/notifications';
       
       websocket = new WebSocket(wsUrl);
       
@@ -1267,8 +988,9 @@ const initRealtimeNotifications = () => {
 };
 
 // 设置轮询模式
-const setupPollingMode = () => {  // 每30秒轮询一次新通知
-  notificationUpdateInterval = window.setInterval(async () => {
+const setupPollingMode = () => {
+  // 每30秒轮询一次新通知
+  notificationUpdateInterval = setInterval(async () => {
     try {
       const currentUnreadCount = await notificationApi.getUnreadCount();
       if (currentUnreadCount > unreadCount.value) {
@@ -1283,60 +1005,35 @@ const setupPollingMode = () => {  // 每30秒轮询一次新通知
 
 // 处理实时通知
 const handleRealtimeNotification = (data: any) => {
-  try {
-    if (!data || typeof data !== 'object') {
-      console.error('接收到无效的实时通知数据:', data);
-      return;
-    }
-
-    switch (data.type) {
-      case 'new_notification':
-        // 新通知 - 使用与API层相同的数据转换逻辑
-        if (data.notification) {
-          // 确保type字段是后端支持的枚举值
-          const validType = Object.values(NotificationType).includes(data.notification.type as any) 
-            ? data.notification.type 
-            : NotificationType.SYSTEM;
-          
-          // 直接转换，与API层保持一致
-          const processedNotification: Notification = {
-            ...data.notification,
-            content: data.notification.message || '',
-            read: data.notification.readFlag !== undefined ? data.notification.readFlag : false,
-            type: validType,
-            priority: getPriorityByType(validType)
-          } as Notification;
-          
-          notifications.value.unshift(processedNotification);
-          unreadCount.value++;
-        }
-        break;
-      case 'notification_read':
-        // 通知已读
-        const readNotification = notifications.value.find(n => n.id === data.notificationId);
-        if (readNotification && !readNotification.read) {
-          readNotification.read = true;
+  switch (data.type) {
+    case 'new_notification':
+      // 新通知
+      notifications.value.unshift(data.notification);
+      unreadCount.value++;
+      break;
+    case 'notification_read':
+      // 通知已读
+      const readNotification = notifications.value.find(n => n.id === data.notificationId);
+      if (readNotification && !readNotification.read) {
+        readNotification.read = true;
+        unreadCount.value = Math.max(0, unreadCount.value - 1);
+      }
+      break;
+    case 'notification_deleted':
+      // 通知删除
+      const deleteIndex = notifications.value.findIndex(n => n.id === data.notificationId);
+      if (deleteIndex > -1) {
+        const deletedNotification = notifications.value[deleteIndex];
+        if (!deletedNotification.read) {
           unreadCount.value = Math.max(0, unreadCount.value - 1);
         }
-        break;
-      case 'notification_deleted':
-        // 通知删除
-        const deleteIndex = notifications.value.findIndex(n => n.id === data.notificationId);
-        if (deleteIndex > -1) {
-          const deletedNotification = notifications.value[deleteIndex];
-          if (!deletedNotification.read) {
-            unreadCount.value = Math.max(0, unreadCount.value - 1);
-          }
-          notifications.value.splice(deleteIndex, 1);
-        }
-        break;
-      case 'unread_count_update':
-        // 未读数量更新
-        unreadCount.value = data.count;
-        break;
-    }
-  } catch (err) {
-    console.error('处理实时通知时出错:', err);
+        notifications.value.splice(deleteIndex, 1);
+      }
+      break;
+    case 'unread_count_update':
+      // 未读数量更新
+      unreadCount.value = data.count;
+      break;
   }
 };
 
@@ -1344,58 +1041,41 @@ const handleRealtimeNotification = (data: any) => {
 const cleanupRealtimeConnections = () => {
   if (websocket && websocket.readyState === WebSocket.OPEN) {
     websocket.close();
-  }  if (notificationUpdateInterval) {
-    window.clearInterval(notificationUpdateInterval);
+  }
+  if (notificationUpdateInterval) {
+    clearInterval(notificationUpdateInterval);
   }
   if (deadlineCheckInterval) {
-    window.clearInterval(deadlineCheckInterval);
+    clearInterval(deadlineCheckInterval);
   }
 };
 
 // 生命周期
 onMounted(async () => {
-  // loading.value = true; // 已在 loadNotifications 内部处理
-  // error.value = null; // 已在 loadNotifications 内部处理
+  loading.value = true;
+  error.value = null;
   
   try {
     // 确保用户已登录
     if (!authStore.user) {
       error.value = '请先登录';
-      loading.value = false; // 确保在未登录时停止加载状态
       return;
     }
     
-    // 并行加载通知和个人任务
-    // loadNotifications 和 loadPersonalTasks 内部会处理各自的 loading 和 error 状态
     await Promise.all([loadNotifications(), loadPersonalTasks()]);
     
-    // 如果 loadNotifications 或 loadPersonalTasks 内部发生错误，
-    // 它们的 catch 块会处理 error.value。
-    // 这里不需要再次设置 error.value，除非有特定于 onMounted 的错误。
-
     // 设置定时检查DDL（每小时检查一次）
-    deadlineCheckInterval = window.setInterval(checkDeadlinesAndGenerateReminders, 60 * 60 * 1000);
-    
-    // 初始化实时通知
+    deadlineCheckInterval = setInterval(checkDeadlinesAndGenerateReminders, 60 * 60 * 1000);
+      // 初始化实时通知
     initRealtimeNotifications();
     
-    // 加载通知设置
-    await loadNotificationSettings();
-
-  } catch (err) { // 这个 catch 主要捕获 Promise.all 的聚合错误或 loadNotificationSettings 的错误
-    console.error('初始化通知页面失败 (in onMounted):', err);
-    // 避免覆盖 loadNotifications 中可能已设置的更具体的错误信息
-    if (!error.value) {
-      error.value = '加载数据失败，请刷新页面重试';
-    }
+    // 加载通知设置从本地存储
+    loadNotificationSettingsFromLocal();
+  } catch (err) {
+    console.error('初始化通知页面失败:', err);
+    error.value = '加载数据失败，请刷新页面重试';
   } finally {
-    // loading.value = false; // loadNotifications 会在最后设置 loading.value
-    // 确保如果 Promise.all 中的某个函数没有正确设置 loading 为 false，这里会处理
-    if (loading.value && !error.value) { // 仅当没有错误且仍在加载时
-        // 一般来说，如果 Promise.all 成功，其内部函数应已处理 loading
-        // 但作为保险，如果 authStore.user 存在，则 loadNotifications 会处理 loading
-        // 如果 authStore.user 不存在，上面已设置 loading.value = false
-    }
+    loading.value = false;
   }
 });
 
@@ -1414,62 +1094,10 @@ watch(activeFilter, () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  position: relative;
-  /* 美观的渐变背景 */
-  background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.03) 0%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.95) 25%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.98) 50%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.02) 100%
-  );
-  /* 添加微妙的图案背景 */
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(var(--primary-rgb, 59, 130, 246), 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(var(--success-rgb, 34, 197, 94), 0.03) 0%, transparent 50%);
-  border-radius: 16px;
-  /* 增强的阴影效果 */
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(var(--border-color-rgb, 229, 231, 235), 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all var(--transition-normal);
-  /* 添加背景纹理 */
-  backdrop-filter: blur(1px);
-}
-
-/* 为通知容器添加悬停效果 */
-.notification-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.08) 0%,
-    transparent 25%,
-    transparent 75%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.04) 100%
-  );
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.notification-container:hover::before {
-  opacity: 1;
-}
-
-/* 响应式优化 */
-@media (max-width: 768px) {
-  .notification-container {
-    margin: 10px;
-    padding: 15px;
-    border-radius: 12px;
-  }
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--transition-normal);
 }
 
 /* 工具栏 */
@@ -1478,39 +1106,8 @@ watch(activeFilter, () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  padding: 1.25rem 1.5rem;
-  position: relative;
-  /* 优美的工具栏背景 */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.9) 50%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.85) 100%
-  );
-  border-radius: 12px;
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.5);
-  /* 精致的阴影效果 */
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(0.5px);
-}
-
-/* 工具栏装饰背景 */
-.toolbar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 12px;
-  background: linear-gradient(90deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.02) 0%,
-    transparent 50%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.01) 100%
-  );
-  pointer-events: none;
-  z-index: -1;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .toolbar-left {
@@ -1539,85 +1136,26 @@ watch(activeFilter, () => {
 }
 
 .action-btn {
-  padding: 0.6rem 1rem;
-  position: relative;
-  /* 美观的按钮背景 */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.8) 100%
-  );
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.7);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
   color: var(--text-secondary);
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.25rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  /* 微妙的阴影 */
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-/* 按钮悬停效果 */
-.action-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 8px;
-  background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.08) 0%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.04) 100%
-  );
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-  pointer-events: none;
-}
-
-.action-btn:hover:not(:disabled)::before {
-  opacity: 1;
 }
 
 .action-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 1) 0%,
-    rgba(var(--bg-tertiary-rgb, 241, 245, 249), 0.9) 100%
-  );
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  transform: translateY(-1px);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-color: rgba(var(--primary-rgb, 59, 130, 246), 0.3);
 }
 
 .action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.create-notification-btn {
-  padding: 0.5rem 1rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.create-notification-btn:hover {
-  background-color: var(--primary-dark);
+  opacity: 0.5;  cursor: not-allowed;
 }
 
 .badge {
@@ -1640,29 +1178,15 @@ watch(activeFilter, () => {
 /* 筛选标签 */
 .filter-tabs {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
-  padding: 1rem;
-  /* 为筛选区域添加微妙背景 */
-  background: linear-gradient(135deg, 
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.6) 0%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.4) 100%
-  );
-  border-radius: 12px;
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.3);
-  backdrop-filter: blur(0.5px);
 }
 
 .filter-tab {
-  padding: 0.6rem 1.2rem;
-  position: relative;
-  /* 美观的渐变背景 */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.8) 100%
-  );
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.6);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
   color: var(--text-secondary);
   border-radius: 25px;
   cursor: pointer;
@@ -1671,62 +1195,17 @@ watch(activeFilter, () => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  /* 微妙的阴影 */
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-/* 筛选标签悬停效果 */
-.filter-tab::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 25px;
-  background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.1) 0%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.05) 100%
-  );
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-  pointer-events: none;
-}
-
-.filter-tab:hover::before {
-  opacity: 1;
 }
 
 .filter-tab:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 1) 0%,
-    rgba(var(--bg-tertiary-rgb, 241, 245, 249), 0.9) 100%
-  );
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  transform: translateY(-1px);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .filter-tab.active {
-  background: linear-gradient(135deg, 
-    var(--primary) 0%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.9) 100%
-  );
+  background-color: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 
-    0 2px 6px rgba(var(--primary-rgb, 59, 130, 246), 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.filter-tab.active::before {
-  opacity: 0;
 }
 
 .filter-count {
@@ -1764,55 +1243,6 @@ watch(activeFilter, () => {
 /* 章节标题 */
 .section {
   margin-bottom: 2rem;
-  padding: 1.5rem;
-  position: relative;
-  /* 美观的背景效果 */
-  background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.98) 50%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.9) 100%
-  );
-  border-radius: 12px;
-  /* 优雅的边框和阴影 */
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.6);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    0 1px 3px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(0.5px);
-  transition: all var(--transition-normal);
-}
-
-/* 为section添加微妙的悬停效果 */
-.section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.02) 0%,
-    transparent 50%,
-    rgba(var(--primary-rgb, 59, 130, 246), 0.01) 100%
-  );
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.section:hover::before {
-  opacity: 1;
-}
-
-.section:hover {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    0 2px 6px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .section-header {
@@ -1848,62 +1278,18 @@ watch(activeFilter, () => {
 
 .notification-card {
   padding: 1.5rem;
-  position: relative;
-  /* 美观的渐变背景 */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.95) 40%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.92) 100%
-  );
-  /* 精致的边框效果 */
-  border: 1px solid rgba(var(--border-color-rgb, 229, 231, 235), 0.7);
-  border-radius: 14px;
-  /* 层次感阴影 */
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-normal);
-  /* 添加微妙的背景纹理 */
-  backdrop-filter: blur(0.5px);
-}
-
-/* 通知卡片的装饰性背景 */
-.notification-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 14px;
-  background: radial-gradient(circle at 80% 20%, 
-    rgba(var(--primary-rgb, 59, 130, 246), 0.02) 0%, 
-    transparent 50%
-  );
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.notification-card:hover::before {
-  opacity: 1;
+  position: relative;
 }
 
 .notification-card:hover {
-  /* 增强悬停效果 */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 1) 0%,
-    rgba(var(--bg-primary-rgb, 255, 255, 255), 0.98) 40%,
-    rgba(var(--bg-secondary-rgb, 248, 250, 252), 0.95) 100%
-  );
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transform: translateY(-2px);
-  border-color: rgba(var(--primary-rgb, 59, 130, 246), 0.2);
+  background-color: var(--bg-tertiary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .notification-card.unread {

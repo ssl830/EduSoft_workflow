@@ -53,12 +53,12 @@ const fetchPractices = async () => {
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeList(props.classId)
             // 更新数据结构处理
-            practices.value = response.practices
+            practices.value = response.data
         }else{ // 老师视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeTeachList(props.classId)
             // 更新数据结构处理
-            practices.value = response.practices
+            practices.value = response.data
         }
 
         // // 提取唯一练习名称
@@ -138,7 +138,7 @@ const checkPractice = (submissionId: number) => {
 
 // 查看练习
 const getPracticeReport = async (practiceId: number, submissionId: number) => {
-    // TODO: 或者跳转到“学习记录”
+    // TODO: 或者跳转到"学习记录"
     router.push({
         name: 'ExerciseFeedback',
         params: { practiceId, submissionId }
@@ -165,6 +165,11 @@ const goToCreateExercise = () => {
 watch([selectedChapter, selectedType, selectedExer], () => {
     fetchData()
 })
+
+// 新增：在<script setup>中添加：
+const viewPracticeDetail = (practiceId) => {
+    router.push({ name: 'PracticeDetail', params: { id: practiceId } })
+}
 
 onMounted(() => {
     fetchData()
@@ -286,18 +291,18 @@ onMounted(() => {
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="practice in practices" :key="practice.practiceid">
-                        <td>{{ practice.name }}</td>
-                        <td>{{ practice.start_time || '-' }}</td>
-                        <td>{{ practice.end_time || '-' }}</td>
+                    <tr v-for="practice in practices" :key="practice.id">
+                        <td>{{ practice.title }}</td>
+                        <td>{{ practice.startTime ? practice.startTime : '-' }}</td>
+                        <td>{{ practice.endTime ? practice.endTime : '-' }}</td>
                         <td class="actions">
                             <!-- 练习按钮  -->
                             <button
                                 v-if="isStudent"
                                 class="btn-action preview"
-                                @click="doPractice(practice.practiceid)"
+                                @click="doPractice(practice.id)"
                                 title="练习"
-                                :disabled="isOverdue(practice.end_time) ||
+                                :disabled="isOverdue(practice.endTime) ||
                             (practice.isSubmitted && !practice.allowMultiple)"
                             >
                                 练习
@@ -313,15 +318,14 @@ onMounted(() => {
                             >
                                 查看
                             </button>
-<!-- TODO 老师查看练习都有什么题-->
+                            <!-- 老师端：查看题目按钮 -->
                             <button
                                 v-if="isTeacher"
                                 class="btn-action download"
-                                @click="getPracticeReport(practice.id, practice.submitId)"
-                                title="查看"
-                                :disabled="!practice.isSubmitted"
+                                @click="viewPracticeDetail(practice.id)"
+                                title="查看题目"
                             >
-                                查看
+                                查看题目
                             </button>
 
                             <!-- 批改按钮 (老师) -->
