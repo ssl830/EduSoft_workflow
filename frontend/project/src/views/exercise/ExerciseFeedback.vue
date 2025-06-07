@@ -11,7 +11,7 @@
             <div class="questions-list">
                 <div v-for="(question, index) in practiceData.questions" :key="question.id" class="question-item">
                     <div class="question-header">
-                        <h3>题目 {{ index + 1 }} {{ question.name }}</h3>
+                        <h3>题目 {{ index + 1 }} {{ question.content }}</h3>
                         <div style="display: flex; gap: 8px;">
                             <button
                                 @click="toggleFavorite(question)"
@@ -35,7 +35,7 @@
 
                     <div class="question-content">
                         <div class="question-type">{{ questionTypeMap[question.type] }}</div>
-                        <div class="question-points">分值：{{ question.points }}分</div>
+                        <div class="question-points">分值：{{ question.score }}分</div>
 
                         <!-- 客观题展示 -->
                         <template v-if="isObjective(question.type)">
@@ -123,11 +123,11 @@ const error = ref('')
 
 // 题目类型映射
 const questionTypeMap = {
-    single_choice: '单选题',
-    multiple_choice: '多选题',
-    true_false: '判断题',
-    short_answer: '简答题',
-    fill_blank: '填空题'
+    'singlechoice': '单选题',
+    'multiplechoice': '多选题',
+    'judge': '判断题',
+    'program': '简答题',
+    'fillblank': '填空题'
 }
 
 // 计算总分
@@ -183,7 +183,8 @@ const addToWrongSet = async (question: Question) => {
                 wrongAnswer: studentAnswers.value[question.id] || ''
             }
         )
-        if (res.data.code === 200) {
+        console.log(res)
+        if (res.code === 200) {
             console.log("YESSSSS")
             question.isadded = true
         } else {
@@ -198,8 +199,10 @@ const addToWrongSet = async (question: Question) => {
 const fetchPracticeDetail = async () => {
     try {
         const response = await ExerciseApi.getExerciseDetails(practiceId, {submissionId})
+        // TODO：没有返回给前端学生的答案和总分
 
         practiceData.value = response.data
+        console.log(response.data)
         // 初始化学生答案（假设从API获取）
         response.data.questions.forEach((q: Question) => {
             studentAnswers.value[q.id] = q.studentAnswer || ''

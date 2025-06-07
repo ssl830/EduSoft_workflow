@@ -104,7 +104,7 @@ onMounted(() => {
                         </button>
                         <button
                             class="btn-action download"
-                            @click="enFavorQuestion(question)"
+                            @click="enFavorQuestion(question.id)"
                             title="取消收藏"
                         >
                             取消收藏

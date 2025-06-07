@@ -124,7 +124,6 @@ const exercise = ref(null)
 const loading = ref(true)
 const error = ref('')
 const answers = ref({})
-const timeLeft = ref(0)
 const isSubmitting = ref(false)
 
 const questionTypeMap = {
@@ -156,36 +155,54 @@ const fetchExercise = async () => {
     }
 }
 
-// 自动提交
-const handleAutoSubmit = async () => {
-    if (isSubmitting.value) return
-    await submitAnswers()
-}
-
 // 手动提交
 const handleSubmit = async () => {
-    if (timeLeft.value <= 0) return
     await submitAnswers()
 }
 
 // 提交答案
 const submitAnswers = async () => {
     isSubmitting.value = true
-    console.log(answers)
     try {
+        // 创建字符串数组格式的答案
+        const answerList = exercise.value.questions.map(question => {
+            const ans = answers.value[question.id]
+
+            // 处理多选题 - 用|||拼接数组
+            if (question.type === 'multiple_choice' || question.type === 'multiplechoice') {
+                if (Array.isArray(ans)) {
+                    return ans.join('|||') // 用|||拼接多选题答案
+                }
+                return ans || '' // 如果意外不是数组，转为字符串
+            }
+
+            // 处理其他题型
+            if (typeof ans === 'string') {
+                return ans
+            }
+            if (Array.isArray(ans)) {
+                return ans.join('') // 其他题型如果是数组（意外情况），拼接成字符串
+            }
+            return '' // 未作答返回空字符串
+        })
+
+        console.log("提交的答案数组:", answerList)
+
         const res = await ExerciseApi.submitExercise({
             practiceId: practiceId.value,
-            studentId: authStore.user?.id, // 从authStore获取
-            answers: answers.value
+            studentId: authStore.user?.id,
+            answers: answerList  // 直接提交字符串数组
         })
+
         console.log(res)
 
         router.push({
             name: 'ExerciseFeedback',
-            params: { practiceId: practiceId.value, submissionId: res.data.data.submissionId }
+            params: { practiceId: practiceId.value, submissionId: res.data }
         })
     } catch (err) {
         error.value = '提交失败，请检查网络连接'
+        console.error("提交错误:", err)
     } finally {
         isSubmitting.value = false
     }

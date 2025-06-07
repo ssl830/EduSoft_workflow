@@ -139,6 +139,14 @@ const saveBasicInfo = async () => {
   }
 }
 
+const questionTypeMap = {
+    'singlechoice': '单选题',
+    'multiplechoice': '多选题',
+    'judge': '判断题',
+    'program': '简答题',
+    'fillblank': '填空题'
+}
+
 // 修改题目分值
 const updateQuestionScore = (questionId: number, score: number) => {
   const q = exercise.questions.find(q => q.id === questionId)
@@ -243,7 +251,7 @@ const removeQuestion = (questionId: number) => {
                 <td>{{ idx + 1 }}</td>
                 <td class="q-content">{{ q.name || q.content }}</td>
                 <td>
-                  <span class="type-tag">{{ q.type }}</span>
+                  <span class="type-tag">{{ questionTypeMap[q.type] }}</span>
                 </td>
                 <td>
                   <div v-if="q.options && q.options.length">
