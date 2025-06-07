@@ -118,11 +118,6 @@ export default {
       <h3 class="sidebar-title">账户</h3>
       <ul class="sidebar-menu">
         <li>
-          <router-link to="/help" class="sidebar-link">
-            <span class="icon">❓</span> 帮助与反馈
-          </router-link>
-        </li>
-        <li>
           <router-link to="/profile" class="sidebar-link">
             <span class="icon">👤</span> 个人信息
           </router-link>

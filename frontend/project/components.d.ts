@@ -27,6 +27,8 @@ declare module 'vue' {
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']
     ProgressKnob: typeof import('./src/components/littlecomponents/ProgressKnob.vue')['default']
+    ReplyForm: typeof import('./src/components/ReplyForm.vue')['default']
+    ReplyItem: typeof import('./src/components/ReplyItem.vue')['default']
     RichTextEditor: typeof import('./src/components/RichTextEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

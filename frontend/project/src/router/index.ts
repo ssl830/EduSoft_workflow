@@ -220,7 +220,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/help',
     name: 'HelpAndFeedback',
-    component: () => import('../views/help/HelpAndFeedback.vue'), // Changed path
+    component: () => import('@/views/help/HelpAndFeedback.vue'), // Changed path
     meta: {
       title: '帮助与反馈',
       requiresAuth: false,
