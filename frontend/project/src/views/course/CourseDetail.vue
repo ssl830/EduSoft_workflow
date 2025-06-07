@@ -7,6 +7,7 @@ import CourseApi from '../../api/course'
 import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
 import CourseVideoList from '../../components/course/CourseVideoList.vue'
+import CourseEditDialog from '../../components/course/CourseEditDialog.vue'
 
 // 类型定义
 interface ApiResponse<T> {
@@ -19,6 +20,7 @@ interface Course {
   id: number
   name: string
   code: string
+  teacherId: number
   teacherName: string
   studentCount: number
   practiceCount: number
@@ -36,6 +38,7 @@ const loading = ref(true)
 const error = ref('')
 const course = ref<Course | null>(null)
 const activeTab = ref('syllabus') // 'syllabus', 'resources', 'video'
+const editDialogVisible = ref(false)
 
 const isTeacherOrTutor = computed(() => {
   return ['teacher', 'tutor'].includes(authStore.userRole)
@@ -58,6 +61,17 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+const handleEditSuccess = async () => {
+  try {
+    const response = await CourseApi.getCourseById(courseId.value) as unknown as ApiResponse<Course>
+    if (response && response.code === 200 && response.data) {
+      course.value = response.data
+    }
+  } catch (err) {
+    console.error('刷新课程信息失败:', err)
+  }
+}
 </script>
 
 <template>
@@ -68,17 +82,17 @@ onMounted(async () => {
       <header class="course-header">
         <h1>{{ course.name }} {{ course.code }}</h1>
         <div class="course-info" v-if="activeTab === 'syllabus'">
+          <div class="info-header">
+            <h3>课程概况</h3>
+          </div>
           <p class="info-item">课程代码: {{ course.code }}</p>
           <p class="info-item">教师: {{ course.teacherName }}</p>
           <p class="info-item">学生人数: {{ course.studentCount }}人</p>
           <p class="info-item">练习题数: {{ course.practiceCount }}题</p>
           <p class="info-item">作业数量: {{ course.homeworkCount }}个</p>
-          <p class="info-item">课程目标: {{ course.objective }}</p>
-          <p class="info-item">课程大纲: {{ course.outline }}</p>
-          <p class="info-item">考核方式: {{ course.assessment }}</p>
         </div>
       </header>
-
+      
       <div class="course-content">
         <!-- 左侧 Tab -->
         <div class="course-tabs">
@@ -121,6 +135,13 @@ onMounted(async () => {
         </div>
       </div>
     </template>
+
+    <CourseEditDialog
+      v-if="course"
+      v-model="editDialogVisible"
+      :course="course"
+      @success="handleEditSuccess"
+    />
   </div>
 </template>
 
@@ -203,6 +224,32 @@ onMounted(async () => {
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid #e0e0e0;
+}
+
+.info-section {
+  margin: 1.5rem 0;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.info-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.info-item {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  color: #666;
 }
 
 @media (max-width: 768px) {

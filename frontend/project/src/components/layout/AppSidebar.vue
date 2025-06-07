@@ -40,12 +40,12 @@ export default {
             <span class="icon">📚</span> 题库中心
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent || isTeacher">
+        <li v-if="isTutor || isStudent">
           <router-link to="/questionFavor" class="sidebar-link">
             <span class="icon">📚</span> 收藏题库
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent || isTeacher">
+        <li v-if="isTutor || isStudent">
           <router-link to="/questionWrong" class="sidebar-link">
             <span class="icon">📈</span> 错误题库
           </router-link>

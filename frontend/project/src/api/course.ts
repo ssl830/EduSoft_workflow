@@ -26,7 +26,7 @@ const CourseApi = {
   },
 
   deleteSection(courseId: bigint, sectionId: bigint) {
-    return axios.post(`/api/courses/${courseId}/sections/${sectionId}`)
+    return axios.delete(`/api/courses/${courseId}/sections/${sectionId}`)
   },
 
   // Create new course (teacher only)
@@ -45,11 +45,12 @@ const CourseApi = {
   updateCourse(id: string, data: {
     name?: string;
     code?: string;
-    syllabus?: string;
-    objectives?: string;
+    teacherId?: number;
+    outline?: string;
+    objective?: string;
     assessment?: string;
   }) {
-    return axios.put(`/courses/${id}`, data)
+    return axios.put(`/api/courses/${id}`, data)
   },
 
   // Get classes for a course
