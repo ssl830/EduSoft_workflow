@@ -168,7 +168,7 @@ watch([selectedChapter, selectedType, selectedExer], () => {
 
 // 新增：在<script setup>中添加：
 const viewPracticeDetail = (practiceId) => {
-    router.push({ name: 'PracticeDetail', params: { id: practiceId } })
+    router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
 }
 
 // 在<script setup>中添加：

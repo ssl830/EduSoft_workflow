@@ -116,9 +116,8 @@ public class PracticeServiceImpl implements PracticeService {
         if (practice == null) {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
-
         List<Question> questions = questionMapper.getQuestionsByPractice(id);
-        // 这里可以设置practice的questions属性，如果Practice类中有这个字段的话
+        practice.setQuestions(questions);
         return practice;
     }
 

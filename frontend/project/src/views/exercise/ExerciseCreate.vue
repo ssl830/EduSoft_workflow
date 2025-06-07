@@ -57,9 +57,13 @@ const tempQuestion = reactive({
     points: 5,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
-        return this.type === 'multiple_choice' && this.answer
-            ? this.answer.split(',')
-            : [];
+        if (this.type === 'multiple_choice') {
+            if (typeof this.answer === 'string') {
+                return this.answer ? this.answer.split(',') : [];
+            }
+            return [];
+        }
+        return [];
     },
     set answerArray(values: string[]) {
         this.answer = values.join(',');
@@ -193,7 +197,7 @@ const prevStep = () => {
 
 const typeMap = {
     single_choice: 'singlechoice',
-    multiple_choice: 'multiplechoice',
+    multiple_choice: 'singlechoice',
     true_false: 'program',
     short_answer: 'program',
     fill_blank: 'fillblank'
@@ -238,7 +242,7 @@ const addOrUpdateQuestion = async () => {
         const questionData = {
             type: typeMap[tempQuestion.type] || tempQuestion.type,
             content: tempQuestion.content,
-            options: tempQuestion.options,
+            options: tempQuestion.options.map(opt => opt.text),
             answer: tempQuestion.type === 'multiple_choice'
                 ? tempQuestion.answerArray.join(',')
                 : (typeof tempQuestion.answer === 'string' ? tempQuestion.answer : ''),
@@ -339,7 +343,7 @@ const submitExercise = async () => {
   error.value = ''
 
   try {
-    await ExerciseApi.createExercise(exercise)
+    // await ExerciseApi.createExercise(exercise) // 移除重复创建练习
     router.push('/') // or to a success page
   } catch (err) {
     error.value = '创建练习失败，请稍后再试'
@@ -350,7 +354,7 @@ const submitExercise = async () => {
 }
 // 添加题目类型变化的watch
 watch(() => tempQuestion.type, (newType) => {
-    tempQuestion.answer = newType === 'multiple_choice' ? [] : '';
+    tempQuestion.answer = '';
 });
 
 // 新增：导入QuestionApi
@@ -411,7 +415,7 @@ const addRepoQuestion = async (question: any) => {
     try {
         await ExerciseApi.importQuestionsToPractice({
             practiceId: exercise.practiceId,
-            questions: [question.id],
+            questionIds: [question.id],
             scores: [score]
         });
 
@@ -690,6 +694,15 @@ const handleClassChange = (classId: number) => {
             <option value="True">正确</option>
             <option value="False">错误</option>
           </select>
+        </div>
+        <div v-if="tempQuestion.type === 'fill_blank'" class="form-group">
+          <label for="fillBlankAnswer">正确答案</label>
+          <input
+            id="fillBlankAnswer"
+            v-model="tempQuestion.answer"
+            type="text"
+            placeholder="输入正确答案"
+          />
         </div>
         <div class="form-group">
           <label for="explanation">答案解析</label>
