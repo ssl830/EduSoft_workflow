@@ -134,7 +134,21 @@ const ClassApi = {
    */
   getTeacherClasses(teacherId: bigint | number | string) {
     return axios.get(`/api/classes/teacher/simple/${teacherId}`)
-  }
+  },
+
+  /**
+   * 查询学生某作业的提交记录（用于判断是否已提交）
+   * @param homeworkId 作业ID
+   * @param studentId 学生ID
+   * @returns Promise
+   */
+  getStudentSubmission(homeworkId: bigint | number | string, studentId: bigint | number | string) {
+    const params = new URLSearchParams({
+      homeworkId,
+      studentId
+    });
+    return axios.get(`/api/homework/submission?${params.toString()}`)
+  },
 }
 
 export default ClassApi

@@ -46,7 +46,7 @@ public interface HomeworkSubmissionMapper {
     /**
      * 根据作业ID和学生ID查询提交记录
      */
-    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} AND student_id = #{studentId}")
+    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} AND student_id = #{studentId} LIMIT 1")
     HomeworkSubmission selectByHomeworkAndStudent(@Param("homeworkId") Long homeworkId, @Param("studentId") Long studentId);
 
     /**

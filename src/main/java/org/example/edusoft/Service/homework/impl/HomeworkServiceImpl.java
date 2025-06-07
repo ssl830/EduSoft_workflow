@@ -220,9 +220,9 @@ public class HomeworkServiceImpl implements HomeworkService {
         if (submission == null) {
             return null;
         }
-
+//         system.out.println("submission: " + submission);
         String fileUrl = submission.getObjectName() != null ?
-            fileAccessService.getDownloadUrl(submission.getId()).getUrl() : null;
+            fileAccessService.getDownloadUrlByObjectName(submission.getObjectName()).getUrl() : null;
 
         return HomeworkSubmissionDTO.builder()
             .submissionId(submission.getId())
