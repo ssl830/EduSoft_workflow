@@ -81,6 +81,7 @@ public class Question {
         singlechoice,
         multiplechoice,
         program,
-        fillblank
+        fillblank,
+        judge
     }
 } 
