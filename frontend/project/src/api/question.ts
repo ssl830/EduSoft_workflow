@@ -3,15 +3,13 @@ import {useAuthStore} from "../stores/auth.ts";
 const authStore = useAuthStore()
 
 const QuestionApi = {
-  getQuestionList(data: {
-    courseId: number
-  }){
+  getQuestionList(data: { courseId?: number } = {}){
     return axios.get('/api/practice/question/list', { params: data })
   },
-  uploadQuestion(data){
+  uploadQuestion(data: any){
     return axios.post('/api/question/upload', data)
   },
-  createQuestion(data){
+  createQuestion(data: any){
     return axios.post('/api/practice/question/create', data)
   },
   getFavorQuestionList(){

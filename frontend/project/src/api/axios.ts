@@ -1,4 +1,11 @@
 import axios from 'axios'
+import { useAuthStore } from '../stores/auth'
+
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
 // Create an axios instance
 const instance = axios.create({
@@ -17,12 +24,9 @@ instance.interceptors.request.use(
         config.url = '/' + config.url;
       }
 
-      // 获取token
-      const token = localStorage.getItem('free-fs-token')
-
-      // 添加token到请求头
-      if (token) {
-        config.headers['free-fs-token'] = token
+      const authStore = useAuthStore()
+      if (authStore.token) {
+        config.headers['free-fs-token'] = authStore.token
       } else if (!config.url?.includes('/login') && !config.url?.includes('/register')) {
         // 对于非登录和注册请求，如果没有token，记录日志
         console.log('未找到token，请求:', config.url)
@@ -62,10 +66,8 @@ instance.interceptors.response.use(
         // 处理401错误
         if (error.response.status === 401) {
           console.log('未授权，清除用户数据');
-          // 清除所有用户相关数据
-          localStorage.removeItem('free-fs-token');
-          localStorage.removeItem('userInfo');
-          localStorage.removeItem('user');
+          const authStore = useAuthStore()
+          authStore.clearUserData()
           // 重定向到登录页
           window.location.href = '/login';
         }

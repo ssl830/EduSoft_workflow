@@ -101,6 +101,14 @@ const CourseApi = {
   getUserDefaultClass() {
     return axios.get('/api/user/default-class')
   },
+
+  getTeacherCourses(teacherId: string) {
+    return axios.get('/api/course/teacher', { params: { teacherId } })
+  },
+
+  getAllCourses() {
+    return axios.get('/api/courses/list')
+  }
 }
 
 export default CourseApi
