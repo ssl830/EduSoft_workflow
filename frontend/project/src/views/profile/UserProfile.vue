@@ -1,16 +1,5 @@
 <template>
   <div class="profile-container min-h-screen">
-    <!-- 顶部导航条 -->
-    <div class="top-nav">
-      <div class="nav-links">
-        <a href="/">首页</a>
-        <a href="/course">教学空间</a>
-        <a href="#" class="dropdown-toggle">优质课程 <span class="arrow-down">▼</span></a>
-        <a href="/help">帮助中心</a>
-        <a href="/feedback">意见反馈</a>
-      </div>
-    </div>
-    
     <!-- 主体内容 -->
     <div class="main-content">
       <!-- 页面标题 -->
@@ -123,16 +112,6 @@
                     disabled
                   />
                   <p class="form-help-text">用户ID不可更改</p>
-                </div>
-                  <div class="form-group">
-                  <label for="role" class="form-label">学院</label>
-                  <input
-                    type="text"
-                    id="role"
-                    value=""
-                    class="form-input disabled"
-                    disabled
-                  />
                 </div>
                 
                 <div class="form-actions">
@@ -462,7 +441,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* CSS变量定义 */
 :root {
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
@@ -481,48 +459,6 @@ onMounted(() => {
 .profile-container {
   font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
   background-color: #f0f2f5;
-}
-
-/* 顶部导航栏 */
-.top-nav {
-  background-color: #0055a2;
-  color: white;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.nav-links {
-  display: flex;
-  max-width: 1200px;
-  width: 100%;
-  justify-content: flex-start;
-  padding: 0 20px;
-}
-
-.nav-links a {
-  color: white;
-  padding: 15px 20px;
-  text-decoration: none;
-  font-weight: 400;
-  font-size: 16px;
-  position: relative;
-  transition: background-color 0.3s;
-}
-
-.nav-links a:hover {
-  background-color: rgba(255,255,255,0.1);
-}
-
-.dropdown-toggle {
-  display: flex;
-  align-items: center;
-}
-
-.arrow-down {
-  font-size: 10px;
-  margin-left: 5px;
 }
 
 /* 主体内容 */

@@ -149,15 +149,6 @@
           </div>
             <!-- 练习记录详情 -->
           <div v-else-if="submissionReportModal.data" class="submission-report-content">            <!-- 调试信息 -->
-            <div v-if="true" class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; font-size: 12px; border: 1px solid #ccc;">
-              <p><strong>调试信息:</strong></p>
-              <p>数据存在: {{ !!submissionReportModal.data }}</p>
-              <p>提交信息存在: {{ !!submissionReportModal.data?.submissionInfo }}</p>
-              <p>题目数量: {{ submissionReportModal.data?.questions?.length || 0 }}</p>
-              <p>排名: {{ submissionReportModal.data?.rank }}</p>
-              <p>总学生数: {{ submissionReportModal.data?.totalStudents }}</p>
-              <p>分数分布: {{ submissionReportModal.data?.scoreDistribution?.length || 0 }}项</p>
-            </div><!-- 基本信息 -->
             <div class="report-section">
               <h4><i class="fa fa-info-circle"></i> 基本信息</h4>
               <div class="info-grid">
@@ -1241,6 +1232,41 @@ onMounted(async () => {
   // 然后获取学习记录
   await loadCoursesList()
 })
+
+const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay) => {
+  try {
+    submissionReportModal.value.loading = true;
+    submissionReportModal.value.error = null;
+    
+    // 获取提交报告
+    const response = await StudyRecordsApi.getSubmissionReport(submissionId);
+    
+    if (response.data) {
+      // 检查响应格式
+      let reportData;
+      if (response.data.code === 200) {
+        reportData = response.data.data;
+      } else {
+        reportData = response.data;
+      }
+      
+      if (!reportData) {
+        throw new Error('API返回的数据为空');
+      }
+      
+      // 设置报告数据
+      submissionReportModal.value.data = reportData;
+      
+    } else {
+      throw new Error('API响应数据格式不正确');
+    }
+    
+  } catch (err: any) {
+    submissionReportModal.value.error = err.response?.data?.message || err.message || '获取记录失败，请稍后再试';
+  } finally {
+    submissionReportModal.value.loading = false;
+  }
+};
 
 </script>
 

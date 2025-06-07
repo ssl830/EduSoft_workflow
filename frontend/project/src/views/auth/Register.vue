@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -15,22 +15,67 @@ const userId = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const handleRegister = async () => {
-  // Validate inputs
-  if (!username.value || !email.value || !password.value || !userId.value) {
-    error.value = '请填写所有必填字段'
-    return
+// 添加验证状态
+const userIdError = computed(() => {
+  if (!userId.value) return ''
+  if (userId.value.length < 3 || userId.value.length > 15) {
+    return '用户ID长度必须在3-15个字符之间'
   }
+  return ''
+})
 
-  if (password.value !== confirmPassword.value) {
-    error.value = '两次输入的密码不一致'
-    return
+const usernameError = computed(() => {
+  if (!username.value) return ''
+  if (username.value.length < 2 || username.value.length > 50) {
+    return '用户名长度必须在2-50个字符之间'
   }
+  return ''
+})
 
-  // Email format validation
+const passwordError = computed(() => {
+  if (!password.value) return ''
+  if (password.value.length < 6) {
+    return '密码长度不能少于6个字符'
+  }
+  return ''
+})
+
+const emailError = computed(() => {
+  if (!email.value) return ''
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email.value)) {
-    error.value = '请输入有效的电子邮箱'
+    return '请输入有效的电子邮箱'
+  }
+  if (email.value.length > 100) {
+    return '邮箱长度不能超过100个字符'
+  }
+  return ''
+})
+
+const confirmPasswordError = computed(() => {
+  if (!confirmPassword.value) return ''
+  if (password.value !== confirmPassword.value) {
+    return '两次输入的密码不一致'
+  }
+  return ''
+})
+
+const isFormValid = computed(() => {
+  return !userIdError.value && 
+         !usernameError.value && 
+         !passwordError.value && 
+         !emailError.value && 
+         !confirmPasswordError.value &&
+         userId.value &&
+         username.value &&
+         password.value &&
+         email.value &&
+         confirmPassword.value
+})
+
+const handleRegister = async () => {
+  if (!isFormValid.value) {
+    error.value = '请检查所有字段的输入是否正确'
     return
   }
 
@@ -68,10 +113,11 @@ const handleRegister = async () => {
               id="userId"
               v-model="userId"
               type="text"
-              placeholder="请输入用户ID"
+              placeholder="请输入用户ID（3-15个字符）"
               :disabled="loading"
               required
           />
+          <div v-if="userIdError" class="field-error">{{ userIdError }}</div>
         </div>
 
         <div class="form-group">
@@ -80,10 +126,11 @@ const handleRegister = async () => {
               id="username"
               v-model="username"
               type="text"
-              placeholder="请输入用户名"
+              placeholder="请输入用户名（2-50个字符）"
               :disabled="loading"
               required
           />
+          <div v-if="usernameError" class="field-error">{{ usernameError }}</div>
         </div>
 
         <div class="form-group">
@@ -96,6 +143,7 @@ const handleRegister = async () => {
               :disabled="loading"
               required
           />
+          <div v-if="emailError" class="field-error">{{ emailError }}</div>
         </div>
 
         <div class="form-group">
@@ -104,11 +152,12 @@ const handleRegister = async () => {
               id="password"
               v-model="password"
               type="password"
-              placeholder="请输入密码"
+              placeholder="请输入密码（至少6个字符）"
               :disabled="loading"
               required
               autocomplete="new-password"
           />
+          <div v-if="passwordError" class="field-error">{{ passwordError }}</div>
         </div>
 
         <div class="form-group">
@@ -122,6 +171,7 @@ const handleRegister = async () => {
               required
               autocomplete="new-password"
           />
+          <div v-if="confirmPasswordError" class="field-error">{{ confirmPasswordError }}</div>
         </div>
 
         <div class="form-group">
@@ -140,7 +190,7 @@ const handleRegister = async () => {
         <button
             type="submit"
             class="btn-primary btn-full"
-            :disabled="loading"
+            :disabled="loading || !isFormValid"
         >
           {{ loading ? '注册中...' : '注册' }}
         </button>
@@ -236,5 +286,21 @@ const handleRegister = async () => {
   border-radius: 4px;
   margin-bottom: 1.25rem;
   text-align: center;
+}
+
+.field-error {
+  color: #c62828;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-group input:invalid,
+.form-group input.error {
+  border-color: #c62828;
+}
+
+.form-group input:focus:invalid {
+  border-color: #c62828;
+  box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
 }
 </style>

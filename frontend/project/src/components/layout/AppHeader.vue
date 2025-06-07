@@ -7,6 +7,9 @@ import ThemeToggle from '../littlecomponents/ThemeToggle.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const showHelpModal = ref(false)
+const showFeedbackModal = ref(false)
+
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const username = computed(() => authStore.user?.username || '')
 
@@ -66,6 +69,8 @@ export default {
         <router-link to="/" class="nav-link">首页</router-link>
         <router-link to="/questionBank" class="nav-link" v-if="isLoggedIn">题库</router-link>
         <router-link to="/learning-records" class="nav-link" v-if="isLoggedIn">学习记录</router-link>
+        <button class="nav-link" @click="showHelpModal = true">帮助中心</button>
+        <button class="nav-link" @click="showFeedbackModal = true">意见反馈</button>
       </nav>      <div class="auth-section">
         <div class="clock-display">
           <div class="time">{{ formatTime }}</div>
@@ -80,6 +85,98 @@ export default {
           <router-link to="/login" class="btn-auth login">登录</router-link>
           <router-link to="/register" class="btn-auth register">注册</router-link>
         </template>
+      </div>
+    </div>
+
+    <!-- 帮助中心弹窗 -->
+    <div v-if="showHelpModal" class="modal-overlay" @click="showHelpModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>帮助中心</h2>
+          <button class="close-btn" @click="showHelpModal = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3>欢迎使用EduSoft课程平台！</h3>
+          <div class="help-section">
+            <h4>📚 课程学习</h4>
+            <ul>
+              <li>浏览课程：在首页可以查看当前加入的课程</li>
+              <li>课程详情：点击课程可以查看详细的课程信息、教学大纲和学习目标</li>
+              <li>学习进度：系统会记录您的学习进度，方便您随时继续学习</li>
+              <li>课程资料：每门课程都提供丰富的学习资料，包括课件、视频和文档</li>
+              <li>讨论区：对课程内容进行交流探讨</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>📝 题库练习</h4>
+            <ul>
+              <li>题目分类：题库按课程和知识点进行分类，方便针对性练习</li>
+              <li>练习模式：支持练习模式，完成老师设置的练习</li>
+              <li>错题本：记录错题，方便复习和巩固</li>
+              <li>答题解析：每道题目都配有详细的解析和知识点说明</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>📊 学习记录</h4>
+            <ul>
+              <li>练习成绩：展示您的练习成绩和分数排名</li>
+              <li>学习轨迹：查看您的学习历史记录</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>👥 个人中心</h4>
+            <ul>
+              <li>个人信息：管理您的个人资料</li>
+              <li>消息通知：接收课程更新和学习提醒</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>💡 使用提示</h4>
+            <ul>
+              <li>定期查看学习记录，了解自己的学习进度和效果</li>
+              <li>多利用题库练习功能，巩固所学知识</li>
+              <li>及时关注课程更新和系统通知</li>
+              <li>遇到问题可以随时通过意见反馈联系我们</li>
+              <li>建议制定合理的学习计划，循序渐进地学习</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h4>🔍 常见问题</h4>
+            <ul>
+              <li>如何修改个人信息？</li>
+              <li>答：在个人中心页面可以修改您的个人信息</li>
+              <li>如何查看学习进度？</li>
+              <li>答：在学习记录页面可以查看详细的学习进度</li>
+              <li>如何获取课程资料？</li>
+              <li>答：在课程详情页面可以下载相关学习资料</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 意见反馈弹窗 -->
+    <div v-if="showFeedbackModal" class="modal-overlay" @click="showFeedbackModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>意见反馈</h2>
+          <button class="close-btn" @click="showFeedbackModal = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>感谢您使用EduSoft课程平台！</p>
+          <p>如果您有任何建议或遇到问题，欢迎通过以下方式联系我们：</p>
+          <div class="feedback-email">
+            <p>📧 邮箱地址：</p>
+            <p class="email">support@edusoft.com</p>
+          </div>
+          <p>我们会认真对待每一条反馈，并尽快回复您。</p>
+          <p>感谢您的支持与理解！</p>
+        </div>
       </div>
     </div>
   </header>
@@ -272,6 +369,127 @@ export default {
 
   .auth-section {
     flex: 0 0 auto;
+  }
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2c6ecf;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  color: #333;
+}
+
+.help-section {
+  margin-bottom: 1.5rem;
+}
+
+.help-section h4 {
+  color: #2c6ecf;
+  margin-bottom: 0.75rem;
+}
+
+.help-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: #333;
+}
+
+.help-section li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+  color: #333;
+}
+
+.modal-body h3 {
+  color: #2c6ecf;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-email {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.email {
+  color: #2c6ecf;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+/* 修改导航链接样式 */
+.nav-link {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
   }
 }
 </style>
