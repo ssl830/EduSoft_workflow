@@ -203,7 +203,7 @@ const uploadFileStudents = async () => {
 
     try {
         // 适配后端参数：student_id和student_name
-        await ClassApi.uploadStudents({
+        const response = await ClassApi.uploadStudents({
             classId: props.classId,
             operatorId: authStore.user?.id,
             importType: 'FILE', // 文件导入
@@ -213,10 +213,13 @@ const uploadFileStudents = async () => {
                 student_name: s.name // 后端如需
             }))
         })
-
-        showUploadFileForm.value = false
-        resetUploadFileForm()
-        fetchStudents()  // 刷新列表
+        if(response.code != 200){
+            uploadError.value = response.message || '上传失败，请稍后再试';
+        }else{
+            showUploadFileForm.value = false
+            resetUploadFileForm()
+            fetchStudents()  // 刷新列表
+        }
     } catch (err: any) {
         // 兼容多种后端/拦截器格式，保证message一定有值
         const msg =
@@ -250,7 +253,7 @@ const uploadAloneStudents = async () => {
 
     try {
         // 适配后端参数：student_id和student_name
-        await ClassApi.uploadStudents({
+        const response = await ClassApi.uploadStudents({
             classId: props.classId,
             operatorId: authStore.user?.id,
             importType: 'MANUAL', // 手动导入
@@ -260,9 +263,13 @@ const uploadAloneStudents = async () => {
             }))
         })
 
-        showUploadAloneForm.value = false
-        resetUploadAloneForm()
-        fetchStudents()  // 刷新列表
+        if(response.code != 200){
+            uploadAloneError.value = response.message || '上传失败，请稍后再试';
+        }else{
+            showUploadAloneForm.value = false
+            resetUploadAloneForm()
+            fetchStudents()  // 刷新列表
+        }
     } catch (err: any) {
         // 兼容多种后端/拦截器格式，保证message一定有值
         const msg =

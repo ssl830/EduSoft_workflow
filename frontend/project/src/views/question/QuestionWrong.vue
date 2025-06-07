@@ -5,108 +5,172 @@ import {useAuthStore} from "../../stores/auth.ts";
 import ExerciseApi from "../../api/exercise.ts";
 
 const authStore = useAuthStore()
-
-// const isTeacher = authStore.userRole === 'teacher'
-
 const questions = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
 
-// Fetch questions
+// 获取错题列表
 const fetchQuestions = async () => {
-  loading.value = true
-  error.value = ''
+    loading.value = true
+    error.value = ''
 
-  try {
-    const response = await QuestionApi.getWrongQuestionList()
-    console.log('错题列表响应:', response)
+    try {
+        const response = await QuestionApi.getWrongQuestionList()
+        console.log('错题列表响应:', response)
 
-    if (response.code === 200 && response.data) {
-      questions.value = Array.isArray(response.data) ? response.data : []
-      console.log('错题列表数据:', questions.value)
-      if (questions.value.length > 0) {
-        const firstQuestion = questions.value[0]
-        console.log('第一个错题的完整数据结构:', JSON.stringify(firstQuestion, null, 2))
-        console.log('第一个错题的ID:', firstQuestion.id)
-        console.log('第一个错题的所有字段:', Object.keys(firstQuestion))
-      }
-    } else {
-      error.value = response.message || '获取错题列表失败'
-      console.error('获取错题列表失败:', response)
-      questions.value = []
+        if (response.code === 200 && response.data) {
+            questions.value = Array.isArray(response.data) ? response.data : []
+            console.log('错题列表数据:', questions.value)
+            if (questions.value.length > 0) {
+                const firstQuestion = questions.value[0]
+                console.log('第一个错题的完整数据结构:', JSON.stringify(firstQuestion, null, 2))
+                console.log('第一个错题的ID:', firstQuestion.id)
+                console.log('第一个错题的所有字段:', Object.keys(firstQuestion))
+            }
+        } else {
+            error.value = response.message || '获取错题列表失败'
+            console.error('获取错题列表失败:', response)
+            questions.value = []
+        }
+    } catch (err) {
+        error.value = '获取错题列表失败，请稍后再试'
+        console.error('获取错题列表错误:', err)
+        questions.value = []
+    } finally {
+        loading.value = false
     }
-  } catch (err) {
-    error.value = '获取错题列表失败，请稍后再试'
-    console.error('获取错题列表错误:', err)
-    questions.value = []
-  } finally {
-    loading.value = false
-  }
 }
 
-// 在onMounted中添加
 onMounted(() => {
-  fetchQuestions()
+    fetchQuestions()
 })
 
-// 新增弹窗相关状态
+// 弹窗相关状态
 const showDetailDialog = ref(false)
 const selectedQuestion = ref<any>(null)
 
-// 修改预览方法
+// 预览题目详情
 const showQuestionDetail = (question: any) => {
-  selectedQuestion.value = question
-  showDetailDialog.value = true
+    selectedQuestion.value = question
+    showDetailDialog.value = true
 }
 
+// 删除错题
 const deleteQuestion = async (questionId: string) => {
-  try {
-    if (!questionId) {
-      error.value = '题目ID不能为空'
-      console.error('删除错题失败: 题目ID为空')
-      return
-    }
-    console.log('删除错题，ID:', questionId)
-    const response = await QuestionApi.removeWrongQuestion(questionId)
-    console.log('删除错题响应:', response)
+    try {
+        if (!questionId) {
+            error.value = '题目ID不能为空'
+            console.error('删除错题失败: 题目ID为空')
+            return
+        }
+        console.log('删除错题，ID:', questionId)
+        const response = await QuestionApi.removeWrongQuestion(questionId)
+        console.log('删除错题响应:', response)
 
-    if (response.code === 200) {
-      await fetchQuestions()
-    } else {
-      error.value = response.message || '删除错题失败'
-      console.error('删除错题失败:', response)
+        if (response.code === 200) {
+            await fetchQuestions()
+        } else {
+            error.value = response.message || '删除错题失败'
+            console.error('删除错题失败:', response)
+        }
+    } catch (err) {
+        error.value = '删除错题失败，请稍后再试'
+        console.error('删除错题错误:', err)
     }
-  } catch (err) {
-    error.value = '删除错题失败，请稍后再试'
-    console.error('删除错题错误:', err)
-  }
 }
 
-// 新增答案格式化方法
+// 格式化答案
 const formatAnswer = (question: any) => {
-  if (!question) return '-'
-  if (question.type === 'multiple_choice') {
-    return question.correct_answer.split(',').join(', ')
-  }
-  return question.correct_answer || '-'
+    if (!question) return '-'
+    if (question.type === 'multiple_choice') {
+        return question.correct_answer.split(',').join(', ')
+    }
+    return question.correct_answer || '-'
 }
 
-// 格式化选项
+// 格式化选项 (修复：实际使用此函数)
 const formatOptions = (options: string) => {
-  try {
-    if (!options) return []
-    return JSON.parse(options)
-  } catch (err) {
-    console.error('解析选项失败:', err)
-    return []
-  }
+    try {
+        if (!options) return []
+        return JSON.parse(options)
+    } catch (err) {
+        console.error('解析选项失败:', err)
+        return []
+    }
 }
 
-onMounted(() => {
-  fetchQuestions()
-})
+// 类似题目弹窗相关状态
+const showSimilarDialog = ref(false)
+const similarApiKey = ref('')
+const similarLoading = ref(false)
+const similarError = ref('')
+const similarQuestion = ref('')
+const similarSourceQuestion = ref<any>(null)
 
+// 打开类似题目弹窗
+const openSimilarDialog = (question: any) => {
+    similarApiKey.value = ''
+    similarError.value = ''
+    similarQuestion.value = ''
+    similarSourceQuestion.value = question
+    showSimilarDialog.value = true
+}
 
+// 调用DeepSeek接口生成类似题目 (修复：API端点)
+const generateSimilarQuestion = async () => {
+    similarError.value = ''
+    similarQuestion.value = ''
+    if (!similarApiKey.value) {
+        similarError.value = '请输入API-Key'
+        return
+    }
+
+    // 检查原题内容是否存在
+    if (!similarSourceQuestion.value?.content) {
+        similarError.value = '原题内容为空，无法生成类似题目'
+        return
+    }
+
+    similarLoading.value = true
+    try {
+        const prompt = `请根据以下题目，生成一道风格、难度和知识点类似的新题目（不要与原题重复），返回题目和答案即可：\n${similarSourceQuestion.value.content}`
+
+        // 修复：正确的API端点
+        const resp = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${similarApiKey.value}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    {role: 'user', content: prompt}
+                ],
+                temperature: 0.8,
+                max_tokens: 512
+            })
+        })
+
+        if (!resp.ok) {
+            const errorData = await resp.json();
+            similarError.value = `API请求失败: ${errorData.error?.message || resp.statusText}`
+            return
+        }
+
+        const data = await resp.json()
+        if (data.choices?.[0]?.message?.content) {
+            similarQuestion.value = data.choices[0].message.content.trim()
+        } else {
+            similarError.value = '未能生成类似题目，请重试'
+        }
+    } catch (e) {
+        similarError.value = '请求出错，请检查API-Key或稍后重试'
+        console.error('DeepSeek API调用错误:', e)
+    } finally {
+        similarLoading.value = false
+    }
+}
 </script>
 
 <template>
@@ -152,6 +216,15 @@ onMounted(() => {
                 title="删除"
             >
               删除
+            </button>
+            <!-- 新增类似题目按钮 -->
+            <button
+                class="btn-action"
+                style="background:#e8f5e9;color:#2e7d32;"
+                @click="openSimilarDialog(question)"
+                title="生成类似题目"
+            >
+              类似题目
             </button>
           </td>
         </tr>
@@ -215,6 +288,36 @@ onMounted(() => {
             <div class="detail-row">
               <label>你的答案:</label>
               <span class="answer-text">{{ selectedQuestion.wrong_answer || '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 新增：类似题目弹窗 -->
+      <div v-if="showSimilarDialog" class="modal-mask">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>生成类似题目</h3>
+            <button class="modal-close" @click="showSimilarDialog = false">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-row">
+              <label>原题目:</label>
+              <div class="content-box" style="flex:1;">{{ similarSourceQuestion?.content }}</div>
+            </div>
+            <div class="detail-row">
+              <label for="api-key-input">Deepseek API-Key:</label>
+              <input id="api-key-input" v-model="similarApiKey" type="password" placeholder="请输入您的API-Key" style="flex:1;" />
+            </div>
+            <div class="form-actions" style="margin-top:1rem;">
+              <button class="btn-primary" @click="generateSimilarQuestion" :disabled="similarLoading">
+                {{ similarLoading ? '生成中...' : '生成类似题目' }}
+              </button>
+              <button class="btn-secondary" @click="showSimilarDialog = false">关闭</button>
+            </div>
+            <div v-if="similarError" class="error-message" style="margin-top:1rem;">{{ similarError }}</div>
+            <div v-if="similarQuestion" class="detail-row" style="margin-top:1.5rem;">
+              <label>生成结果:</label>
+              <div class="content-box" style="flex:1;">{{ similarQuestion }}</div>
             </div>
           </div>
         </div>
