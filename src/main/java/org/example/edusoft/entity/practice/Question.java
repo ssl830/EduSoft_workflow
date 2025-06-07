@@ -63,6 +63,9 @@ public class Question {
     @JsonProperty("options")
     private List<String> optionsList;
 
+    @Transient
+    private Integer score; // 仅用于接口返回，不参与数据库映射
+
     public void setOptionsList(List<String> optionsList) {
         this.optionsList = optionsList;
         if (optionsList != null) {

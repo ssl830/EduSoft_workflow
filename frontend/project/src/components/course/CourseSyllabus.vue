@@ -194,12 +194,14 @@ const handleEditSuccess = async () => {
               <td>{{ section.title }}</td>
               <td class="actions">
                 <button
+                    v-if="isTeacher"
                     class="btn-action preview"
                     @click="deleteSection(section.id)"
                     title="编辑"
                 >
                   删除
                 </button>
+                <span v-else>无权限操作</span>
               </td>
             </tr>
             </tbody>
