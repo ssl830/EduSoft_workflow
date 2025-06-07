@@ -51,6 +51,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/class/create',
+    name: 'ClassCreate',
+    component: () => import('../views/class/ClassCreate.vue'),
+    meta: {
+      title: '创建班级',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/class/:id',
     name: 'ClassDetail',
     component: () => import('../views/class/ClassDetail.vue'),
@@ -211,7 +221,7 @@ const routes: RouteRecordRaw[] = [
     path: '/discussions',
     name: 'GeneralDiscussionList',
     component: DiscussionList,
-    meta: { 
+    meta: {
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
     }
@@ -221,7 +231,7 @@ const routes: RouteRecordRaw[] = [
     name: 'ThreadDetail',
     component: ThreadDetail,
     props: true, // Pass route params as props to the component
-    meta: { 
+    meta: {
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
     }
@@ -236,7 +246,7 @@ const routes: RouteRecordRaw[] = [
       showSidebar: true
     }
   },
-  
+
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',

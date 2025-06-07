@@ -51,6 +51,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/class/create',
+    name: 'ClassCreate',
+    component: () => import('../views/class/ClassCreate.vue'),
+    meta: {
+      title: '创建班级',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/class/:id',
     name: 'ClassDetail',
     component: () => import('../views/class/ClassDetail.vue'),
@@ -215,7 +225,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
-    }  
+    }
   },
   {
     path: '/help',
