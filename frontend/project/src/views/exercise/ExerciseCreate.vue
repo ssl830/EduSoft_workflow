@@ -238,7 +238,7 @@ const addOrUpdateQuestion = async () => {
         const questionData = {
             type: typeMap[tempQuestion.type] || tempQuestion.type,
             content: tempQuestion.content,
-            options: tempQuestion.options,
+            options: tempQuestion.options.map(opt => opt.text),
             answer: tempQuestion.type === 'multiple_choice'
                 ? tempQuestion.answerArray.join(',')
                 : (typeof tempQuestion.answer === 'string' ? tempQuestion.answer : ''),
@@ -411,7 +411,7 @@ const addRepoQuestion = async (question: any) => {
     try {
         await ExerciseApi.importQuestionsToPractice({
             practiceId: exercise.practiceId,
-            questions: [question.id],
+            questionIds: [question.id],
             scores: [score]
         });
 
@@ -690,6 +690,15 @@ const handleClassChange = (classId: number) => {
             <option value="True">正确</option>
             <option value="False">错误</option>
           </select>
+        </div>
+        <div v-if="tempQuestion.type === 'fill_blank'" class="form-group">
+          <label for="fillBlankAnswer">正确答案</label>
+          <input
+            id="fillBlankAnswer"
+            v-model="tempQuestion.answer"
+            type="text"
+            placeholder="输入正确答案"
+          />
         </div>
         <div class="form-group">
           <label for="explanation">答案解析</label>
