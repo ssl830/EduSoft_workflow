@@ -57,9 +57,13 @@ const tempQuestion = reactive({
     points: 5,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
-        return this.type === 'multiple_choice' && this.answer
-            ? this.answer.split(',')
-            : [];
+        if (this.type === 'multiple_choice') {
+            if (typeof this.answer === 'string') {
+                return this.answer ? this.answer.split(',') : [];
+            }
+            return [];
+        }
+        return [];
     },
     set answerArray(values: string[]) {
         this.answer = values.join(',');
@@ -193,7 +197,7 @@ const prevStep = () => {
 
 const typeMap = {
     single_choice: 'singlechoice',
-    multiple_choice: 'multiplechoice',
+    multiple_choice: 'singlechoice',
     true_false: 'program',
     short_answer: 'program',
     fill_blank: 'fillblank'
@@ -339,7 +343,7 @@ const submitExercise = async () => {
   error.value = ''
 
   try {
-    await ExerciseApi.createExercise(exercise)
+    // await ExerciseApi.createExercise(exercise) // 移除重复创建练习
     router.push('/') // or to a success page
   } catch (err) {
     error.value = '创建练习失败，请稍后再试'
@@ -350,7 +354,7 @@ const submitExercise = async () => {
 }
 // 添加题目类型变化的watch
 watch(() => tempQuestion.type, (newType) => {
-    tempQuestion.answer = newType === 'multiple_choice' ? [] : '';
+    tempQuestion.answer = '';
 });
 
 // 新增：导入QuestionApi
