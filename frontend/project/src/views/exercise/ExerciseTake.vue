@@ -8,14 +8,6 @@
 
         <!-- 练习主体 -->
         <div v-if="exercise" class="exercise-content">
-            <!-- 头部信息 -->
-            <div class="exercise-header">
-                <h2>{{ exercise.title }}</h2>
-                <div class="time-limit">
-                    <span class="time-icon">⏳</span>
-                    剩余时间：{{ formattedTime }}
-                </div>
-            </div>
 
             <!-- 题目列表 -->
             <div class="question-list">
@@ -24,7 +16,7 @@
                     :key="question.id"
                     class="question-item"
                 >
-                    <h3>题目 {{ index + 1 }}：{{ question.name }}</h3>
+                    <h3>题目 {{ index + 1 }}：{{ question.content }}</h3>
                     <div class="question-meta">
                         <span class="question-type">{{ questionTypeMap[question.type] }}</span>
                         <span class="question-points">{{ question.score || question.points || 0 }}分</span>
@@ -134,14 +126,13 @@ const error = ref('')
 const answers = ref({})
 const timeLeft = ref(0)
 const isSubmitting = ref(false)
-let timer = null
 
 const questionTypeMap = {
-    single_choice: '单选题',
-    multiple_choice: '多选题',
-    true_false: '判断题',
-    short_answer: '简答题',
-    fill_blank: '填空题'
+    'singlechoice': '单选题',
+    'multiplechoice': '多选题',
+    'truefalse': '判断题',
+    'shortanswer': '简答题',
+    'fillblank': '填空题'
 }
 
 // 获取练习详情
@@ -158,33 +149,12 @@ const fetchExercise = async () => {
                 answers.value[question.id] = []
             }
         })
-        timeLeft.value = res.data.timeLimit * 60 // 转换为秒
-        startTimer()
     } catch (err) {
         error.value = '获取练习详情失败，请稍后重试'
     } finally {
         loading.value = false
     }
 }
-
-// 启动计时器
-const startTimer = () => {
-    timer = setInterval(() => {
-        if (timeLeft.value <= 0) {
-            handleAutoSubmit()
-            clearInterval(timer)
-            return
-        }
-        timeLeft.value--
-    }, 1000)
-}
-
-// 格式化剩余时间
-const formattedTime = computed(() => {
-    const minutes = Math.floor(timeLeft.value / 60)
-    const seconds = timeLeft.value % 60
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-})
 
 // 自动提交
 const handleAutoSubmit = async () => {
@@ -220,10 +190,7 @@ const submitAnswers = async () => {
         isSubmitting.value = false
     }
 }
-// 组件卸载时清除定时器
-onUnmounted(() => {
-    if (timer) clearInterval(timer)
-})
+
 onMounted(() => {
     fetchExercise()
     // 初始化多选题答案为数组

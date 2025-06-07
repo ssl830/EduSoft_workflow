@@ -48,4 +48,4 @@ public class PracticeQuestionServiceImpl implements PracticeQuestionService {
     public void removeQuestionFromPractice(Long practiceId, Long questionId) {
         practiceQuestionMapper.delete(practiceId, questionId);
     }
-} 
+}

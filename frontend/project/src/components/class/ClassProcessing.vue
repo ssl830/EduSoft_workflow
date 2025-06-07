@@ -223,25 +223,25 @@ onMounted(() => {
         </div>
 
         <!-- 筛选区域 -->
-        <div class="resource-filters" v-if="currentView === 'exercises'">
-            <div class="filter-section">
-                <label for="typeFilter">按练习筛选:</label>
-                <select
-                    id="typeFilter"
-                    v-model="selectedExer"
-                >
-                    <option value=-1>所有练习</option>
-                    <option
-                        v-for="practice in practicesName"
-                        :key="practice.id"
-                        :value="practice.id"
-                    >
-                        {{ practice.name }}
-                    </option>
-                </select>
-            </div>
+<!--        <div class="resource-filters" v-if="currentView === 'exercises'">-->
+<!--            <div class="filter-section">-->
+<!--                <label for="typeFilter">按练习筛选:</label>-->
+<!--                <select-->
+<!--                    id="typeFilter"-->
+<!--                    v-model="selectedExer"-->
+<!--                >-->
+<!--                    <option value=-1>所有练习</option>-->
+<!--                    <option-->
+<!--                        v-for="practice in practicesName"-->
+<!--                        :key="practice.id"-->
+<!--                        :value="practice.id"-->
+<!--                    >-->
+<!--                        {{ practice.name }}-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
 
-        </div>
+<!--        </div>-->
 
         <!-- 待批改列表视图 -->
         <div v-if="!isStudent && currentView === 'corrections'">

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {ref, reactive, onMounted, watch} from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
 import {useAuthStore} from "../../stores/auth.ts";
 import { ElMessage } from 'element-plus';
+import QuestionApi from '../../api/question'
 
 const router = useRouter()
 const route = useRoute()
@@ -23,7 +24,53 @@ const exercise = reactive({
 
 const loading = ref(false)
 const error = ref('')
-const currentStep = ref(1)
+
+// 题库相关
+const questionBankLoading = ref(false)
+const questionBankError = ref('')
+const questionBankList = ref<any[]>([])
+const selectedQuestionIds = ref<number[]>([])
+
+// 拉取题库题目
+const fetchQuestionBank = async () => {
+  questionBankLoading.value = true
+  questionBankError.value = ''
+  try {
+    const res = await QuestionApi.getQuestionList(
+      exercise.courseId ? { courseId: exercise.courseId } : {}
+    )
+    let list = []
+    if (res.data && Array.isArray(res.data.questions)) {
+      list = res.data.questions
+    } else if (res.data && Array.isArray(res.data.data?.questions)) {
+      list = res.data.data.questions
+    }
+    questionBankList.value = list
+  } catch (err) {
+    questionBankError.value = '获取题库失败'
+    questionBankList.value = []
+  } finally {
+    questionBankLoading.value = false
+  }
+}
+
+// 添加全部选中题目到练习
+const addAllSelectedQuestions = () => {
+  const selected = questionBankList.value.filter(q => selectedQuestionIds.value.includes(q.id))
+  const existIds = exercise.questions.map(q => q.id)
+  const toAdd = selected.filter(q => !existIds.includes(q.id))
+  toAdd.forEach(q => {
+    exercise.questions.push({
+      id: q.id,
+      content: q.name || q.content,
+      type: q.type,
+      options: q.options,
+      answer: q.answer,
+      score: q.score || 5
+    })
+  })
+  ElMessage.success('题目已添加')
+}
 
 // 拉取练习详情
 const fetchPracticeDetail = async () => {
@@ -37,7 +84,12 @@ const fetchPracticeDetail = async () => {
     exercise.startTime = data.startTime
     exercise.endTime = data.endTime
     exercise.allowMultipleSubmission = data.allowMultipleSubmission
-    exercise.questions = data.questions || []
+    exercise.questions = (data.questions || []).map((q: any) => ({
+      ...q,
+      score: q.score || 5
+    }))
+    // 拉取题库
+    fetchQuestionBank()
   } catch (err) {
     error.value = '获取练习详情失败，请稍后再试'
   } finally {
@@ -49,17 +101,37 @@ onMounted(() => {
   fetchPracticeDetail()
 })
 
-// 保存练习基本信息
+// 保存练习基本信息和题目
 const saveBasicInfo = async () => {
   loading.value = true
   try {
-    await ExerciseApi.updateExercise(practiceId, {
+    const response = await ExerciseApi.updateExercise(practiceId, {
       title: exercise.title,
       startTime: exercise.startTime,
       endTime: exercise.endTime,
       allowMultipleSubmission: exercise.allowMultipleSubmission
     })
-    ElMessage.success('基本信息保存成功')
+    if (response.code !== 200) {
+        ElMessage.error(response.message || '保存基本信息失败，请稍后再试')
+    }else{
+        // 题目同步到后端
+        if (exercise.questions.length > 0) {
+            const questionIds = exercise.questions.map(q => q.id)
+            const scores = exercise.questions.map(q => q.score || 5)
+            const response = await ExerciseApi.importQuestionsToPractice({
+                practiceId,
+                questionIds,
+                scores
+            })
+            if(response.code !== 200) {
+                ElMessage.error(response.message || '题目保存失败，请稍后再试')
+                return
+            }else{
+                ElMessage.success('基本信息和题目保存成功')
+            }
+        }
+    }
+
   } catch (err) {
     error.value = '保存失败，请稍后再试'
   } finally {
@@ -68,259 +140,349 @@ const saveBasicInfo = async () => {
 }
 
 // 修改题目分值
-const updateQuestionScore = async (questionId: number, score: number) => {
-  try {
-    await ExerciseApi.updatePracticeQuestionScore(practiceId, questionId, score)
-    ElMessage.success('分值已更新')
-  } catch (err) {
-    ElMessage.error('分值更新失败')
-  }
+const updateQuestionScore = (questionId: number, score: number) => {
+  const q = exercise.questions.find(q => q.id === questionId)
+  if (q) q.score = score
 }
 
 // 删除题目
-const removeQuestion = async (questionId: number) => {
-  try {
-    await ExerciseApi.removePracticeQuestion(practiceId, questionId)
-    exercise.questions = exercise.questions.filter(q => q.id !== questionId)
-    ElMessage.success('题目已移除')
-  } catch (err) {
-    ElMessage.error('移除失败')
-  }
-}
-
-// 跳转题目编辑页
-const editQuestion = (questionId: number) => {
-  router.push({ name: 'QuestionEdit', params: { id: questionId } })
-}
-
-// 跳转添加题目页
-const addQuestion = () => {
-  router.push({ name: 'QuestionBank', query: { practiceId } })
+const removeQuestion = (questionId: number) => {
+  exercise.questions = exercise.questions.filter(q => q.id !== questionId)
 }
 </script>
 
 <template>
-  <div class="exercise-edit-container">
-    <div class="edit-card">
-      <h2>编辑练习</h2>
-      <div v-if="loading" class="loading">加载中...</div>
-      <div v-else>
-        <div class="form-section">
-          <label>标题</label>
-          <input v-model="exercise.title" type="text" class="input" />
-          <div class="row">
-            <div class="col">
-              <label>开始时间</label>
-              <input v-model="exercise.startTime" type="datetime-local" class="input" />
+  <div class="exercise-edit-layout">
+    <!-- 左侧：练习编辑与题目列表 -->
+    <div class="exercise-edit-main">
+      <div class="edit-card">
+        <h2 class="main-title">编辑练习</h2>
+        <div v-if="loading" class="loading">加载中...</div>
+        <div v-else>
+          <div class="form-section">
+            <label class="form-label">标题</label>
+            <input v-model="exercise.title" type="text" class="input" placeholder="请输入练习标题" />
+            <div class="row">
+              <div class="col">
+                <label class="form-label">开始时间</label>
+                <input v-model="exercise.startTime" type="datetime-local" class="input" />
+              </div>
+              <div class="col">
+                <label class="form-label">截止时间</label>
+                <input v-model="exercise.endTime" type="datetime-local" class="input" />
+              </div>
             </div>
-            <div class="col">
-              <label>截止时间</label>
-              <input v-model="exercise.endTime" type="datetime-local" class="input" />
+            <label class="form-label">允许多次提交</label>
+            <select v-model="exercise.allowMultipleSubmission" class="input">
+              <option :value="true">是</option>
+              <option :value="false">否</option>
+            </select>
+            <div class="form-actions">
+              <button class="btn btn-primary" @click="saveBasicInfo">保存更改</button>
             </div>
           </div>
-          <label>允许多次提交</label>
-          <select v-model="exercise.allowMultipleSubmission" class="input">
-            <option :value="true">是</option>
-            <option :value="false">否</option>
-          </select>
-          <button class="btn btn-primary" @click="saveBasicInfo">保存基本信息</button>
+          <hr class="divider" />
+          <div class="question-section">
+            <div class="q-header">
+              <h3 class="section-title">题目列表</h3>
+            </div>
+            <table class="q-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>题目内容</th>
+                  <th style="width:90px;">分值</th>
+                  <th style="width:90px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(q, idx) in exercise.questions" :key="q.id">
+                  <td>{{ idx + 1 }}</td>
+                  <td class="q-content">{{ q.content }}</td>
+                  <td>
+                    <input type="number" v-model.number="q.score" @change="updateQuestionScore(q.id, q.score)" class="score-input" min="1" />
+                  </td>
+                  <td>
+                    <button class="btn2 btn-danger" @click="removeQuestion(q.id)">移除</button>
+                  </td>
+                </tr>
+                <tr v-if="!exercise.questions.length">
+                  <td colspan="4" class="empty">暂无题目，请从右侧题库添加</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <hr class="divider" />
-        <div class="question-section">
-          <div class="q-header">
-            <h3>题目列表</h3>
-            <button class="btn btn-success" @click="addQuestion">+ 添加题目</button>
-          </div>
+        <transition name="fade">
+          <div v-if="error" class="error-tip">{{ error }}</div>
+        </transition>
+      </div>
+    </div>
+    <!-- 右侧：题库表格 -->
+    <div class="exercise-edit-bank">
+      <div class="bank-header">
+        <h3 class="section-title">题库</h3>
+      </div>
+      <div v-if="questionBankLoading" class="loading">加载中...</div>
+      <div v-else-if="questionBankError" class="error-tip">{{ questionBankError }}</div>
+      <div v-else>
+        <div class="bank-table-wrapper">
           <table class="q-table">
             <thead>
               <tr>
                 <th style="width:40px;">#</th>
                 <th>题目内容</th>
-                <th style="width:90px;">分值</th>
-                <th style="width:180px;">操作</th>
+                <th>类型</th>
+                <th>选项</th>
+                <th>答案</th>
+                <th style="width:60px;">选择</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(q, idx) in exercise.questions" :key="q.id">
+              <tr v-for="(q, idx) in questionBankList" :key="q.id">
                 <td>{{ idx + 1 }}</td>
-                <td class="q-content">{{ q.content }}</td>
+                <td class="q-content">{{ q.name || q.content }}</td>
                 <td>
-                  <input type="number" v-model.number="q.score" @change="updateQuestionScore(q.id, q.score)" class="score-input" min="1" />
+                  <span class="type-tag">{{ q.type }}</span>
                 </td>
                 <td>
-                  <button class="btn btn-outline" @click="editQuestion(q.id)">编辑题目</button>
-                  <button class="btn btn-danger" @click="removeQuestion(q.id)">移除</button>
+                  <div v-if="q.options && q.options.length">
+                    <div v-for="opt in q.options" :key="opt.key" class="option-item">{{ opt.key }}. {{ opt.text }}</div>
+                  </div>
+                </td>
+                <td>{{ q.answer }}</td>
+                <td>
+                  <input type="checkbox" v-model="selectedQuestionIds" :value="q.id" />
                 </td>
               </tr>
-              <tr v-if="!exercise.questions.length">
-                <td colspan="4" class="empty">暂无题目，请添加</td>
+              <tr v-if="!questionBankList.length">
+                <td colspan="6" class="empty">暂无题目</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <div class="bank-actions">
+          <button class="btn btn-primary" @click="addAllSelectedQuestions" :disabled="!selectedQuestionIds.length">
+            添加全部题目
+          </button>
+        </div>
       </div>
-      <div v-if="error" class="error-tip">{{ error }}</div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.exercise-edit-container {
-  min-height: 100vh;
-  background: #f6f8fa;
+.exercise-edit-layout {
   display: flex;
+  gap: 32px;
   align-items: flex-start;
-  justify-content: center;
-  padding: 40px 0;
+  background: #f6f8fa;
+  min-height: 100vh;
+  padding: 32px 0;
 }
-.edit-card {
+.exercise-edit-main {
+    margin-left: 200px;
+    max-width: 500px;
+  flex: 2;
+  min-width: 0;
+}
+.exercise-edit-bank {
+  flex: 1.2;
+  min-width: 340px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-  padding: 2.5rem 2.5rem 2rem 2.5rem;
-  width: 100%;
-  max-width: 700px;
+  box-shadow: 0 4px 24px rgba(44,110,207,0.07);
+  padding: 2rem 1.2rem 1.5rem 1.2rem;
+  transition: box-shadow 0.2s;
+    margin-right: 200px;
 }
-.form-section label {
-  display: block;
-  margin-top: 1.2rem;
-  font-weight: 500;
-  color: #333;
+.bank-header {
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid #e3e8ee;
+  padding-bottom: 0.7rem;
 }
-.input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  background: #fafbfc;
-  transition: border 0.2s;
+.bank-table-wrapper {
+  max-height: 60vh;
+  overflow-y: auto;
 }
-.input:focus {
-  border-color: #409eff;
-  outline: none;
-}
-.row {
+.bank-actions {
   display: flex;
-  gap: 1.5rem;
-}
-.col {
-  flex: 1;
-}
-.btn {
-  display: inline-block;
-  padding: 0.45rem 1.2rem;
-  border-radius: 6px;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-right: 0.5rem;
+  justify-content: flex-end;
   margin-top: 1.2rem;
-  transition: background 0.2s, color 0.2s;
-}
-.btn-primary {
-  background: #409eff;
-  color: #fff;
-}
-.btn-primary:hover {
-  background: #1976d2;
-}
-.btn-success {
-  background: #67c23a;
-  color: #fff;
-}
-.btn-success:hover {
-  background: #4caf50;
-}
-.btn-danger {
-  background: #f56c6c;
-  color: #fff;
-}
-.btn-danger:hover {
-  background: #c0392b;
-}
-.btn-outline {
-  background: #fff;
-  color: #409eff;
-  border: 1px solid #409eff;
-}
-.btn-outline:hover {
-  background: #e3f2fd;
-}
-.divider {
-  border: none;
-  border-top: 1px solid #e0e0e0;
-  margin: 2rem 0 1.5rem 0;
-}
-.q-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
 }
 .q-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fafbfc;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  background: #fff;
+  font-size: 15px;
 }
 .q-table th, .q-table td {
-  padding: 0.75rem 1rem;
+  border: 1px solid #f0f1f3;
+  padding: 0.6rem 0.5rem;
   text-align: left;
-  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
 }
 .q-table th {
-  background: #f5f7fa;
+  background: #f7fafd;
   font-weight: 600;
-  color: #495057;
-}
-.q-table tr:last-child td {
-  border-bottom: none;
+  color: #2c6ecf;
 }
 .q-content {
-  max-width: 350px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 320px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #333;
 }
 .score-input {
   width: 60px;
-  padding: 0.3rem 0.5rem;
+  padding: 3px 8px;
+  border: 1px solid #cfd8dc;
   border-radius: 4px;
-  border: 1px solid #e0e0e0;
-  font-size: 1rem;
+  font-size: 15px;
+  background: #f7fafd;
+  transition: border-color 0.2s;
+}
+.score-input:focus {
+  border-color: #2c6ecf;
+  outline: none;
+}
+.btn2 {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-danger {
+  background: #ffebee;
+  color: #d32f2f;
+  border: 1px solid #ffcdd2;
+}
+.btn-danger:hover {
+  background: #ffcdd2;
+}
+.btn-primary {
+  background-color: #2c6ecf;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-size: 15px;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(44,110,207,0.08);
+}
+.btn-primary:hover {
+  background-color: #215bb4;
+}
+.loading {
+  color: #888;
+  padding: 1.2rem;
+  text-align: center;
+  font-size: 16px;
+}
+.error-tip {
+  color: #d32f2f;
+  background: #fff0f0;
+  padding: 0.9rem 1rem;
+  border-radius: 4px;
+  margin-top: 1.2rem;
+  font-size: 15px;
+  text-align: center;
+}
+.edit-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(44,110,207,0.07);
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  min-width: 400px;
+  transition: box-shadow 0.2s;
+}
+.form-section label.form-label {
+  font-weight: 600;
+  margin-top: 0.5rem;
+  display: block;
+  color: #2c6ecf;
+  margin-bottom: 0.3rem;
+}
+.input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #cfd8dc;
+  border-radius: 4px;
+  margin-bottom: 1.2rem;
+  font-size: 15px;
+  background: #f7fafd;
+  transition: border-color 0.2s;
+}
+.input:focus {
+  border-color: #2c6ecf;
+  outline: none;
+}
+.form-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.row {
+  display: flex;
+  gap: 1.2rem;
+}
+.col {
+  flex: 1;
+}
+.divider {
+  margin: 2rem 0 1.5rem 0;
+  border: none;
+  border-top: 1px solid #e3e8ee;
+}
+.q-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.section-title {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: #2c6ecf;
+  letter-spacing: 1px;
+}
+.main-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #215bb4;
+  margin-bottom: 1.5rem;
+  letter-spacing: 1px;
 }
 .empty {
   color: #aaa;
   text-align: center;
-  padding: 1.5rem 0;
+  font-size: 15px;
 }
-.loading {
-  color: #409eff;
-  font-size: 1.1rem;
-  text-align: center;
-  margin: 2rem 0;
-}
-.error-tip {
-  color: #fff;
-  background: #f56c6c;
-  border-radius: 6px;
-  padding: 0.75rem 1.2rem;
-  margin-top: 1.5rem;
-  text-align: center;
+.type-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #1976d2;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 1px;
 }
-@media (max-width: 800px) {
-  .edit-card {
-    padding: 1rem;
-  }
-  .q-content {
-    max-width: 120px;
-  }
+.option-item {
+  background: #f7fafd;
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin-bottom: 2px;
+  display: inline-block;
+  font-size: 13px;
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
