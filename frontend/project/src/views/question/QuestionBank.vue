@@ -666,89 +666,86 @@ const fetchCourseQuestions = async () => {
         <!-- Resource List -->
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
-        <div v-else class="resource-table-wrapper">
-
+        <div v-else class="question-cards-container">
             <div v-if="questions.length === 0" class="empty-state">
                 暂无教学资料
             </div>
-            <table v-else class="resource-table">
-                <thead>
-                <tr>
-                    <th>题目内容</th>
-                    <th>所属课程</th>
-                    <th>所属章节</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="question in questions" :key="question.id">
-                    <td>{{ question.name }}</td>
-                    <td>{{ question.courseName }}</td>
-                    <td>{{ question.sectionName || '-' }}</td>
-                    <td class="actions">
-                        <button
-                            class="btn-action preview"
-                            @click="showQuestionDetail(question)"
-                            title="查看"
-                        >
-                            查看
+            <div v-else class="question-cards">
+                <div v-for="question in questions" 
+                     :key="question.id" 
+                     class="question-card"
+                     @click="showQuestionDetail(question)">
+                    <div class="question-card-header">
+                        <span class="question-type">{{ 
+                            question.type === 'singlechoice' ? '单选题' :
+                            question.type === 'multiplechoice' ? '多选题' :
+                            question.type === 'true_false' ? '判断题' :
+                            question.type === 'short_answer' ? '简答题' : '填空题'
+                        }}</span>
+                        <span class="question-course">{{ question.courseName }}</span>
+                    </div>
+                    <div class="question-content">{{ question.name }}</div>
+                    <div class="question-footer">
+                        <span class="question-section">{{ question.sectionName || '未分类' }}</span>
+                        <button class="btn-action preview" @click.stop="showQuestionDetail(question)">
+                            查看详情
                         </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <!-- 在resource-table下方添加弹窗 -->
-            <div v-if="showDetailDialog" class="modal-mask">
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h3>题目详情</h3>
-                        <button class="modal-close" @click="showDetailDialog = false">&times;</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="modal-body" v-if="selectedQuestion">
-                        <div class="detail-row">
-                            <label>课程名称:</label>
-                            <span>{{ selectedQuestion.courseName || '-' }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>章节标题:</label>
-                            <span>{{ selectedQuestion.sectionName || '-' }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>题目类型:</label>
-                            <span>{{
-                                    selectedQuestion.type === 'singlechoice' ? '单选题' :
-                                        selectedQuestion.type === 'multiplechoice' ? '多选题' :
-                                            selectedQuestion.type === 'true_false' ? '判断题' :
-                                                selectedQuestion.type === 'short_answer' ? '简答题' : '填空题'
-                                }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <label>题目内容:</label>
-                            <div class="content-box">{{ selectedQuestion.name }}</div>
-                        </div>
+    <!-- 题目详情弹窗 -->
+    <div v-if="showDetailDialog" class="modal-mask" @click="showDetailDialog = false">
+        <div class="modal-container" @click.stop>
+            <div class="modal-header">
+                <h3>题目详情</h3>
+                <button class="modal-close" @click="showDetailDialog = false">&times;</button>
+            </div>
 
-                        <!-- 选项展示 -->
-                        <div v-if="['singlechoice', 'multiplechoice'].includes(selectedQuestion.type)"
-                             class="detail-row">
-                            <label>题目选项:</label>
-                            <div class="options-list">
-                                <div v-for="(opt, index) in selectedQuestion.optionsArray"
-                                     :key="index"
-                                     class="option-item">
-                                    <span class="option-key">{{ String.fromCharCode(65 + index) }}.</span>
-                                    <span class="option-text">{{ opt }}</span>
-                                    <span v-if="selectedQuestion.answer === opt"
-                                          class="correct-badge">✓</span>
-                                </div>
-                            </div>
-                        </div>
+            <div class="modal-body" v-if="selectedQuestion">
+                <div class="detail-row">
+                    <label>课程名称:</label>
+                    <span>{{ selectedQuestion.courseName || '-' }}</span>
+                </div>
+                <div class="detail-row">
+                    <label>章节标题:</label>
+                    <span>{{ selectedQuestion.sectionName || '-' }}</span>
+                </div>
+                <div class="detail-row">
+                    <label>题目类型:</label>
+                    <span>{{
+                        selectedQuestion.type === 'singlechoice' ? '单选题' :
+                        selectedQuestion.type === 'multiplechoice' ? '多选题' :
+                        selectedQuestion.type === 'true_false' ? '判断题' :
+                        selectedQuestion.type === 'short_answer' ? '简答题' : '填空题'
+                    }}</span>
+                </div>
+                <div class="detail-row">
+                    <label>题目内容:</label>
+                    <div class="content-box">{{ selectedQuestion.name }}</div>
+                </div>
 
-                        <div class="detail-row">
-                            <label>正确答案:</label>
-                            <span class="answer-text">{{ selectedQuestion.answer }}</span>
+                <!-- 选项展示 -->
+                <div v-if="['singlechoice', 'multiplechoice'].includes(selectedQuestion.type)"
+                     class="detail-row">
+                    <label>题目选项:</label>
+                    <div class="options-list">
+                        <div v-for="(opt, index) in selectedQuestion.optionsArray"
+                             :key="index"
+                             class="option-item">
+                            <span class="option-key">{{ String.fromCharCode(65 + index) }}.</span>
+                            <span class="option-text">{{ opt }}</span>
+                            <span v-if="selectedQuestion.answer === opt"
+                                  class="correct-badge">✓</span>
                         </div>
                     </div>
+                </div>
+
+                <div class="detail-row">
+                    <label>正确答案:</label>
+                    <span class="answer-text">{{ selectedQuestion.answer }}</span>
                 </div>
             </div>
         </div>
@@ -1262,6 +1259,215 @@ select:disabled {
 
 .btn-text:hover {
     text-decoration: underline;
+}
+
+.question-cards-container {
+    padding: 20px;
+}
+
+.question-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.question-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.question-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.question-type {
+    background: #e6f7ff;
+    color: #1890ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.question-course {
+    color: #666;
+}
+
+.question-content {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+    /* 文本超出两行显示省略号 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.question-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.question-section {
+    font-size: 14px;
+    color: #999;
+}
+
+.btn-action {
+    background: #1890ff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-action:hover {
+    background: #40a9ff;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 16px;
+}
+
+.loading-container {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.error-message {
+    text-align: center;
+    padding: 20px;
+    color: #ff4d4f;
+    background: #fff2f0;
+    border-radius: 4px;
+    margin: 20px;
+}
+
+/* 弹窗样式 */
+.modal-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #666;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.detail-row {
+    margin-bottom: 16px;
+}
+
+.detail-row label {
+    display: block;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.content-box {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    line-height: 1.6;
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.option-key {
+    color: #1890ff;
+    font-weight: 500;
+}
+
+.correct-badge {
+    color: #52c41a;
+    margin-left: auto;
+}
+
+.answer-text {
+    color: #1890ff;
+    font-weight: 500;
 }
 
 </style>
