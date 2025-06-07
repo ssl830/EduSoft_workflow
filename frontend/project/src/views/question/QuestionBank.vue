@@ -91,10 +91,16 @@ const fetchQuestions = async () => {
             courseId: selectedCourse.value
         })
 
-        questions.value = response.data.questions
+        // 防御性处理，确保 response.data 和 response.data.questions 存在
+        if (response && response.data && Array.isArray(response.data.questions)) {
+            questions.value = response.data.questions
+        } else {
+            questions.value = []
+        }
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
         console.error(err)
+        questions.value = []
     } finally {
         loading.value = false
     }

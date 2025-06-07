@@ -246,14 +246,14 @@ const deleteStudentByIndex = (index: number) => {
 }
 
 // Preview resource
-const deleteStudent = async(studentId: string) => {
+const deleteStudent = async(userId: string) => {
     if (!props.isTeacher) {
         alert('只有老师可以删除学生！')
         return
     }
     try {
-        const response = await ClassApi.deleteStudents(props.classId, studentId)
-        students.value = students.value.filter(s => s.studentId !== studentId);
+        const response = await ClassApi.deleteStudents(props.classId, userId)
+        students.value = students.value.filter(s => String(s.userId) !== String(userId));
         console.log(response)
         fetchStudents()  // 刷新列表
         alert('删除成功！')
@@ -439,7 +439,7 @@ onMounted(() => {
                         <button
                             v-if="isTeacher && student.userId !== authStore.user?.id && !student.isTeacher"
                             class="btn-action preview"
-                            @click="deleteStudent(student.studentId)"
+                            @click="deleteStudent(student.userId)"
                             title="删除"
                         >
                             删除
