@@ -2,7 +2,7 @@
   <div class="home-page">
     <!-- 动态背景 -->
     <Background />
-    
+
     <div class="home-container">
       <section class="welcome-section">
         <div class="welcome-content">
@@ -19,12 +19,9 @@
       <section v-if="authStore.isAuthenticated" class="courses-section">
         <div class="section-header">
           <h2>我的课程</h2>
-          <button
-            v-if="authStore.userRole === 'teacher'"
-            class="btn-primary"
-          >
-            创建课程
-          </button>
+            <router-link to="/course/create" class="btn-primary">
+                <span v-if="authStore.userRole === 'teacher'">创建课程</span>
+            </router-link>
         </div>
 
         <div v-if="loading" class="loading">加载中...</div>
@@ -86,13 +83,13 @@ const goToCourseDetail = (courseId: number) => {
 
 onMounted(async () => {
   console.log('Home.vue mounted, Background component loaded')
-  
+
   if (authStore.isAuthenticated && authStore.user?.id) {
     try {
       console.log('获取用户课程列表，用户ID:', authStore.user.id)
       const response = await CourseApi.getUserCourses(authStore.user.id.toString())
       console.log('课程列表响应:', response)
-      
+
       if (response.code === 200 && response.data) {
         courses.value = Array.isArray(response.data) ? response.data : []
         console.log('课程列表数据:', courses.value)
@@ -143,7 +140,7 @@ onMounted(async () => {
   -webkit-backdrop-filter: blur(20px);
   padding: 3rem;
   border-radius: 20px;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -156,7 +153,7 @@ onMounted(async () => {
 .welcome-content:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-5px);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -187,7 +184,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -217,7 +214,7 @@ onMounted(async () => {
 .feature-card:hover {
   transform: translateY(-8px) scale(1.02);
   background: rgba(255, 255, 255, 0.15);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.3);
@@ -274,7 +271,7 @@ onMounted(async () => {
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 
+  box-shadow:
     0 4px 15px rgba(102, 126, 234, 0.4),
     0 2px 4px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.5px;
@@ -301,7 +298,7 @@ onMounted(async () => {
 
 .btn-primary:hover {
   background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(102, 126, 234, 0.5),
     0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-3px) scale(1.05);
@@ -389,25 +386,25 @@ h2 {
   .home-container {
     padding: 1rem 0.5rem;
   }
-  
+
   .welcome-content {
     padding: 2rem 1.5rem;
     margin: 0 1rem;
   }
-  
+
   h1 {
     font-size: 2.2rem;
   }
-  
+
   h2 {
     font-size: 1.8rem;
   }
-  
+
   .features-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .feature-card {
     padding: 1.5rem;
   }
@@ -417,15 +414,15 @@ h2 {
   .welcome-section {
     padding: 2rem 0;
   }
-  
+
   .welcome-content {
     padding: 1.5rem 1rem;
   }
-  
+
   h1 {
     font-size: 1.8rem;
   }
-  
+
   .welcome-content p {
     font-size: 1rem;
   }

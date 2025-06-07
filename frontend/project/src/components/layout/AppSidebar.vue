@@ -80,6 +80,11 @@ export default {
             <span class="icon">➕</span> 创建课程
           </router-link>
         </li>
+          <li v-if="isTeacher">
+              <router-link to="/class/create" class="sidebar-link">
+                  <span class="icon">➕</span> 创建班级
+              </router-link>
+          </li>
         <li v-if="isTeacher || isTutor">
           <router-link to="/exercise/create" class="sidebar-link">
             <span class="icon">📝</span> 创建练习
@@ -97,7 +102,7 @@ export default {
         <!--        </li>-->
       </ul>
     </div>
-    <div class="sidebar-divider"></div>    
+    <div class="sidebar-divider"></div>
     <div class="sidebar-section">
       <h3 class="sidebar-title">账户</h3>
       <ul class="sidebar-menu">
