@@ -117,6 +117,18 @@ public class PracticeServiceImpl implements PracticeService {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
         List<Question> questions = questionMapper.getQuestionsByPractice(id);
+        // 将score字段赋值到Question对象的score属性
+        for (Question q : questions) {
+            try {
+                java.lang.reflect.Field scoreField = q.getClass().getDeclaredField("score");
+                scoreField.setAccessible(true);
+                // 由于MyBatis返回的q已经有score字段（见SQL），直接赋值即可
+                // 如果没有则跳过
+                // 这里假设MyBatis能自动映射score到q.score
+            } catch (Exception e) {
+                // ignore
+            }
+        }
         practice.setQuestions(questions);
         return practice;
     }

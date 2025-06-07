@@ -27,7 +27,7 @@
                     <h3>题目 {{ index + 1 }}：{{ question.name }}</h3>
                     <div class="question-meta">
                         <span class="question-type">{{ questionTypeMap[question.type] }}</span>
-                        <span class="question-points">{{ question.points }}分</span>
+                        <span class="question-points">{{ question.score || question.points || 0 }}分</span>
                     </div>
 
                     <!-- 单选题 -->
