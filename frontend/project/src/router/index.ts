@@ -215,6 +215,16 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       showSidebar: true  // 显示侧边栏
+    }  
+  },
+  {
+    path: '/help',
+    name: 'HelpAndFeedback',
+    component: () => import('../views/help/HelpAndFeedback.vue'), // Changed path
+    meta: {
+      title: '帮助与反馈',
+      requiresAuth: false,
+      showSidebar: true
     }
   },
   {
