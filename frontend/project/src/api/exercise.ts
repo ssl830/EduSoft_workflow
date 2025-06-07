@@ -135,6 +135,10 @@ const ExerciseApi = {
 
   // Grade a subjective answer (teacher/tutor)
 
+  // 获取某个练习的题目列表
+  getPracticeQuestions(practiceId: number|string) {
+    return axios.get(`/api/practice/${practiceId}/questions`)
+  },
 }
 
 export default ExerciseApi

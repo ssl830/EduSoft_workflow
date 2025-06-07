@@ -49,7 +49,7 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         // 处理选项
-        if (question.getType().equals("singlechoice") || question.getType().equals("multiplechoice")) {
+        if (question.getType() == Question.QuestionType.singlechoice || question.getType() == Question.QuestionType.multiplechoice) {
             if (question.getOptions() == null || question.getOptions().isEmpty()) {
                 throw new PracticeException("QUESTION_OPTIONS_REQUIRED", "选择题必须提供选项");
             }
@@ -92,7 +92,7 @@ public class QuestionServiceImpl implements QuestionService {
 
         // 处理选项
         if (question.getType() != null && 
-            (question.getType().equals("singlechoice") || question.getType().equals("multiplechoice"))) {
+            (question.getType() == Question.QuestionType.singlechoice || question.getType() == Question.QuestionType.multiplechoice)) {
             if (question.getOptionsList() != null && !question.getOptionsList().isEmpty()) {
                 existingQuestion.setOptionsList(question.getOptionsList());
             }
@@ -218,7 +218,7 @@ public class QuestionServiceImpl implements QuestionService {
             }
 
             // 处理选项
-            if (question.getType().equals("singlechoice") || question.getType().equals("multiplechoice")) {
+            if (question.getType() == Question.QuestionType.singlechoice || question.getType() == Question.QuestionType.multiplechoice) {
                 if (question.getOptions() == null || question.getOptions().isEmpty()) {
                     throw new PracticeException("QUESTION_OPTIONS_REQUIRED", "选择题必须提供选项");
                 }
@@ -241,7 +241,7 @@ public class QuestionServiceImpl implements QuestionService {
      */
     private void processQuestionOptions(Question question) {
         if (question.getType() != null && 
-            (question.getType().equals("singlechoice") || question.getType().equals("multiplechoice")) 
+            (question.getType() == Question.QuestionType.singlechoice || question.getType() == Question.QuestionType.multiplechoice) 
             && question.getOptions() != null) {
             question.setOptionsList(Arrays.asList(question.getOptions().split(OPTION_SEPARATOR)));
         }

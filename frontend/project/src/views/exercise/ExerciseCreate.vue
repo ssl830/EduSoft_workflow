@@ -78,8 +78,18 @@ const fetchSections = async (courseId: number) => {
     }
     try {
         const res = await CourseApi.getCourseById(String(courseId));
-        // 假设返回结构为 res.data.data.sections
-        sections.value = res.data.data.sections || [];
+        let sectionsArr = [];
+        if (res.data && res.data.data && Array.isArray(res.data.data.sections)) {
+            sectionsArr = res.data.data.sections;
+        } else if (res.data && Array.isArray(res.data.sections)) {
+            sectionsArr = res.data.sections;
+        } else if (res.data && res.data.data && res.data.data.sections) {
+            sectionsArr = Object.values(res.data.data.sections);
+        }
+        sections.value = sectionsArr;
+        if (!Array.isArray(sectionsArr) || sectionsArr.length === 0) {
+            console.error('课程详情无sections字段', res.data);
+        }
     } catch (err) {
         sections.value = [];
         console.error('获取章节失败', err);
@@ -106,7 +116,12 @@ const fetchClasses = async () => {
 
 // Fetch classes on component mount
 onMounted(() => {
-    fetchClasses()
+    fetchClasses().then(() => {
+        // 如果初始有classId，自动触发一次
+        if (exercise.classId) {
+            handleClassChange(exercise.classId);
+        }
+    });
 })
 
 // TODO
@@ -142,6 +157,7 @@ const nextStep = async () => {
             const response = await ExerciseApi.createExercise({
                 title: exercise.title,
                 classId: exercise.classId,
+                courseId: exercise.courseId,
                 startTime: exercise.startTime,
                 endTime: exercise.endTime,
                 createdBy: authStore.user?.id,
@@ -175,7 +191,14 @@ const prevStep = () => {
   error.value = ''
 }
 
-// Add a new question or update an existing one
+const typeMap = {
+    single_choice: 'singlechoice',
+    multiple_choice: 'multiplechoice',
+    true_false: 'program',
+    short_answer: 'program',
+    fill_blank: 'fillblank'
+};
+
 const addOrUpdateQuestion = async () => {
     // Validate question data
     if (!tempQuestion.content || tempQuestion.points < 0) {
@@ -210,83 +233,51 @@ const addOrUpdateQuestion = async () => {
         return;
     }
 
-    // const questionCopy = JSON.parse(JSON.stringify(tempQuestion))
-    //
-    // if (isEditingQuestion.value && selectedQuestion.value) {
-    //     // Update existing question
-    //     const index = exercise.questions.indexOf(selectedQuestion.value)
-    //     if (index !== -1) {
-    //         exercise.questions[index] = questionCopy
-    //     }
-    // } else {
-    //     // Add new question
-    //     exercise.questions.push(questionCopy)
-    // }
-
-    // Reset form and state
     try {
         // 创建题目到题库
         const questionData = {
-            type: tempQuestion.type,
+            type: typeMap[tempQuestion.type] || tempQuestion.type,
             content: tempQuestion.content,
             options: tempQuestion.options,
             answer: tempQuestion.type === 'multiple_choice'
                 ? tempQuestion.answerArray.join(',')
-                : tempQuestion.answer,
+                : (typeof tempQuestion.answer === 'string' ? tempQuestion.answer : ''),
             analysis: tempQuestion.explanation,
             courseId: exercise.courseId, // 使用练习的课程ID
             sectionId: tempSectionId.value, // 绑定的章节ID
             creatorId: authStore.user?.id
         };
-
-        await QuestionApi.createQuestion(questionData);
-        // const questionId = createResponse.data.data.questionId;
-
-        // // 将题目添加到当前练习
-        // await ExerciseApi.importQuestionsToPractice({
-        //     practiceId: exercise.practiceId,
-        //     questions: [questionId],
-        //     scores: [tempQuestion.points]
-        // });
-        //
-        // // 添加到本地列表
-        // const questionCopy = {
-        //     ...JSON.parse(JSON.stringify(tempQuestion)),
-        //     id: questionId
-        // };
-        //
-        // if (isEditingQuestion.value && selectedQuestion.value) {
-        //     const index = exercise.questions.indexOf(selectedQuestion.value);
-        //     if (index !== -1) {
-        //         exercise.questions[index] = questionCopy;
-        //     }
-        // } else {
-        //     exercise.questions.push(questionCopy);
-        // }
+        const createResponse = await QuestionApi.createQuestion(questionData);
+        const questionId = createResponse.data?.data?.questionId;
+        // 将题目添加到当前练习
+        if (questionId) {
+            await ExerciseApi.importQuestionsToPractice({
+                practiceId: exercise.practiceId,
+                questionIds: [questionId],
+                scores: [tempQuestion.points]
+            });
+        }
         await fetchRepoQuestions();
+        await fetchPracticeQuestions();
         error.value = '';
         ElMessage.success('题目创建成功');
     } catch (err) {
         error.value = '题目创建失败，请稍后再试';
         console.error(err);
     }
-
     resetQuestionForm();
-}
-//
-// // Edit an existing question
-// // 修改编辑题目逻辑
-// const editQuestion = (question: Question) => {
-//     selectedQuestion.value = question;
-//     isEditingQuestion.value = true;
-//
-//     // 处理答案格式转换
-//     const copiedQuestion = JSON.parse(JSON.stringify(question));
-//     if (question.type === 'multiple_choice') {
-//         copiedQuestion.answerArray = question.answer?.split(',') || [];
-//     }
-//     Object.assign(tempQuestion, copiedQuestion);
-// };
+};
+
+// 新增：获取当前练习的题目列表
+const fetchPracticeQuestions = async () => {
+    try {
+        const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
+        exercise.questions = response.data;
+    } catch (err) {
+        exercise.questions = [];
+        console.error('获取练习题目失败', err);
+    }
+};
 
 // Remove a question
 const removeQuestion = (question: Question) => {

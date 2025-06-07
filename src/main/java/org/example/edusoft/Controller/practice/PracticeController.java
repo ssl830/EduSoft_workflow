@@ -217,4 +217,17 @@ public class PracticeController {
             return Result.error(500, "获取练习列表失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 老师端：获取班级所有练习列表
+     */
+    @GetMapping("/list/teacher")
+    public Result<List<Practice>> getPracticeListForTeacher(@RequestParam Long classId) {
+        try {
+            List<Practice> practices = practiceService.getPracticeList(classId);
+            return Result.success(practices, "获取练习列表成功");
+        } catch (Exception e) {
+            return Result.error(500, "获取练习列表失败：" + e.getMessage());
+        }
+    }
 }
