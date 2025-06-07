@@ -91,15 +91,22 @@ const handleLogin = async () => {
   align-items: center;
   min-height: calc(100vh - 64px);
   padding: 2rem;
+  background-image: url('../../assets/login2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .auth-title {

@@ -7,15 +7,14 @@ export interface Discussion {
   id: number;
   title: string;
   content: string;
-  authorId: number;
-  authorName: string;
   courseId: number;
-  courseName: string;
-  isPinned: boolean;
-  isClosed: boolean;
+  classId: number;
+  creatorId: number;
+  creatorNum: string;
   replyCount: number;
   viewCount: number;
-  likeCount: number;
+  isPinned: boolean;
+  isClosed: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,7 +23,6 @@ export interface Discussion {
 export interface CreateDiscussionRequest {
   title: string;
   content: string;
-  courseId: number;
 }
 
 // 更新讨论帖的请求数据
@@ -37,9 +35,8 @@ export interface UpdateDiscussionRequest {
 export interface DiscussionListParams {
   page?: number;
   size?: number;
-  courseId?: number;
   keyword?: string;
-  sortBy?: 'createdAt' | 'replyCount' | 'likeCount' | 'viewCount';
+  sortBy?: 'createdAt' | 'replyCount' | 'viewCount';
   sortOrder?: 'asc' | 'desc';
 }
 
@@ -100,46 +97,43 @@ export interface ErrorResponse {
 
 const discussionApi = {
   // 1. 创建讨论帖
-  createDiscussion: (data: CreateDiscussionRequest) => {
-    return apiClient.post<Discussion>('/api/discussions', data);
+  createDiscussion: (courseId: number, classId: number, data: CreateDiscussionRequest) => {
+    return apiClient.post<Discussion>(`/api/discussion/course/${courseId}/class/${classId}`, data);
   },
 
   // 2. 更新讨论帖
   updateDiscussion: (discussionId: number, data: UpdateDiscussionRequest) => {
-    return apiClient.put<Discussion>(`/api/discussions/${discussionId}`, data);
+    return apiClient.put<Discussion>(`/api/discussion/${discussionId}`, data);
   },
 
   // 3. 删除讨论帖
   deleteDiscussion: (discussionId: number) => {
-    return apiClient.delete(`/api/discussions/${discussionId}`);
+    return apiClient.delete<SuccessResponse>(`/api/discussion/${discussionId}`);
   },
 
   // 4. 获取讨论帖详情
   getDiscussionDetail: (discussionId: number) => {
-    return apiClient.get<Discussion>(`/api/discussions/${discussionId}`);
+    return apiClient.get<Discussion>(`/api/discussion/${discussionId}`);
   },
 
-  // 5. 分页查询讨论帖列表
-  getDiscussionList: (params?: DiscussionListParams) => {
-    return apiClient.get<PageResponse<Discussion>>('/api/discussions', { params });
+  // 5. 获取课程下的讨论列表
+  getDiscussionListByCourse: (courseId: number) => {
+    return apiClient.get<Discussion[]>(`/api/discussion/course/${courseId}`);
   },
 
-  // 6. 获取当前用户的讨论帖列表
-  getMyDiscussions: (params?: { page?: number; size?: number }) => {
-    return apiClient.get<PageResponse<Discussion>>('/api/discussions/my', { params });
+  // 6. 获取班级下的讨论列表
+  getDiscussionListByClass: (classId: number) => {
+    return apiClient.get<Discussion[]>(`/api/discussion/class/${classId}`);
   },
 
-  // 7. 管理员置顶/取消置顶讨论帖
+  // 7. 更新讨论置顶状态
   pinDiscussion: (discussionId: number, isPinned: boolean) => {
-    return apiClient.patch<Discussion>(`/api/discussions/${discussionId}/admin`, {
-      isPinned
-    });
+    return apiClient.put<SuccessResponse>(`/api/discussion/${discussionId}/pin?isPinned=${isPinned}`);
   },
-  // 8. 管理员关闭/开启讨论帖
+
+  // 8. 更新讨论关闭状态
   closeDiscussion: (discussionId: number, isClosed: boolean) => {
-    return apiClient.patch<Discussion>(`/api/discussions/${discussionId}/admin`, {
-      isClosed
-    });
+    return apiClient.put<SuccessResponse>(`/api/discussion/${discussionId}/close?isClosed=${isClosed}`);
   },
 
   // ==================== 回复相关接口 ====================

@@ -10,22 +10,9 @@
               讨论区 {{ courseName ? '- ' + courseName : '' }}
               <span v-if="unreadNotificationsCount > 0" class="badge">{{ unreadNotificationsCount }}</span>
             </h1>
-          </div>
+          </div>          
           <div class="toolbar-right">
-            <button 
-              @click="showCreateInput = true"
-              class="create-discussion-btn"
-            >
-              <i class="fa fa-plus"></i>
-              发起讨论
-            </button>
-            
-            <div class="action-buttons">
-              <button @click="refreshDiscussions" class="action-btn" :disabled="loading">
-                <i class="fa fa-refresh" :class="{ 'fa-spin': loading }"></i>
-                刷新
-              </button>
-            </div>
+            <!-- 删除了发起讨论和刷新按钮，保留右侧导航栏的功能 -->
           </div>
         </div>
         
@@ -126,7 +113,9 @@
             <i class="fa fa-plus-circle"></i>
             发起第一个讨论
           </button>
-        </div>        <div v-else>          <div
+        </div>        
+        <div v-else>          
+          <div
             v-for="thread in filteredThreads"
             :key="thread.id"
             class="discussion-card"
@@ -155,14 +144,14 @@
                   <i class="fa fa-comments"></i>
                   {{ thread.replyCount || 0 }} 回复
                 </span>
-                <span class="tag heat-tag" :class="{'hot': isHot(thread)}">
+                <!-- <span class="tag heat-tag" :class="{'hot': isHot(thread)}">
                   <i class="fa fa-fire"></i>
                   热度: {{ calculateHeat(thread) }}
-                </span>
-                <span class="tag view-tag">
+                </span> -->
+                <!-- <span class="tag view-tag">
                   <i class="fa fa-eye"></i>
                   {{ thread.viewCount || 0 }} 浏览
-                </span>
+                </span> -->
               </div>
               <div class="thread-meta-info">
                 <div class="author-info">
@@ -184,7 +173,7 @@
               <div class="discussion-content-wrapper">
                 <p class="discussion-content line-clamp-2" v-html="formatContent(thread.content)"></p>
               </div>
-              <div class="read-more-link">查看详情 <i class="fa fa-angle-right"></i></div>
+              <!-- <div class="read-more-link">查看详情 <i class="fa fa-angle-right"></i></div> -->
             </div>
 
             <!-- 操作按钮区域 -->
@@ -593,85 +582,130 @@ interface CreateThreadData {
   courseId: string;
 }
 
-// 创建兼容层，用新接口适配旧代码
+// 创建兼容层，用新接口适配旧代码  
 const legacyDiscussionApi = {
-  // 讨论区列表页
   getAllThreads: async () => {
+    console.log('=== getAllThreads 开始执行 ===');
+    console.log('当前courseId.value:', courseId.value);
+    
     try {
-      const response = await discussionApi.getDiscussionList();
-      return {
-        data: (response.data.content || []).map((item: Discussion): Thread => ({
-          id: String(item.id),
-          title: item.title,
-          content: item.content,
-          authorId: String(item.authorId),
-          author: item.authorName,
-          createdAt: item.createdAt,
-          courseId: String(item.courseId),
-          courseName: item.courseName,
-          isPinned: item.isPinned,
-          isClosed: item.isClosed, // 添加isClosed状态
-          likes: item.likeCount,
-          replyCount: item.replyCount,
-          viewCount: item.viewCount // 添加viewCount
-        }))
-      };
+      // 如果有courseId，使用courseId获取讨论列表
+      if (courseId.value) {
+        console.log('正在调用 getDiscussionListByCourse，courseId:', Number(courseId.value));
+        const response = await discussionApi.getDiscussionListByCourse(Number(courseId.value));
+          console.log('getAllThreads API响应完整对象:', response);
+        console.log('getAllThreads response 类型:', typeof response);
+        console.log('getAllThreads response 是否为数组:', Array.isArray(response));
+        
+        // 由于axios拦截器已经返回了response.data，所以这里response就是数据本身
+        const discussionList = Array.isArray(response) ? response : [];
+        console.log('getAllThreads 讨论列表长度:', discussionList.length);
+        
+        if (discussionList.length > 0) {
+          console.log('getAllThreads 第一条讨论数据:', discussionList[0]);
+        }
+        
+        const mappedData = discussionList.map((item: Discussion): Thread => {
+          console.log('getAllThreads 正在映射讨论项:', item);
+          const mapped = {
+            id: String(item.id),
+            title: item.title,
+            content: item.content,
+            authorId: String(item.creatorId),
+            author: item.creatorNum,
+            createdAt: item.createdAt,
+            courseId: String(item.courseId),
+            courseName: `课程 ${item.courseId}`,
+            isPinned: item.isPinned,
+            isClosed: item.isClosed,
+            likes: 0, // 后端接口没有likes字段，设为0
+            replyCount: item.replyCount,
+            viewCount: item.viewCount
+          };
+          console.log('getAllThreads 映射后的数据:', mapped);
+          return mapped;
+        });
+        
+        console.log('getAllThreads 最终返回的数据:', { data: mappedData });
+        return { data: mappedData };
+      } else {
+        // 没有courseId，返回空数组
+        console.log('没有指定课程ID，无法获取讨论列表');
+        return { data: [] };
+      }
     } catch (error) {
-      console.error('获取所有讨论帖失败', error);
-      return { data: [] };
+      console.error('获取所有讨论帖失败 - 详细错误信息:', error);    return { data: [] };
     }
   },
-  
   getThreadsByCourse: async (courseId: string) => {
+    console.log('=== getThreadsByCourse 开始执行 ===');
+    console.log('传入的courseId:', courseId);
+    
     try {
-      const response = await discussionApi.getDiscussionList({ 
-        courseId: Number(courseId),
-        sortBy: 'createdAt',
-        sortOrder: 'desc' 
-      });
-      return {
-        data: (response.data.content || []).map((item: Discussion): Thread => ({
+      console.log('正在调用 getDiscussionListByCourse，courseId:', Number(courseId));
+      const response = await discussionApi.getDiscussionListByCourse(Number(courseId));
+      
+      console.log('getThreadsByCourse API响应完整对象:', response);
+      console.log('getThreadsByCourse response 类型:', typeof response);
+      console.log('getThreadsByCourse response 是否为数组:', Array.isArray(response));
+      
+      // 由于axios拦截器已经返回了response.data，所以这里response就是数据本身
+      const discussionList = Array.isArray(response) ? response : [];
+      console.log('getThreadsByCourse 讨论列表长度:', discussionList.length);
+      
+      if (discussionList.length > 0) {
+        console.log('getThreadsByCourse 第一条讨论数据:', discussionList[0]);
+      }
+      
+      const mappedData = discussionList.map((item: Discussion): Thread => {
+        console.log('getThreadsByCourse 正在映射讨论项:', item);
+        const mapped = {
           id: String(item.id),
           title: item.title,
           content: item.content,
-          authorId: String(item.authorId),
-          author: item.authorName,
+          authorId: String(item.creatorId),
+          author: item.creatorNum,
           createdAt: item.createdAt,
           courseId: String(item.courseId),
-          courseName: item.courseName,
+          courseName: `课程 ${item.courseId}`,
           isPinned: item.isPinned,
           isClosed: item.isClosed,
-          likes: item.likeCount,
+          likes: 0, // 后端接口没有likes字段，设为0
           replyCount: item.replyCount,
           viewCount: item.viewCount
-        }))
-      };
+        };
+        console.log('getThreadsByCourse 映射后的数据:', mapped);
+        return mapped;
+      });
+      
+      console.log('getThreadsByCourse 最终返回的数据:', { data: mappedData });      return { data: mappedData };
     } catch (error) {
-      console.error(`获取课程(${courseId})讨论帖失败`, error);
+      console.error(`获取课程(${courseId})讨论帖失败 - 详细错误信息:`, error);
       return { data: [] };
     }
   },
-  
+
   createThread: async (data: CreateThreadData) => {
     try {
-      const response = await discussionApi.createDiscussion({
+      // 需要courseId和classId，这里假设classId为1（实际项目中需要从路由或上下文获取）
+      const classId = 1; // 临时硬编码，实际需要动态获取
+      const response = await discussionApi.createDiscussion(Number(data.courseId), classId, {
         title: data.title,
-        content: data.content,
-        courseId: Number(data.courseId)
+        content: data.content
       });
       return {
         data: {
           id: String(response.data.id),
           title: response.data.title,
           content: response.data.content,
-          authorId: String(response.data.authorId),
-          author: response.data.authorName,
+          authorId: String(response.data.creatorId),
+          author: response.data.creatorNum,
           createdAt: response.data.createdAt,
           courseId: String(response.data.courseId),
-          courseName: response.data.courseName,
+          courseName: `课程 ${response.data.courseId}`,
           isPinned: response.data.isPinned,
           isClosed: response.data.isClosed,
-          likes: response.data.likeCount,
+          likes: 0,
           replyCount: response.data.replyCount,
           viewCount: response.data.viewCount
         }
@@ -681,7 +715,7 @@ const legacyDiscussionApi = {
       throw error;
     }
   },
-  
+
   deleteThread: async (threadId: string) => {
     try {
       await discussionApi.deleteDiscussion(Number(threadId));
@@ -691,45 +725,49 @@ const legacyDiscussionApi = {
       throw error;
     }
   },
-  
+
   togglePinThread: async (threadId: string, isPinned: boolean) => {
     try {
-      const response = await discussionApi.pinDiscussion(Number(threadId), isPinned);
-      return {
-        data: {
-          id: String(response.data.id),
-          isPinned: response.data.isPinned
-        }
-      };
+      await discussionApi.pinDiscussion(Number(threadId), isPinned);
+      return { data: { success: true } };
     } catch (error) {
       console.error(`${isPinned ? '置顶' : '取消置顶'}讨论帖(${threadId})失败`, error);
       throw error;
     }
   },
-  
+
   likeThread: async (threadId: string) => {
-    // 假设新API中没有直接的点赞方法，这里模拟实现，在实际项目中应根据新API的实际情况来实现
+    // 假设新API中没有直接的点赞方法，这里模拟实现
     console.log(`点赞讨论帖: ${threadId}`);
     return { data: { success: true } };
   },
-  
+
   searchThreads: async (keyword: string) => {
     try {
-      const response = await discussionApi.getDiscussionList({ keyword });
-      // 将新接口的响应转换为旧接口格式
+      // 由于新API没有搜索功能，这里先模拟实现
+      if (!courseId.value) {
+        return { data: [] };
+      }
+      const response = await discussionApi.getDiscussionListByCourse(Number(courseId.value));
+      // 在前端进行简单的关键词过滤
+      const filteredData = (response.data || []).filter((item: Discussion) => 
+        item.title.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.content.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
       return {
-        data: (response.data.content || []).map((item: Discussion): Thread => ({
+        data: filteredData.map((item: Discussion): Thread => ({
           id: String(item.id),
           title: item.title,
           content: item.content,
-          authorId: String(item.authorId),
-          author: item.authorName,
+          authorId: String(item.creatorId),
+          author: item.creatorNum,
           createdAt: item.createdAt,
           courseId: String(item.courseId),
-          courseName: item.courseName,
+          courseName: `课程 ${item.courseId}`,
           isPinned: item.isPinned,
           isClosed: item.isClosed,
-          likes: item.likeCount,
+          likes: 0,
           replyCount: item.replyCount,
           viewCount: item.viewCount
         }))
@@ -739,35 +777,17 @@ const legacyDiscussionApi = {
       return { data: [] };
     }
   },
-  
-  // 获取用户讨论记录
+
   getUserThreads: async () => {
     try {
-      const response = await discussionApi.getMyDiscussions();
-      return {
-        data: (response.data.content || []).map((item: Discussion): Thread => ({
-          id: String(item.id),
-          title: item.title,
-          content: item.content,
-          authorId: String(item.authorId),
-          author: item.authorName,
-          createdAt: item.createdAt,
-          courseId: String(item.courseId),
-          courseName: item.courseName,
-          isPinned: item.isPinned,
-          isClosed: item.isClosed,
-          likes: item.likeCount,
-          replyCount: item.replyCount,
-          viewCount: item.viewCount
-        }))
-      };
+      // 由于新API没有获取用户讨论记录的接口，这里返回空数组
+      console.log('获取用户讨论记录 - 暂未实现');
+      return { data: [] };
     } catch (error) {
       console.error('获取我的讨论帖失败', error);
       return { data: [] };
     }
   },
-  
-  // 通知相关API，临时模拟
   markNotificationAsRead: async (id: string) => {
     console.log(`标记通知已读: ${id}`);
     return { data: { success: true } };
@@ -781,7 +801,7 @@ const router = useRouter();
 const userRole = ref<'student' | 'assistant' | 'teacher'>('student'); // 默认为学生
 const currentUserId = ref<string>('user123'); // 模拟当前用户ID，实际项目中应从认证状态获取
 
-const courseId = ref<string | null>(null);
+const courseId = ref<string | null>('1'); // 设置默认courseId为1，用于测试
 const courseName = ref<string>('');
 const threads = ref<Thread[]>([]);
 const loading = ref(true);
@@ -1239,6 +1259,7 @@ const likeThread = async (threadId: string) => {
 
 // 导航到帖子详情页
 const navigateToThread = (threadId: string) => {
+  console.log('导航到讨论详情页，threadId:', threadId);
   router.push(`/discussions/${threadId}`);
 };
 
@@ -1287,8 +1308,7 @@ const isHot = (thread: Thread) => {
 // 开启/关闭讨论帖
 const toggleCloseThread = async (thread: Thread) => {
   try {
-    // 假设新API里有关闭讨论的方法，这里模拟实现
-    // 实际项目中应该调用相应API
+    await discussionApi.closeDiscussion(Number(thread.id), !thread.isClosed);
     thread.isClosed = !thread.isClosed;
     
     const actionName = thread.isClosed ? '关闭' : '开启';
@@ -1397,9 +1417,10 @@ const markNotificationAsRead = async (notificationId: string) => {
 };
 
 onMounted(async () => {
-  courseId.value = route.params.courseId as string || null;
+  // 从路由参数获取courseId，如果没有则设置默认值用于测试
+  courseId.value = route.params.courseId as string || '1'; // 设置默认courseId为1
   if (newThread) {
-    newThread.courseId = courseId.value || '';
+    newThread.courseId = courseId.value || '1';
   }
   
   // 获取真实的讨论数据

@@ -8,7 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ApiTestTool: typeof import('./src/components/ApiTestTool.vue')['default']
     AppHeader: typeof import('./src/components/layout/AppHeader.vue')['default']
     AppSidebar: typeof import('./src/components/layout/AppSidebar.vue')['default']
     Background: typeof import('./src/components/layout/Background.vue')['default']
@@ -28,6 +27,8 @@ declare module 'vue' {
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']
     ProgressKnob: typeof import('./src/components/littlecomponents/ProgressKnob.vue')['default']
+    ReplyForm: typeof import('./src/components/ReplyForm.vue')['default']
+    ReplyItem: typeof import('./src/components/ReplyItem.vue')['default']
     RichTextEditor: typeof import('./src/components/RichTextEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
