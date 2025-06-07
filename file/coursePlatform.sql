@@ -67,7 +67,7 @@ CREATE TABLE CourseClass (
 CREATE TABLE Question (
                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
                           creator_id BIGINT NOT NULL,
-                          type ENUM('singlechoice', 'program', 'fillblank') NOT NULL,
+                          type ENUM('singlechoice', 'program', 'fillblank','judge') NOT NULL,
                           content TEXT NOT NULL,
                           analysis TEXT,
                           options TEXT,
@@ -259,8 +259,8 @@ CREATE TABLE IF NOT EXISTS teaching_resource (
 CREATE TABLE IF NOT EXISTS learning_progress (
                                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                                  resource_id BIGINT NOT NULL,           -- 教学资源ID
-                                                 student_id BIGINT NOT NULL,            -- 学生ID
-                                                 progress INTEGER NOT NULL,             -- 学习进度（秒）
+                                                 student_id BIGINT NOT NULL,            -- 学生ID       
+                                                 progress DECIMAL(5,2) NOT NULL;        -- 学习进度
                                                  last_position INTEGER NOT NULL,        -- 最后观看位置（秒）
                                                  watch_count INTEGER DEFAULT 0,         -- 观看次数
                                                  last_watch_time DATETIME,              -- 最后观看时间
