@@ -79,4 +79,7 @@ public interface QuestionMapper {
             "WHERE q.course_id = #{courseId} " +
             "ORDER BY q.created_at DESC")
     List<Map<String, Object>> getQuestionListWithNames(@Param("courseId") Long courseId);
+
+    @Update("UPDATE PracticeQuestion SET score = #{score} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
+    void updatePracticeQuestionScore(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("score") Integer score);
 } 

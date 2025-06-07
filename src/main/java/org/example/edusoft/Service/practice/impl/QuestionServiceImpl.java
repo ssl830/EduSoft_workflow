@@ -168,8 +168,35 @@ public class QuestionServiceImpl implements QuestionService {
             }
         }
 
+        // 查询当前练习已有的题目及分数
+        List<Question> existingQuestions = questionMapper.getQuestionsByPractice(practiceId);
+        Map<Long, Integer> existingMap = new java.util.HashMap<>();
+        for (Question q : existingQuestions) {
+            if (q.getId() != null) {
+                existingMap.put(q.getId(), q.getScore());
+            }
+        }
+
+        // 1. 先移除不在新列表中的题目
+        for (Long oldQid : existingMap.keySet()) {
+            if (!questionIds.contains(oldQid)) {
+                questionMapper.removeQuestionFromPractice(practiceId, oldQid);
+            }
+        }
+
+        // 2. 新增或更新题目
         for (int i = 0; i < questionIds.size(); i++) {
-            questionMapper.addQuestionToPractice(practiceId, questionIds.get(i), scores.get(i));
+            Long qid = questionIds.get(i);
+            Integer score = scores.get(i);
+            if (existingMap.containsKey(qid)) {
+                // 已存在，分数不同则更新
+                if (!existingMap.get(qid).equals(score)) {
+                    questionMapper.updatePracticeQuestionScore(practiceId, qid, score);
+                }
+            } else {
+                // 不存在，插入
+                questionMapper.addQuestionToPractice(practiceId, qid, score);
+            }
         }
     }
 
