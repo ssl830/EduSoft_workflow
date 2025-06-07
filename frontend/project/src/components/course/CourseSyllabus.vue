@@ -3,6 +3,7 @@ import {computed, defineProps, onMounted, ref} from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import CourseApi from "../../api/course.ts";
 import {useRoute} from "vue-router";
+import CourseEditDialog from './CourseEditDialog.vue'
 
 const props = defineProps<{
   course: any;
@@ -13,6 +14,7 @@ const isTeacher = authStore.userRole === 'teacher'
 const error = ref('')
 const uploadError = ref('')
 const showSectionForm = ref(false)
+const editDialogVisible = ref(false)
 const uploadForm = ref({
   sections: [
     { sectionId: -1, title: '' }
@@ -86,42 +88,37 @@ const deleteSection = async (sectionId: bigint) => {
   }
 }
 
+const handleEditSuccess = async () => {
+  await fetchCourse()
+}
 </script>
 
 <template>
   <div class="course-syllabus">
     <section class="syllabus-section">
       <div class="section-header">
-        <h2>教学目标</h2>
-        <button v-if="isTeacher" class="btn-edit">编辑</button>
+        <h2>课程信息</h2>
+        <button v-if="isTeacher" class="btn-edit" @click="editDialogVisible = true">编辑</button>
       </div>
       <div class="section-content">
-        <div v-if="course.objective" v-html="course.objective"></div>
-        <div v-else class="empty-state">尚未设置教学目标</div>
+        <div class="info-block">
+          <h3>教学目标</h3>
+          <div v-if="course.objective" v-html="course.objective"></div>
+          <div v-else class="empty-state">尚未设置教学目标</div>
+        </div>
+        <div class="info-block">
+          <h3>考核方式</h3>
+          <div v-if="course.assessment" v-html="course.assessment"></div>
+          <div v-else class="empty-state">尚未设置考核方式</div>
+        </div>
+        <div class="info-block">
+          <h3>课程大纲</h3>
+          <div v-if="course.outline" v-html="course.outline"></div>
+          <div v-else class="empty-state">尚未设置课程大纲</div>
+        </div>
       </div>
     </section>
 
-    <section class="syllabus-section">
-      <div class="section-header">
-        <h2>考核方式</h2>
-        <button v-if="isTeacher" class="btn-edit">编辑</button>
-      </div>
-      <div class="section-content">
-        <div v-if="course.assessment" v-html="course.assessment"></div>
-        <div v-else class="empty-state">尚未设置考核方式</div>
-      </div>
-    </section>
-
-    <section class="syllabus-section">
-      <div class="section-header">
-        <h2>课程大纲</h2>
-        <button v-if="isTeacher" class="btn-edit">编辑</button>
-      </div>
-      <div class="section-content">
-        <div v-if="course.outline" v-html="course.outline"></div>
-        <div v-else class="empty-state">尚未设置课程大纲</div>
-      </div>
-    </section>
     <section class="syllabus-section">
       <div class="section-header">
         <h2>课程章节</h2>
@@ -212,6 +209,13 @@ const deleteSection = async (sectionId: bigint) => {
         <div v-else class="empty-state">尚未设置课程章节</div>
       </div>
     </section>
+
+    <CourseEditDialog
+      v-if="course"
+      v-model="editDialogVisible"
+      :course="course"
+      @success="handleEditSuccess"
+    />
   </div>
 </template>
 
@@ -317,15 +321,16 @@ const deleteSection = async (sectionId: bigint) => {
   background: none;
   border: 1px solid #2c6ecf;
   color: #2c6ecf;
-  padding: 0.375rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
   cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
   transition: all 0.2s;
 }
 
 .btn-edit:hover {
   background-color: #e3f2fd;
+  border-color: #1e88e5;
 }
 
 .resource-table-wrapper {
@@ -458,5 +463,23 @@ const deleteSection = async (sectionId: bigint) => {
 
 .btn-text:hover {
   text-decoration: underline;
+}
+
+.info-block {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.info-block h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c6ecf;
+  font-size: 1rem;
+}
+
+.info-block .empty-state {
+  color: #999;
+  font-style: italic;
 }
 </style>
