@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref} from 'vue'
+import {onMounted, reactive, ref, computed} from 'vue'
 import { defineProps } from 'vue'
 import ClassApi from '../../api/class'
 import {useAuthStore} from "../../stores/auth.ts";
@@ -9,6 +9,7 @@ import Papa from 'papaparse'  // CSV解析库
 const props = defineProps<{
     classId: string;
     isTeacher: boolean;
+    teacherId: number | string;
 }>()
 
 const students = ref<any[]>([])
@@ -44,11 +45,15 @@ const fetchStudents = async () => {
 
     try {
         const response = await ClassApi.getClassStudents(props.classId)
-        // console.log(selectedChapter.value)
-        students.value = response.students
+        // 修正：正确赋值为response.data
+        students.value = (response.data || []).map((stu: any) => ({
+            ...stu,
+            isTeacher: String(stu.userId) === String(props.teacherId)
+        }))
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
+        error.value = '获取学生列表失败，请稍后再试'
         console.error(err)
+        students.value = []
     } finally {
         loading.value = false
     }
@@ -242,19 +247,30 @@ const deleteStudentByIndex = (index: number) => {
 
 // Preview resource
 const deleteStudent = async(studentId: string) => {
-    // /api/classes/{classId}/leave/{userId}
-
+    if (!props.isTeacher) {
+        alert('只有老师可以删除学生！')
+        return
+    }
     try {
-        // 改为发送JSON数据
         const response = await ClassApi.deleteStudents(props.classId, studentId)
-        students.value = students.value.filter(s => s.student_id !== studentId);
+        students.value = students.value.filter(s => s.studentId !== studentId);
         console.log(response)
         fetchStudents()  // 刷新列表
+        alert('删除成功！')
     } catch (err) {
         uploadAloneError.value = '删除学生失败，请稍后再试'
         console.error(err)
     }
 }
+
+const sortedStudents = computed(() => {
+    // 老师置顶，其他成员按原顺序
+    return [...students.value].sort((a, b) => {
+        if (a.isTeacher && !b.isTeacher) return -1;
+        if (!a.isTeacher && b.isTeacher) return 1;
+        return 0;
+    });
+});
 
 onMounted(() => {
     fetchStudents()
@@ -264,7 +280,7 @@ onMounted(() => {
 <template>
     <div class="resource-list-container">
         <div class="resource-header">
-            <h2>学生管理</h2>
+            <h2>班级成员管理</h2>
             <div class="button-group">
                 <button
                     v-if="isTeacher"
@@ -412,19 +428,24 @@ onMounted(() => {
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="student in students" :key="student.user_id">
-                    <td>{{ student.student_name }}</td>
-                    <td>{{ student.student_id }}</td>
+                <tr v-for="student in sortedStudents" :key="student.userId">
+                    <td>
+                        {{ student.studentName }}
+                        <span v-if="student.isTeacher" style="color: #1976d2; font-size: 0.85em; margin-left: 4px;">[老师]</span>
+                    </td>
+                    <td>{{ student.studentId }}</td>
                     <td>{{ student.finishedExercise }}/{{ student.sumExercise }}</td>
-                    <!--         aTODO: 时间-->
                     <td class="actions">
                         <button
+                            v-if="isTeacher && student.userId !== authStore.user?.id && !student.isTeacher"
                             class="btn-action preview"
-                            @click="deleteStudent(student.student_id)"
+                            @click="deleteStudent(student.studentId)"
                             title="删除"
                         >
                             删除
                         </button>
+                        <span v-else-if="student.userId === authStore.user?.id" style="color: #aaa;">不可删除</span>
+                        <span v-else-if="student.isTeacher" style="color: #aaa;">不可删除</span>
                     </td>
                 </tr>
                 </tbody>

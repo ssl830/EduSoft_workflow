@@ -125,6 +125,15 @@ const ClassApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+
+  /**
+   * 老师获取自己负责的所有班级（不查成员表，不会把老师当成员）
+   * @param teacherId 老师用户ID
+   * @returns Promise
+   */
+  getTeacherClasses(teacherId: bigint | number | string) {
+    return axios.get(`/api/classes/teacher/simple/${teacherId}`)
   }
 }
 

@@ -51,17 +51,24 @@ const resetJoinForm = () => {
   errorDialog.value = ''
 }
 
-// 获取班级列表
+// 获取班级列表（根据身份适配接口）
 const fetchClasses = async () => {
   try {
-    const response = await ClassApi.getUserClasses(authStore.user?.id)
+    let response
+    if (authStore.userRole === 'teacher') {
+      // 老师用专用接口，避免查到自己是成员
+      response = await ClassApi.getTeacherClasses(authStore.user?.id)
+    } else {
+      // 学生用原有接口
+      response = await ClassApi.getUserClasses(authStore.user?.id)
+    }
     console.log('获取班级列表响应:', response)
 
     if (response.code === 200 && Array.isArray(response.data)) {
       classes.value = response.data.map(classItem => ({
         ...classItem,
-        name: classItem.className || '未命名班级',
-        code: classItem.classCode || '无代码',
+        name: classItem.className || classItem.name || '未命名班级',
+        code: classItem.classCode || classItem.code || '无代码',
         courseName: classItem.courseName || '未知课程',
         createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
       }))

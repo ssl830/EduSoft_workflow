@@ -20,6 +20,11 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    /**
+     * 创建通知的基础实现
+     * 该方法被NotificationUtils中的各种通知创建方法调用
+     * 用于将通知保存到数据库中
+     */
     public void createNotification(Notification notification) {
         notificationMapper.insert(notification);
     }

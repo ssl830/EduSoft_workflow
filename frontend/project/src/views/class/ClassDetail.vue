@@ -70,7 +70,7 @@ onMounted(async () => {
               :class="['tab-button', { active: activeTab === 'students' }]"
               @click="activeTab = 'students'"
           >
-            学生管理
+            班级成员管理
           </button>
           <button
               :class="['tab-button', { active: activeTab === 'homework' }]"
@@ -93,6 +93,7 @@ onMounted(async () => {
               v-if="activeTab === 'students'"
               :class-id="aclassId"
               :is-teacher="isTeacherOrTutor"
+              :teacher-id="aclass.teacherId"
           />
 
           <!-- Panel 2: 在线练习 -->

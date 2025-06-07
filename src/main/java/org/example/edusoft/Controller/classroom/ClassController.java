@@ -14,6 +14,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import org.example.edusoft.entity.classroom.TeacherClassDTO;
+import org.example.edusoft.service.classroom.TeacherClassService;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -22,6 +24,9 @@ public class ClassController {
 
     @Autowired
     private ClassService classService;
+
+    @Autowired
+    private TeacherClassService teacherClassService;
 
     @PostMapping
     public Result<Class> createClass(@Valid @RequestBody Class clazz) {
@@ -154,5 +159,10 @@ public class ClassController {
     @GetMapping("/user/{userId}")
     public Result<List<ClassDetailDTO>> getClassesByUserId(@PathVariable Long userId) {
         return Result.success(classService.getClassesByUserId(userId));
+    }
+
+    @GetMapping("/teacher/simple/{teacherId}")
+    public Result<List<TeacherClassDTO>> getSimpleClassesByTeacherId(@PathVariable Long teacherId) {
+        return Result.success(teacherClassService.getClassesByTeacherId(teacherId));
     }
 } 

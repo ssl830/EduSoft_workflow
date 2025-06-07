@@ -11,6 +11,11 @@ import java.util.List;
 
 /**
  * 通知工具类
+ * 用于创建各种类型的通知，包括：
+ * 1. 练习通知 - 当老师发布新练习时
+ * 2. 作业通知 - 当老师发布新作业时
+ * 3. 任务通知 - 当老师发布新任务时
+ * 4. DDL提醒 - 当任务截止时间前3天时
  */
 @Component
 public class NotificationUtils {

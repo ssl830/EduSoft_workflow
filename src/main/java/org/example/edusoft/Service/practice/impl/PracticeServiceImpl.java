@@ -58,7 +58,7 @@ public class PracticeServiceImpl implements PracticeService {
         // 获取班级中的所有学生ID
         List<Long> studentIds = practiceMapper.getClassStudentIds(practice.getClassId());
 
-        // 创建通知
+        // 自动创建练习通知：当老师发布新练习时，向班级中的所有学生发送通知
         notificationUtils.createPracticeNotification(
                 practice.getId(),
                 practice.getTitle(),
