@@ -130,8 +130,8 @@ const isSubmitting = ref(false)
 const questionTypeMap = {
     'singlechoice': '单选题',
     'multiplechoice': '多选题',
-    'truefalse': '判断题',
-    'shortanswer': '简答题',
+    'judge': '判断题',
+    'program': '简答题',
     'fillblank': '填空题'
 }
 
