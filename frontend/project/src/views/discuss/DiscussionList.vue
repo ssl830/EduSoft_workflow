@@ -139,10 +139,9 @@
                 <span class="tag like-tag" :class="{'highlight': isLikedByUser(thread.id)}">
                   <i class="fa fa-heart"></i>
                   {{ thread.likes || 0 }} 点赞
-                </span>
-                <span class="tag reply-tag">
+                </span>                <span class="tag reply-tag clickable" @click.stop="toggleRepliesList(thread.id)">
                   <i class="fa fa-comments"></i>
-                  {{ thread.replyCount || 0 }} 回复
+                  {{ getActualReplyCount(thread.id) }} 回复
                 </span>
                 <!-- <span class="tag heat-tag" :class="{'hot': isHot(thread)}">
                   <i class="fa fa-fire"></i>
@@ -220,6 +219,16 @@
                   <span v-if="isLikedByUser(thread.id)" class="like-pulse"></span>
                 </button>
 
+                <!-- 回复按钮 -->
+                <button
+                  @click.stop="toggleReplyInput(thread.id)"
+                  class="action-btn reply-btn"
+                  :disabled="thread.isClosed"
+                >
+                  <i class="fa fa-reply"></i>
+                  <span class="action-text">回复</span>
+                </button>
+
                 <!-- 删除按钮（仅作者、助教和老师可见） -->
                 <button 
                   v-if="canDeleteThread(thread)"
@@ -229,6 +238,92 @@
                   <i class="fa fa-trash"></i>
                   删除
                 </button>
+              </div>
+            </div>
+
+            <!-- 回复输入区 -->
+            <div v-if="replyingToThreadId === thread.id" class="reply-input-section">
+              <textarea
+                v-model="currentReplyContent"
+                placeholder="输入你的回复..."
+                class="reply-textarea"
+                rows="3"
+              ></textarea>
+              <div class="reply-actions">                <button
+                  @click="submitReply(thread.id)"
+                  class="submit-reply-btn"
+                  :disabled="!currentReplyContent.trim()"
+                >
+                  提交回复
+                </button>
+                <button
+                  @click="cancelReply"
+                  class="cancel-reply-btn"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+
+            <!-- 回复列表区 -->
+            <div v-if="showingRepliesForThread === thread.id" class="replies-list-section">
+              <div class="replies-header">                <h4 class="replies-title">
+                  <i class="fa fa-comments"></i>
+                  全部回复 ({{ getActualReplyCount(thread.id) }})
+                </h4>
+                <button @click="hideRepliesList" class="hide-replies-btn">
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+              
+              <div v-if="loadingReplies" class="replies-loading">
+                <div class="loading-spinner">
+                  <i class="fa fa-spinner fa-spin"></i>
+                  加载回复中...
+                </div>
+              </div>
+              
+              <div v-else-if="repliesError" class="replies-error">
+                <i class="fa fa-exclamation-triangle"></i>
+                {{ repliesError }}
+                <button @click="loadReplies(thread.id)" class="retry-btn">重试</button>
+              </div>
+              
+              <div v-else-if="!threadReplies[thread.id] || threadReplies[thread.id].length === 0" class="no-replies">
+                <i class="fa fa-comment-o"></i>
+                暂无回复，来发表第一个回复吧！
+              </div>
+              
+              <div v-else class="replies-list">
+                <div 
+                  v-for="reply in threadReplies[thread.id]" 
+                  :key="reply.id"
+                  class="reply-item"
+                >                  <div class="reply-header">
+                    <div class="reply-author">
+                      <span class="author-avatar">{{ getAvatarInitial(reply.creatorNum) }}</span>
+                      <div class="author-info">
+                        <span class="author-name">{{ reply.creatorNum }}</span>
+                        <span class="author-id">ID: {{ reply.creatorId }}</span>
+                      </div>
+                    </div>
+                    <div class="reply-meta">
+                      <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
+                      <div v-if="canDeleteReply(reply)" class="reply-actions">
+                        <button 
+                          @click="confirmDeleteReply(reply.id)"
+                          class="delete-reply-btn"
+                          title="删除回复"
+                        >
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="reply-content">
+                    {{ reply.content }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -544,7 +639,7 @@
 import { ref, onMounted, computed, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import WriteBoard from '../../components/littlecomponents/WriteBoard.vue';
-import discussionApi, { Discussion } from '../../api/discussion';
+import discussionApi, { Discussion, DiscussionReply } from '../../api/discussion';
 
 // 定义讨论帖类型（旧接口格式）
 interface Thread {
@@ -830,6 +925,73 @@ const newThread = reactive<CreateThreadData>({
 
 // 控制创建输入区显示
 const showCreateInput = ref(false);
+
+// 回复相关状态管理
+const replyingToThreadId = ref<string | null>(null);
+const currentReplyContent = ref('');
+const showingRepliesForThread = ref<string | null>(null);
+const loadingReplies = ref(false);
+const repliesError = ref<string | null>(null);
+// 存储每个讨论帖的回复列表
+const threadReplies = reactive<Record<string, DiscussionReply[]>>({});
+
+// 回复方法
+const toggleReplyInput = (threadId: string) => {
+  if (replyingToThreadId.value === threadId) {
+    // 如果点击的是同一个帖子的回复按钮，则关闭回复框
+    replyingToThreadId.value = null;
+    currentReplyContent.value = '';
+  } else {
+    // 否则打开该帖子的回复框
+    replyingToThreadId.value = threadId;
+    currentReplyContent.value = '';
+  }
+};
+
+const submitReply = async (discussionId: string) => {
+  try {
+    if (!currentReplyContent.value.trim()) {
+      showStatusMessage('回复内容不能为空', 'error');
+      return;
+    }
+
+    // 调用API创建回复
+    const response = await discussionApi.createReply(Number(discussionId), {
+      content: currentReplyContent.value
+    });
+
+    console.log('回复创建成功:', response);
+
+    // 回复成功后清空输入框并隐藏回复区域
+    currentReplyContent.value = '';
+    replyingToThreadId.value = null;
+
+    // 更新讨论帖的回复数量
+    const thread = threads.value.find(t => t.id === discussionId);
+    if (thread) {
+      thread.replyCount = (thread.replyCount || 0) + 1;
+    }    // 如果本地已经加载了回复列表，将新回复添加到列表中
+    if (threadReplies[discussionId]) {
+      // response 是从 axios 拦截器返回的 data，应该直接是 DiscussionReply 类型
+      threadReplies[discussionId].push(Array.isArray(response) ? response[0] : response);
+    }
+
+    // 如果当前正在显示该讨论的回复列表，刷新回复数据
+    if (showingRepliesForThread.value === discussionId) {
+      loadReplies(discussionId);
+    }
+
+    showStatusMessage('回复发表成功', 'success');
+  } catch (error: any) {
+    console.error('发表回复失败:', error);
+    showStatusMessage('发表回复失败: ' + (error.message || '未知错误'), 'error');
+  }
+};
+
+const cancelReply = () => {
+  replyingToThreadId.value = null;
+  currentReplyContent.value = '';
+};
 
 // 监听弹窗状态，当弹窗关闭时重置表单
 watch(showCreateInput, (newValue) => {
@@ -1271,6 +1433,25 @@ const canDeleteThread = (thread: Thread) => {
          userRole.value === 'assistant';
 };
 
+// 获取实际回复数量
+const getActualReplyCount = (threadId: string) => {
+  // 如果已经加载了回复数据，使用实际数量
+  if (threadReplies[threadId]) {
+    return threadReplies[threadId].length;
+  }
+  // 否则使用线程本身的回复数量
+  const thread = threads.value.find(t => t.id === threadId);
+  return thread?.replyCount || 0;
+};
+
+// 检查是否可以删除回复
+const canDeleteReply = (reply: DiscussionReply) => {
+  // 回复创建者本人、教师和助教可以删除回复
+  return reply.creatorId === Number(currentUserId.value) || 
+         userRole.value === 'teacher' || 
+         userRole.value === 'assistant';
+};
+
 // 确认删除帖子
 const confirmDeleteThread = (threadId: string) => {
   if (confirm('确定要删除这个讨论帖吗？此操作无法撤销。')) {
@@ -1288,21 +1469,6 @@ const deleteThread = async (threadId: string) => {
     console.error('删除讨论帖失败:', err);
     showStatusMessage('删除失败: ' + (err.message || '未知错误'), 'error');
   }
-};
-
-// 计算热度函数
-const calculateHeat = (thread: Thread) => {
-  const likes = thread.likes || 0;
-  const replies = thread.replyCount || 0;
-  const views = thread.viewCount || 0;
-  return likes * 2 + replies - Math.floor(views / 10); // 热度算法：两倍点赞+回复-浏览量/10
-};
-
-// 检查一个帖子是否热门
-const isHot = (thread: Thread) => {
-  // 热度阈值，可根据实际情况调整
-  const heatThreshold = 10;
-  return calculateHeat(thread) > heatThreshold;
 };
 
 // 开启/关闭讨论帖
@@ -1455,6 +1621,77 @@ watch(showNotificationPane, (newVal) => {
     fetchNotifications();
   }
 });
+
+// 加载回复列表
+const loadReplies = async (threadId: string) => {
+  if (loadingReplies.value) return;
+  
+  loadingReplies.value = true;
+  repliesError.value = null;
+  
+  try {
+    const response = await discussionApi.getAllReplies(Number(threadId));
+    threadReplies[threadId] = Array.isArray(response) ? response : [];
+  } catch (err: any) {
+    console.error('加载回复失败:', err);
+    repliesError.value = '加载回复失败，请重试';
+  } finally {
+    loadingReplies.value = false;
+  }
+};
+
+// 显示回复列表
+const toggleRepliesList = (threadId: string) => {
+  if (showingRepliesForThread.value === threadId) {
+    // 如果回复列表已经显示，则隐藏
+    showingRepliesForThread.value = null;
+  } else {
+    // 显示选定帖子的回复列表
+    showingRepliesForThread.value = threadId;
+    // 加载回复数据（如果尚未加载）
+    if (!threadReplies[threadId]) {
+      loadReplies(threadId);
+    }
+  }
+};
+
+// 隐藏回复列表
+const hideRepliesList = () => {
+  showingRepliesForThread.value = null;
+};
+
+// 删除回复
+const deleteReply = async (replyId: number) => {
+  try {
+    await discussionApi.deleteReply(replyId);
+    
+    // 更新本地状态，移除已删除的回复，并更新相关讨论的回复数量
+    for (const threadId in threadReplies) {
+      const originalLength = threadReplies[threadId].length;
+      threadReplies[threadId] = threadReplies[threadId].filter(r => r.id !== replyId);
+      
+      // 如果回复数量发生了变化，更新讨论帖的回复数量
+      if (threadReplies[threadId].length < originalLength) {
+        const thread = threads.value.find(t => t.id === threadId);
+        if (thread) {
+          thread.replyCount = Math.max(0, (thread.replyCount || 0) - 1);
+        }
+      }
+    }
+    
+    showStatusMessage('回复已删除', 'success');
+  } catch (err: any) {
+    console.error('删除回复失败:', err);
+    showStatusMessage('删除回复失败，请重试', 'error');
+  }
+};
+
+// 确认删除回复
+const confirmDeleteReply = (replyId: number) => {
+  if (confirm('确定要删除这个回复吗？此操作无法撤销。')) {
+    deleteReply(replyId);
+  }
+};
 
 </script>
 
@@ -1902,7 +2139,7 @@ watch(showNotificationPane, (newVal) => {
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(44, 110, 207, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
  }
 
 .form-actions {
@@ -1978,224 +2215,6 @@ watch(showNotificationPane, (newVal) => {
   cursor: pointer;
   font-weight: 500;
   transition: background-color var(--transition-fast);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-/* Enhanced toolbar styling */
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.toolbar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-}
-
-.toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.title .fa {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.badge {
-  background: linear-gradient(135deg, var(--danger), #ff6b6b);
-  color: white;
-  border-radius: 20px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-  box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
-  animation: pulse-badge 2s infinite;
-}
-
-@keyframes pulse-badge {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.create-discussion-btn {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all var(--transition-normal);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.create-discussion-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.create-discussion-btn:hover::before {
-  left: 100%;
-}
-
-.create-discussion-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.action-btn {
-  padding: 0.6rem 1rem;
-  border: 2px solid transparent;
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--text-secondary);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
-
-.action-btn::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  transition: width var(--transition-normal);
-  z-index: -1;
-}
-
-.action-btn:hover {
-  color: white;
-  border-color: var(--primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.action-btn:hover::after {
-  width: 100%;
-}
-
-.action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Search container enhanced styling */
-.search-container {
-  margin-bottom: 2rem;
-}
-
-.search-inner {
-  display: flex;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-radius: 30px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  overflow: hidden;
-  transition: all var(--transition-normal);
-}
-
-.search-inner:focus-within {
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-  transform: translateY(-2px);
-}
-
-.search-input {
-  flex: 1;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  outline: none;
-}
-
-.search-input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.search-btn {
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3582,153 +3601,340 @@ watch(showNotificationPane, (newVal) => {
   max-height: 0;
 }
 
-/* Responsive design for modal */
-@media (max-width: 768px) {
-  .modal-overlay {
-    padding: 0.5rem;
+/* 回复输入区域样式 */
+.reply-input-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(247, 250, 252, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+}
+
+.reply-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: all var(--transition-fast);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(5px);
+}
+
+.reply-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.reply-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.reply-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  justify-content: flex-end;
+}
+
+.submit-reply-btn,
+.cancel-reply-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-reply-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.submit-reply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.submit-reply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-reply-btn {
+  background: rgba(113, 128, 150, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.cancel-reply-btn:hover {
+  background: rgba(113, 128, 150, 0.2);
+  border-color: var(--text-secondary);
+}
+
+/* 动画效果 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
   }
-  
-  .create-modal-container {
-    width: 98%;
-    max-height: 98vh;
-    border-radius: 16px;
-  }
-  
-  .create-modal-header {
-    padding: 1.5rem 1.5rem 1rem;
-  }
-  
-  .header-text h2 {
-    font-size: 1.5rem;
-  }
-  
-  .header-subtitle {
-    font-size: 0.875rem;
-  }
-  
-  .create-modal-body {
-    padding: 2rem 1.5rem;
-  }
-  
-  .create-modal-footer {
-    padding: 1.5rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .footer-buttons {
-    width: 100%;
-    justify-content: stretch;
-  }
-  
-  .enhanced-btn {
-    flex: 1;
-    min-width: auto;
-  }
-  
-  .enhanced-form-group {
-    margin-bottom: 2rem;
-  }
-  
-  .progress-indicator {
-    padding: 0 1rem;
-    gap: 0.75rem;
-  }
-  
-  .progress-step {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .progress-line {
-    width: 2rem;
-    transform: rotate(90deg);
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
   }
 }
 
-@media (max-width: 480px) {
-  .create-modal-container {
-    width: 100%;
-    height: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
-  }
-  
-  .enhanced-label {
-    font-size: 0.875rem;
-  }
-  
-  .progress-indicator {
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  .progress-line {
-    width: 100%;
-    height: 2px;
-    transform: none;
-  }
-  
-  .header-content {
-    gap: 0.75rem;
-  }
-  
-  .header-icon-wrapper {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-  
-  .close-modal-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1rem;
-  }
+/* 回复列表区域样式 */
+.replies-list-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .modal-overlay {
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
-  .create-modal-container {
-    background: white;
-    border: 2px solid black;
-  }
-  
-  .create-modal-header {
-    background: var(--primary);
-    border-bottom: 2px solid black;
-  }
-  
-  .enhanced-btn {
-    border-width: 2px;
-  }
+.replies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .modal-fade-enter-active,
-  .modal-fade-leave-active {
-    transition-duration: 0.1s;
-  }
-  
-  .create-modal-container {
-    animation: none;
-  }
-  
-  .enhanced-btn:before {
-    display: none;
-  }
-  
-  .btn-pulse {
-    animation: none;
-  }
-  
-  .progress-line.active::after {
-    animation: none;
-  }
+.replies-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.replies-title i {
+  color: var(--primary);
+}
+
+.hide-replies-btn {
+  padding: 0.25rem 0.5rem;
+  background: rgba(113, 128, 150, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+}
+
+.hide-replies-btn:hover {
+  background: rgba(113, 128, 150, 0.2);
+  color: var(--text-primary);
+}
+
+.replies-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-spinner i {
+  color: var(--primary);
+}
+
+.replies-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(245, 101, 101, 0.1);
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  border-radius: var(--border-radius-sm);
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.replies-error .retry-btn {
+  padding: 0.25rem 0.75rem;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+}
+
+.replies-error .retry-btn:hover {
+  background: #e53e3e;
+  transform: translateY(-1px);
+}
+
+.no-replies {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.no-replies i {
+  font-size: 1.5rem;
+  color: var(--text-quaternary);
+}
+
+.replies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reply-item {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--border-radius-sm);
+  backdrop-filter: blur(5px);
+  transition: all var(--transition-fast);
+}
+
+.reply-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--border-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.reply-author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reply-author .author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.reply-author .author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.reply-author .author-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.reply-author .author-id {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  line-height: 1.2;
+}
+
+.reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reply-date {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.reply-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.delete-reply-btn {
+  padding: 0.25rem;
+  background: rgba(245, 101, 101, 0.1);
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  border-radius: var(--border-radius-sm);
+  color: var(--danger);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.75rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-reply-btn:hover {
+  background: rgba(245, 101, 101, 0.2);
+  transform: scale(1.1);
+}
+
+.reply-content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-wrap: break-word;
+  margin-left: 34px; /* Align with author name */
+}
+
+/* 可点击的回复计数样式 */
+.reply-tag.clickable {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reply-tag.clickable:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-dark);
+  transform: translateY(-1px);
 }
 </style>

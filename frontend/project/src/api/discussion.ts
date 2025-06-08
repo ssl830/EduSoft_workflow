@@ -61,8 +61,8 @@ export interface AdminActionRequest {
 export interface DiscussionReply {
   id: number;
   content: string;
-  authorId: number;
-  authorName: string;
+  creatorId: number;
+  creatorNum: string;
   discussionId: number;
   parentReplyId?: number;
   isTeacher: boolean;
