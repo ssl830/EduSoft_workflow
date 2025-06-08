@@ -62,15 +62,19 @@ const tempQuestion = ref({
         { key: 'C', text: '' },
         { key: 'D', text: '' }
     ],
-    analysis: '',
+    explanation: '',
     courseId: null as number | null,
     sectionId: null as number | null,
     creatorId: authStore.user?.id,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
-        return this.type === 'multiplechoice' && this.answer
-            ? this.answer.split('|')
-            : [];
+        if (this.type === 'multiplechoice') {
+            if (typeof this.answer === 'string') {
+                return this.answer ? this.answer.split('|') : [];
+            }
+            return [];
+        }
+        return [];
     },
     set answerArray(values: string[]) {
         this.answer = values.join('|');
@@ -129,8 +133,18 @@ const fetchQuestions = async () => {
         if (response?.code === 200) {
             if (response.data?.questions) {
                 questionsData = response.data.questions
+                questionsData.forEach(q => {
+                    if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                        q.type = 'multiplechoice'
+                    }
+                })
             } else if (Array.isArray(response.data)) {
                 questionsData = response.data
+                questionsData.forEach(q => {
+                    if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                        q.type = 'multiplechoice'
+                    }
+                })
             }
         }
 
@@ -263,7 +277,7 @@ const addQuestion = async () => {
     }
 
     // 处理选项格式
-    const formattedOptions = tempQuestion.value.type === 'fillblank' ? [] : 
+    const formattedOptions = tempQuestion.value.type === 'fillblank' ? [] :
         tempQuestion.value.options
             .filter((opt: { key: string; text: string }) => opt.text.trim() !== '')  // 过滤掉空选项
             .map((opt: { key: string; text: string }) => opt.text)
@@ -291,9 +305,10 @@ const addQuestion = async () => {
         answer: formattedAnswer,
         courseId: tempQuestion.value.courseId,
         sectionId: tempQuestion.value.sectionId,
-        analysis: tempQuestion.value.analysis,
+        analysis: tempQuestion.value.explanation,
         creatorId: tempQuestion.value.creatorId
     }
+    console.log(questionData)
 
     console.warn('准备发送到后端的数据:', JSON.stringify(questionData, null, 2))
 
@@ -437,9 +452,10 @@ const filteredQuestions = computed(() => {
 
 // 更新题目类型选项
 const questionTypes = [
-  { value: 'choice', label: '选择题' },
+  { value: 'singlechoice', label: '单选题' },
+  { value: 'multiplechoice', label: '多选题' },
   { value: 'fillblank', label: '填空题' },
-  { value: 'program', label: '问答题' },
+  { value: 'program', label: '简答题' },
   { value: 'judge', label: '判断题' }
 ]
 
@@ -468,15 +484,6 @@ const selectedType = ref('')
 
             <!-- Question Form -->
             <div class="question-form-byhand-section">
-
-                <div class="form-group">
-                    <label for="questionType">题目类型</label>
-                    <select id="questionType" v-model="tempQuestion.type">
-                        <option v-for="type in questionTypes" :key="type.value" :value="type.value">
-                            {{ type.label }}
-                        </option>
-                    </select>
-                </div>
 
                 <div class="form-row">
                     <div class="form-group form-group-half">
@@ -517,6 +524,16 @@ const selectedType = ref('')
                             <option v-else disabled>加载中...</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="questionType">题目类型</label>
+                    <select id="questionType" v-model="tempQuestion.type">
+                        <option value="singlechoice">单选题</option>
+                        <option value="multiplechoice">多选题</option>
+                        <option value="judge">判断题</option>
+                        <option value="program">简答题</option>
+                        <option value="fillblank">填空题</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -578,7 +595,7 @@ const selectedType = ref('')
                     </select>
                 </div>
 
-                <div v-if="tempQuestion.type === 'multiplechoice'" class="form-group">
+                <div v-else-if="tempQuestion.type === 'multiplechoice'" class="form-group">
                     <label>正确答案 (多选)</label>
                     <div class="checkbox-group">
                         <div
@@ -589,19 +606,46 @@ const selectedType = ref('')
                             <input
                                 :id="`answer-${option.key}`"
                                 type="checkbox"
-                                v-model="tempQuestion.answerArray"
-                                :value="option.key"
+                                :checked="tempQuestion.answerArray.includes(option.key)"
+                                @change="e => {
+                              let arr = tempQuestion.answerArray.slice();
+                              if(e.target.checked) {
+                                  if(!arr.includes(option.key)) arr.push(option.key);
+                              } else {
+                                  arr = arr.filter(k => k !== option.key);
+                              }
+                              arr.sort();
+                              tempQuestion.answer = arr.join('|');
+                          }"
                             />
                             <label :for="`answer-${option.key}`">{{ option.key }}</label>
                         </div>
                     </div>
                 </div>
 
+                <div v-else-if="tempQuestion.type === 'judge'" class="form-group">
+                    <label for="truefalseAnswer">正确答案</label>
+                    <select id="truefalseAnswer" v-model="tempQuestion.answer">
+                        <option value="" disabled>选择正确答案</option>
+                        <option value="True">正确</option>
+                        <option value="False">错误</option>
+                    </select>
+                </div>
+                <div v-else class="form-group">
+                    <label for="fillBlankAnswer">正确答案</label>
+                    <input
+                        id="fillBlankAnswer"
+                        v-model="tempQuestion.answer"
+                        type="text"
+                        placeholder="输入正确答案"
+                    />
+                </div>
+
                 <div class="form-group">
                     <label for="analysis">答案解析</label>
                     <textarea
                         id="analysis"
-                        v-model="tempQuestion.analysis"
+                        v-model="tempQuestion.explanation"
                         rows="4"
                         placeholder="输入答案解析"
                     ></textarea>
@@ -657,8 +701,8 @@ const selectedType = ref('')
                 暂无教学资料
             </div>
             <div v-else class="question-cards">
-                <div v-for="question in filteredQuestions" 
-                     :key="question.id" 
+                <div v-for="question in filteredQuestions"
+                     :key="question.id"
                      class="question-card"
                      @click="showQuestionDetail(question)">
                     <div class="question-card-header">
@@ -672,7 +716,8 @@ const selectedType = ref('')
                           }"
                         >
                           {{
-                            question.type === 'singlechoice' || question.type === 'multiplechoice' ? '选择题' :
+                            question.type === 'singlechoice' ? '单选题' :
+                            question.type === 'multiplechoice' ? '多选题' :
                             question.type === 'fillblank' ? '填空题' :
                             question.type === 'program' ? '问答题' : '判断题'
                           }}
