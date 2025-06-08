@@ -17,10 +17,9 @@
       </section>
 
       <section v-if="authStore.isAuthenticated" class="courses-section">
-        <div class="section-header">
-          <h2>我的课程</h2>
-            <router-link to="/course/create" class="btn-primary">
-                <span v-if="authStore.userRole === 'teacher'">创建课程</span>
+        <div class="section-header">          <h2>我的课程</h2>
+            <router-link v-if="authStore.userRole === 'teacher'" to="/course/create" class="btn-primary">
+                <span>创建课程</span>
             </router-link>
         </div>
 

@@ -21,12 +21,12 @@ export default defineConfig({
     }),
     Components({
       resolvers: [ElementPlusResolver()],
-    }),
-  ],  resolve: {
+    }),  ],
+  resolve: {
     alias: {
-      '@': resolve('./src'),
+      '@': resolve(__dirname, 'src'),
       '@popperjs/core/lib/modifiers/offset.js': resolve('./node_modules/@popperjs/core/dist/esm/modifiers/offset.js'),
-    },
+    }
   },
   server: {
     port: 3000, // 修改为 3000 端口

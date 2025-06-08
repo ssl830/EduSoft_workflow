@@ -211,9 +211,8 @@ onMounted(() => {
 <template>
     <div class="video-list-container">
         <div class="video-header">
-            <h2>课程视频</h2>
-            <!--                v-if="isTeacher"-->
-            <button
+            <h2>课程视频</h2>            <button
+                v-if="isTeacher"
                 class="btn-primary"
                 @click="showUploadForm = !showUploadForm"
             >

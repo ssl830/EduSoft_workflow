@@ -88,14 +88,24 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
-  },
-  {
+  },  {
     path: '/exercise/create',
     component: () => import('../views/exercise/ExerciseCreate.vue'),
     meta: {
       title: '创建练习',
       requiresAuth: true,
       roles: ['teacher', 'tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/study-records',
+    name: 'StudyRecords',
+    component: () => import('../views/record/StudyRecordList.vue'),
+    meta: {
+      title: '学习记录',
+      requiresAuth: true,
+      roles: ['student'],
       showSidebar: true
     }
   },
@@ -177,7 +187,17 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/question/QuestionWrong.vue'),
     meta: {
       title: '错误题库',
+      requiresAuth: true,      showSidebar: true
+    }
+  },
+  {
+    path: '/study-records',
+    name: 'StudyRecordList',
+    component: () => import('../views/record/StudyRecordList.vue'),
+    meta: {
+      title: '学习记录',
       requiresAuth: true,
+      roles: ['student'],
       showSidebar: true
     }
   },

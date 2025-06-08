@@ -50,9 +50,14 @@ export default {
             <span class="icon">📈</span> 错误题库
           </router-link>
         </li>
+        <li v-if="isStudent">
+          <router-link to="/study-records" class="sidebar-link">
+            <span class="icon">📖</span> 学习记录
+          </router-link>
+        </li>
         <li>
           <router-link to="/learning-records" class="sidebar-link">
-            <span class="icon">📊</span> 学习记录
+            <span class="icon">📊</span> 练习记录
           </router-link>
         </li>
         <li>
@@ -60,11 +65,11 @@ export default {
             <span class="icon">🔔</span> 通知中心
           </router-link>
         </li>
-        <li>
-          <router-link to="/discussions" class="sidebar-link">
+        <li>          <router-link to="/discussions" class="sidebar-link">
             <span class="icon">💬</span> 讨论区
           </router-link>
         </li>
+        
       </ul>
     </div>
     <div class="sidebar-section" v-if="isTeacher || isTutor">

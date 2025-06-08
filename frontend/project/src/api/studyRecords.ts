@@ -6,13 +6,19 @@ export type ExportFormat = 'excel' | 'pdf'
 // 学习记录接口
 export interface StudyRecord {
   id: number;
+  resourceId: number;
   studentId: number;
-  courseId: number;
-  sectionId: number;
-  completed: boolean;
-  completedAt: string;
+  progress: number;
+  lastPosition: number;
+  watchCount: number;
+  lastWatchTime: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resourceTitle: string;
   courseName: string;
   sectionTitle: string;
+  formattedProgress: string;
+  formattedLastWatchTime: string;
 }
 
 // 练习记录中的题目接口

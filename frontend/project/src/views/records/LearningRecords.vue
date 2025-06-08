@@ -7,8 +7,8 @@
     </div>
     
     <header class="page-header">
-      <h1>学习记录</h1>
-      <p>查看您的学习轨迹、练习记录和反馈，帮助您更好地评估和调整学习计划。</p>
+      <h1>练习记录</h1>
+      <p>查看您的练习记录和反馈，帮助您更好地评估和调整学习计划。</p>
       <!-- 显示当前班级信息（教师/助教可见） -->
       <div v-if="(userRole === 'teacher' || userRole === 'assistant') && currentClass" class="class-info">
         <span class="class-badge">
@@ -213,7 +213,12 @@
                 >
                   <div class="question-header">
                     <span class="question-number">第{{ index + 1 }}题</span>
-                    <span class="question-type">{{ question.type }}</span>
+                    <span class="question-type">{{
+                      question.type === 'singlechoice' ? '选择题' :
+                      question.type === 'program' ? '问答题' :
+                      question.type === 'fillblank' ? '填空题' :
+                      question.type === 'judge' ? '判断题' : question.type
+                    }}</span>
                     <span class="question-score" :class="{ 'full-score': question.isCorrect }">
                       {{ question.score || 0 }}分
                     </span>
