@@ -156,6 +156,12 @@ public class RecordController {
             }
             Long studentId = StpUtil.getLoginIdAsLong();
             byte[] data = recordService.exportPracticeRecordsByCourseToExcel(studentId, courseId);
+            
+            if (data == null || data.length == 0) {
+                writeErrorResponse(response, "导出数据为空");
+                return;
+            }
+
             // 设置响应头
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition",
@@ -168,7 +174,8 @@ public class RecordController {
             // 写入响应流
             response.getOutputStream().write(data);
             response.getOutputStream().flush();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             try {
                 writeErrorResponse(response, "导出练习记录失败: " + e.getMessage());
             } catch (IOException ex) {

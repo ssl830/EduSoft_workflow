@@ -23,10 +23,22 @@ const ResourceApi = {
       }
     })
   },
+ 
 
-  // Get resources for a course
-  getCourseResources(courseId: string, params = {}) {
-    return axios.post(`/api/courses/${courseId}/resources`, { params })
+
+  // Get resources for a course 
+  getCourseResources(courseId: number, data: {
+    courseId: number;
+    userId: number;
+    chapter?: number; 
+    type?: string;
+    title?: string;
+    isTeacher: boolean;
+  }) {
+    return axios.post(`/api/courses/${courseId}/filelist`, { 
+      ...data,
+      courseId: Number(courseId), 
+    })
   },
 
   // Upload resource
@@ -46,7 +58,30 @@ const ResourceApi = {
 
   // Download resource
   downloadResource(resourceId: string) {
-    return axios.get(`/api/resources/${resourceId}/download`)
+    return axios.get<{
+      code: number;
+      message: string;
+      data: {
+        url: string;
+        fileName: string;
+        fileType?: string;
+        expiresIn: number;
+      }
+    }>(`/api/resources/${resourceId}/download`)
+  },
+
+  // Preview resource
+  previewResource(resourceId: string) {
+    return axios.get<{
+      code: number;
+      message: string;
+      data: {
+        url: string;
+        fileName: string;
+        fileType?: string;
+        expiresIn: number;
+      }
+    }>(`/api/resources/${resourceId}/preview`)
   },
 
   // Update resource (teacher/tutor only)
@@ -81,6 +116,24 @@ const ResourceApi = {
   // Delete resource (teacher/tutor only)
   deleteResource(resourceId: string) {
     return axios.delete(`/resources/${resourceId}`)
+  },
+
+  // Update resource duration
+  updateResourceDuration(resourceId: string, duration: number) {
+    return axios.put(`/api/resources/${resourceId}/duration`, { duration })
+  },
+
+  // Get video progress
+  getVideoProgress(resourceId: string, studentId: string) {
+    return axios.get<{
+      code: number;
+      message: string;
+      data: {
+        progress: number;
+        lastPosition: number;
+        watchCount: number;
+      }
+    }>(`/api/resources/progress/${resourceId}/${studentId}`)
   }
 }
 

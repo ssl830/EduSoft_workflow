@@ -3,6 +3,8 @@ package org.example.edusoft.service.file.impl;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
+import com.aliyun.oss.model.ResponseHeaderOverrides;
+
 import org.example.edusoft.common.properties.FsServerProperties;
 import org.example.edusoft.entity.file.FileAccessDTO;
 import org.example.edusoft.entity.file.FileInfo;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
  
 import java.net.URL;
 import java.util.Date;
+import java.net.URLEncoder;
+import org.springframework.http.HttpMethod;
 
 @Slf4j
 @Service
@@ -118,28 +122,37 @@ public class FileAccessServiceImpl implements FileAccessService {
                 // 设置URL过期时间为1小时
                 Date expiration = new Date(System.currentTimeMillis() + 3600 * 1000);
                 
+                // 获取文件类型和MIME类型
+                String suffix = FileUtil.getFileSuffix(objectName);
+                String contentType = FileUtil.getContentType("." + suffix);
+                String fileName = getFileNameFromObjectName(objectName);
                 // 构造带参数的预签名请求
                 GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(
                     config.getBucket(),
                     objectName
                 );
 
+                request.setMethod(com.aliyun.oss.HttpMethod.GET);
                 // 设置过期时间
                 request.setExpiration(expiration);
-
-                // 获取文件类型
-                String contentType = FileUtil.getContentType("." + FileUtil.getFileSuffix(objectName));
-
-                // 设置响应头：内联预览
-                request.addQueryParameter("response-content-type", contentType);
-                request.addQueryParameter("response-content-disposition", "inline");
+                
+                //request.addQueryParameter("response-content-type", contentType);
+                //   让浏览器以内嵌方式显示，并带上文件名（UTF-8 编码防止乱码）
+                request.addQueryParameter(
+                    "response-content-disposition",
+                    "inline;filename=" + URLEncoder.encode(fileName, "UTF-8")
+                );
 
                 // 生成带签名的临时访问URL
                 URL url = ossClient.generatePresignedUrl(request);
 
+
+                log.debug("Generated preview URL: {}", url.toString());
+
                 return FileAccessDTO.builder()
                     .url(url.toString())
-                    .fileName(getFileNameFromObjectName(objectName))
+                    .fileName(fileName)
+                    .fileType(suffix)
                     .expiresIn(3600)
                     .build();
 

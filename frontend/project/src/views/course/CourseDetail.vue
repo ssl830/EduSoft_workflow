@@ -16,6 +16,19 @@ interface ApiResponse<T> {
   data: T
 }
 
+interface Section {
+  id: string;
+  title: string;
+  sortOrder: string;
+}
+
+interface ClassInfo {
+  id: string;
+  name: string;
+  classCode: string;
+  studentCount: number;
+}
+
 interface Course {
   id: number
   name: string
@@ -28,6 +41,8 @@ interface Course {
   objective: string
   outline: string
   assessment: string
+  sections: Section[]
+  classes: ClassInfo[]
 }
 
 const route = useRoute()
@@ -50,6 +65,7 @@ onMounted(async () => {
     const response = await CourseApi.getCourseById(courseId.value) as unknown as ApiResponse<Course>
     if (response && response.code === 200 && response.data) {
       course.value = response.data
+      console.log('Course data:', course.value) // 添加日志以检查数据
     } else {
       error.value = '获取课程详情失败'
       console.error('获取课程详情失败: 响应数据格式不正确', response)
@@ -126,11 +142,13 @@ const handleEditSuccess = async () => {
             v-else-if="activeTab === 'resources'"
             :course-id="courseId"
             :is-teacher="isTeacherOrTutor"
+            :course="course"
           />
           <CourseVideoList
             v-else-if="activeTab === 'video'"
             :course-id="courseId"
             :is-teacher="isTeacherOrTutor"
+            :course="course"
           />
         </div>
       </div>

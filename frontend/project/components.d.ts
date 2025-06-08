@@ -40,6 +40,7 @@ declare module 'vue' {
     SimpleKnob: typeof import('./src/components/littlecomponents/SimpleKnob.vue')['default']
     Theme: typeof import('./src/components/littlecomponents/Theme.vue')['default']
     ThemeToggle: typeof import('./src/components/littlecomponents/ThemeToggle.vue')['default']
+    TopNav: typeof import('./src/components/layout/TopNav.vue')['default']
     WriteBoard: typeof import('./src/components/littlecomponents/WriteBoard.vue')['default']
   }
 }

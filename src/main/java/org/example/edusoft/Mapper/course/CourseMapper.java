@@ -105,4 +105,17 @@ public interface CourseMapper extends BaseMapper<Course> {
 
     @Delete("DELETE FROM course WHERE id = #{id}")
     int deleteById(Long id);
+    @Select("""
+            SELECT 
+                cl.id,
+                cl.name,
+                cl.class_code as classCode,
+                (SELECT COUNT(DISTINCT cu.user_id) 
+                 FROM ClassUser cu 
+                 WHERE cu.class_id = cl.id) as studentCount
+            FROM CourseClass cc
+            JOIN Class cl ON cc.class_id = cl.id
+            WHERE cc.course_id = #{courseId}
+            """)
+    List<CourseDetailDTO.ClassInfo> getClassesByCourseId(Long courseId);
 } 

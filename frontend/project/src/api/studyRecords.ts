@@ -302,7 +302,8 @@ export const StudyRecordsApi = {
     return axios.get(`/api/record/practice/course/${courseId}/export`, {
       responseType: 'blob',
       headers: {
-        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
+        'Content-Type': 'application/json'
       }
     });
   }
