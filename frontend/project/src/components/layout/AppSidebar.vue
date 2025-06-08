@@ -85,20 +85,10 @@ export default {
       <h3 class="sidebar-title">教师工具</h3>
       <ul class="sidebar-menu">
         <li v-if="isTeacher">
-          <router-link to="/exercise/grading" class="sidebar-link">
-            <span class="icon">✓</span> 批阅练习
-          </router-link>
-        </li>
-        <li v-if="isTeacher">
           <router-link to="/course/create" class="sidebar-link">
             <span class="icon">➕</span> 创建课程
           </router-link>
         </li>
-          <li v-if="isTeacher">
-              <router-link to="/class/create" class="sidebar-link">
-                  <span class="icon">➕</span> 创建班级
-              </router-link>
-          </li>
         <li v-if="isTeacher || isTutor">
           <router-link to="/exercise/create" class="sidebar-link">
             <span class="icon">📝</span> 创建练习
