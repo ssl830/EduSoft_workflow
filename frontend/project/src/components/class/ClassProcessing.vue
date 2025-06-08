@@ -70,18 +70,16 @@ const fetchPractices = async () => {
             practices.value = response.data
         }
 
-        // // 提取唯一练习名称
-        // const practiceSet = new Map()
-        // practices.value.forEach((ex: any) => {
-        //     if (ex.id && ex.name) {
-        //         practiceSet.set(ex.id, ex.name)
-        //     }
-        // })
-        // practicesName.value = Array.from(practiceSet, ([id, name]) => ({id, name}))
-        //
-        // // 提取学生姓名
-        // const namesSet = new Set(practices.value.map((r: any) => r.name).filter(Boolean))
-        // names.value = Array.from(namesSet)
+        console.log("practices.value:",practices.value)
+
+        // 提取唯一练习名称
+        const practiceSet = new Map()
+        practices.value.forEach((ex: any) => {
+            if (ex.id && ex.title) {
+                practiceSet.set(ex.id, ex.title)
+            }
+        })
+        practicesName.value = Array.from(practiceSet, ([id, title]) => ({id, title}))
 
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
@@ -100,8 +98,9 @@ const fetchPendingCorrections = async () => {
         // 调用新的API端点
         const response = await ExerciseApi.getPendingJudgeList({
             classId: props.classId,
-            practiced: selectedExer.value === -1 ? undefined : selectedExer.value
+            practiceId: selectedExer.value === -1 ? undefined : selectedExer.value
         })
+        console.log("response:", response.data)
         // 更新数据结构
         pendingCorrections.value = response.data
         console.log(pendingCorrections.value)
@@ -133,9 +132,14 @@ const doPractice = (practiceId: number) => {
 
 // 批改练习
 const checkPractice = (submissionId: number) => {
+    console.log(selectedExer.value)
+    if(selectedExer.value == -1){
+        error.value = '请选择一个练习进行批改'
+        return
+    }
     router.push({
         name: 'CheckExercise',
-        params: { submissionId }
+        params: { practiceId: selectedExer.value, submissionId: submissionId }
     })
 }
 
@@ -213,26 +217,24 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- 筛选区域 -->
-<!--        <div class="resource-filters" v-if="currentView === 'exercises'">-->
-<!--            <div class="filter-section">-->
-<!--                <label for="typeFilter">按练习筛选:</label>-->
-<!--                <select-->
-<!--                    id="typeFilter"-->
-<!--                    v-model="selectedExer"-->
-<!--                >-->
-<!--                    <option value=-1>所有练习</option>-->
-<!--                    <option-->
-<!--                        v-for="practice in practicesName"-->
-<!--                        :key="practice.id"-->
-<!--                        :value="practice.id"-->
-<!--                    >-->
-<!--                        {{ practice.name }}-->
-<!--                    </option>-->
-<!--                </select>-->
-<!--            </div>-->
-
-<!--        </div>-->
+        <div class="resource-filters" v-if="currentView === 'corrections'">
+            <div class="filter-section">
+                <label for="typeFilter">按练习筛选:</label>
+                <select
+                    id="typeFilter"
+                    v-model="selectedExer"
+                >
+                    <option value=-1>所有练习</option>
+                    <option
+                        v-for="practice in practicesName"
+                        :key="practice.id"
+                        :value="practice.id"
+                    >
+                        {{ practice.title }}
+                    </option>
+                </select>
+            </div>
+        </div>
 
         <!-- 待批改列表视图 -->
         <div v-if="!isStudent && currentView === 'corrections'">

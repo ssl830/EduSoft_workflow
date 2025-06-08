@@ -54,6 +54,7 @@ const fetchPendingAnswers = async () => {
         const response = await ExerciseApi.fetchPendingAnswers({
                 submissionId: submissionId,
         });
+        console.log(response)
         console.log(response.code)
         if (response.code === 200) {
             questions.value = response.data;
