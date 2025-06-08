@@ -171,13 +171,15 @@ const nextStep = async () => {
                 createdBy: authStore.user?.id,
                 allowMultipleSubmission: exercise.allowMultipleSubmission,
             });
-
+            console.log(response.data)
+            console.log()
+            
             // 存储练习ID
             exercise.practiceId = response.data.practiceId;
             currentStep.value = 2;
             error.value = '';
-            // console.log(response.data.data.practiceId)
-            // console.log(exercise.practiceId);
+            console.log(response.data.practiceId)
+            console.log(exercise.practiceId);
             // 获取题库题目
             await fetchRepoQuestions();
         } catch (err) {

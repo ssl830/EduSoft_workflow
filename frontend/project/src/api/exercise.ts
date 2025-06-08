@@ -40,6 +40,7 @@ const ExerciseApi = {
   createExercise(data: {
     title: string;
     classId: number;
+    courseId: number;
     startTime?: string;
     endTime?: string;
     createdBy?: bigint;
