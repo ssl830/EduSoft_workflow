@@ -2,6 +2,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { StudyRecord } from '../../api/studyRecords'
 import axios from '../../api/axios'
+import StudyRecordsApi from '../../api/studyRecords'
+import { useAuthStore } from '../../stores/auth'
+import CourseApi from '../../api/course'
 
 interface ApiResponse<T> {
   code: number;
@@ -13,6 +16,12 @@ const records = ref<StudyRecord[]>([])
 const loading = ref(true)
 const error = ref('')
 const selectedCourse = ref('')
+const exportStatus = ref<{ loading: boolean; error: string | null }>({ loading: false, error: null })
+const authStore = useAuthStore()
+const userId = computed(() => authStore.user?.userId || authStore.user?.id)
+
+// 课程选项结构：[{ name, id }]
+const courseList = ref<{ id: string | number; name: string }[]>([])
 
 const fetchRecords = async () => {
   loading.value = true;
@@ -34,6 +43,19 @@ const fetchRecords = async () => {
   }
 }
 
+// 获取课程列表
+const fetchCourses = async () => {
+  if (!userId.value) return
+  try {
+    const res = await CourseApi.getUserCourses(String(userId.value))
+    if (res && res.data) {
+      courseList.value = res.data.map((c: any) => ({ id: String(c.id), name: c.name }))
+    }
+  } catch (e) {
+    // 忽略
+  }
+}
+
 // 格式化时间
 const formatDateTime = (dateTimeStr: string) => {
   if (!dateTimeStr) return '-'
@@ -47,11 +69,13 @@ const formatDateTime = (dateTimeStr: string) => {
   })
 }
 
-// 从记录中提取所有不重复的课程
-const courseOptions = computed(() => {
-  const courses = new Set(records.value.map(record => record.courseName))
-  return Array.from(courses)
-})
+// 课程下拉选项
+const courseOptions = computed(() => courseList.value.map(c => c.name))
+
+// 通过课程名查ID
+const getCourseIdByName = (name: string) => {
+  return courseList.value.find(c => c.name === name)?.id
+}
 
 // 根据选中的课程筛选记录
 const filteredRecords = computed(() => {
@@ -59,13 +83,48 @@ const filteredRecords = computed(() => {
   return records.value.filter(record => record.courseName === selectedCourse.value)
 })
 
+// 导出选中课程的学习记录
+const exportSelectedCourseRecords = async () => {
+  if (!selectedCourse.value) return
+  exportStatus.value.loading = true
+  exportStatus.value.error = null
+  try {
+    const courseId = getCourseIdByName(selectedCourse.value)
+    if (!courseId) throw new Error('未找到课程ID')
+    const response = await StudyRecordsApi.exportStudyRecordsByCourse(String(courseId))
+    if (!response || !(response instanceof Blob)) {
+      throw new Error('服务器返回的数据格式不正确')
+    }
+    if (response.size > 0) {
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
+      const filename = `${selectedCourse.value}_学习记录_${timestamp}.xlsx`
+      const url = window.URL.createObjectURL(response)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } else {
+      throw new Error('服务器返回的数据为空')
+    }
+  } catch (err: any) {
+    exportStatus.value.error = err?.message || '导出失败'
+  } finally {
+    exportStatus.value.loading = false
+  }
+}
+
 onMounted(() => {
   fetchRecords()
+  fetchCourses()
 })
 </script>
 
 <template>
-  <div class="study-record-container">    <header class="page-header">
+  <div class="study-record-container">
+    <header class="page-header">
       <h1>学习记录</h1>
       <div class="filter-section" v-if="courseOptions.length > 0">
         <select v-model="selectedCourse" class="course-filter">
@@ -74,9 +133,20 @@ onMounted(() => {
             {{ course }}
           </option>
         </select>
+        <button
+          class="btn btn-export"
+          :disabled="!selectedCourse || exportStatus.loading"
+          style="margin-left: 1rem;"
+          @click="exportSelectedCourseRecords"
+        >
+          <span v-if="exportStatus.loading">导出中...</span>
+          <span v-else>导出记录</span>
+        </button>
       </div>
     </header>
-
+    <div v-if="exportStatus.error" class="error-message" style="margin-bottom: 1rem;">
+      {{ exportStatus.error }}
+    </div>
     <div v-if="loading" class="loading-container">
       加载中...
     </div>
@@ -270,6 +340,22 @@ onMounted(() => {
   border-color: #42b983;
   outline: none;
   box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.1);
+}
+
+.btn.btn-export {
+  background: #42b983;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn.btn-export:disabled {
+  background: #b2dfdb;
+  color: #eee;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
