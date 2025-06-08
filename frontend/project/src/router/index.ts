@@ -279,6 +279,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/schedule',
+    name: 'Schedule',
+    component: () => import('../views/ScheduleView.vue'),
+    meta: {
+      title: '课表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

@@ -9,6 +9,7 @@ import org.example.edusoft.entity.imports.ImportRecord;
 import org.example.edusoft.mapper.classroom.ClassMapper;
 import org.example.edusoft.mapper.classroom.ClassUserMapper;
 import org.example.edusoft.mapper.imports.ImportRecordMapper;
+import org.example.edusoft.mapper.course.CourseMapper;
 import org.example.edusoft.service.classroom.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,14 +32,20 @@ public class ClassServiceImpl implements ClassService {
     @Autowired
     private ImportRecordMapper importRecordMapper;
 
+    @Autowired
+    private CourseMapper courseMapper;
+
     @Override
     @Transactional
     public Class createClass(Class clazz) {
-        if (clazz.getName() == null || clazz.getName().trim().isEmpty()) {
-            throw new BusinessException(400, "班级名称不能为空");
+        if (clazz.getCourseId() == null) {
+            throw new BusinessException(400, "课程ID不能为空");
         }
         if (clazz.getClassCode() == null || clazz.getClassCode().trim().isEmpty()) {
             throw new BusinessException(400, "班级代码不能为空");
+        }
+        if (clazz.getName() == null || clazz.getName().trim().isEmpty()) {
+            throw new BusinessException(400, "班级名称不能为空");
         }
         classMapper.insert(clazz);
         return clazz;

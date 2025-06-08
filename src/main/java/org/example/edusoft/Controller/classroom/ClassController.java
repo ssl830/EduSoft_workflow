@@ -165,4 +165,10 @@ public class ClassController {
     public Result<List<TeacherClassDTO>> getSimpleClassesByTeacherId(@PathVariable Long teacherId) {
         return Result.success(teacherClassService.getClassesByTeacherId(teacherId));
     }
+
+    // 课表API，返回用户所有班级信息
+    @GetMapping("/schedule/user/{userId}")
+    public Result<List<ClassDetailDTO>> getScheduleByUserId(@PathVariable Long userId) {
+        return Result.success(classService.getClassesByUserId(userId));
+    }
 } 
