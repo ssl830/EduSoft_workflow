@@ -69,11 +69,11 @@ const tempQuestion = ref({
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
         return this.type === 'multiplechoice' && this.answer
-            ? this.answer.split(',')
+            ? this.answer.split('|')
             : [];
     },
     set answerArray(values: string[]) {
-        this.answer = values.join(',');
+        this.answer = values.join('|');
     },
     answer: '' // 始终保持字符串类型
 })
@@ -331,11 +331,11 @@ const resetUploadForm = () => {
         creatorId: authStore.user?.id,
         get answerArray(): string[] {
             return this.type === 'multiplechoice' && this.answer
-                ? this.answer.split(',')
+                ? this.answer.split('|')
                 : [];
         },
         set answerArray(values: string[]) {
-            this.answer = values.join(',');
+            this.answer = values.join('|');
         },
     }
     uploadError.value = ''
@@ -425,7 +425,7 @@ const fetchCourseQuestions = async () => {
 }
 
 const questionTypes = [
-  { value: 'singlechoice', label: '选择题' },
+  { value: 'singlechoice', label: '单选题' },
   { value: 'multiplechoice', label: '多选题' },
   { value: 'fillblank', label: '填空题' },
   { value: 'program', label: '问答题' },
@@ -598,42 +598,6 @@ const formatMultipleChoiceAnswer = (answer: string) => {
                         rows="4"
                         placeholder="输入答案解析"
                     ></textarea>
-                </div>
-
-                <!-- 统一的答案输入部分 -->
-                <div class="form-group">
-                    <label>正确答案:</label>
-                    <template v-if="tempQuestion.type === 'judge'">
-                        <div class="radio-group">
-                            <label class="radio-item">
-                                <input type="radio" v-model="tempQuestion.answer" value="true" />
-                                <span>正确</span>
-                            </label>
-                            <label class="radio-item">
-                                <input type="radio" v-model="tempQuestion.answer" value="false" />
-                                <span>错误</span>
-                            </label>
-                        </div>
-                    </template>
-                    <template v-else-if="tempQuestion.type === 'multiplechoice'">
-                        <div class="checkbox-group">
-                            <div v-for="option in tempQuestion.options" :key="option.key" class="checkbox-item">
-                                <input type="checkbox" v-model="tempQuestion.answerArray" :value="option.key" />
-                                <label>{{ option.key }}</label>
-                            </div>
-                        </div>
-                    </template>
-                    <template v-else-if="tempQuestion.type === 'singlechoice'">
-                        <select v-model="tempQuestion.answer">
-                            <option value="" disabled>选择正确答案</option>
-                            <option v-for="option in tempQuestion.options" :key="option.key" :value="option.key">
-                                {{ option.key }}
-                            </option>
-                        </select>
-                    </template>
-                    <template v-else>
-                        <input type="text" v-model="tempQuestion.answer" placeholder="请输入正确答案" />
-                    </template>
                 </div>
             </div>
 
