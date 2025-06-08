@@ -299,7 +299,7 @@ onMounted(() => {
                                 @click="doPractice(practice.id)"
                                 title="练习"
                                 :disabled="isOverdue(practice.endTime) || didntStart(practice.startTime) ||
-                            (practice.isSubmitted && !practice.allowMultipleSubmission)"
+                            (practice.isCompleted && !practice.allowMultipleSubmission)"
                             >
                                 练习
                             </button>

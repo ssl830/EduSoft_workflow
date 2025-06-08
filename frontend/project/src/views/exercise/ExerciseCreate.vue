@@ -268,7 +268,7 @@ const addOrUpdateQuestion = async () => {
         // }
         await fetchRepoQuestions();
         const response = await fetchPracticeQuestions();
-        console.log("当前题目列表", response.data)
+        // console.log("当前题目列表", response.data)
         error.value = '';
         ElMessage.success('题目创建成功');
     } catch (err) {
@@ -403,6 +403,11 @@ const fetchRepoQuestions = async () => {
             courseId: exercise.courseId
         });
         repoQuestions.value = response.data.questions;
+        repoQuestions.value.forEach(q => {
+            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                q.type = 'multiplechoice'
+            }
+        })
     } catch (err) {
         repoError.value = '获取题库题目失败，请稍后再试';
         console.error(err);
@@ -925,7 +930,7 @@ const handleClassChange = (classId: number) => {
 
                     <div class="detail-row">
                         <label>正确答案:</label>
-                        <span class="answer-text">{{ formatRepoAnswer(selectedRepoQuestion) }}</span>
+                        <span class="answer-text">{{ selectedRepoQuestion.answer }}</span>
                     </div>
                 </div>
             </div>
