@@ -103,14 +103,14 @@ function getBlockStyle(block, hourIdx) {
   const blockEnd = block.end
   const cellStart = hourIdx
   const cellEnd = hourIdx + 1
-  
+
   if (blockEnd <= cellStart || blockStart >= cellEnd) return { display: 'none' }
-  
+
   const totalHeight = 60
   const top = Math.max(0, (blockStart - cellStart) * totalHeight)
   const bottom = Math.max(0, (cellEnd - blockEnd) * totalHeight)
   const height = totalHeight - top - bottom
-  
+
   return {
     top: top + 'px',
     height: height + 'px',
@@ -135,18 +135,18 @@ const semesterStartDate = new Date('2025-02-24')
 function calculateCurrentWeek(): number {
   const today = new Date()
   const startDate = new Date(semesterStartDate)
-  
+
   // 将时间都设置为当天的0点，以便准确计算天数差
   today.setHours(0, 0, 0, 0)
   startDate.setHours(0, 0, 0, 0)
-  
+
   // 计算天数差
   const diffTime = today.getTime() - startDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-  
+
   // 计算周数（从第1周开始）
   const week = Math.floor(diffDays / 7) + 1
-  
+
   // 限制在1-20周之间
   return Math.max(1, Math.min(20, week))
 }
@@ -170,7 +170,7 @@ function getWeekDateRange(): string {
   startDate.setDate(semesterStartDate.getDate() + (currentWeek.value - 1) * 7)
   const endDate = new Date(startDate)
   endDate.setDate(startDate.getDate() + 6)
-  
+
   return `${startDate.getMonth() + 1}/${startDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()}`
 }
 
@@ -230,7 +230,7 @@ function formatBlockTime(block: any): string {
             <div class="time-line"></div>
           </div>
         </div>
-        
+
         <!-- 星期标题 -->
         <div class="week-header">
           <div v-for="(week, index) in weekDays" :key="week" class="week-label">
@@ -238,7 +238,7 @@ function formatBlockTime(block: any): string {
             <span class="date-text">{{ getDateByWeekIndex(index) }}</span>
           </div>
         </div>
-        
+
         <!-- 课程网格 -->
         <div class="schedule-content">
           <div v-for="week in weekDays" :key="week" class="week-column">
@@ -268,9 +268,9 @@ function formatBlockTime(block: any): string {
           <span class="badge">{{ unscheduledClasses.length }}</span>
         </div>
         <div class="unscheduled-list">
-          <div 
-            v-for="c in unscheduledClasses" 
-            :key="c.id" 
+          <div
+            v-for="c in unscheduledClasses"
+            :key="c.id"
             class="unscheduled-item"
             @click="goToClassDetail(c.id)"
           >
@@ -290,7 +290,7 @@ function formatBlockTime(block: any): string {
 
 <style scoped>
 .schedule-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   background: #f8fafc;
@@ -653,4 +653,4 @@ function formatBlockTime(block: any): string {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
-</style> 
+</style>

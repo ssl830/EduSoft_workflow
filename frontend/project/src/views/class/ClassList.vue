@@ -338,7 +338,7 @@ onMounted(async () => {
 
 <style scoped>
 .home-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
 }

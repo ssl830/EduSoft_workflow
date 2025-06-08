@@ -797,6 +797,40 @@ const selectedType = ref('')
 </template>
 
 <style scoped>
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.checkbox-item input {
+    margin-right: 0.5rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #757575;
+    font-size: 1rem;
+    padding: 0.5rem;
+}
+
+.btn-icon:hover {
+    color: #d32f2f;
+}
+
+.btn-icon:disabled {
+    color: #bdbdbd;
+    cursor: not-allowed;
+}
+
 /* 确保样式优先级更高 */
 .question-type-singlechoice {
     background-color: #e6f7ff !important;
@@ -839,7 +873,7 @@ const selectedType = ref('')
 }
 
 .question-bank-container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem;
 }
