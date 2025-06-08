@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted, watch, onBeforeMount, reactive} from 'vue'
+import {ref, onMounted, watch, onBeforeMount, reactive, computed} from 'vue'
 import {useRouter} from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from "../../stores/auth"
@@ -424,20 +424,27 @@ const fetchCourseQuestions = async () => {
   }
 }
 
+// 更新计算属性：将单选题和多选题统一为“选择题”
+const filteredQuestions = computed(() => {
+  if (!selectedType.value) return questions.value // 如果未选择类型，显示所有题目
+  return questions.value.filter(question => {
+    if (selectedType.value === 'choice') {
+      return question.type === 'singlechoice' || question.type === 'multiplechoice'
+    }
+    return question.type === selectedType.value
+  })
+})
+
+// 更新题目类型选项
 const questionTypes = [
-  { value: 'singlechoice', label: '单选题' },
-  { value: 'multiplechoice', label: '多选题' },
+  { value: 'choice', label: '选择题' },
   { value: 'fillblank', label: '填空题' },
   { value: 'program', label: '问答题' },
   { value: 'judge', label: '判断题' }
 ]
 
-// 在 script 部分添加一个计算属性来处理多选题答案
-const formatMultipleChoiceAnswer = (answer: string) => {
-    if (!answer) return [];
-    return answer.split('|');
-}
-
+// 添加一个用于筛选题目类型的状态
+const selectedType = ref('')
 </script>
 
 <template>
@@ -619,63 +626,64 @@ const formatMultipleChoiceAnswer = (answer: string) => {
             </div>
         </div>
 
-        <!-- Filter Section -->
+        <!-- 筛选框放在一行 -->
         <div class="resource-filters">
-            <div class="filter-section">
-                <div class="filter-item">
-                    <label for="typeFilter">按课程筛选:</label>
-                    <select
-                        id="typeFilter"
-                        v-model="selectedCourse"
-                    >
-                        <!-- 显示课程名称，绑定值为课程ID -->
-                        <option v-for="course in courses" :key="course.id" :value="course.id">
-                            {{ course.name }}
-                        </option>
-                    </select>
-                </div>
+          <div class="filter-section-row">
+            <div class="filter-item">
+              <label for="courseFilter">按课程筛选:</label>
+              <select id="courseFilter" v-model="selectedCourse">
+                <option v-for="course in courses" :key="course.id" :value="course.id">
+                  {{ course.name }}
+                </option>
+              </select>
             </div>
-
-<!--            <div class="filter-section">-->
-<!--                <label for="chapterFilter">按章节筛选:</label>-->
-<!--                <select-->
-<!--                    id="chapterFilter"-->
-<!--                    v-model="selectedChapter"-->
-<!--                >-->
-<!--                    <option value="">所有章节</option>-->
-<!--                    <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">-->
-<!--                        {{ sectionId }}-->
-<!--                    </option>-->
-<!--                </select>-->
-<!--            </div>-->
+            <div class="filter-item">
+              <label for="typeFilter">按题目类型筛选:</label>
+              <select id="typeFilter" v-model="selectedType">
+                <option value="">所有类型</option>
+                <option v-for="type in questionTypes" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- Resource List -->
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div v-else class="question-cards-container">
-            <div v-if="questions.length === 0" class="empty-state">
+            <div v-if="filteredQuestions.length === 0" class="empty-state">
                 暂无教学资料
             </div>
             <div v-else class="question-cards">
-                <div v-for="question in questions" 
+                <div v-for="question in filteredQuestions" 
                      :key="question.id" 
                      class="question-card"
                      @click="showQuestionDetail(question)">
                     <div class="question-card-header">
-                        <span class="question-type">{{ 
-                            question.type === 'singlechoice' ? '选择题' :
-                            question.type === 'multiplechoice' ? '多选题' :
+                        <span
+                          class="question-type"
+                          :class="{
+                            'question-type-choice': question.type === 'singlechoice' || question.type === 'multiplechoice',
+                            'question-type-fillblank': question.type === 'fillblank',
+                            'question-type-program': question.type === 'program',
+                            'question-type-judge': question.type === 'judge',
+                          }"
+                        >
+                          {{
+                            question.type === 'singlechoice' || question.type === 'multiplechoice' ? '选择题' :
                             question.type === 'fillblank' ? '填空题' :
                             question.type === 'program' ? '问答题' : '判断题'
-                        }}</span>
+                          }}
+                        </span>
                         <span class="question-course">{{ question.courseName }}</span>
                     </div>
                     <div class="question-content">{{ question.name }}</div>
                     <div class="question-footer">
                         <span class="question-section">{{ question.sectionName || '未分类' }}</span>
                         <button class="btn-action preview" @click.stop="showQuestionDetail(question)">
-                            查看详情
+                          查看详情
                         </button>
                     </div>
                 </div>
@@ -744,111 +752,45 @@ const formatMultipleChoiceAnswer = (answer: string) => {
 </template>
 
 <style scoped>
-/* 新增弹窗样式 */
-.modal-mask {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-container {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    width: 600px;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
-
-.detail-row {
-    margin: 12px 0;
-    display: flex;
-    align-items: flex-start;
-}
-
-.detail-row label {
-    width: 100px;
-    font-weight: 500;
-    color: #666;
-    flex-shrink: 0;
-}
-
-.content-box {
-    background: #f5f5f5;
-    padding: 10px;
+/* 确保样式优先级更高 */
+.question-type-singlechoice {
+    background-color: #e6f7ff !important;
+    color: #1890ff !important;
+    border: 1px solid #91d5ff !important;
     border-radius: 4px;
-    white-space: pre-wrap;
+    padding: 2px 8px;
 }
 
-.options-list {
-    width: 100%;
-}
-
-.option-item {
-    display: flex;
-    align-items: center;
-    margin: 6px 0;
-    padding: 8px;
-    background: #f8f8f8;
+.question-type-multiplechoice {
+    background-color: #f6ffed !important;
+    color: #52c41a !important;
+    border: 1px solid #b7eb8f !important;
     border-radius: 4px;
+    padding: 2px 8px;
 }
 
-.option-key {
-    font-weight: 500;
-    margin-right: 10px;
-    min-width: 20px;
+.question-type-fillblank {
+    background-color: #fffbe6 !important;
+    color: #faad14 !important;
+    border: 1px solid #ffe58f !important;
+    border-radius: 4px;
+    padding: 2px 8px;
 }
 
-.correct-badge {
-    color: #67C23A;
-    margin-left: 8px;
-    font-weight: bold;
+.question-type-program {
+    background-color: #fff0f6 !important;
+    color: #eb2f96 !important;
+    border: 1px solid #ffadd2 !important;
+    border-radius: 4px;
+    padding: 2px 8px;
 }
 
-.answer-text {
-    font-weight: 500;
-    color: #2c6ecf;
-}
-
-.checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    margin-right: 1rem;
-}
-
-.checkbox-item input {
-    margin-right: 0.5rem;
+.question-type-judge {
+    background-color: #f0f5ff !important;
+    color: #2f54eb !important;
+    border: 1px solid #adc6ff !important;
+    border-radius: 4px;
+    padding: 2px 8px;
 }
 
 .question-bank-container {
@@ -1108,6 +1050,55 @@ select:disabled {
     background-color: #e0e0e0;
 }
 
+/* 添加不同题目类型的样式 */
+.question-type-singlechoice {
+    background-color: #e6f7ff !important;
+    color: #1890ff !important;
+    border: 1px solid #91d5ff !important;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.question-type-multiplechoice {
+    background-color: #f6ffed !important;
+    color: #52c41a !important;
+    border: 1px solid #b7eb8f !important;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.question-type-fillblank {
+    background-color: #fffbe6 !important;
+    color: #faad14 !important;
+    border: 1px solid #ffe58f !important;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.question-type-program {
+    background-color: #fff0f6 !important;
+    color: #eb2f96 !important;
+    border: 1px solid #ffadd2 !important;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.question-type-judge {
+    background-color: #f0f5ff !important;
+    color: #2f54eb !important;
+    border: 1px solid #adc6ff !important;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.question-type-choice {
+  background-color: #e6f7ff !important;
+  color: #1890ff !important;
+  border: 1px solid #91d5ff !important;
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
 @media (max-width: 768px) {
     .form-row {
         flex-direction: column;
@@ -1127,6 +1118,52 @@ select:disabled {
     .search-input {
         flex-grow: 1;
     }
+}
+
+/* 调整题目卡片的样式，使其更小 */
+.question-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    padding: 12px; /* 减小内边距 */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 减小间距 */
+}
+
+.question-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px; /* 减小字体大小 */
+}
+
+.question-content {
+    font-size: 14px; /* 减小字体大小 */
+    color: #333;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.question-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    font-size: 12px; /* 减小字体大小 */
+}
+
+.question-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 减小卡片宽度 */
+    gap: 16px; /* 减小卡片间距 */
+    padding: 10px;
 }
 
 .question-list-section, .question-form-byhand-section, question-form-fromrepo-section {
@@ -1255,8 +1292,8 @@ select:disabled {
 
 .question-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
     padding: 10px;
 }
 
@@ -1264,12 +1301,12 @@ select:disabled {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    padding: 16px;
+    padding: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .question-card:hover {
@@ -1281,7 +1318,7 @@ select:disabled {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .question-type {
@@ -1296,10 +1333,9 @@ select:disabled {
 }
 
 .question-content {
-    font-size: 16px;
+    font-size: 14px;
     color: #333;
-    line-height: 1.5;
-    /* 文本超出两行显示省略号 */
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1312,6 +1348,7 @@ select:disabled {
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
+    font-size: 12px;
 }
 
 .question-section {
@@ -1337,7 +1374,6 @@ select:disabled {
     text-align: center;
     padding: 40px;
     color: #999;
-    font-size: 16px;
 }
 
 .loading-container {
@@ -1459,4 +1495,28 @@ select:disabled {
     font-weight: 500;
 }
 
+/* 添加筛选框一行的样式 */
+.filter-section-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-item label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.filter-item select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+}
 </style>
