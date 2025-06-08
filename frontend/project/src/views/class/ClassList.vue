@@ -5,6 +5,7 @@ import ClassCard from '../../components/class/ClassCard.vue'
 import ClassApi from '../../api/class'
 import CourseApi from '../../api/course'  // 新增课程API引入
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const classes = ref([])
@@ -157,6 +158,12 @@ const validateClassForm = () => {
 
 const createClass = async () => {
   if (!validateClassForm()) return;
+  
+  if (!authStore.user?.id) {
+    errorDialog.value = '请先登录';
+    return;
+  }
+
   const course = courses.value.find(c => c.id === newClass.value.courseId)
   let className = course?.name || ''
   if (selectedWeek.value !== '未确定') {
@@ -166,7 +173,8 @@ const createClass = async () => {
     const classData = {
       courseId: newClass.value.courseId,
       name: className,
-      classCode: newClass.value.classCode
+      classCode: newClass.value.classCode,
+      creatorId: authStore.user.id  // 添加创建者ID
     }
     console.log('发送的班级数据:', classData)
     const response = await ClassApi.createClass(classData)
@@ -201,14 +209,17 @@ const formatDate = (dateString: string) => {
   }
 }
 
+const router = useRouter()
+
 onMounted(async () => {
-  if (authStore.isAuthenticated) {
-    try {
-      await Promise.all([fetchClasses(), fetchCourses()])
-    } finally {
-      loading.value = false
-    }
-  } else {
+  if (!authStore.isAuthenticated || !authStore.user?.id) {
+    error.value = '请先登录'
+    router.push('/login')
+    return
+  }
+  try {
+    await Promise.all([fetchClasses(), fetchCourses()])
+  } finally {
     loading.value = false
   }
 })

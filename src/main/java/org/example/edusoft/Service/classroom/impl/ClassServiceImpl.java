@@ -10,6 +10,7 @@ import org.example.edusoft.mapper.classroom.ClassMapper;
 import org.example.edusoft.mapper.classroom.ClassUserMapper;
 import org.example.edusoft.mapper.imports.ImportRecordMapper;
 import org.example.edusoft.mapper.course.CourseMapper;
+import org.example.edusoft.mapper.course.CourseClassMapper;
 import org.example.edusoft.service.classroom.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,9 +36,13 @@ public class ClassServiceImpl implements ClassService {
     @Autowired
     private CourseMapper courseMapper;
 
+    @Autowired
+    private CourseClassMapper courseClassMapper;
+
     @Override
     @Transactional
     public Class createClass(Class clazz) {
+        // 基本验证
         if (clazz.getCourseId() == null) {
             throw new BusinessException(400, "课程ID不能为空");
         }
@@ -47,7 +52,38 @@ public class ClassServiceImpl implements ClassService {
         if (clazz.getName() == null || clazz.getName().trim().isEmpty()) {
             throw new BusinessException(400, "班级名称不能为空");
         }
+        if (clazz.getCreatorId() == null) {
+            throw new BusinessException(400, "创建者ID不能为空");
+        }
+
+        // 检查课程是否存在
+        var course = courseMapper.selectById(clazz.getCourseId());
+        if (course == null) {
+            throw new BusinessException(404, "课程不存在");
+        }
+
+        // 1. 创建班级
         classMapper.insert(clazz);
+
+        // 2. 创建课程班级关联
+        courseClassMapper.insertCourseClass(clazz.getCourseId(), clazz.getId());
+
+        // 3. 创建班级用户关联（将创建者添加为班级成员）
+        ClassUser creator = new ClassUser();
+        creator.setClassId(clazz.getId());
+        creator.setUserId(clazz.getCreatorId());
+        creator.setJoinedAt(LocalDateTime.now());
+        classUserMapper.insert(creator);
+
+        // 4. 如果创建者不是课程教师，也将课程教师添加为班级成员
+        if (!course.getTeacherId().equals(clazz.getCreatorId())) {
+            ClassUser courseTeacher = new ClassUser();
+            courseTeacher.setClassId(clazz.getId());
+            courseTeacher.setUserId(course.getTeacherId());
+            courseTeacher.setJoinedAt(LocalDateTime.now());
+            classUserMapper.insert(courseTeacher);
+        }
+
         return clazz;
     }
 

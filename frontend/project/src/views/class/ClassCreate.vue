@@ -32,6 +32,11 @@ const isValidTime = (time: string) => {
 }
 
 const submitClass = async () => {
+  if (!authStore.user?.id) {
+    error.value = '请先登录'
+    return
+  }
+
   if (!classForm.courseId || !classForm.classTime || !classForm.classCode) {
     error.value = '请填写所有必填字段'
     return
@@ -62,8 +67,11 @@ const submitClass = async () => {
     const classData = {
       courseId: classForm.courseId,
       name: classForm.classTime,
-      classCode: classForm.classCode
+      classCode: classForm.classCode,
+      creatorId: authStore.user.id
     }
+    console.log("classData:", classData)
+    console.log()
     const resp = await ClassApi.createClass(classData)
     if (resp.code !== 200) {
       error.value = resp.message || '创建班级失败，请稍后再试'
@@ -89,6 +97,11 @@ const fetchCourses = async () => {
 }
 
 onMounted(() => {
+  if (!authStore.user?.id) {
+    error.value = '请先登录'
+    router.push('/login')
+    return
+  }
   fetchCourses()
 })
 </script>
