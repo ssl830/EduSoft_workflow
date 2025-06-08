@@ -95,4 +95,18 @@ public interface PracticeService {
      * @return 练习列表，包含完成状态
      */
     List<PracticeListDTO> getStudentPracticeList(Long studentId, Long classId);
-} 
+
+    /**
+     * 获取教师相关的所有练习信息
+     * @param teacherId 教师ID
+     * @return 练习信息列表
+     */
+    List<Map<String, Object>> getTeacherPractices(Long teacherId);
+
+    /**
+     * 获取练习的提交统计信息
+     * @param practiceId 练习ID
+     * @return 包含总提交人数和平均分的统计信息
+     */
+    Map<String, Object> getSubmissionStats(Long practiceId);
+}

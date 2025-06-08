@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.example.edusoft.mapper.record.PracticeRecordMapper;
 
 @Service
 public class PracticeServiceImpl implements PracticeService {
@@ -26,6 +27,9 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private NotificationUtils notificationUtils;
+
+    @Autowired
+    private PracticeRecordMapper practiceRecordMapper;
 
     @Override
     @Transactional
@@ -280,5 +284,15 @@ public class PracticeServiceImpl implements PracticeService {
             throw new IllegalArgumentException("学生ID和班级ID不能为空");
         }
         return practiceMapper.getStudentPracticeList(studentId, classId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getTeacherPractices(Long teacherId) {
+        return practiceMapper.getPracticesByTeacherId(teacherId);
+    }
+
+    @Override
+    public Map<String, Object> getSubmissionStats(Long practiceId) {
+        return practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
     }
 }

@@ -108,7 +108,12 @@ const CourseApi = {
 
   getAllCourses() {
     return axios.get('/api/courses/list')
-  }
+  },
+
+  // 获取教师相关的所有练习信息
+  getTeacherPractices() {
+    return axios.get('/api/practices/teacher');
+  },
 }
 
 export default CourseApi

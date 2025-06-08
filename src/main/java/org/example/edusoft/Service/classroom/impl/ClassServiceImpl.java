@@ -336,4 +336,9 @@ public class ClassServiceImpl implements ClassService {
         }
         return classes;
     }
-} 
+
+    @Override
+    public int getClassStudentCount(Long classId) {
+        return classMapper.getClassStudentCount(classId);
+    }
+}

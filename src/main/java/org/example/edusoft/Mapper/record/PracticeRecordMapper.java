@@ -319,4 +319,11 @@ public interface PracticeRecordMapper {
                 ORDER BY score_range DESC
             """)
     List<Map<String, Object>> getSubmissionScoreDistribution(@Param("submissionId") Long submissionId);
+
+    @Select("""
+        SELECT COUNT(*) as total_submissions, AVG(score) as average_score
+        FROM Submission
+        WHERE practice_id = #{practiceId}
+    """)
+    Map<String, Object> getSubmissionStatsByPracticeId(@Param("practiceId") Long practiceId);
 }

@@ -243,4 +243,23 @@ public class PracticeController {
             return Result.error(500, "题目分值更新失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 获取教师相关的所有练习信息
+     */
+    @GetMapping("/teacher/practices")
+    public Result<List<Map<String, Object>>> getTeacherPractices() {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long teacherId = StpUtil.getLoginIdAsLong();
+        List<Map<String, Object>> practices = practiceService.getTeacherPractices(teacherId);
+        return Result.success(practices, "获取教师练习信息成功");
+    }
+
+    @GetMapping("/stats/{practiceId}")
+    public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
+        Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
+        return Result.success(stats);
+    }
 }

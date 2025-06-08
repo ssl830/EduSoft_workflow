@@ -8,6 +8,7 @@ import Register from '../views/auth/Register.vue'
 import NotFound from '../views/NotFound.vue'
 import DiscussionList from '../views/discuss/DiscussionList.vue'
 import ThreadDetail from '../views/discuss/ThreadDetail.vue'
+import LearningRecordsAnalysis from '@/views/records/LearningRecordsAnalysis.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -288,6 +289,11 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       showSidebar: true
     }
+  },
+  {
+    path: '/learning-records-analysis',
+    name: 'LearningRecordsAnalysis',
+    component: LearningRecordsAnalysis,
   },
   {
     path: '/:pathMatch(.*)*',

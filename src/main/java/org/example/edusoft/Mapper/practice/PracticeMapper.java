@@ -248,4 +248,10 @@ public interface PracticeMapper {
     @Update("UPDATE Practice SET title=#{title}, start_time=#{startTime}, end_time=#{endTime}, " +
             "allow_multiple_submission=#{allowMultipleSubmission} WHERE id=#{id}")
     void update(Practice practice);
-} 
+
+    @Select("SELECT p.id, p.title, p.start_time, p.end_time, c.name AS course_name, p.class_id " +
+            "FROM Practice p " +
+            "JOIN Course c ON p.course_id = c.id " +
+            "WHERE p.created_by = #{teacherId} ORDER BY p.created_at DESC")
+    List<Map<String, Object>> getPracticesByTeacherId(@Param("teacherId") Long teacherId);
+}

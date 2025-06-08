@@ -171,4 +171,10 @@ public class ClassController {
     public Result<List<ClassDetailDTO>> getScheduleByUserId(@PathVariable Long userId) {
         return Result.success(classService.getClassesByUserId(userId));
     }
-} 
+
+    @GetMapping("/{classId}/student-count")
+    public Result<Object> getClassStudentCount(@PathVariable Long classId) {
+        int total = classService.getClassStudentCount(classId);
+        return Result.success(Map.of("total", total));
+    }
+}

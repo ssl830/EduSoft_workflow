@@ -59,9 +59,14 @@ export default {
             <span class="icon">📖</span> 学习记录
           </router-link>
         </li>
-        <li>
+        <li v-if="isStudent">
           <router-link to="/learning-records" class="sidebar-link">
             <span class="icon">📊</span> 练习记录
+          </router-link>
+        </li>
+        <li v-if="isTeacher || isAssistant">
+          <router-link to="/learning-records-analysis" class="sidebar-link">
+            <span class="icon">📊</span> 练习分析
           </router-link>
         </li>
         <li>

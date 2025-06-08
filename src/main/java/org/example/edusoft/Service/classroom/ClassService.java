@@ -65,4 +65,7 @@ public interface ClassService {
 
     // 获取用户的班级列表（包括教师和学生的班级）
     List<ClassDetailDTO> getClassesByUserId(Long userId);
-} 
+
+    // 获取班级学生总数
+    int getClassStudentCount(Long classId);
+}
