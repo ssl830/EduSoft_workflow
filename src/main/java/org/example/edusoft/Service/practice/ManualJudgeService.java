@@ -44,6 +44,8 @@ public class ManualJudgeService {
      * 获取待批改的提交列表
      */
     public Result<List<PendingSubmissionDTO>> getPendingSubmissionList(Long practiceId, Long classId) {
+        System.out.println("practiceId: " + practiceId);
+        System.out.println("classId: " + classId);
         List<Submission> submissions;
         if (practiceId != null) {
             // 获取指定练习的待批改提交
@@ -51,6 +53,8 @@ public class ManualJudgeService {
         } else {
             // 获取班级下所有练习的待批改提交
             List<Practice> practices = practiceMapper.findByClassId(classId);
+            System.out.println("practices: " + practices);
+            System.out.println();
             submissions = new ArrayList<>();
             for (Practice practice : practices) {
                 submissions.addAll(submissionMapper.findByPracticeIdWithUnjudgedAnswers(practice.getId()));
@@ -92,8 +96,8 @@ public class ManualJudgeService {
         for (Answer answer : answers) {
             Question question = questionMapper.selectById(answer.getQuestionId());
             // 只返回非单选题
-            if (question.getType() != Question.QuestionType.singlechoice || question.getType() != Question.QuestionType.judge 
-            || question.getType() != Question.QuestionType.fillblank || question.getType() != Question.QuestionType.multiplechoice) {
+            if (question.getType() != Question.QuestionType.singlechoice && question.getType() != Question.QuestionType.judge 
+            && question.getType() != Question.QuestionType.fillblank && question.getType() != Question.QuestionType.multiplechoice) {
                 // 获取题目分值
                 PracticeQuestion pq = practiceQuestionMapper.findByPracticeIdAndQuestionId(
                     submission.getPracticeId(), question.getId());
@@ -120,10 +124,12 @@ public class ManualJudgeService {
     @Transactional
     public Result<Void> judgeSubmission(JudgeSubmissionRequest request) {
         // 1. 获取提交信息
+        System.out.println("request: " + request);
+        System.out.println();
         Submission submission = submissionMapper.selectById(request.getSubmissionId());
         if (submission == null) {
             return Result.error("提交不存在");
-        }
+        } 
 
         // 2. 更新每道题的得分
         int totalScore = submission.getScore(); // 保留单选题分数
@@ -136,6 +142,8 @@ public class ManualJudgeService {
             if (answer != null && !answer.getIsJudged()) {
                 answer.setScore(questionRequest.getScore());
                 answer.setIsJudged(true);
+                // 如果得分等于最高分，设置correct为true
+                answer.setCorrect(questionRequest.getScore() >= questionRequest.getMaxScore());
                 answerMapper.updateScoreAndJudgment(answer);
                 
                 totalScore += questionRequest.getScore();
@@ -149,5 +157,5 @@ public class ManualJudgeService {
         submissionMapper.update(submission);
 
         return Result.ok(null, "批改成功");
-    }
+    } 
 }

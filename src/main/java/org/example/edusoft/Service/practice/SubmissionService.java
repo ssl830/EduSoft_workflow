@@ -67,7 +67,8 @@ public class SubmissionService {
             answer.setSubmissionId(submission.getId());
             answer.setQuestionId(pq.getQuestionId());
             answer.setAnswerText(userAnswer);
-            answer.setSortOrder(pq.getSortOrder());
+            // 使用题目在练习中的排序作为答案的排序
+            answer.setSortOrder(pq.getSortOrder() != null ? pq.getSortOrder() : Long.valueOf(i));
 
             // 根据题目类型处理
             if (question.getType() == Question.QuestionType.singlechoice

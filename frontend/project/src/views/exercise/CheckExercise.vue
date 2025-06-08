@@ -36,7 +36,8 @@ interface QuestionItem {
     questionName: string;
     answerText: string;
     maxScore: number;
-    score: number
+    score: number;
+    sortOrder: number;
 }
 const route = useRoute()
 const router = useRouter()
@@ -83,23 +84,22 @@ const submitScores = async () => {
         return;
     }
 
-    const requestData = [
-        {
-            submissionId: submissionId,
-            question: questions.value.map(q => ({
-                answerText: q.answerText,
-                score: q.score,
-                maxScore: q.maxScore,
-            })),
-        },
-    ];
+    const requestData = {
+        submissionId: Number(submissionId),
+        questions: questions.value.map(q => ({
+            answerText: q.answerText,
+            score: q.score,
+            maxScore: q.maxScore,
+            sortOrder: q.sortOrder,
+        })),
+    };
 
     try {
         const response = await Exercise.gradeAnswer(requestData);
         if (response.code === 200) {
             router.push('/')
         } else {
-            error.value = '评分提交失败：' + response.message;
+            error.value = '评分提交失败：' + (response.data?.message || '未知错误');
         }
     } catch (err) {
         error.value = '请求失败，请稍后重试';

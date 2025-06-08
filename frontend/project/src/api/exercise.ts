@@ -23,6 +23,8 @@ const ExerciseApi = {
     practiceId: bigint,
     classId: string,
   }){
+    console.log("data:", data)
+    console.log()
     return axios.post('/api/judge/pendinglist', data)
   },
 
@@ -101,10 +103,26 @@ const ExerciseApi = {
     )
   },
   fetchPendingAnswers(data){
+    console.log(data)
+    console.log()
     return axios.post('/api/judge/pending', data)
   },
-  gradeAnswer(data) {
-    return axios.post('/api/judge/judge', data)
+
+  gradeAnswer(data: {
+    submissionId: string | number,
+    questions: Array<{
+      answerText: string,
+      score: number,
+      maxScore: number,
+      sortOrder: number
+    }>
+  }) {
+    // 确保submissionId是数字类型
+    const payload = {
+      submissionId: Number(data.submissionId),
+      questions: data.questions
+    }
+    return axios.post('/api/judge/judge', payload)
   },
 
   // Start exercise attempt (student only)

@@ -30,6 +30,7 @@ public class ManualJudgeController {
     @PostMapping("/pendinglist")
     public Result<List<PendingSubmissionDTO>> getPendingList(
             @RequestBody PendingListRequest request) {
+        System.out.println("request: " + request);  
         return manualJudgeService.getPendingSubmissionList(request.getPracticeId(), request.getClassId());
     }
 

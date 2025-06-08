@@ -49,7 +49,7 @@ public interface AnswerMapper {
                                                   @Param("submissionIds") List<Long> submissionIds);
 
     @Update({
-        "UPDATE Answer SET score=#{score}, is_judged=#{isJudged} WHERE id=#{id}"
+        "UPDATE Answer SET score=#{score}, is_judged=#{isJudged}, correct=#{correct} WHERE id=#{id}"
     })
     void updateScoreAndJudgment(Answer answer);
 

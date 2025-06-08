@@ -100,7 +100,10 @@ const fetchPendingCorrections = async () => {
             classId: props.classId,
             practiceId: selectedExer.value === -1 ? undefined : selectedExer.value
         })
+        console.log("classId:", props.classId)
+        console.log()
         console.log("response:", response.data)
+        console.log()
         // 更新数据结构
         pendingCorrections.value = response.data
         console.log(pendingCorrections.value)
@@ -132,7 +135,8 @@ const doPractice = (practiceId: number) => {
 
 // 批改练习
 const checkPractice = (submissionId: number) => {
-    console.log(selectedExer.value)
+    console.log("selectedExer.value:", selectedExer.value)
+    console.log()
     if(selectedExer.value == -1){
         error.value = '请选择一个练习进行批改'
         return
