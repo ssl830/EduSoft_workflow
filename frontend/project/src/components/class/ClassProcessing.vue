@@ -43,6 +43,14 @@ const isOverdue = (endTime: string) => {
     return now > end
 }
 
+// 新增：判断是否还没开始
+const didntStart = (startTime: string) => {
+    if (!startTime) return false
+    const now = new Date()
+    const start = new Date(startTime)
+    return now < start
+}
+
 // 获取班级练习列表 (学生视图)
 const fetchPractices = async () => {
     loading.value = true
@@ -51,9 +59,10 @@ const fetchPractices = async () => {
     try {
         if(isStudent.value){ // 学生视图
             // 调用新的API端点
-            const response = await ExerciseApi.getPracticeList(props.classId)
+            const response = await ExerciseApi.getPracticeList(authStore.user?.id, props.classId)
             // 更新数据结构处理
             practices.value = response.data
+            console.log("Hereeeeeeeeeeeeeeeeeeee", response.data)
         }else{ // 老师视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeTeachList(props.classId)
@@ -61,18 +70,16 @@ const fetchPractices = async () => {
             practices.value = response.data
         }
 
-        // // 提取唯一练习名称
-        // const practiceSet = new Map()
-        // practices.value.forEach((ex: any) => {
-        //     if (ex.id && ex.name) {
-        //         practiceSet.set(ex.id, ex.name)
-        //     }
-        // })
-        // practicesName.value = Array.from(practiceSet, ([id, name]) => ({id, name}))
-        //
-        // // 提取学生姓名
-        // const namesSet = new Set(practices.value.map((r: any) => r.name).filter(Boolean))
-        // names.value = Array.from(namesSet)
+        console.log("practices.value:",practices.value)
+
+        // 提取唯一练习名称
+        const practiceSet = new Map()
+        practices.value.forEach((ex: any) => {
+            if (ex.id && ex.title) {
+                practiceSet.set(ex.id, ex.title)
+            }
+        })
+        practicesName.value = Array.from(practiceSet, ([id, title]) => ({id, title}))
 
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
@@ -91,8 +98,9 @@ const fetchPendingCorrections = async () => {
         // 调用新的API端点
         const response = await ExerciseApi.getPendingJudgeList({
             classId: props.classId,
-            practiced: selectedExer.value === -1 ? undefined : selectedExer.value
+            practiceId: selectedExer.value === -1 ? undefined : selectedExer.value
         })
+        console.log("response:", response.data)
         // 更新数据结构
         pendingCorrections.value = response.data
         console.log(pendingCorrections.value)
@@ -114,12 +122,6 @@ const fetchData = async () => {
     }
 }
 
-// 导出报告
-const downloadPracticeReport = async (practiceId: number) => {
-    // TODO: 实现导出逻辑
-    console.log(`导出报告: ${practiceId}`)
-}
-
 // 做练习
 const doPractice = (practiceId: number) => {
     router.push({
@@ -130,9 +132,14 @@ const doPractice = (practiceId: number) => {
 
 // 批改练习
 const checkPractice = (submissionId: number) => {
+    console.log(selectedExer.value)
+    if(selectedExer.value == -1){
+        error.value = '请选择一个练习进行批改'
+        return
+    }
     router.push({
         name: 'CheckExercise',
-        params: { submissionId }
+        params: { practiceId: selectedExer.value, submissionId: submissionId }
     })
 }
 
@@ -143,11 +150,6 @@ const getPracticeReport = async (practiceId: number, submissionId: number) => {
         name: 'ExerciseFeedback',
         params: { practiceId, submissionId }
     })
-}
-
-// 导出报告
-const exportReport = async() => {
-    // TODO: 实现导出逻辑
 }
 
 // 切换视图
@@ -212,36 +214,27 @@ onMounted(() => {
                 >
                     待批改
                 </button>
-                <button
-                    v-if="isStudent"
-                    class="btn-primary"
-                    @click="exportReport"
-                >
-                    {{ '导出报告' }}
-                </button>
             </div>
         </div>
 
-        <!-- 筛选区域 -->
-<!--        <div class="resource-filters" v-if="currentView === 'exercises'">-->
-<!--            <div class="filter-section">-->
-<!--                <label for="typeFilter">按练习筛选:</label>-->
-<!--                <select-->
-<!--                    id="typeFilter"-->
-<!--                    v-model="selectedExer"-->
-<!--                >-->
-<!--                    <option value=-1>所有练习</option>-->
-<!--                    <option-->
-<!--                        v-for="practice in practicesName"-->
-<!--                        :key="practice.id"-->
-<!--                        :value="practice.id"-->
-<!--                    >-->
-<!--                        {{ practice.name }}-->
-<!--                    </option>-->
-<!--                </select>-->
-<!--            </div>-->
-
-<!--        </div>-->
+        <div class="resource-filters" v-if="currentView === 'corrections'">
+            <div class="filter-section">
+                <label for="typeFilter">按练习筛选:</label>
+                <select
+                    id="typeFilter"
+                    v-model="selectedExer"
+                >
+                    <option value=-1>所有练习</option>
+                    <option
+                        v-for="practice in practicesName"
+                        :key="practice.id"
+                        :value="practice.id"
+                    >
+                        {{ practice.title }}
+                    </option>
+                </select>
+            </div>
+        </div>
 
         <!-- 待批改列表视图 -->
         <div v-if="!isStudent && currentView === 'corrections'">
@@ -307,8 +300,8 @@ onMounted(() => {
                                 class="btn-action preview"
                                 @click="doPractice(practice.id)"
                                 title="练习"
-                                :disabled="isOverdue(practice.endTime) ||
-                            (practice.isSubmitted && !practice.allowMultiple)"
+                                :disabled="isOverdue(practice.endTime) || didntStart(practice.startTime) ||
+                            (practice.isCompleted && !practice.allowMultipleSubmission)"
                             >
                                 练习
                             </button>

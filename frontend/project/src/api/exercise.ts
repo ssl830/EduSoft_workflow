@@ -40,6 +40,7 @@ const ExerciseApi = {
   createExercise(data: {
     title: string;
     classId: number;
+    courseId: number;
     startTime?: string;
     endTime?: string;
     createdBy?: bigint;
@@ -68,11 +69,12 @@ const ExerciseApi = {
   },
 
   // 获取学生所有练习
-  getPracticeList(classId: string) {
+  getPracticeList(studentId: string, classId: string) {
     const params = new URLSearchParams({
+      studentId,
       classId
     });
-    return axios.get(`/api/practice/list?${params.toString()}`)
+    return axios.get(`/api/practice/student/list?${params.toString()}`)
   },
 
   getPracticeTeachList(classId: string) {

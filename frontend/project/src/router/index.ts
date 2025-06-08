@@ -90,6 +90,7 @@ const routes: RouteRecordRaw[] = [
     }
   },  {
     path: '/exercise/create',
+    name:'ExerciseCreate',
     component: () => import('../views/exercise/ExerciseCreate.vue'),
     meta: {
       title: '创建练习',

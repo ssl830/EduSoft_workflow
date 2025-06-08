@@ -10,6 +10,10 @@ import CourseApi from '../../api/course.ts';
 const router = useRouter()
 const authStore = useAuthStore()
 
+const importQuestionIds = ref([])
+const importQuestionScores = ref([])
+const importQuestions = ref([])
+
 interface Question {
   type: string;
   content: string;
@@ -167,13 +171,15 @@ const nextStep = async () => {
                 createdBy: authStore.user?.id,
                 allowMultipleSubmission: exercise.allowMultipleSubmission,
             });
-
+            console.log(response.data)
+            console.log()
+            
             // 存储练习ID
             exercise.practiceId = response.data.practiceId;
             currentStep.value = 2;
             error.value = '';
-            // console.log(response.data.data.practiceId)
-            // console.log(exercise.practiceId);
+            console.log(response.data.practiceId)
+            console.log(exercise.practiceId);
             // 获取题库题目
             await fetchRepoQuestions();
         } catch (err) {
@@ -253,17 +259,18 @@ const addOrUpdateQuestion = async () => {
         };
         console.log(questionData)
         const createResponse = await QuestionApi.createQuestion(questionData);
-        const questionId = createResponse.data?.data?.questionId;
-        // 将题目添加到当前练习
-        if (questionId) {
-            await ExerciseApi.importQuestionsToPractice({
-                practiceId: exercise.practiceId,
-                questionIds: [questionId],
-                scores: [tempQuestion.score]
-            });
-        }
+        // const questionId = createResponse.data?.data?.questionId;
+        // // // 将题目添加到当前练习
+        // if (questionId) {
+        //     await ExerciseApi.importQuestionsToPractice({
+        //         practiceId: exercise.practiceId,
+        //         questionIds: [questionId],
+        //         scores: [tempQuestion.score]
+        //     });
+        // }
         await fetchRepoQuestions();
-        await fetchPracticeQuestions();
+        const response = await fetchPracticeQuestions();
+        // console.log("当前题目列表", response.data)
         error.value = '';
         ElMessage.success('题目创建成功');
     } catch (err) {
@@ -273,21 +280,21 @@ const addOrUpdateQuestion = async () => {
     resetQuestionForm();
 };
 
-// 新增：获取当前练习的题目列表
-const fetchPracticeQuestions = async () => {
-    try {
-        const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
-        exercise.questions = response.data;
-        exercise.questions.forEach(q => {
-            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
-                q.type = 'multiplechoice'
-            }
-        })
-    } catch (err) {
-        exercise.questions = [];
-        console.error('获取练习题目失败', err);
-    }
-};
+// // 新增：获取当前练习的题目列表
+// const fetchPracticeQuestions = async () => {
+//     try {
+//         const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
+//         exercise.questions = response.data;
+//         exercise.questions.forEach(q => {
+//             if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+//                 q.type = 'multiplechoice'
+//             }
+//         })
+//     } catch (err) {
+//         exercise.questions = [];
+//         console.error('获取练习题目失败', err);
+//     }
+// };
 
 // Remove a question
 const removeQuestion = (question: Question) => {
@@ -314,6 +321,7 @@ const resetQuestionForm = () => {
   ]
   tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? [] : ''
   tempQuestion.score = 5
+    tempQuestion.explanation = ''
 
   selectedQuestion.value = null
   isEditingQuestion.value = false
@@ -337,27 +345,38 @@ const removeOption = (index: number) => {
   }
 }
 
-// Submit the exercise to the server
-const submitExercise = async () => {
-  // Validate exercise data
-  if (exercise.questions.length === 0) {
-    error.value = '请至少添加一道题目'
-    return
-  }
+// // Submit the exercise to the server
+// const submitExercise = async () => {
+//   // Validate exercise data
+//   if (
+//       exercise.questions.length === 0 &&
+//       importQuestionIds.value.length === 0
+//   ) {
+//       error.value = '请至少添加一道题目'
+//       return
+//   }
+//
+//   loading.value = true
+//   error.value = ''
+//
+//   try {
+//       // 批量导入题库题目
+//       if (importQuestionIds.value.length > 0) {
+//           await ExerciseApi.importQuestionsToPractice({
+//               practiceId: exercise.practiceId,
+//               questionIds: importQuestionIds.value,
+//               scores: importQuestionScores.value
+//           })
+//       }
+//       router.push('/') // or to a success page
+//   } catch (err) {
+//       error.value = '创建练习失败，请稍后再试'
+//       console.error(err)
+//   } finally {
+//       loading.value = false
+//   }
+// }
 
-  loading.value = true
-  error.value = ''
-
-  try {
-    // await ExerciseApi.createExercise(exercise) // 移除重复创建练习
-    router.push('/') // or to a success page
-  } catch (err) {
-    error.value = '创建练习失败，请稍后再试'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
 // 添加题目类型变化的watch
 watch(() => tempQuestion.type, (newType) => {
     tempQuestion.answer = '';
@@ -386,6 +405,11 @@ const fetchRepoQuestions = async () => {
             courseId: exercise.courseId
         });
         repoQuestions.value = response.data.questions;
+        repoQuestions.value.forEach(q => {
+            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                q.type = 'multiplechoice'
+            }
+        })
     } catch (err) {
         repoError.value = '获取题库题目失败，请稍后再试';
         console.error(err);
@@ -417,40 +441,69 @@ const addRepoQuestion = async (question: any) => {
         error.value = '分值必须大于0';
         return;
     }
+    // 避免重复添加
+    if (importQuestionIds.value.includes(question.id)) {
+        error.value = '该题已添加';
+        return;
+    }
+    importQuestionIds.value.push(question.id)
+    importQuestionScores.value.push(score)
+    importQuestions.value.push({
+        ...question,
+        score
+    })
+    ElMessage.success('题目添加成功');
+    error.value = '';
+};
+
+// 修改：顶部题目列表显示
+// 修改：获取当前练习的题目列表
+const fetchPracticeQuestions = async () => {
+    try {
+        const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
+        exercise.questions = response.data;
+        exercise.questions.forEach(q => {
+            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                q.type = 'multiplechoice'
+            }
+        })
+    } catch (err) {
+        exercise.questions = [];
+        console.error('获取练习题目失败', err);
+    }
+};
+
+// 修改：完成时批量导入题库题目
+const submitExercise = async () => {
+    // Validate exercise data
+    if (
+        exercise.questions.length === 0 &&
+        importQuestionIds.value.length === 0
+    ) {
+        error.value = '请至少添加一道题目'
+        return
+    }
+
+    loading.value = true
+    error.value = ''
 
     try {
-        await ExerciseApi.importQuestionsToPractice({
-            practiceId: exercise.practiceId,
-            questionIds: [question.id],
-            scores: [score]
-        });
-
-        const newQuestion: Question = {
-            id: question.id,
-            type: question.type,
-            content: question.name,
-            options: question.options,
-            explanation: '',
-            score: score,
-            answer: question.answer
-        };
-
-        exercise.questions.push(newQuestion);
-        ElMessage.success('题目添加成功');
-        error.value = '';
+        // 批量导入题库题目
+        if (importQuestionIds.value.length > 0) {
+            await ExerciseApi.importQuestionsToPractice({
+                practiceId: exercise.practiceId,
+                questionIds: importQuestionIds.value,
+                scores: importQuestionScores.value
+            })
+        }
+        router.push('/') // or to a success page
     } catch (err) {
-        error.value = '添加题目失败，请稍后再试';
-        console.error(err);
+        error.value = '创建练习失败，请稍后再试'
+        console.error(err)
+    } finally {
+        loading.value = false
     }
-};
-
-// 新增：格式化答案显示
-const formatRepoAnswer = (question: any) => {
-    if (question.type === 'multiplechoice') {
-        return question.answer.split('|').join('|');
-    }
-    return question.answer;
-};
+}
 
 // 修改班级选择逻辑，选择班级时同步 courseId 和 classId，并拉取章节
 const handleClassChange = (classId: number) => {
@@ -543,16 +596,17 @@ const handleClassChange = (classId: number) => {
     <div v-else-if="currentStep === 2" class="form-step">
       <!-- Question List -->
       <div class="question-list-section">
-        <h2>题目列表 ({{ exercise.questions.length }})</h2>
+        <h2>题目列表 ({{ exercise.questions.length + importQuestions.length }})</h2>
 
-        <div v-if="exercise.questions.length === 0" class="empty-state">
+        <div v-if="exercise.questions.length + importQuestions.length === 0" class="empty-state">
           尚未添加题目，请使用下方表单添加题目
         </div>
 
         <div v-else class="question-list">
+          <!-- 已在练习中的题目 -->
           <div
             v-for="(question, index) in exercise.questions"
-            :key="index"
+            :key="'practice-' + index"
             class="question-list-item"
           >
             <div class="question-list-header">
@@ -567,23 +621,55 @@ const handleClassChange = (classId: number) => {
               </span>
               <span class="question-points">{{ question.score }}分</span>
             </div>
-
             <div class="question-list-content">
               <div v-html="question.content"></div>
             </div>
-
             <div class="question-list-actions">
-<!--              <button-->
-<!--                class="btn-secondary btn-sm"-->
-<!--                @click="editQuestion(question)"-->
-<!--              >-->
-<!--                编辑-->
-<!--              </button>-->
               <button
                 class="btn-danger btn-sm"
                 @click="removeQuestion(question)"
               >
                 删除
+              </button>
+            </div>
+          </div>
+          <!-- 待导入题库题目 -->
+          <div
+            v-for="(question, index) in importQuestions"
+            :key="'import-' + question.id"
+            class="question-list-item"
+          >
+            <div class="question-list-header">
+              <span class="question-number">{{ exercise.questions.length + index + 1 }}</span>
+              <span class="question-type-badge" :class="question.type">
+                {{
+                  question.type === 'singlechoice' ? '单选题' :
+                  question.type === 'multiplechoice' ? '多选题' :
+                  question.type === 'judge' ? '判断题' :
+                  question.type === 'program' ? '简答题' : '填空题'
+                }}
+              </span>
+              <span class="question-points">{{ question.score }}分</span>
+            </div>
+            <div class="question-list-content">
+              <div v-html="question.name"></div>
+            </div>
+            <div class="question-list-actions">
+              <!-- 可选：添加移除按钮 -->
+              <button
+                class="btn-danger btn-sm"
+                @click="
+                  () => {
+                    const idx = importQuestionIds.indexOf(question.id);
+                    if (idx !== -1) {
+                      importQuestionIds.splice(idx, 1);
+                      importQuestionScores.splice(idx, 1);
+                      importQuestions.splice(index, 1);
+                    }
+                  }
+                "
+              >
+                移除
               </button>
             </div>
           </div>
@@ -675,7 +761,7 @@ const handleClassChange = (classId: number) => {
           </select>
         </div>
 
-          <div v-if="tempQuestion.type === 'multiplechoice'" class="form-group">
+          <div v-else-if="tempQuestion.type === 'multiplechoice'" class="form-group">
               <label>正确答案 (多选)</label>
               <div class="checkbox-group">
                   <div
@@ -702,7 +788,7 @@ const handleClassChange = (classId: number) => {
                   </div>
               </div>
           </div>
-        <div v-if="tempQuestion.type === 'judge'" class="form-group">
+        <div v-else-if="tempQuestion.type === 'judge'" class="form-group">
           <label for="truefalseAnswer">正确答案</label>
           <select id="truefalseAnswer" v-model="tempQuestion.answer">
             <option value="" disabled>选择正确答案</option>
@@ -710,7 +796,7 @@ const handleClassChange = (classId: number) => {
             <option value="False">错误</option>
           </select>
         </div>
-        <div v-if="tempQuestion.type === 'fillblank'" class="form-group">
+        <div v-else class="form-group">
           <label for="fillBlankAnswer">正确答案</label>
           <input
             id="fillBlankAnswer"
@@ -727,15 +813,6 @@ const handleClassChange = (classId: number) => {
               rows="4"
               placeholder="输入答案解析"
           ></textarea>
-        </div>
-        <div class="form-group">
-          <label for="questionPoints">分值</label>
-          <input
-            id="questionPoints"
-            v-model.number="tempQuestion.score"
-            type="number"
-            min="1"
-          />
         </div>
 
         <div class="form-actions">
@@ -809,11 +886,11 @@ const handleClassChange = (classId: number) => {
                 <div class="modal-body" v-if="selectedRepoQuestion">
                     <div class="detail-row">
                         <label>课程名称:</label>
-                        <span>{{ selectedRepoQuestion.course_name || '-' }}</span>
+                        <span>{{ selectedRepoQuestion.courseName || '-' }}</span>
                     </div>
                     <div class="detail-row">
                         <label>章节标题:</label>
-                        <span>{{ selectedRepoQuestion.section_name || '-' }}</span>
+                        <span>{{ selectedRepoQuestion.sectionName || '-' }}</span>
                     </div>
                     <div class="detail-row">
                         <label>题目类型:</label>
@@ -855,7 +932,7 @@ const handleClassChange = (classId: number) => {
 
                     <div class="detail-row">
                         <label>正确答案:</label>
-                        <span class="answer-text">{{ formatRepoAnswer(selectedRepoQuestion) }}</span>
+                        <span class="answer-text">{{ selectedRepoQuestion.answer }}</span>
                     </div>
                 </div>
             </div>
