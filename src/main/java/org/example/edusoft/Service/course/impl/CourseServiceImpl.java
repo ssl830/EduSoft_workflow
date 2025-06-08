@@ -120,6 +120,10 @@ public class CourseServiceImpl implements CourseService {
             // 获取并设置章节信息
             List<CourseSection> sections = courseMapper.getSectionsByCourseId(courseId);
             courseDetail.setSections(sections);
+            
+            // 获取并设置班级信息
+            List<CourseDetailDTO.ClassInfo> classes = courseMapper.getClassesByCourseId(courseId);
+            courseDetail.setClasses(classes);
         }
         return courseDetail;
     }
@@ -129,7 +133,17 @@ public class CourseServiceImpl implements CourseService {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }
-        return courseMapper.getCourseDetailsByUserId(userId);
+        List<CourseDetailDTO> courses = courseMapper.getCourseDetailsByUserId(userId);
+        
+        // 为每个课程获取章节和班级信息
+        for (CourseDetailDTO course : courses) {
+            List<CourseSection> sections = courseMapper.getSectionsByCourseId(course.getId());
+            course.setSections(sections);
+            
+            List<CourseDetailDTO.ClassInfo> classes = courseMapper.getClassesByCourseId(course.getId());
+            course.setClasses(classes);
+        }
+        return courses;
     }
 
     @Override

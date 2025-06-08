@@ -20,7 +20,8 @@ public interface FileQueryService {
         Long courseId,
         String title,
         String type,
-        Long chapter
+        Long chapter,
+        Boolean isTeacher
     );
     /**
      * 获取某个文件夹下的内容

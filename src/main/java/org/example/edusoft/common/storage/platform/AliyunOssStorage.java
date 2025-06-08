@@ -150,7 +150,7 @@ public class AliyunOssStorage implements IFileStorage {
             throw new BusinessException("文件下载失败");
         } 
     }
-    
+     
     public void download(String objectName, HttpServletResponse response) {
         if (StringUtils.isEmpty(objectName)) {
             throw new BusinessException("文件下载失败, 文件对象为空");
