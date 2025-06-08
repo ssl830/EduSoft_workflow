@@ -23,13 +23,17 @@ public interface PracticeRecordMapper {
                     s.feedback,
                     p.title as practice_title,
                     c.name as course_name,
-                    cl.name as class_name
+                    (
+                      SELECT GROUP_CONCAT(DISTINCT cl.name)
+                      FROM ClassUser cu
+                      JOIN Class cl ON cu.class_id = cl.id
+                      WHERE cu.user_id = s.student_id AND cl.course_id = c.id
+                    ) as class_name
                 FROM Submission s
                 JOIN Practice p ON s.practice_id = p.id
                 JOIN Course c ON p.course_id = c.id
-                LEFT JOIN ClassUser cu ON s.student_id = cu.user_id
-                LEFT JOIN Class cl ON cu.class_id = cl.id
                 WHERE s.student_id = #{studentId}
+                GROUP BY s.id
                 ORDER BY s.submitted_at DESC
             """)
     @Results({
@@ -53,13 +57,17 @@ public interface PracticeRecordMapper {
                     s.feedback,
                     p.title as practice_title,
                     c.name as course_name,
-                    cl.name as class_name
+                    (
+                      SELECT GROUP_CONCAT(DISTINCT cl.name)
+                      FROM ClassUser cu
+                      JOIN Class cl ON cu.class_id = cl.id
+                      WHERE cu.user_id = s.student_id AND cl.course_id = c.id
+                    ) as class_name
                 FROM Submission s
                 JOIN Practice p ON s.practice_id = p.id
                 JOIN Course c ON p.course_id = c.id
-                LEFT JOIN ClassUser cu ON s.student_id = cu.user_id
-                LEFT JOIN Class cl ON cu.class_id = cl.id
                 WHERE s.student_id = #{studentId} and p.course_id=#{courseId}
+                GROUP BY s.id
                 ORDER BY s.submitted_at DESC
             """)
     @Results({
@@ -75,7 +83,7 @@ public interface PracticeRecordMapper {
             @Param("courseId") Long courseId);
 
     @Select("""
-                SELECT
+                SELECT DISTINCT
                     q.id,
                     q.course_id as courseId,
                     q.section_id as sectionId,
@@ -115,7 +123,7 @@ public interface PracticeRecordMapper {
     int getTotalStudentsInPractice(@Param("practiceId") Long practiceId);
 
     @Select("""
-                SELECT
+                SELECT DISTINCT
                     s.id,
                     s.practice_id,
                     s.student_id,
@@ -124,14 +132,16 @@ public interface PracticeRecordMapper {
                     s.feedback,
                     p.title as practice_title,
                     c.name as course_name,
-                    cl.name as class_name
+                    (SELECT GROUP_CONCAT(DISTINCT cl.name) 
+                     FROM ClassUser cu 
+                     JOIN Class cl ON cu.class_id = cl.id 
+                     WHERE cu.user_id = s.student_id) as class_name
                 FROM Submission s
                 JOIN Practice p ON s.practice_id = p.id
                 JOIN Course c ON p.course_id = c.id
-                LEFT JOIN ClassUser cu ON s.student_id = cu.user_id
-                LEFT JOIN Class cl ON cu.class_id = cl.id
-                WHERE s.id= #{submissionId}
+                WHERE s.id = #{submissionId}
                 AND s.student_id = #{studentId}
+                LIMIT 1
             """)
     @Results({
             @Result(property = "id", column = "id"),
@@ -141,9 +151,11 @@ public interface PracticeRecordMapper {
             @Result(property = "className", column = "class_name"),
             @Result(property = "submittedAt", column = "submitted_at"),
             @Result(property = "score", column = "score"),
-            @Result(property = "feedback", column = "feedback")
+            @Result(property = "feedback", column = "feedback"),
+            @Result(property = "questions", column = "id", many = @Many(select = "findQuestionsBySubmissionId"))
     })
-    PracticeRecord findPracticeRecord(@Param("submissionId") Long submissionId,
+    PracticeRecord findSubmissionDetail(
+            @Param("submissionId") Long submissionId,
             @Param("studentId") Long studentId);
 
     @Select("""
@@ -239,41 +251,7 @@ public interface PracticeRecordMapper {
             @Param("studentId") Long studentId);
 
     @Select("""
-                SELECT
-                    s.id,
-                    s.practice_id,
-                    s.student_id,
-                    s.submitted_at,
-                    s.score,
-                    s.feedback,
-                    p.title as practice_title,
-                    c.name as course_name,
-                    cl.name as class_name
-                FROM Submission s
-                JOIN Practice p ON s.practice_id = p.id
-                JOIN Course c ON p.course_id = c.id
-                LEFT JOIN ClassUser cu ON s.student_id = cu.user_id
-                LEFT JOIN Class cl ON cu.class_id = cl.id
-                WHERE s.id = #{submissionId}
-                AND s.student_id = #{studentId}
-            """)
-    @Results({
-            @Result(property = "id", column = "id"),
-            @Result(property = "practiceId", column = "practice_id"),
-            @Result(property = "practiceTitle", column = "practice_title"),
-            @Result(property = "courseName", column = "course_name"),
-            @Result(property = "className", column = "class_name"),
-            @Result(property = "submittedAt", column = "submitted_at"),
-            @Result(property = "score", column = "score"),
-            @Result(property = "feedback", column = "feedback"),
-            @Result(property = "questions", column = "id", many = @Many(select = "findQuestionsBySubmissionId"))
-    })
-    PracticeRecord findSubmissionDetail(
-            @Param("submissionId") Long submissionId,
-            @Param("studentId") Long studentId);
-
-    @Select("""
-                SELECT
+                SELECT DISTINCT
                     q.id,
                     q.content,
                     q.type,

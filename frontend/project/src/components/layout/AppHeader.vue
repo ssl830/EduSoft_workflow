@@ -67,7 +67,7 @@ export default {
 
       <nav class="main-nav">
         <router-link to="/" class="nav-link">首页</router-link>
-        <router-link to="/questionBank" class="nav-link" v-if="isLoggedIn">题库</router-link>
+        <router-link to="/questionBank" class="nav-link" v-if="isLoggedIn && authStore.user?.role !== 'student'">题库</router-link>
         <router-link to="/learning-records" class="nav-link" v-if="isLoggedIn">学习记录</router-link>
         <button class="nav-link" @click="showHelpModal = true">帮助中心</button>
         <button class="nav-link" @click="showFeedbackModal = true">意见反馈</button>

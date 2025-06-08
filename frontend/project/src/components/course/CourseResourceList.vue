@@ -1,16 +1,56 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { defineProps } from 'vue'
+import { defineProps, withDefaults } from 'vue'
 import ResourceApi from '../../api/resource'
-import {useAuthStore} from "../../stores/auth.ts";
+import { useAuthStore } from "../../stores/auth.ts";
 
-const props = defineProps<{
-  courseId: string;
-  isTeacher: boolean;
-}>()
+interface Resource {
+    id: number;
+    title: string;
+    courseId: number;
+    sectionId: number;
+    uploaderId: number;
+    type: string;
+    visibility: string;
+    fileUrl: string;
+    createdAt: string;
+}
 
-const resources = ref<any[]>([])
-const resourcesVer = ref<any[]>([])
+interface UploadForm {
+    courseId: number;
+    sectionId: number;
+    uploaderId: number;
+    title: string;
+    type: string;
+    file: File | null;
+    visibility: string;
+}
+
+interface Props {
+    courseId: string;
+    isTeacher: boolean;
+    course?: {
+        id: number;
+        sections: Array<{
+            id: string;
+            title: string;
+            sortOrder: string;
+        }>;
+        classes: Array<{
+            id: string;
+            name: string;
+            classCode: string;
+            studentCount: number;
+        }>;
+    };
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    course: undefined
+})
+
+const resources = ref<Resource[]>([])
+const resourcesVer = ref<Resource[]>([])
 const loading = ref(true)
 const error = ref('')
 
@@ -18,24 +58,27 @@ const error = ref('')
 const selectedChapter = ref('')
 const selectedType = ref('')
 const searchQuery = ref('')
+const selectedClass = ref('')
 
-// Chapters and types (will be populated from resources)
-const chapters = ref([])
-const resourceTypes = ref([])
+// Types that can be used in resources
+const resourceTypes = ref<string[]>([])
 
-// File upload
+// 上传文件
 const showUploadForm = ref(false)
 const showHistoryForm = ref(false)
 const isRenew = ref(false)
 
-const uploadForm = ref({
-    courseId: 0,
-    sectionId: 0,
-    uploaderId: 0,
+const authStore = useAuthStore()
+
+// 上传表单
+const uploadForm = ref<UploadForm>({
+    courseId: parseInt(props.courseId),
+    sectionId: -1,
+    uploaderId: authStore.user?.id || 0,
     title: '',
     type: '',
-    file: null as File | null,
-    visibility: '',
+    file: null,
+    visibility: ''
 })
 const uploadProgress = ref(0)
 const uploadError = ref('')
@@ -50,11 +93,36 @@ const typeOptions = ref([
 ])
 
 const visibilityOptions = ref([
-    { value: 'PUBLIC', label: '公开' },
-    { value: 'COURSE-ONLY', label: '仅课程成员' }
+    { value: 'PUBLIC', label: '课程内公开' },
+    { value: 'CLASS_ONLY', label: '仅特定班级' }
 ])
 
-const authStore = useAuthStore()
+// 在 script setup 部分添加新的常量和工具函数
+const OFFICE_PREVIEW_URL = 'https://view.officeapps.live.com/op/embed.aspx?src='
+
+const PREVIEW_MIME_TYPES: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'doc': 'application/msword',
+    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'xls': 'application/vnd.ms-excel'
+}
+
+const isOfficeFile = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || ''
+    return ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(ext)
+}
+
+const getMimeType = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || ''
+    return PREVIEW_MIME_TYPES[ext] || 'application/octet-stream'
+}
 
 // Fetch resources
 const fetchResources = async () => {
@@ -62,21 +130,19 @@ const fetchResources = async () => {
   error.value = ''
 
   try {
-    const response = await ResourceApi.getCourseResources(props.courseId, {
-      chapter: selectedChapter.value,
-      type: selectedType.value,
-      title: searchQuery.value,
-      userid: authStore.user?.id,
+    const response = await ResourceApi.getCourseResources(parseInt(props.courseId), {
+      courseId: parseInt(props.courseId),
+      userId: authStore.user?.id || 0,
+      chapter: selectedChapter.value ? parseInt(selectedChapter.value) : undefined,
+      type: selectedType.value || undefined,
+      title: searchQuery.value || undefined,
+      isTeacher: props.isTeacher
     })
-    // console.log(selectedChapter.value)
     resources.value = response.data
-
-    // Extract unique chapters and types
-    const chaptersSet = new Set(resources.value.map((r: any) => r.sectionId).filter(Boolean))
-    chapters.value = Array.from(chaptersSet)
-
-    const typesSet = new Set(resources.value.map((r: any) => r.type).filter(Boolean))
-    resourceTypes.value = Array.from(typesSet)
+    console.log("resources: " + resources.value)
+    // Extract unique types
+    const typesSet = new Set(resources.value.map(r => r.type).filter(Boolean))
+    resourceTypes.value = Array.from(typesSet) as string[]
 
   } catch (err) {
     error.value = '获取资源列表失败，请稍后再试'
@@ -95,12 +161,14 @@ const toggleHistory = async (title: string) => {
 
 const fetchResourcesVer = async (title: string) => {
     try {
-        const response = await ResourceApi.getCourseResources(props.courseId, {
-            chapter: "",
-            type:"",
-            title: title
+        const response = await ResourceApi.getCourseResources(parseInt(props.courseId), {
+            courseId: parseInt(props.courseId),
+            userId: authStore.user?.id || 0,
+            title: title,
+            isTeacher: props.isTeacher
         })
-        // console.log(selectedChapter.value)
+        console.log("title: " + title)
+        console.log()
         resourcesVer.value = response.data
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
@@ -130,13 +198,16 @@ const handleFileChange = (event: Event) => {
 
 // Upload resource
 const uploadResource = async () => {
-
   if (!uploadForm.value.title) {
     uploadError.value = '请填写资源标题'
     return
   }
   if(!uploadForm.value.file){
       uploadError.value = '请选择文件'
+      return
+  }
+  if(uploadForm.value.visibility === 'CLASS_ONLY' && !selectedClass.value) {
+      uploadError.value = '请选择班级'
       return
   }
 
@@ -147,20 +218,22 @@ const uploadResource = async () => {
   formData.append('title', uploadForm.value.title)
   formData.append('file', uploadForm.value.file)
 
-    if (uploadForm.value.sectionId) {
-        formData.append('sectionId', uploadForm.value.sectionId.toString())
-    }
-    if (uploadForm.value.uploaderId) {
-        formData.append('uploaderId', uploadForm.value.uploaderId.toString())
-    }
+  if (uploadForm.value.sectionId) {
+      formData.append('sectionId', uploadForm.value.sectionId.toString())
+  }
+  if (uploadForm.value.uploaderId) {
+      formData.append('uploaderId', uploadForm.value.uploaderId.toString())
+  }
 
-    if (uploadForm.value.type) {
-        formData.append('type', uploadForm.value.type)
-    }
-    if (uploadForm.value.visibility) {
-        formData.append('visibility', uploadForm.value.visibility)
-    }
-
+  if (uploadForm.value.type) {
+      formData.append('type', uploadForm.value.type)
+  }
+  if (uploadForm.value.visibility) {
+      formData.append('visibility', uploadForm.value.visibility)
+  }
+  if (uploadForm.value.visibility === 'CLASS_ONLY' && selectedClass.value) {
+      formData.append('classId', selectedClass.value)
+  }
 
   try {
     await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
@@ -168,10 +241,10 @@ const uploadResource = async () => {
     })
 
     // Reset form and refresh list
-      showUploadForm.value = false
-      isRenew.value = false
-      resetUploadForm()
-      fetchResources()
+    showUploadForm.value = false
+    isRenew.value = false
+    resetUploadForm()
+    fetchResources()
 
   } catch (err) {
     uploadError.value = '上传资源失败，请稍后再试'
@@ -181,66 +254,80 @@ const uploadResource = async () => {
 
 // Reset upload form
 const resetUploadForm = () => {
-  if(isRenew.value){
-      uploadForm.value.file = null
-      uploadError.value = ''
-      return
-  }
-  uploadForm.value = {
-    title: '',
-    chapter: '',
-    type: '',
-    file: null,
-    description: ''
-  }
-  uploadProgress.value = 0
-  uploadError.value = ''
+    if(isRenew.value){
+        uploadForm.value.file = null
+        uploadError.value = ''
+        return
+    }
+    uploadForm.value = {
+        courseId: parseInt(props.courseId),
+        sectionId: -1,
+        uploaderId: authStore.user?.id || 0,
+        title: '',
+        type: '',
+        file: null,
+        visibility: ''
+    }
+    uploadProgress.value = 0
+    uploadError.value = ''
 }
 
-// Preview resource
-const previewResource = (resource: any) => {
-  window.open(resource.fileUrl, '_blank')
+// 修改预览方法
+const previewResource = async (resource: any) => {
+    try {
+        // 1. 获取预览链接
+        const response = await ResourceApi.previewResource(resource.id)
+        const previewUrl = response.data.url
+        const fileName = response.data.fileName || resource.title
+
+        // 2. 如果是 Office 文档，使用 Office Online Viewer
+        if (isOfficeFile(fileName)) {
+            const encodedUrl = encodeURIComponent(previewUrl)
+            window.open(OFFICE_PREVIEW_URL + encodedUrl, '_blank')
+            return
+        }
+
+        // 3. 其他文件使用 Blob 预览
+        const fileResponse = await fetch(previewUrl)
+        const blob = await fileResponse.blob()
+        
+        // 4. 创建带正确 MIME type 的新 Blob
+        const mimeType = getMimeType(fileName)
+        const file = new Blob([blob], { type: mimeType })
+        
+        // 5. 创建预览 URL 并在新窗口打开
+        const blobUrl = URL.createObjectURL(file)
+        window.open(blobUrl, '_blank')
+
+        // 6. 清理 Blob URL
+        setTimeout(() => {
+            URL.revokeObjectURL(blobUrl)
+        }, 1000)
+    } catch (err) {
+        error.value = '预览资源失败，请稍后再试'
+        console.error(err)
+    }
 }
 
 // Download resource
 const downloadResource = async (resource: any) => {
-  try {
-    // const response = await ResourceApi.downloadResource(resource.id)
-    //
-    // // Create a download link
-    // const downloadUrl = response.data.url
-    // console.log(response.data.url)
-    // console.log(response.data)
-    // const link = document.createElement('a')
-    // link.href = downloadUrl
-    // link.setAttribute('download', resource.title)
-    // document.body.appendChild(link)
-    // link.click()
-    // link.remove()
-      // 1. 获取文件直链
-      const response = await ResourceApi.downloadResource(resource.id)
-      const fileUrl = response.url
-      const fileName = resource.title
+    try {
+        // 1. 获取文件直链
+        const response = await ResourceApi.downloadResource(resource.id)
+        const fileUrl = response.data.url
+        const fileName = response.data.fileName || resource.title
 
-      // 2. 通过 Fetch/Blob 间接下载
-      const res = await fetch(fileUrl)
-      const blob = await res.blob()
-
-      // 3. 创建本地下载链接
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = fileName
-      document.body.appendChild(link)
-      link.click()
-
-      // 4. 清理内存
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(link)
-  } catch (err) {
-    error.value = '下载资源失败，请稍后再试'
-    console.error(err)
-  }
+        // 2. 直接使用浏览器打开下载链接
+        const link = document.createElement('a')
+        link.href = fileUrl
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    } catch (err) {
+        error.value = '下载资源失败，请稍后再试'
+        console.error(err)
+    }
 }
 
 // Filter resources when criteria change
@@ -335,43 +422,63 @@ onMounted(() => {
 
       <div class="form-row">
         <div class="form-group form-group-half">
-          <label for="sectionId">所属章节（-1表示无章节属性）</label>
-          <input
+          <label for="sectionId">所属章节</label>
+          <select
             id="sectionId"
             v-model="uploadForm.sectionId"
-            type="number"
-          />
+            class="form-select"
+          >
+            <option value="-1">无章节</option>
+            <option 
+              v-for="section in course?.sections" 
+              :key="section.id" 
+              :value="section.id"
+            >
+              {{ section.title }}
+            </option>
+          </select>
         </div>
 
-          <!-- 资料类型单选框 -->
-          <div class="form-group form-group-half">
-              <label>资料类型</label>
-              <div class="radio-group">
-                  <label v-for="option in typeOptions" :key="option.value">
-                      <input
-                          type="radio"
-                          v-model="uploadForm.type"
-                          :value="option.value"
-                      />
-                      <span class="radio-label">{{ option.label }}</span>
-                  </label>
-              </div>
-          </div>
+        <!-- 资料类型单选框 -->
+        <div class="form-group form-group-half">
+            <label>资料类型</label>
+            <div class="radio-group">
+                <label v-for="option in typeOptions" :key="option.value">
+                    <input
+                        type="radio"
+                        v-model="uploadForm.type"
+                        :value="option.value"
+                    />
+                    <span class="radio-label">{{ option.label }}</span>
+                </label>
+            </div>
+        </div>
 
-          <!-- 可见性单选框 -->
-          <div class="form-group form-group-half">
-              <label>可见性</label>
-              <div class="radio-group">
-                  <label v-for="option in visibilityOptions" :key="option.value">
-                      <input
-                          type="radio"
-                          v-model="uploadForm.visibility"
-                          :value="option.value"
-                      />
-                      <span class="radio-label">{{ option.label }}</span>
-                  </label>
-              </div>
-          </div>
+        <!-- 可见性单选框 -->
+        <div class="form-group form-group-half">
+            <label>可见性</label>
+            <div class="radio-group">
+                <label v-for="option in visibilityOptions" :key="option.value">
+                    <input
+                        type="radio"
+                        v-model="uploadForm.visibility"
+                        :value="option.value"
+                    />
+                    <span class="radio-label">{{ option.label }}</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 班级选择（当选择仅特定班级时显示） -->
+        <div v-if="uploadForm.visibility === 'CLASS_ONLY' && course?.classes?.length" class="form-group form-group-half">
+            <label>选择班级</label>
+            <select v-model="selectedClass" class="form-select">
+                <option value="">请选择班级</option>
+                <option v-for="class_ in course.classes" :key="class_.id" :value="class_.id">
+                    {{ class_.name }} ({{ class_.classCode }})
+                </option>
+            </select>
+        </div>
       </div>
 
       <div class="form-group">
@@ -472,10 +579,15 @@ onMounted(() => {
         <select
           id="chapterFilter"
           v-model="selectedChapter"
+          class="form-select"
         >
           <option value="">所有章节</option>
-          <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">
-            {{ sectionId }}
+          <option 
+            v-for="section in course?.sections" 
+            :key="section.id" 
+            :value="section.id"
+          >
+            {{ section.title }}
           </option>
         </select>
       </div>
@@ -900,5 +1012,20 @@ input[type="radio"] {
   .search-input {
     flex-grow: 1;
   }
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #2c6ecf;
+    box-shadow: 0 0 0 2px rgba(44, 110, 207, 0.1);
 }
 </style>

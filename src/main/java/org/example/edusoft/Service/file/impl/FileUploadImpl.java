@@ -68,6 +68,7 @@ public class FileUploadImpl implements FileUpload {
                     }
                     targetParentId = sectionFolder.getId();
                 }
+                System.out.println("uploaderId: " + uploaderId);
                 // 这个upload方法需要哪些参数？？还需要查看逻辑再确定
                 Result<?> result = upload(file, title, targetParentId, courseId, classId, visibility, sectionId, filetype, uploaderId);
                 if (result.getCode() != 200) {
@@ -94,6 +95,7 @@ public class FileUploadImpl implements FileUpload {
             FileInfo rootFolder = fileMapper.getRootFolderByClassId(classId);
             if (rootFolder == null) {
                 // 如果根文件夹不存在，则创建一个新的根文件夹
+                System.out.println("uploaderId: " + uploaderId);
                 rootFolder = createClassFolder(courseId, classId, uploaderId);
                 if (rootFolder == null) {
                     return Result.error("班级根文件夹创建失败");
@@ -103,6 +105,7 @@ public class FileUploadImpl implements FileUpload {
             // Step 3: 查找对应 section 的文件夹
             if(sectionId == -1){
                 // 如果 sectionId 为 -1，表示上传到根目录
+                System.out.println("uploaderId: " + uploaderId);
                 return upload(
                     file,
                     title,
@@ -196,7 +199,7 @@ public class FileUploadImpl implements FileUpload {
         if (file.isEmpty()) { 
             return Result.error("上传文件为空");
         }
-
+        System.out.println("uploaderId: " + uploaderId);
         // 检查父节点是否为目录
         if (parentId != null && !fileMapper.isDir(parentId)) {
             return Result.error("父节点不是文件夹");
@@ -207,38 +210,54 @@ public class FileUploadImpl implements FileUpload {
         
         int flag = 0;
         // 防止前端展示时文件夹内重名，更新文件命名
-        String uniqueName = recursionFindName(fileName, fileName, parentId, flag);
+        NameResult nr = recursionFindName(fileName, fileName, parentId, flag);
+
+        String uniqueName = nr.getName();
+        flag = nr.getCount();
 
         // 上传到OSS
         // 返回了用于文件上传对象库过程管理的数据结构
         FileBo bo = storageProvider.getStorage().upload(file, uniqueName, type);
-        int isnewversion = 0; // 是版本管理上传的新版本
+        int isnewversion = 0; // 不是版本管理上传的新版本
         if(flag > 0){
-            isnewversion = 1;
+            isnewversion = 1; // 是版本管理上传的新版本
         }
         // 获取原始文件名
         String baseName = FileUtil.getFileBaseName(uniqueName);
+        System.out.println("baseName: " + baseName);
+        System.out.println("uniqueName: " + uniqueName);
+        System.out.println("parentId: " + parentId);
+        
         // 获取上一个版本的文件 ID
-        Long lastVersionId = fileMapper.getLastVersionId(parentId, baseName, uniqueName);
-
+        Long lastVersionId = null;
+        if (flag > 0) {  // 只有在是新版本的情况下才查找上一个版本
+            lastVersionId = fileMapper.getLastVersionId(parentId, baseName, uniqueName);
+            System.out.println("lastVersionId: " + lastVersionId);
+        }
+        
         FileInfo info = convertToInfo(bo, uniqueName, parentId, courseId, classId, visibility, sectionId, uploaderId);
-        // 这里应该传入什么信息，后面可能会需要改动
+        
         // 设置版本信息
-        if(isnewversion == 1){
+        if (flag > 0) {  // 是新版本
             info.setVersion(flag);
             info.setLastVersionId(lastVersionId == null ? 0L : lastVersionId);
-            info.setIsCurrentVersion(true); // 新上传的默认为当前版本
+            info.setIsCurrentVersion(true);
+        } else {  // 不是新版本
+            info.setVersion(0);
+            info.setLastVersionId(0L);
+            info.setIsCurrentVersion(true);
         }
 
         fileMapper.insertNode(info);
 
         // 如果有旧版本，则更新其为非当前版本
-        if (lastVersionId != null && lastVersionId > 0 && isnewversion == 1) {
+        if (lastVersionId != null && lastVersionId > 0) {
             FileInfo oldInfo = fileMapper.selectById(lastVersionId);
             if (oldInfo == null) {
                 return Result.error("旧版本文件不存在，版本管理出错");
             }
             oldInfo.setIsCurrentVersion(false);
+            System.out.println("Found old version: " + oldInfo.getName() + ", setting is_current_version to false");
             fileMapper.updateNode(oldInfo);
         }
 
@@ -246,12 +265,13 @@ public class FileUploadImpl implements FileUpload {
     }
 
     //  同文件夹中重名文件加标号，用于前端展示，OSS库中会自动生成不重复的文件名，不需要这里处理
-    private String recursionFindName(String originalName, String name, Long parentId, int flag) {
+    private NameResult recursionFindName(String originalName, String name, Long parentId, int flag) {
         while (fileMapper.existsByNameAndParent(name, parentId)) {
             flag++;
             name = originalName + "(" + flag + ")";
         }
-        return flag > 0 ? originalName + "(" + flag + ")" : originalName;
+        //return flag > 0 ? originalName + "(" + flag + ")" : originalName;
+        return new NameResult(name, flag);
     }
 
 }

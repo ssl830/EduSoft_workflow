@@ -28,6 +28,11 @@ public interface FileMapper {
         @Param("chapter") Long chapter,
         @Param("regexTitle") String regexTitle
     );
+
+    List<FileInfo> getFileWith(
+        @Param("parentId") Long parentId,
+        @Param("regexTitle") String regexTitle
+    );
     
     /**
      * 获取某个用户所在的所有班级对应的根文件夹
@@ -95,5 +100,28 @@ public interface FileMapper {
 
     List<Long> getAllClassIdsByCourseId(
         @Param("courseId") Long courseId
+    );
+
+    List<FileInfo> getFilesByCourseId(
+        @Param("courseId") Long courseId,
+        @Param("title") String title,
+        @Param("type") String type,
+        @Param("chapter") Long chapter,
+        @Param("regexTitle") String regexTitle
+    );
+
+    List<FileInfo> getFilesByClassIdandChapter(
+        @Param("classId") Long classId,
+        @Param("title") String title,
+        @Param("type") String type,
+        @Param("chapter") Long chapter,
+        @Param("regexTitle") String regexTitle
+    );
+
+    List<FileInfo> getFilesByClassId(
+        @Param("classId") Long classId,
+        @Param("title") String title,
+        @Param("type") String type,
+        @Param("regexTitle") String regexTitle
     );
 }

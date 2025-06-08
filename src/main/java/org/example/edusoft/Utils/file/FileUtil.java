@@ -148,13 +148,9 @@ public class FileUtil {
             return fileName;
         }
 
-        int lastParenIndex = fileName.lastIndexOf('(');
-
-        if (lastParenIndex == -1) {
-            return fileName; // 没有括号，直接返回原名
-        }
-
-        return fileName.substring(0, lastParenIndex);
+        // 使用正则表达式匹配最后一个(数字)模式
+        String pattern = "\\([0-9]+\\)$";
+        return fileName.replaceAll(pattern, "");
     }
 
     public static void downLoad(String url, String path, HttpServletResponse response) {
