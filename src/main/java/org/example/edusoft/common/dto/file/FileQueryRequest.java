@@ -8,4 +8,5 @@ public class FileQueryRequest {
     private String title;       // 文件标题（模糊匹配）
     private Long courseId;    // 课程ID
     private Long userId;        // 用户ID
+    private Boolean isTeacher;  // 是否为教师
 }

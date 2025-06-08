@@ -90,6 +90,7 @@ const routes: RouteRecordRaw[] = [
     }
   },  {
     path: '/exercise/create',
+    name:'ExerciseCreate',
     component: () => import('../views/exercise/ExerciseCreate.vue'),
     meta: {
       title: '创建练习',
@@ -275,6 +276,16 @@ const routes: RouteRecordRaw[] = [
       title: '编辑练习',
       requiresAuth: true,
       roles: ['teacher', 'tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/schedule',
+    name: 'Schedule',
+    component: () => import('../views/ScheduleView.vue'),
+    meta: {
+      title: '课表',
+      requiresAuth: true,
       showSidebar: true
     }
   },

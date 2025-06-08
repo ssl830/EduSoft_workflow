@@ -51,7 +51,7 @@ public class TeachingResourceController {
     /**
      * 上传教学资源
      */
-    @PostMapping("/upload")
+    @PostMapping("/upload") 
     public Result<TeachingResource> uploadResource(
             @RequestParam("file") MultipartFile file,
             @RequestParam("courseId") Long courseId,
@@ -219,6 +219,26 @@ public class TeachingResourceController {
         } catch (Exception e) {
             log.error("获取课程资源及进度信息失败", e);
             return ResponseEntity.ok(Result.error("获取课程资源及进度信息失败：" + e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新资源时长
+     */
+    @PutMapping("/{resourceId}/duration")
+    public Result<TeachingResource> updateResourceDuration(
+            @PathVariable Long resourceId,
+            @RequestBody Map<String, Integer> request) {
+        try {
+            Integer duration = request.get("duration");
+            if (duration == null) {
+                return Result.error("视频时长不能为空");
+            }
+
+            TeachingResource resource = resourceService.updateResourceDuration(resourceId, duration);
+            return Result.ok(resource, "更新视频时长成功");
+        } catch (Exception e) {
+            return Result.error("更新视频时长失败：" + e.getMessage());
         }
     }
 } 

@@ -43,6 +43,14 @@ const isOverdue = (endTime: string) => {
     return now > end
 }
 
+// 新增：判断是否还没开始
+const didntStart = (startTime: string) => {
+    if (!startTime) return false
+    const now = new Date()
+    const start = new Date(startTime)
+    return now < start
+}
+
 // 获取班级练习列表 (学生视图)
 const fetchPractices = async () => {
     loading.value = true
@@ -51,9 +59,10 @@ const fetchPractices = async () => {
     try {
         if(isStudent.value){ // 学生视图
             // 调用新的API端点
-            const response = await ExerciseApi.getPracticeList(props.classId)
+            const response = await ExerciseApi.getPracticeList(authStore.user?.id, props.classId)
             // 更新数据结构处理
             practices.value = response.data
+            console.log("Hereeeeeeeeeeeeeeeeeeee", response.data)
         }else{ // 老师视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeTeachList(props.classId)
@@ -114,12 +123,6 @@ const fetchData = async () => {
     }
 }
 
-// 导出报告
-const downloadPracticeReport = async (practiceId: number) => {
-    // TODO: 实现导出逻辑
-    console.log(`导出报告: ${practiceId}`)
-}
-
 // 做练习
 const doPractice = (practiceId: number) => {
     router.push({
@@ -143,11 +146,6 @@ const getPracticeReport = async (practiceId: number, submissionId: number) => {
         name: 'ExerciseFeedback',
         params: { practiceId, submissionId }
     })
-}
-
-// 导出报告
-const exportReport = async() => {
-    // TODO: 实现导出逻辑
 }
 
 // 切换视图
@@ -211,13 +209,6 @@ onMounted(() => {
                     :class="{ active: currentView === 'corrections' }"
                 >
                     待批改
-                </button>
-                <button
-                    v-if="isStudent"
-                    class="btn-primary"
-                    @click="exportReport"
-                >
-                    {{ '导出报告' }}
                 </button>
             </div>
         </div>
@@ -307,8 +298,8 @@ onMounted(() => {
                                 class="btn-action preview"
                                 @click="doPractice(practice.id)"
                                 title="练习"
-                                :disabled="isOverdue(practice.endTime) ||
-                            (practice.isSubmitted && !practice.allowMultiple)"
+                                :disabled="isOverdue(practice.endTime) || didntStart(practice.startTime) ||
+                            (practice.isSubmitted && !practice.allowMultipleSubmission)"
                             >
                                 练习
                             </button>

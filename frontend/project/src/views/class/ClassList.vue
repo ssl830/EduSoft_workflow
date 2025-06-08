@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import ClassCard from '../../components/class/ClassCard.vue'
 import ClassApi from '../../api/class'
@@ -23,6 +23,18 @@ const newClass = ref({
 
 const showJoinClassDialog = ref(false)
 const joinClassCode = ref('')
+
+const weekOptions = [
+  '未确定', '周一', '周二', '周三', '周四', '周五', '周六', '周日'
+]
+const selectedWeek = ref('未确定')
+const startTime = ref('14:00')
+const endTime = ref('15:30')
+
+const classTimePreview = computed(() => {
+  if (selectedWeek.value === '未确定') return ''
+  return `${selectedWeek.value} ${startTime.value}-${endTime.value}`
+})
 
 // 加入班级功能
 const joinClass = async () => {
@@ -110,34 +122,63 @@ const isValidTime = (time: string) => {
   return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59
 }
 
-// 创建班级
-const createClass = async () => {
-  if (!newClass.value.classTime || !newClass.value.classCode || newClass.value.courseId == 0) {
-    errorDialog.value = '请填写所有必填字段'
-    return
+const validateClassForm = () => {
+  if (!newClass.value.courseId) {
+    errorDialog.value = '请选择课程';
+    return false;
   }
+  const course = courses.value.find(c => c.id === newClass.value.courseId)
+  let className = course?.name || ''
+  if (selectedWeek.value !== '未确定') {
+    if (!startTime.value || !endTime.value) {
+      errorDialog.value = '请选择完整的上课时间';
+      return false;
+    }
+    className += `${selectedWeek.value} ${startTime.value}-${endTime.value}`
+  }
+  if (!className || className.length < 2 || className.length > 50) {
+    errorDialog.value = '班级名称长度必须在2-50个字符之间';
+    return false;
+  }
+  if (!newClass.value.classCode) {
+    errorDialog.value = '请输入班级代码';
+    return false;
+  }
+  if (newClass.value.classCode.length < 6 || newClass.value.classCode.length > 40) {
+    errorDialog.value = '班级代码长度必须在6-40个字符之间';
+    return false;
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(newClass.value.classCode)) {
+    errorDialog.value = '班级代码只能包含字母、数字和下划线';
+    return false;
+  }
+  return true;
+}
 
+const createClass = async () => {
+  if (!validateClassForm()) return;
+  const course = courses.value.find(c => c.id === newClass.value.courseId)
+  let className = course?.name || ''
+  if (selectedWeek.value !== '未确定') {
+    className += `${selectedWeek.value} ${startTime.value}-${endTime.value}`
+  }
   try {
     const classData = {
       courseId: newClass.value.courseId,
-      name: `${courses.value.find(c => c.id === newClass.value.courseId)?.name || ''} ${newClass.value.classTime}`,
+      name: className,
       classCode: newClass.value.classCode
     }
-
     console.log('发送的班级数据:', classData)
     const response = await ClassApi.createClass(classData)
-    
-    // 检查响应状态
-    if (response?.data) {
-      ElMessage.success('班级创建成功')
-      resetUploadForm()
-      fetchClasses()
-    } else {
-      errorDialog.value = '创建班级失败'
+    if (response?.code !== 200) {
+      errorDialog.value = response?.message || '创建班级失败';
+      return;
     }
+    ElMessage.success('班级创建成功')
+    resetUploadForm()
+    fetchClasses()
   } catch (error) {
-    console.error('创建班级失败:', error)
-    errorDialog.value = '创建班级失败，请重试'
+    errorDialog.value = error?.response?.data?.message || error?.message || '创建班级失败，请重试';
   }
 }
 
@@ -262,11 +303,15 @@ onMounted(async () => {
           </div>
           <div class="form-group">
             <label>授课时间</label>
-            <input
-                v-model="newClass.classTime"
-                type="text"
-                placeholder="例如：0800-0935"
-            >
+            <select v-model="selectedWeek">
+              <option v-for="w in weekOptions" :key="w" :value="w">{{ w }}</option>
+            </select>
+            <template v-if="selectedWeek !== '未确定'">
+              <input type="time" v-model="startTime" style="width: 110px; margin: 0 8px;" />
+              <span>到</span>
+              <input type="time" v-model="endTime" style="width: 110px; margin: 0 8px;" />
+            </template>
+            <div style="margin-top: 6px; color: #888; font-size: 13px;">预览：{{ classTimePreview || '（无具体时间）' }}</div>
           </div>
           <div class="form-group">
             <label>班级代码</label>

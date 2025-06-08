@@ -297,4 +297,21 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    /**
+     * 更新资源时长
+     */
+    @Override
+    @Transactional
+    public TeachingResource updateResourceDuration(Long resourceId, Integer duration) {
+        TeachingResource resource = resourceMapper.selectById(resourceId);
+        if (resource == null) {
+            throw new BusinessException("教学资源不存在");
+        }
+
+        resource.setDuration(duration);
+        resourceMapper.update(resource);
+        
+        return resource;
+    }
 } 

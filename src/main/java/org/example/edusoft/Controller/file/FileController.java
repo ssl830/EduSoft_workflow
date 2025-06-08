@@ -68,6 +68,7 @@ public class FileController {
         String type = request.getType();  // PDF, PPT, VIDEO, CODE, OTHER
         String title = request.getTitle(); // 文件名模糊匹配
         Long userId = request.getUserId();
+        Boolean isTeacher = request.getIsTeacher();
         //Long courseId = request.getCourseId();
 
         // 调用 Service 查询文件列表
@@ -76,7 +77,8 @@ public class FileController {
             courseId,
             title,
             type,
-            chapter
+            chapter,
+            isTeacher
         );
         return Result.ok(files, "获取用户课程文件成功");
     }
@@ -125,18 +127,17 @@ public class FileController {
      * 文件下载接口
      *
      * @param resourceId 文件或文件夹ID
-     * @param response   HttpServletResponse 对象，用于写入响应流
+     * @return Result<FileAccessDTO> 文件下载URL及相关信息
      */
     @GetMapping("/resources/{resourceId}/download")
-    public void downloadResource(@PathVariable("resourceId") String resourceId,
-                                @RequestHeader(name = "Accept", required = false) String accept,
-                                HttpServletResponse response) throws IOException {
-        // resourceId 转换为 Long
+    public Result<FileAccessDTO> downloadResource(@PathVariable("resourceId") String resourceId) {
         try {
             Long fileId = Long.valueOf(resourceId);
-            fileDownloadService.downloadFileOrFolder(fileId, response);
+            return Result.ok(fileAccessService.getDownloadUrl(fileId), "获取下载链接成功");
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "无效的 resourceId 格式");
+            return Result.error("无效的 resourceId 格式");
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
         }
     }
 
@@ -144,32 +145,14 @@ public class FileController {
     /**
      * 文件预览接口
      *
-     * @param resourceId 文件或文件夹ID
-     * @param response   HttpServletResponse 对象，用于写入响应流
+     * @param resourceId 文件ID
+     * @return Result<FileAccessDTO> 文件预览URL及相关信息
      */
     @GetMapping("/resources/{resourceId}/preview")
-    public void previewResource(@PathVariable("resourceId") String resourceId,
-                                HttpServletResponse response) throws IOException {
+    public Result<FileAccessDTO> previewResource(@PathVariable("resourceId") String resourceId) {
         try {
             Long fileId = Long.valueOf(resourceId);
-            filePreviewService.previewFile(fileId, response);
-        } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "无效的 resourceId 格式");
-        }
-    }
-
-    /**
-     * 获取文件下载URL
-     *
-     * @param resourceId 文件ID
-     * @return 文件下载URL及相关信息
-     */
-    @GetMapping("/resources/{resourceId}/download-url")
-    public Result<FileAccessDTO> getDownloadUrl(@PathVariable("resourceId") String resourceId) {
-        try {
-            Long fileId = Long.valueOf(resourceId);
-            FileAccessDTO accessDTO = fileAccessService.getDownloadUrl(fileId);
-            return Result.ok(accessDTO, "获取下载链接成功");
+            return Result.ok(fileAccessService.getPreviewUrl(fileId), "获取预览链接成功");
         } catch (NumberFormatException e) {
             return Result.error("无效的 resourceId 格式");
         } catch (BusinessException e) {

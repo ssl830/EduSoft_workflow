@@ -1,14 +1,48 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import ResourceApi from '../../api/resource'
 import { useAuthStore } from "../../stores/auth.ts";
 
-const props = defineProps<{
+interface Props {
     courseId: string;
     isTeacher: boolean;
-}>()
+    course?: {
+        id: number;
+        sections: Array<{
+            id: string;
+            title: string;
+            sortOrder: string;
+        }>;
+        classes: Array<{
+            id: string;
+            name: string;
+            classCode: string;
+            studentCount: number;
+        }>;
+    };
+}
 
-const videos = ref<any[]>([])
+const props = withDefaults(defineProps<Props>(), {
+    course: undefined
+})
+
+// 添加视频对象的类型定义
+interface VideoResource {
+    id: number;
+    title: string;
+    description?: string;
+    fileUrl: string;
+    duration?: number;
+    chapterId: number;
+    chapterName: string;
+    progress: number;
+    lastWatch?: number;
+    formattedDuration: string;
+    formattedWatched: string;
+}
+
+// 修改 ref 的类型
+const videos = ref<VideoResource[]>([])
 const loading = ref(true)
 const error = ref('')
 
@@ -21,25 +55,41 @@ const chapters = ref<Array<{id: number, name: string}>>([]) // 修改为对象�
 
 // Video player modal
 const showVideoModal = ref(false)
-const currentVideo = ref<any>(null)
+const currentVideo = ref<VideoResource | null>(null)
 const videoProgress = ref(0)
 const watchedDuration = ref(0)
 const playerRef = ref<HTMLVideoElement | null>(null)
 
-// File upload
+// 上传教学资源视频
 const showUploadForm = ref(false)
 const uploadForm = ref({
     courseId: 0,
-    chapterId: -1, // 默认改为-1 (无章节)
-    createdBy: 0,
     title: '',
-    description: '',
+    chapterId: -1, // 默认为-1表示无章节属性
+    chapterName: '',
     file: null as File | null,
+    description: '',
+    createdBy: 0
 })
 const uploadProgress = ref(0)
 const uploadError = ref('')
 
 const authStore = useAuthStore()
+
+// 当 props.course.sections 更新时，同步到本地 chapters 列表
+watch(() => props.course?.sections, sections => {
+    if (sections) {
+        chapters.value = [
+            { id: -1, name: '无章节属性' },
+            ...sections.map(s => ({ id: parseInt(s.id), name: s.title }))
+        ]
+    }
+}, { immediate: true })
+
+// 初始化创建者
+onMounted(() => {
+    uploadForm.value.createdBy = authStore.user?.id || 0
+})
 
 // Fetch videos
 const fetchVideos = async () => {
@@ -47,21 +97,29 @@ const fetchVideos = async () => {
     error.value = ''
 
     try {
-        const response = await ResourceApi.getChapterResources(props.courseId, {
-            studentId: authStore.user?.id.toString(),
-            chapterId: selectedChapter.value || -1
-        })
-
+        const formData = new FormData()
+        formData.append('studentId', authStore.user?.id?.toString() || '')
+        formData.append('chapterId', selectedChapter.value?.toString() || '-1')
+        
+        const response = await ResourceApi.getChapterResources(props.courseId, formData)
+        console.log("response:", response);
         videos.value = response.data.map((video: any) => {
-            const progress = video.lastWatch && video.duration
-                ? Math.min(100, Math.round((video.lastWatch / video.duration) * 100))
-                : 0
-
+            // 直接使用后端返回的 progress 和 lastWatch/lastPosition
+            const progress = video.progress || 0
+            const lastWatch = video.lastPosition || 0
+            
             return {
-                ...video,
-                progress,
+                id: video.resourceId || video.id,
+                title: video.title || '',
+                description: video.description,
+                fileUrl: video.fileUrl || '',
+                duration: video.duration,
+                chapterId: video.chapterId || -1,
+                chapterName: video.chapterName || '',
+                progress: progress,
+                lastWatch: lastWatch,
                 formattedDuration: formatDuration(video.duration),
-                formattedWatched: formatDuration(video.lastWatch || 0)
+                formattedWatched: formatDuration(lastWatch)
             }
         })
 
@@ -87,7 +145,7 @@ const fetchVideos = async () => {
 
 
 // Format seconds to MM:SS
-const formatDuration = (seconds: number) => {
+const formatDuration = (seconds: number | undefined): string => {
     if (!seconds) return '00:00'
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
@@ -95,41 +153,146 @@ const formatDuration = (seconds: number) => {
 }
 
 // Open video player
-const openVideoPlayer = (video: any) => {
-    currentVideo.value = video
-    showVideoModal.value = true
-    // 使用 lastWatch 字段
-    watchedDuration.value = video.lastWatch || 0
-    videoProgress.value = video.progress || 0
+const openVideoPlayer = async (video: VideoResource) => {
+    try {
+        // 每次打开视频时都重新获取最新的进度数据
+        if (authStore.user?.id) {
+            const formData = new FormData()
+            formData.append('studentId', authStore.user.id.toString())
+            formData.append('chapterId', selectedChapter.value?.toString() || '-1')
+            
+            // 先获取最新的视频资源数据
+            const resourceResponse = await ResourceApi.getChapterResources(props.courseId, formData)
+            const updatedVideo = resourceResponse.data.find((v: any) => v.resourceId === video.id)
+            
+            if (updatedVideo) {
+                // 更新视频对象的进度信息
+                video.progress = updatedVideo.progress || 0
+                video.lastWatch = updatedVideo.lastPosition || 0
+                video.formattedWatched = formatDuration(updatedVideo.lastPosition || 0)
+            }
+
+            // 再获取具体的播放进度记录
+            const progressResponse = await ResourceApi.getVideoProgress(
+                video.id.toString(),
+                authStore.user.id.toString()
+            )
+            
+            if (progressResponse.data.code === 200 && progressResponse.data.data) {
+                const { progress, lastPosition } = progressResponse.data.data
+                video.progress = progress
+                video.lastWatch = lastPosition
+                video.formattedWatched = formatDuration(lastPosition)
+            }
+        }
+
+        // 设置视频播放器的状态
+        currentVideo.value = video
+        showVideoModal.value = true
+        
+        // 设置进度相关的值
+        videoProgress.value = video.progress
+        maxAllowedProgress.value = video.progress
+        watchedDuration.value = video.lastWatch || 0
+
+        // 等待视频加载完成后设置播放位置
+        nextTick(() => {
+            if (playerRef.value && video.lastWatch) {
+                playerRef.value.currentTime = video.lastWatch
+            }
+        })
+    } catch (err) {
+        console.error('获取播放记录失败:', err)
+        // 即使获取记录失败，也允许播放视频，使用视频对象中现有的进度
+        currentVideo.value = video
+        showVideoModal.value = true
+        videoProgress.value = video.progress
+        maxAllowedProgress.value = video.progress
+        watchedDuration.value = video.lastWatch || 0
+    }
 }
 
-// Close video player and save progress
-const closeVideoPlayer = async () => {
-    if (currentVideo.value && watchedDuration.value > 0) {
+// Add new ref for max allowed progress
+const maxAllowedProgress = ref(0)
+
+// Handle video metadata loaded (for duration)
+const handleMetadataLoaded = async () => {
+    if (!playerRef.value || !currentVideo.value?.id) return
+    const duration = Math.floor(playerRef.value.duration)
+    
+    // Only update if duration has changed
+    if (currentVideo.value.duration !== duration) {
         try {
-            // 使用新的进度记录接口
-            await ResourceApi.recordWatchProgress({
-                resourceId: currentVideo.value.id,
-                studentId: authStore.user?.id,
-                progress: watchedDuration.value, // 实际进度
-                position: watchedDuration.value // 当前位置
-            })
-            fetchVideos()
+            // Update the resource with duration
+            await ResourceApi.updateResourceDuration(currentVideo.value.id.toString(), duration)
+            currentVideo.value.duration = duration
         } catch (err) {
-            console.error('保存观看进度失败:', err)
+            console.error('更新视频时长失败:', err)
         }
     }
-    showVideoModal.value = false
+}
+
+// Handle seeking (prevent seeking beyond allowed position)
+const handleSeeking = () => {
+    if (!playerRef.value || !currentVideo.value?.duration) return
+    const seekTime = playerRef.value.currentTime
+    const maxAllowedTime = (maxAllowedProgress.value / 100) * currentVideo.value.duration
+    
+    // If trying to seek beyond max allowed position, prevent it
+    if (seekTime > maxAllowedTime) {
+        playerRef.value.currentTime = maxAllowedTime
+    }
 }
 
 // Handle video time update
 const handleTimeUpdate = () => {
-    if (!playerRef.value) return
-    const currentTime = playerRef.value.currentTime
+    if (!playerRef.value || !currentVideo.value?.duration) return
+    const currentTime = Math.floor(playerRef.value.currentTime)
+    
+    // 更新当前观看时长
     watchedDuration.value = currentTime
-    if (currentVideo.value?.duration) {
-        videoProgress.value = Math.min(100, Math.round((currentTime / currentVideo.value.duration) * 100))
+    
+    // 计算当前播放位置对应的进度百分比
+    const currentProgress = Math.round((currentTime / currentVideo.value.duration) * 100)
+    
+    // 如果当前进度大于之前的进度，则更新进度条
+    if (currentProgress > videoProgress.value) {
+        videoProgress.value = currentProgress
+        maxAllowedProgress.value = currentProgress // 同时更新最大允许进度
     }
+}
+
+// Close video player and save progress
+const closeVideoPlayer = async () => {
+    if (!currentVideo.value?.id || !authStore.user?.id || watchedDuration.value <= 0) {
+        showVideoModal.value = false
+        return
+    }
+
+    try {
+        const currentProgress = Math.round((watchedDuration.value / (currentVideo.value.duration || 1)) * 100)
+        // 只有当当前位置对应的进度超过历史进度时才更新progress
+        const progressToSave = currentProgress > maxAllowedProgress.value ? currentProgress : maxAllowedProgress.value
+
+        const formData = new FormData()
+        formData.append('resourceId', currentVideo.value.id.toString())
+        formData.append('studentId', authStore.user.id.toString())
+        formData.append('progress', progressToSave.toString())
+        formData.append('position', watchedDuration.value.toString())
+        
+        await ResourceApi.recordWatchProgress(formData)
+        
+        // 更新本地视频列表中的进度
+        const updatedVideo = videos.value.find(v => v.id === currentVideo.value?.id)
+        if (updatedVideo) {
+            updatedVideo.progress = progressToSave
+            updatedVideo.lastWatch = watchedDuration.value
+            updatedVideo.formattedWatched = formatDuration(watchedDuration.value)
+        }
+    } catch (err) {
+        console.error('保存观看进度失败:', err)
+    }
+    showVideoModal.value = false
 }
 
 // Handle file selection
@@ -139,6 +302,8 @@ const handleFileChange = (event: Event) => {
         uploadForm.value.file = input.files[0]
     }
 }
+
+
 
 // Upload video
 const uploadVideo = async () => {
@@ -159,6 +324,7 @@ const uploadVideo = async () => {
     formData.append('file', uploadForm.value.file)
     formData.append('courseId', props.courseId) // 注意字段名
     formData.append('chapterId', uploadForm.value.chapterId.toString()) // 注意字段名
+    formData.append('chapterName', props.course?.sections.find(section => parseInt(section.id) === uploadForm.value.chapterId)?.title || '')
     formData.append('createdBy', uploadForm.value.createdBy.toString()) // 注意字段名
     formData.append('title', uploadForm.value.title)
 
@@ -185,12 +351,13 @@ const uploadVideo = async () => {
 // Reset upload form
 const resetUploadForm = () => {
     uploadForm.value = {
-        courseId: 0,
-        chapterId: -1, // 默认改为-1 (无章节)
-        createdBy: authStore.user?.id || 0,
+        courseId: parseInt(props.courseId),
         title: '',
+        chapterId: -1, // 默认为-1表示无章节属性
+        chapterName: '',
+        file: null,
         description: '',
-        file: null
+        createdBy: authStore.user?.id || 0
     }
     uploadProgress.value = 0
     uploadError.value = ''
@@ -237,50 +404,38 @@ onMounted(() => {
                 />
             </div>
 
-            <!-- 新增描述字段 -->
+            <div class="form-group">
+                <label for="chapterId">所属章节</label>
+                <select
+                    id="chapterId"
+                    v-model="uploadForm.chapterId"
+                    class="form-select"
+                >
+                    <option value="-1">无章节属性</option>
+                    <option 
+                        v-for="section in props.course?.sections" 
+                        :key="section.id" 
+                        :value="parseInt(section.id)"
+                    >
+                        {{ section.title }}
+                    </option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label for="description">视频描述</label>
                 <textarea
                     id="description"
                     v-model="uploadForm.description"
                     placeholder="输入视频描述"
+                    rows="3"
                 ></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group form-group-half">
-                    <!-- 改为 chapterId -->
-<!--                    <label for="chapterId">所属章节</label>-->
-<!--                    <input-->
-<!--                        id="chapterId"-->
-<!--                        v-model="uploadForm.chapterId"-->
-<!--                        type="number"-->
-<!--                        placeholder="输入章节ID"-->
-<!--                        required-->
-<!--                    />-->
-                    <!-- 修改为下拉框 -->
-                    <label for="chapterId">所属章节</label>
-                    <select
-                        id="chapterId"
-                        v-model="uploadForm.chapterId"
-                        required
-                    >
-                        <option :value="-1">无章节属性</option>
-                        <option
-                            v-for="chapter in chapters"
-                            :key="chapter.id"
-                            :value="chapter.id"
-                        >
-                            {{ chapter.name }}
-                        </option>
-                    </select>
-                </div>
-            </div>
-
             <div class="form-group">
-                <label for="file">选择视频文件</label>
+                <label for="video">选择视频文件</label>
                 <input
-                    id="file"
+                    id="video"
                     type="file"
                     accept="video/*"
                     @change="handleFileChange"
@@ -319,15 +474,19 @@ onMounted(() => {
         <!-- Filter Section -->
         <div class="video-filters">
             <div class="filter-section">
-                <label for="chapterFilter">按章节筛选:</label>
+                <label for="chapterFilter">选择章节:</label>
                 <select
                     id="chapterFilter"
                     v-model="selectedChapter"
+                    class="chapter-select"
                 >
                     <option value="">所有章节</option>
-                    <!-- 修改为显示章节名称 -->
-                    <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
-                        {{ chapter.name }}
+                    <option 
+                        v-for="section in props.course?.sections" 
+                        :key="section.id" 
+                        :value="section.id"
+                    >
+                        {{ section.title }}
                     </option>
                 </select>
             </div>
@@ -353,7 +512,7 @@ onMounted(() => {
                 <tbody>
                 <tr v-for="video in videos" :key="video.id">
                     <td>{{ video.title }}</td>
-                    <td>{{ video.chapterId }}.{{ video.chapterName  || '-' }}</td>
+                    <td>{{ video.chapterId }}.{{ video.chapterName || '-' }}</td>
                     <td>{{ video.formattedDuration }}</td>
                     <td>
                         <div class="progress-container">
@@ -387,23 +546,25 @@ onMounted(() => {
         <div v-if="showVideoModal" class="video-modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>{{ currentVideo.title }}</h3>
+                    <h3>{{ currentVideo?.title || '' }}</h3>
                     <button class="close-btn" @click="closeVideoPlayer">&times;</button>
                 </div>
 
                 <div class="video-container">
                     <video
                         ref="playerRef"
-                        :src="currentVideo.fileUrl"
+                        :src="currentVideo?.fileUrl"
                         controls
                         autoplay
                         @timeupdate="handleTimeUpdate"
+                        @loadedmetadata="handleMetadataLoaded"
+                        @seeking="handleSeeking"
                     ></video>
                 </div>
 
                 <div class="progress-info">
-                    <div class = "progress-container">
-                        {{currentVideo.description}}
+                    <div class="progress-container">
+                        {{ currentVideo?.description || '' }}
                     </div>
                     <div class="progress-container">
                         <div class="progress-bar">
@@ -415,7 +576,7 @@ onMounted(() => {
                         <span class="progress-text">{{ videoProgress }}%</span>
                     </div>
                     <div class="duration-text">
-                        已观看: {{ formatDuration(watchedDuration) }} / {{ currentVideo.formattedDuration }}
+                        已观看: {{ formatDuration(watchedDuration) }} / {{ currentVideo?.formattedDuration || '00:00' }}
                     </div>
                 </div>
             </div>
@@ -793,5 +954,31 @@ input[type="radio"] {
     .modal-content {
         width: 95%;
     }
+}
+
+.chapter-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 200px;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #2c6ecf;
+    box-shadow: 0 0 0 2px rgba(44, 110, 207, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
 }
 </style>

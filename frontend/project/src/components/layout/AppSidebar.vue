@@ -34,7 +34,11 @@ export default {
             <span class="icon">👥</span> 班级中心
           </router-link>
         </li>
-
+        <li>
+          <router-link to="/schedule" class="sidebar-link">
+            <span class="icon">📅</span> 课表
+          </router-link>
+        </li>
         <li v-if="isTutor || isTeacher">
           <router-link to="/questionBank" class="sidebar-link">
             <span class="icon">📚</span> 题库中心

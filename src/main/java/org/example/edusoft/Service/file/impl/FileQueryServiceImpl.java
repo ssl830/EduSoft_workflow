@@ -3,6 +3,7 @@ package org.example.edusoft.service.file.impl;
 import org.example.edusoft.common.dto.file.FileResponseDTO;
 import org.example.edusoft.mapper.file.FileMapper;
 import org.example.edusoft.service.file.FileQueryService;
+import org.example.edusoft.utils.file.FileUtil;
 import org.example.edusoft.entity.file.FileInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -61,24 +62,47 @@ public class FileQueryServiceImpl implements FileQueryService {
         Long courseId,
         String title,
         String type, 
-        Long chapter
+        Long chapter,
+        Boolean isTeacher
     ) {
-        Long classId = fileMapper.getClassIdByUserandCourse(userId, courseId);
-        FileInfo root = fileMapper.getRootFolderByClassId(classId);
-        if (root == null) return Collections.emptyList();
-        FileInfo chapterdir;
-        List<FileInfo> children;
-        String escapedTitle = title.replaceAll("([\\$\\^\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\\\.])", "\\\\$1");
-        String regexTitle = "^" + escapedTitle + "\\([0-9]+\\)$";
-        if(chapter != null) {
-            chapterdir = fileMapper.getFolderBySection(root.getId(), chapter);
-            if (chapterdir == null) {
-                throw new IllegalArgumentException("无效的章节ID");
-            }
-            children = fileMapper.getChildrenWithFilter(chapterdir.getId(), title, type, chapter, regexTitle);
-        }else{
-            children = fileMapper.getChildrenWithFilter(root.getId(), title, type, chapter, regexTitle);   
+        System.out.println("Input title: " + title);
+        
+        // 获取基础文件名（去掉最后的版本号）
+        String baseName = FileUtil.getFileBaseName(title);
+        System.out.println("Base name: " + baseName);
+        
+        // 构建用于匹配所有版本的正则表达式
+        String regexTitle = "";
+        if (baseName == null || baseName.trim().isEmpty()) {
+            regexTitle = ".*"; // 匹配所有文件
+        } else {
+            // 转义特殊字符
+            String escapedBaseName = baseName.replaceAll(
+                "([\\$\\^\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\\\.])",
+                "\\\\$1"
+            );
+            // 匹配基础名称完全相同的文件，可能后面跟着(数字)
+            regexTitle = "^" + escapedBaseName + "(\\([0-9]+\\))?$";
         }
+        System.out.println("Regex pattern: " + regexTitle);
+
+        List<FileInfo> children;
+        if (isTeacher) {
+            // 如果是老师，直接获取课程下的所有文件
+            children = fileMapper.getFilesByCourseId(courseId, baseName, type, chapter, regexTitle);
+        } else {
+            // 如果是学生，只获取自己所在班级的文件
+            Long classId = fileMapper.getClassIdByUserandCourse(userId, courseId);
+            FileInfo root = fileMapper.getRootFolderByClassId(classId);
+            if (root == null) return Collections.emptyList();
+            
+            if (chapter != null) {
+                children = fileMapper.getFilesByClassIdandChapter(classId, baseName, type, chapter, regexTitle);
+            } else {
+                children = fileMapper.getFilesByClassId(classId, baseName, type, regexTitle);
+            }
+        }
+
         return children.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());

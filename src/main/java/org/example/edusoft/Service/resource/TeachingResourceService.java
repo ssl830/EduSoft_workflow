@@ -96,4 +96,12 @@ public interface TeachingResourceService {
      * @return 资源及学习进度信息列表
      */
     List<ResourceProgressDTO> getCourseResourcesWithProgress(Long courseId, Long studentId, Long chapterId);
+
+    /**
+     * 更新资源时长
+     * @param resourceId 资源ID
+     * @param duration 视频时长（秒）
+     * @return 更新后的资源对象
+     */
+    TeachingResource updateResourceDuration(Long resourceId, Integer duration);
 } 
