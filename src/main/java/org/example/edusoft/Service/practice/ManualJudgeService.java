@@ -92,7 +92,8 @@ public class ManualJudgeService {
         for (Answer answer : answers) {
             Question question = questionMapper.selectById(answer.getQuestionId());
             // 只返回非单选题
-            if (question.getType() != Question.QuestionType.singlechoice) {
+            if (question.getType() != Question.QuestionType.singlechoice || question.getType() != Question.QuestionType.judge 
+            || question.getType() != Question.QuestionType.fillblank || question.getType() != Question.QuestionType.multiplechoice) {
                 // 获取题目分值
                 PracticeQuestion pq = practiceQuestionMapper.findByPracticeIdAndQuestionId(
                     submission.getPracticeId(), question.getId());

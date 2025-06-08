@@ -70,7 +70,10 @@ public class SubmissionService {
             answer.setSortOrder(pq.getSortOrder());
 
             // 根据题目类型处理
-            if (question.getType() == Question.QuestionType.singlechoice) {
+            if (question.getType() == Question.QuestionType.singlechoice
+            || question.getType() == Question.QuestionType.judge
+            || question.getType() == Question.QuestionType.fillblank
+            || question.getType() == Question.QuestionType.multiplechoice) {
                 // 单选题自动评判
                 boolean isCorrect = userAnswer.equals(question.getAnswer());
                 answer.setCorrect(isCorrect);
