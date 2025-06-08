@@ -4,74 +4,48 @@
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center space-x-3">
         <!-- 用户头像 -->
-        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-          {{ getInitials(reply.authorName) }}
+        <div class="author-avatar">
+          {{ getInitials(reply.creatorNum) }}
         </div>
         
         <!-- 用户信息 -->
-        <div>
-          <span class="font-medium text-gray-900">{{ reply.authorName }}</span>
-          <span v-if="reply.isTeacher" class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+        <div class="flex flex-col">
+          <div class="flex items-center">
+            <span class="font-medium text-gray-900">{{ reply.creatorNum }}</span>
+            <span v-if="reply.isTeacher" class="ml-2 px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
             教师
           </span>
         </div>
-        
-        <!-- 时间信息 -->
         <span class="text-sm text-gray-500">{{ formatDate(reply.createdAt) }}</span>
+        </div>
       </div>
       
-      <!-- 操作按钮 -->
-      <div class="flex items-center space-x-2">
-        <!-- 点赞按钮 -->
-        <button 
-          @click="$emit('like', reply.id)"
-          class="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L9 7m5 3v10M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-          </svg>
-          <span class="text-sm">{{ reply.likeCount }}</span>
-        </button>
-        
-        <!-- 回复按钮 -->
-        <button 
-          @click="toggleReplyForm"
-          class="text-gray-500 hover:text-blue-600 transition-colors"
-          title="回复"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-        </button>
-        
-        <!-- 编辑按钮 (仅作者可见) -->
+      <!-- 回复操作按钮 -->
+      <div class="flex items-center space-x-4">
+        <!-- 编辑按钮 -->
         <button 
           v-if="canEdit"
-          @click="toggleEditForm"
-          class="text-gray-500 hover:text-yellow-600 transition-colors"
-          title="编辑"
+          @click="$emit('edit', reply)"
+          class="edit-btn"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+          <i class="fas fa-edit mr-1"></i>
+          编辑
         </button>
         
-        <!-- 删除按钮 (仅作者可见) -->
+        <!-- 删除按钮 -->
         <button 
           v-if="canDelete"
-          @click="handleDelete"
-          class="text-gray-500 hover:text-red-600 transition-colors"
-          title="删除"
+          @click="$emit('delete', reply.id)"
+          class="delete-btn"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          <i class="fas fa-trash-alt mr-1"></i>
+          删除
         </button>
       </div>
     </div>
     
     <!-- 回复内容 -->
-    <div v-if="!isEditing" class="prose max-w-none text-gray-800 mb-3" v-html="reply.content"></div>
+    <div class="prose max-w-none text-gray-700 mb-4" v-html="renderedContent"></div>
     
     <!-- 编辑表单 -->
     <div v-if="isEditing" class="mb-3">
@@ -92,7 +66,7 @@
         :parent-reply-id="reply.id"
         @success="handleReplySuccess"
         @cancel="toggleReplyForm"
-        :placeholder="`回复 ${reply.authorName}...`"
+        :placeholder="`回复 ${reply.creatorNum}...`"
         submit-text="提交回复"
       />
     </div>
@@ -115,7 +89,9 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue';
 import type { DiscussionReply } from '../api/discussion';
+import discussionApi from '../api/discussion';
 import ReplyForm from './ReplyForm.vue';
+import MarkdownIt from 'markdown-it';
 
 // Props
 interface Props {
@@ -144,11 +120,11 @@ const showReplyForm = ref(false);
 
 // 计算属性
 const canEdit = computed(() => {
-  return props.reply.authorId.toString() === currentUserId || userRole === 'teacher';
+  return props.reply.creatorId.toString() === currentUserId || userRole === 'teacher';
 });
 
 const canDelete = computed(() => {
-  return props.reply.authorId.toString() === currentUserId || userRole === 'teacher';
+  return props.reply.creatorId.toString() === currentUserId || userRole === 'teacher';
 });
 
 const hasChildren = computed(() => {
@@ -159,12 +135,50 @@ const childrenCount = computed(() => {
   return props.reply.children ? props.reply.children.length : 0;
 });
 
+// 点赞相关
+const isLiked = ref(props.reply.likedByMe || false);
+const showLikeUsers = ref(false);
+const likeUsers = ref<{userNum: string; userId: number}[]>([]);
+const loadingLikeUsers = ref(false);
+
+// 处理点赞
+const handleLike = async () => {
+  try {
+    await emit('like', props.reply.id);
+  } catch (err) {
+    console.error('点赞失败:', err);
+  }
+};
+
+// 加载点赞用户列表
+const loadLikeUsers = async () => {
+  if (loadingLikeUsers.value) return;
+  
+  loadingLikeUsers.value = true;
+  try {
+    const response = await discussionApi.getLikeUsers(props.reply.id);
+    likeUsers.value = response.data;
+    showLikeUsers.value = true;
+  } catch (err) {
+    console.error('Failed to load like users:', err);
+  } finally {
+    loadingLikeUsers.value = false;
+  }
+};
+
+// 关闭点赞用户列表
+const closeLikeUsers = () => {
+  showLikeUsers.value = false;
+};
+
 // 方法
 const getInitials = (name: string): string => {
+  if (!name) return '';
   return name.charAt(0).toUpperCase();
 };
 
 const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
@@ -215,6 +229,22 @@ const handleReplySuccess = () => {
   emit('reply', props.reply.id);
   showReplyForm.value = false;
 };
+
+const md = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true
+});
+
+const renderMarkdown = (content: string) => {
+  if (!content) return '';
+  return md.render(content);
+};
+
+const renderedContent = computed(() => {
+  if (!props.reply?.content) return '';
+  return renderMarkdown(props.reply.content);
+});
 </script>
 <script lang="ts">
 export default {
@@ -223,22 +253,299 @@ export default {
 </script>
 <style scoped>
 .reply-item {
-  transition: all 0.2s ease-in-out;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
 }
 
 .reply-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.prose {
-  max-width: none;
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.prose p {
-  margin-bottom: 0.5rem;
+.reply-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.prose p:last-child {
-  margin-bottom: 0;
+.author-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.author-role {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.teacher-badge {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.reply-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.reply-content {
+  color: #334155;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  padding-left: 3.25rem;
+}
+
+.reply-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-left: 3.25rem;
+}
+
+.reply-btn, .like-btn, .edit-btn, .delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  font-size: 0.93rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: all 0.18s;
+  cursor: pointer;
+}
+.reply-btn:hover, .like-btn:hover, .edit-btn:hover, .delete-btn:hover {
+  background: #f1f5f9;
+  border-color: #bcd0e5;
+}
+.reply-btn:active, .like-btn:active, .edit-btn:active, .delete-btn:active {
+  background: #e2e8f0;
+}
+.edit-btn {
+  color: #2563eb;
+  border-color: #93c5fd;
+}
+.edit-btn:hover {
+  background: #e0e7ef;
+  color: #1e40af;
+}
+.delete-btn {
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+.delete-btn:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #ef4444;
+}
+.like-btn {
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+.like-btn.liked {
+  color: #64748b;
+  background: #fff;
+  border-color: #e2e8f0;
+}
+.like-count {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-left: 0.25rem;
+}
+
+.reply-form {
+  margin-top: 1rem;
+  padding-left: 3.25rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .reply-item {
+    padding: 1rem;
+  }
+
+  .reply-content,
+  .reply-actions,
+  .reply-form {
+    padding-left: 0;
+  }
+
+  .reply-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .reply-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* 动画效果 */
+@keyframes likeAnimation {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.like-button.liked i {
+  animation: likeAnimation 0.3s ease;
+}
+
+/* 加载状态 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 点赞用户列表样式 */
+.like-users-popover {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 1rem;
+  min-width: 200px;
+  z-index: 10;
+}
+
+.like-users-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.like-user-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.like-user-item:hover {
+  background: #f8fafc;
+}
+
+.like-user-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.like-user-name {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.like-users-empty {
+  text-align: center;
+  padding: 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* 滚动条样式 */
+.like-users-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.like-users-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.like-users-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.like-users-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 </style>

@@ -6,8 +6,8 @@
         <div class="toolbar">
           <div class="toolbar-left">
             <h1 class="title">
-              <i class="fa fa-comments fa-lg"></i>
-              讨论区 {{ courseName ? '- ' + courseName : '' }}
+              <i class="fa fa-comments text-blue-500"></i>
+              <span class="text-gray-800 text-xl font-semibold">讨论区 {{ courseName ? '- ' + courseName : '' }}</span>
               <span v-if="unreadNotificationsCount > 0" class="badge">{{ unreadNotificationsCount }}</span>
             </h1>
           </div>          
@@ -640,6 +640,8 @@ import { ref, onMounted, computed, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import WriteBoard from '../../components/littlecomponents/WriteBoard.vue';
 import discussionApi, { Discussion, DiscussionReply } from '../../api/discussion';
+import MarkdownIt from 'markdown-it';
+import courseApi from '../../api/course';
 
 // 定义讨论帖类型（旧接口格式）
 interface Thread {
@@ -744,7 +746,6 @@ const legacyDiscussionApi = {
       console.log('getThreadsByCourse response 类型:', typeof response);
       console.log('getThreadsByCourse response 是否为数组:', Array.isArray(response));
       
-      // 由于axios拦截器已经返回了response.data，所以这里response就是数据本身
       const discussionList = Array.isArray(response) ? response : [];
       console.log('getThreadsByCourse 讨论列表长度:', discussionList.length);
       
@@ -752,7 +753,10 @@ const legacyDiscussionApi = {
         console.log('getThreadsByCourse 第一条讨论数据:', discussionList[0]);
       }
       
-      const mappedData = discussionList.map((item: Discussion): Thread => {
+      // 获取课程名称
+      const courseName = await getCourseInfo(Number(courseId));
+      
+      const mappedData = discussionList.map((item: Discussion) => {
         console.log('getThreadsByCourse 正在映射讨论项:', item);
         const mapped = {
           id: String(item.id),
@@ -762,10 +766,10 @@ const legacyDiscussionApi = {
           author: item.creatorNum,
           createdAt: item.createdAt,
           courseId: String(item.courseId),
-          courseName: `课程 ${item.courseId}`,
+          courseName: courseName,
           isPinned: item.isPinned,
           isClosed: item.isClosed,
-          likes: 0, // 后端接口没有likes字段，设为0
+          likes: 0,
           replyCount: item.replyCount,
           viewCount: item.viewCount
         };
@@ -773,9 +777,10 @@ const legacyDiscussionApi = {
         return mapped;
       });
       
-      console.log('getThreadsByCourse 最终返回的数据:', { data: mappedData });      return { data: mappedData };
-    } catch (error) {
-      console.error(`获取课程(${courseId})讨论帖失败 - 详细错误信息:`, error);
+      console.log('getThreadsByCourse 最终返回的数据:', { data: mappedData });
+      return { data: mappedData };
+    } catch (err) {
+      console.error(`获取课程(${courseId})讨论帖失败 - 详细错误信息:`, err);
       return { data: [] };
     }
   },
@@ -790,19 +795,19 @@ const legacyDiscussionApi = {
       });
       return {
         data: {
-          id: String(response.data.id),
-          title: response.data.title,
-          content: response.data.content,
-          authorId: String(response.data.creatorId),
-          author: response.data.creatorNum,
-          createdAt: response.data.createdAt,
-          courseId: String(response.data.courseId),
-          courseName: `课程 ${response.data.courseId}`,
-          isPinned: response.data.isPinned,
-          isClosed: response.data.isClosed,
+          id: String(response.id),
+          title: response.title,
+          content: response.content,
+          authorId: String(response.creatorId),
+          author: response.creatorNum,
+          createdAt: response.createdAt,
+          courseId: String(response.courseId),
+          courseName: `课程 ${response.courseId}`,
+          isPinned: response.isPinned,
+          isClosed: response.isClosed,
           likes: 0,
-          replyCount: response.data.replyCount,
-          viewCount: response.data.viewCount
+          replyCount: response.replyCount,
+          viewCount: response.viewCount
         }
       };
     } catch (error) {
@@ -1170,11 +1175,23 @@ const currentFilter = ref('all');
 // 过滤和排序函数
 const filteredThreads = computed(() => {
   // 应用搜索过滤
-  let filtered = searchQuery.value
-    ? threads.value.filter(t => 
-        t.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-        t.content.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    : threads.value;
+  let filtered = threads.value;
+  
+  if (searchQuery.value.trim()) {
+    const searchTerms = searchQuery.value.toLowerCase().split(/\s+/);
+    filtered = filtered.filter(thread => {
+      const titleMatch = searchTerms.every(term => 
+        thread.title.toLowerCase().includes(term)
+      );
+      const contentMatch = searchTerms.every(term => 
+        thread.content.toLowerCase().includes(term)
+      );
+      const authorMatch = searchTerms.every(term => 
+        thread.author.toLowerCase().includes(term)
+      );
+      return titleMatch || contentMatch || authorMatch;
+    });
+  }
   
   // 应用状态过滤
   if (currentFilter.value === 'pinned') {
@@ -1187,7 +1204,7 @@ const filteredThreads = computed(() => {
   
   // 计算热度值（如果尚未计算）
   filtered.forEach(t => {
-    if (!t.heat) t.heat = (t.likes || 0) - (t.replyCount || 0);
+    if (!t.heat) t.heat = (t.likes || 0) + (t.replyCount || 0) * 2;
   });
   
   // 应用排序
@@ -1271,14 +1288,20 @@ const performSearch = async () => {
   
   loading.value = true;
   error.value = null;
+  
   try {
-    const response = await legacyDiscussionApi.searchThreads(searchQuery.value);
-    if (response && response.data) {
-      threads.value = response.data;
+    // 如果已经有帖子数据，直接使用 filteredThreads 进行过滤
+    if (threads.value.length > 0) {
+      loading.value = false;
+      return;
     }
+    
+    // 如果没有帖子数据，先获取帖子
+    await fetchThreads();
   } catch (err: any) {
     console.error('搜索失败:', err);
     error.value = '搜索失败，请重试';
+    showStatusMessage('搜索失败，请重试', 'error');
   } finally {
     loading.value = false;
   }
@@ -1491,12 +1514,15 @@ const getAvatarInitial = (name: string) => {
   return name.charAt(0).toUpperCase();
 };
 
-// 格式化内容，简单处理HTML内容
+// 格式化内容，支持markdown渲染
 const formatContent = (content: string) => {
   if (!content) return '';
-  
-  // 简单过滤HTML标签，实际项目中可能需要更复杂的处理或使用专门的库
-  return content.replace(/<[^>]*>/g, ' ');
+  const md = new MarkdownIt({
+    html: false,
+    linkify: true,
+    typographer: true
+  });
+  return md.render(content);
 };
 
 // 获取空状态提示信息
@@ -1690,6 +1716,17 @@ const deleteReply = async (replyId: number) => {
 const confirmDeleteReply = (replyId: number) => {
   if (confirm('确定要删除这个回复吗？此操作无法撤销。')) {
     deleteReply(replyId);
+  }
+};
+
+// 获取课程名称
+const getCourseInfo = async (courseId: number) => {
+  try {
+    const response = await courseApi.getCourseInfo(courseId);
+    return response.data.name || `课程 ${courseId}`;
+  } catch (err) {
+    console.error('获取课程信息失败:', err);
+    return `课程 ${courseId}`;
   }
 };
 
@@ -3936,5 +3973,13 @@ const confirmDeleteReply = (replyId: number) => {
   background: rgba(102, 126, 234, 0.1);
   color: var(--primary-dark);
   transform: translateY(-1px);
+}
+
+.q-editor__content {
+  min-height: 200px !important;
+  background: #fff !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  z-index: 10 !important;
 }
 </style>

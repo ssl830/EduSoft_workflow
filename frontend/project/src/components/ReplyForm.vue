@@ -3,6 +3,17 @@
     <div class="mb-4">
       <!-- 富文本编辑器或简单文本框 -->
       <div class="relative">
+        <!-- 工具栏 -->
+        <div class="wb-toolbar" style="margin-bottom:6px;">
+          <button type="button" class="wb-btn" @click="insertFormat('**','**')" title="粗体"><b>B</b></button>
+          <button type="button" class="wb-btn" @click="insertFormat('*','*')" title="斜体"><i>I</i></button>
+          <button type="button" class="wb-btn" @click="insertFormat('~~','~~')" title="删除线"><span style="text-decoration:line-through;">S</span></button>
+          <span class="wb-divider"></span>
+          <button type="button" class="wb-btn" @click="insertFormat('`','`')" title="行内代码"><span style="font-family:monospace;">&lt;/&gt;</span></button>
+          <button type="button" class="wb-btn" @click="insertFormat('\n````\n','\n````\n')" title="代码块"><span style="font-family:monospace;">[code]</span></button>
+          <span class="wb-divider"></span>
+          <button type="button" class="wb-btn" @click="toggleEmojiPicker" title="表情">😀</button>
+        </div>
         <textarea
           ref="textareaRef"
           v-model="content"
@@ -13,101 +24,16 @@
           @input="handleInput"
           @keydown="handleKeydown"
         ></textarea>
-        
         <!-- 字符计数 -->
         <div class="absolute bottom-2 right-2 text-xs text-gray-400">
           {{ content.length }}/{{ maxLength }}
         </div>
       </div>
-      
       <!-- 错误提示 -->
       <div v-if="hasError" class="mt-2 text-sm text-red-600">
         {{ errorMessage }}
       </div>
     </div>
-    
-    <!-- 工具栏 -->
-    <div class="flex items-center justify-between">
-      <!-- 格式化按钮 -->
-      <div class="flex items-center space-x-2">
-        <button
-          type="button"
-          @click="insertFormat('**', '**')"
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-          title="粗体"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"></path>
-          </svg>
-        </button>
-        
-        <button
-          type="button"
-          @click="insertFormat('*', '*')"
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-          title="斜体"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20l-7-8 7-8M5 20l7-8L5 4"></path>
-          </svg>
-        </button>
-        
-        <button
-          type="button"
-          @click="insertFormat('`', '`')"
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-          title="代码"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-          </svg>
-        </button>
-        
-        <div class="h-4 w-px bg-gray-300"></div>
-        
-        <!-- 表情按钮 -->
-        <button
-          type="button"
-          @click="toggleEmojiPicker"
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-          title="表情"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <!-- 操作按钮 -->
-      <div class="flex items-center space-x-3">
-        <button
-          v-if="showCancel"
-          type="button"
-          @click="handleCancel"
-          class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          取消
-        </button>
-        
-        <button
-          type="button"
-          @click="handleSubmit"
-          :disabled="!canSubmit || isSubmitting"
-          class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <span v-if="isSubmitting" class="flex items-center">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            提交中...
-          </span>
-          <span v-else>{{ submitText }}</span>
-        </button>
-      </div>
-    </div>
-    
     <!-- 表情选择器 -->
     <div v-if="showEmojiPicker" class="mt-3 p-3 border border-gray-200 rounded-md bg-gray-50">
       <div class="grid grid-cols-8 gap-2">
@@ -119,6 +45,34 @@
           class="p-2 text-lg hover:bg-gray-200 rounded text-center"
         >
           {{ emoji }}
+        </button>
+      </div>
+    </div>
+    <!-- 工具栏和表情区结束 -->
+    <div class="flex items-center justify-between mt-2">
+      <!-- 操作按钮 -->
+      <div class="flex items-center space-x-3">
+        <button
+          v-if="showCancel"
+          class="cancel-button"
+          @click="handleCancel"
+        >
+          取消
+        </button>
+        <button
+          class="submit-button"
+          @click="handleSubmit"
+          style="margin-left: 10px"
+          :disabled="!canSubmit || isSubmitting"
+        >
+          <span v-if="isSubmitting" class="flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            提交中...
+          </span>
+          <span v-else>{{ submitText }}</span>
         </button>
       </div>
     </div>
@@ -216,37 +170,33 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 };
 
-const insertFormat = (startFormat: string, endFormat: string) => {
-  if (!textareaRef.value) return;
-  
+const insertFormat = (prefix: string, suffix: string) => {
   const textarea = textareaRef.value;
+  if (!textarea) return;
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
-  const selectedText = content.value.substring(start, end);
-  
-  const newText = startFormat + selectedText + endFormat;
-  content.value = content.value.substring(0, start) + newText + content.value.substring(end);
-  
+  const value = content.value;
+  const selected = value.substring(start, end);
+  const newValue = value.substring(0, start) + prefix + selected + suffix + value.substring(end);
+  content.value = newValue;
   nextTick(() => {
     textarea.focus();
-    textarea.setSelectionRange(start + startFormat.length, start + startFormat.length + selectedText.length);
+    textarea.setSelectionRange(start + prefix.length, end + prefix.length);
   });
 };
 
 const insertEmoji = (emoji: string) => {
-  if (!textareaRef.value) return;
-  
   const textarea = textareaRef.value;
+  if (!textarea) return;
   const start = textarea.selectionStart;
-  
-  content.value = content.value.substring(0, start) + emoji + content.value.substring(start);
-  
+  const end = textarea.selectionEnd;
+  const value = content.value;
+  const newValue = value.substring(0, start) + emoji + value.substring(end);
+  content.value = newValue;
   nextTick(() => {
     textarea.focus();
     textarea.setSelectionRange(start + emoji.length, start + emoji.length);
   });
-  
-  showEmojiPicker.value = false;
 };
 
 const toggleEmojiPicker = () => {
@@ -319,25 +269,238 @@ export default {
 </script>
 <style scoped>
 .reply-form {
-  transition: all 0.2s ease-in-out;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
 }
 
-textarea {
-  min-height: 100px;
-  max-height: 300px;
-  font-family: inherit;
-  line-height: 1.5;
+.reply-form:focus-within {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #3b82f6;
 }
 
-textarea:focus {
-  outline: none;
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.grid-cols-8 {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+.form-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.editor-container {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.editor-container:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.submit-button, .cancel-button {
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  color: #fff !important;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: none !important;
+}
+.submit-button:active, .cancel-button.cancel-button:active {
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+}
+.submit-button:disabled, .cancel-button:disabled {
+  background: #e5e7eb !important;
+  color: #cbd5e1 !important;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.character-count {
+  font-size: 0.875rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.character-count.warning {
+  color: #f59e0b;
+}
+
+.character-count.error {
+  color: #ef4444;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .reply-form {
+    padding: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .submit-button,
+  .cancel-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* WriteBoard编辑器样式覆盖 */
+:deep(.q-editor) {
+  border: none !important;
+  border-radius: 8px;
+}
+
+:deep(.q-editor__content) {
+  min-height: 150px;
+  padding: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+:deep(.q-editor__toolbar) {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem;
+}
+
+:deep(.q-btn) {
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+:deep(.q-btn:hover) {
+  background: rgba(226, 232, 240, 0.5);
+}
+
+/* 错误提示样式 */
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.error-message i {
+  font-size: 1rem;
+}
+
+.wb-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.wb-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4B5563;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.wb-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #2563EB;
+  transform: translateY(-1px);
+}
+
+.wb-btn:active {
+  transform: translateY(0);
+}
+
+.wb-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(226, 232, 240, 0.8);
+  margin: 0 0.25rem;
+}
+
+textarea, .wb-textarea {
+  width: 100% !important;
+  max-width: 100%;
+  min-width: 0;
 }
 
 button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -346,11 +509,85 @@ button:disabled {
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+  /* 表情选择器样式 */
+  .mt-3.p-3 {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   }
-  to {
-    transform: rotate(360deg);
+
+  .grid.grid-cols-8 button {
+    transition: all 0.2s ease;
+    border-radius: 8px;
   }
+
+  .grid.grid-cols-8 button:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.1);
+  }
+
+  /* 提交按钮样式 */
+  button[type="button"]:not(.wb-btn) {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button[type="button"]:not(.wb-btn):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  }
+
+  button[type="button"]:not(.wb-btn):active {
+    transform: translateY(0);
+  }
+
+  /* 错误提示样式 */
+  .text-red-600 {
+    background: rgba(239, 68, 68, 0.1);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+    gap: 0.5rem;
+  }
+
+  .text-red-600::before {
+    content: '⚠️';
+  }
+
+  /* 字数统计样式 */
+  .text-xs.text-gray-400 {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    font-weight: 500;
+  }
+
+  /* 提交按钮渐变背景 */
+  button[type="button"]:not(.wb-btn):not([disabled]) {
+    background: linear-gradient(135deg, #3B82F6, #2563EB);
+    border: none;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+  }
+
+  /* 取消按钮样式 */
+  button[type="button"].text-gray-600 {
+    background: rgba(75, 85, 99, 0.1);
+    border: 1px solid rgba(75, 85, 99, 0.2);
+  }
+
+  button[type="button"].text-gray-600:hover {
+    background: rgba(75, 85, 99, 0.15);
+    border-color: rgba(75, 85, 99, 0.3);
+    color: #374151;
 }
 </style>

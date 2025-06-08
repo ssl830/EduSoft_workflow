@@ -66,10 +66,26 @@ export interface DiscussionReply {
   discussionId: number;
   parentReplyId?: number;
   isTeacher: boolean;
-  likeCount: number;
   createdAt: string;
   updatedAt: string;
-  children?: DiscussionReply[]; // 子回复列表
+  children?: DiscussionReply[];
+  likeCount?: number;
+  likedByMe?: boolean;
+}
+
+// 后端返回的回复数据结构
+export interface BackendDiscussionReply {
+  id: number;
+  content: string;
+  userId: number;
+  userNum: string;
+  discussionId: number;
+  parentReplyId: number | null;
+  isTeacherReply: boolean;
+  createdAt: string;
+  updatedAt: string;
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 // 创建回复的请求数据
@@ -140,12 +156,12 @@ const discussionApi = {
 
   // 1. 创建回复
   createReply: (discussionId: number, data: CreateReplyRequest) => {
-    return apiClient.post<DiscussionReply>(`/api/discussion-reply/discussion/${discussionId}`, data);
+    return apiClient.post<BackendDiscussionReply>(`/api/discussion-reply/discussion/${discussionId}`, data);
   },
 
   // 2. 更新回复
   updateReply: (replyId: number, data: UpdateReplyRequest) => {
-    return apiClient.put<DiscussionReply>(`/api/discussion-reply/${replyId}`, data);
+    return apiClient.put<BackendDiscussionReply>(`/api/discussion-reply/${replyId}`, data);
   },
 
   // 3. 删除回复
@@ -155,32 +171,54 @@ const discussionApi = {
 
   // 4. 获取回复详情
   getReplyDetail: (replyId: number) => {
-    return apiClient.get<DiscussionReply>(`/api/discussion-reply/${replyId}`);
+    return apiClient.get<BackendDiscussionReply>(`/api/discussion-reply/${replyId}`);
   },
 
   // 5. 获取讨论下的所有回复
   getAllReplies: (discussionId: number) => {
-    return apiClient.get<DiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}`);
+    return apiClient.get<BackendDiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}`);
   },
 
   // 6. 获取讨论的顶层回复
   getTopLevelReplies: (discussionId: number) => {
-    return apiClient.get<DiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}/top-level`);
+    return apiClient.get<BackendDiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}/top-level`);
   },
 
   // 7. 获取指定回复的子回复
   getChildReplies: (parentReplyId: number) => {
-    return apiClient.get<DiscussionReply[]>(`/api/discussion-reply/parent/${parentReplyId}`);
+    return apiClient.get<BackendDiscussionReply[]>(`/api/discussion-reply/parent/${parentReplyId}`);
   },
 
   // 8. 获取讨论的教师回复
   getTeacherReplies: (discussionId: number) => {
-    return apiClient.get<DiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}/teacher`);
+    return apiClient.get<BackendDiscussionReply[]>(`/api/discussion-reply/discussion/${discussionId}/teacher`);
   },
 
   // 9. 删除讨论的所有回复（教师权限）
   deleteAllReplies: (discussionId: number) => {
     return apiClient.delete<SuccessResponse>(`/api/discussion-reply/discussion/${discussionId}`);
+  },
+
+  // 10. 获取回复的点赞用户列表
+  getLikeUsers: (replyId: number) => {
+    return apiClient.get<{userNum: string; userId: number}[]>(`/api/discussion-reply/${replyId}/likes`);
+  },
+
+  // ==================== 点赞相关接口 ====================
+  
+  // 1. 点赞回复
+  likeReply: (replyId: number) => {
+    return apiClient.post<SuccessResponse>(`/api/discussion-reply/${replyId}/like`);
+  },
+
+  // 2. 取消点赞回复
+  unlikeReply: (replyId: number) => {
+    return apiClient.delete<SuccessResponse>(`/api/discussion-reply/${replyId}/like`);
+  },
+
+  // 3. 获取回复的点赞状态
+  getLikeStatus: (replyId: number) => {
+    return apiClient.get<{liked: boolean; count: number}>(`/api/discussion-reply/${replyId}/like-status`);
   }
 };
 

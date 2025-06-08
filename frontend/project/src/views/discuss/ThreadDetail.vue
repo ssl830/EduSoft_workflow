@@ -1,40 +1,74 @@
 <template>
-  <div class="thread-detail-page p-6 bg-gray-50 min-h-screen">
-    <div class="max-w-3xl mx-auto">      <button @click="goBack" class="mb-6 btn btn-secondary flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+  <div class="thread-detail-page">
+    <div class="max-w-3xl mx-auto">
+      <button @click="goBack" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
         </svg>
         返回列表
       </button>
 
-      <div v-if="loadingThread || loadingPosts" class="text-center py-10">
-        <p class="text-blue-600">加载中...</p>
+      <!-- Loading State -->
+      <div v-if="loadingThread || loadingPosts" class="loading-state">
+        <div class="loading-spinner"></div>
       </div>
 
-      <div v-else-if="threadError || postsError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+      <!-- Error State -->
+      <div v-else-if="threadError || postsError" class="error-state">
         <strong class="font-bold">错误!</strong>
         <span class="block sm:inline"> {{ threadError || postsError }}</span>
       </div>
 
-      <div v-else-if="!thread" class="text-center py-10 bg-white shadow-md rounded-lg">
-        <p class="text-gray-600 text-lg">讨论帖未找到。</p>
+      <!-- Empty State -->
+      <div v-else-if="!thread" class="empty-state">
+        <div class="empty-state-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p class="text-lg">讨论帖未找到。</p>
       </div>
 
-      <div v-else class="bg-white shadow-xl rounded-lg overflow-hidden">
-        <!-- Thread Details -->
-        <div class="p-6 border-b border-gray-200">          <h1 class="text-3xl font-bold text-blue-700 mb-3">{{ thread.title }}</h1>
-          <p class="text-sm text-gray-500 mb-4">
-            由 <span class="font-medium text-blue-600">{{ thread.creatorNum }}</span> 创建于 {{ formatDate(thread.createdAt) }}
-          </p>
-          <div class="prose max-w-none text-gray-800" v-html="thread.content"></div>
-        </div>        <!-- Posts/Replies -->
-        <div class="p-6">
-          <h2 class="text-xl font-semibold text-blue-600 mb-4">回复 ({{ posts.length }})</h2>
+      <!-- Thread Content -->
+      <div v-else class="thread-container">
+        <div class="thread-header">
+          <h1 class="thread-title">{{ thread.title }}</h1>
+          <div class="thread-meta">
+            <div class="creator-info">
+              <div class="creator-avatar">{{ thread.creatorNum[0] }}</div>
+              <span class="creator-name">{{ thread.creatorNum }}</span>
+            </div>
+            <span class="text-gray-400">•</span>
+            <span>{{ formatDate(thread.createdAt) }}</span>
+            <!-- 主贴删除按钮，仅作者或老师可见 -->
+            <button v-if="thread && (thread.creatorId == currentUserId || userRole === 'teacher')" @click="handleDeleteThread" class="btn btn-delete-thread ml-4">
+              <i class="fas fa-trash-alt"></i> 删除帖子
+            </button>
+          </div>
+        </div>
+        
+        <div class="thread-content prose" v-html="renderedContent"></div>
+        
+        <!-- 回复区折叠按钮 -->
+        <div class="flex justify-end mb-2">
+          <button class="btn btn-toggle-replies" @click="repliesCollapsed = !repliesCollapsed">
+            <i :class="repliesCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"></i>
+            {{ repliesCollapsed ? '展开回复' : '收起回复' }}
+          </button>
+        </div>
+        
+        <!-- Replies Section -->
+        <div class="replies-section" v-show="!repliesCollapsed">
+          <div class="replies-header">
+            <h2 class="replies-title">
+              回复
+              <span class="replies-count">{{ posts.length }}</span>
+            </h2>
+          </div>
           
-          <!-- 顶层回复列表 -->
-          <div v-if="posts.length > 0" class="space-y-6 mb-6">
-            <div v-for="post in topLevelPosts" :key="post.id" class="reply-container">
-              <!-- 顶层回复 -->
+          <!-- Reply List -->
+          <div v-if="posts.length > 0" class="reply-list">
+            <div v-for="post in posts" :key="post.id" class="reply-container">
               <ReplyItem 
                 :reply="post" 
                 :level="0"
@@ -45,8 +79,8 @@
                 @load-children="loadChildReplies"
               />
               
-              <!-- 子回复列表 -->
-              <div v-if="post.children && post.children.length > 0" class="ml-8 mt-4 space-y-3">
+              <!-- Child Replies -->
+              <div v-if="post.children && post.children.length > 0" class="child-replies">
                 <ReplyItem 
                   v-for="childReply in post.children" 
                   :key="childReply.id"
@@ -58,29 +92,21 @@
                   @like="handleLikeReply"
                 />
               </div>
-              
-              <!-- 加载更多子回复按钮 -->
-              <div v-if="hasMoreChildren(post)" class="ml-8 mt-2">
-                <button 
-                  @click="loadMoreChildren(post)"
-                  :disabled="loadingChildren[post.id]"
-                  class="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                >
-                  <svg v-if="loadingChildren[post.id]" class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  <svg v-else class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                  {{ loadingChildren[post.id] ? '加载中...' : '查看更多回复' }}
-                </button>
-              </div>
             </div>
           </div>
-          <p v-else class="text-gray-500 mb-6">还没有回复，快来抢沙发！</p>
+          
+          <!-- Empty Replies State -->
+          <div v-else class="empty-state">
+            <div class="empty-state-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p class="text-lg">还没有回复，快来抢沙发！</p>
+          </div>
 
-          <!-- Create Post Form -->
+          <!-- Reply Form -->
+          <div class="reply-form-container">
           <ReplyForm 
             :discussion-id="Number(threadId)"
             :parent-reply-id="null"
@@ -89,6 +115,7 @@
             placeholder="发表你的回复..."
             submit-text="提交回复"
           />
+          </div>
         </div>
       </div>
     </div>
@@ -96,11 +123,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed, provide } from 'vue';
+import { ref, onMounted, reactive, computed, provide, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import discussionApi, { type Discussion, type DiscussionReply } from '../../api/discussion';
 import ReplyItem from '../../components/ReplyItem.vue';
 import ReplyForm from '../../components/ReplyForm.vue';
+import MarkdownIt from 'markdown-it';
 
 const route = useRoute();
 const router = useRouter();
@@ -122,6 +150,20 @@ const loadingThread = ref(true);
 const threadError = ref<string | null>(null);
 const loadingPosts = ref(true);
 const postsError = ref<string | null>(null);
+
+const repliesCollapsed = ref(false);
+
+const md = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true
+});
+
+// 计算属性
+const renderedContent = computed(() => {
+  if (!thread.value?.content) return '';
+  return md.render(thread.value.content);
+});
 
 // 计算顶层回复
 const topLevelPosts = computed(() => {
@@ -159,10 +201,12 @@ const fetchThreadDetails = async () => {
   threadError.value = null;
   try {
     const response = await discussionApi.getDiscussionDetail(Number(threadId.value));
-    thread.value = response.data;
+    console.log('Thread details response:', response);
+    thread.value = response;
   } catch (err: any) {
     console.error('Failed to fetch thread details:', err);
     threadError.value = err.response?.data?.message || '无法加载讨论帖详情。';
+    thread.value = null;
   } finally {
     loadingThread.value = false;
   }
@@ -174,25 +218,53 @@ const fetchPosts = async () => {
   try {
     // 获取顶层回复
     const response = await discussionApi.getTopLevelReplies(Number(threadId.value));
-    const topLevelReplies = response.data.sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    console.log('Top level replies response:', response);
     
-    // 为每个顶层回复加载少量子回复
-    for (const reply of topLevelReplies) {
-      try {
-        const childrenResponse = await discussionApi.getChildReplies(reply.id);
-        reply.children = childrenResponse.data.slice(0, 3); // 只显示前3个子回复
+    // 将后端返回的数据结构转换为前端需要的格式
+    posts.value = response.map(reply => ({
+      id: reply.id,
+      content: reply.content,
+      creatorId: reply.userId,
+      creatorNum: reply.userNum,
+      discussionId: reply.discussionId,
+      isTeacher: reply.isTeacherReply || false,
+      createdAt: reply.createdAt,
+      updatedAt: reply.updatedAt,
+      parentReplyId: reply.parentReplyId,
+      children: []
+    }));
+
+    // 为每个顶层回复加载子回复
+    for (const post of posts.value) {
+      if (!loadingChildren.value[post.id]) {
+        loadingChildren.value[post.id] = true;
+        try {
+          const childrenResponse = await discussionApi.getChildReplies(post.id);
+          console.log(`Child replies for post ${post.id}:`, childrenResponse);
+          
+          post.children = (childrenResponse || []).map(child => ({
+            id: child.id,
+            content: child.content,
+            creatorId: child.userId,
+            creatorNum: child.userNum,
+            discussionId: child.discussionId,
+            isTeacher: child.isTeacherReply || false,
+            createdAt: child.createdAt,
+            updatedAt: child.updatedAt,
+            parentReplyId: child.parentReplyId
+          }));
       } catch (err) {
-        console.warn(`Failed to fetch children for reply ${reply.id}:`, err);
-        reply.children = [];
+          console.error(`获取回复(${post.id})的子回复失败:`, err);
+          post.children = [];
+        } finally {
+          loadingChildren.value[post.id] = false;
+        }
       }
     }
-    
-    posts.value = topLevelReplies;
   } catch (err: any) {
     console.error('Failed to fetch posts:', err);
     postsError.value = err.response?.data?.message || '无法加载回复列表。';
+    posts.value = [];
   } finally {
     loadingPosts.value = false;
   }
@@ -202,11 +274,21 @@ const fetchPosts = async () => {
 const loadChildReplies = async (parentId: number) => {
   try {
     const response = await discussionApi.getChildReplies(parentId);
+    console.log(`Loading child replies for parent ${parentId}:`, response);
+    
     const parent = posts.value.find(p => p.id === parentId);
     if (parent) {
-      parent.children = response.data.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      parent.children = (response || []).map(child => ({
+        id: child.id,
+        content: child.content,
+        creatorId: child.userId,
+        creatorNum: child.userNum,
+        discussionId: child.discussionId,
+        isTeacher: child.isTeacherReply || false,
+        createdAt: child.createdAt,
+        updatedAt: child.updatedAt,
+        parentReplyId: child.parentReplyId
+      }));
     }
   } catch (err: any) {
     console.error('Failed to load child replies:', err);
@@ -218,9 +300,19 @@ const loadMoreChildren = async (parent: DiscussionReply) => {
   loadingChildren.value[parent.id] = true;
   try {
     const response = await discussionApi.getChildReplies(parent.id);
-    parent.children = response.data.sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    console.log(`Loading more children for parent ${parent.id}:`, response);
+    
+    parent.children = (response || []).map(child => ({
+      id: child.id,
+      content: child.content,
+      creatorId: child.userId,
+      creatorNum: child.userNum,
+      discussionId: child.discussionId,
+      isTeacher: child.isTeacherReply || false,
+      createdAt: child.createdAt,
+      updatedAt: child.updatedAt,
+      parentReplyId: child.parentReplyId
+    }));
   } catch (err: any) {
     console.error('Failed to load more children:', err);
   } finally {
@@ -302,11 +394,23 @@ const handleReplyToReply = (parentReplyId: number) => {
 // 处理点赞回复
 const handleLikeReply = async (replyId: number) => {
   try {
-    // 模拟点赞效果，实际项目中需要调用点赞API
+    // 获取当前点赞状态
+    const statusResponse = await discussionApi.getLikeStatus(replyId);
+    const { liked } = statusResponse.data;
+
+    // 根据当前状态决定是点赞还是取消点赞
+    if (liked) {
+      await discussionApi.unlikeReply(replyId);
+    } else {
+      await discussionApi.likeReply(replyId);
+    }
+
+    // 更新回复的点赞数
     const updateLike = (replies: DiscussionReply[]): void => {
       replies.forEach(reply => {
         if (reply.id === replyId) {
-          reply.likeCount = (reply.likeCount || 0) + 1;
+          // 更新点赞数
+          reply.likeCount = (reply.likeCount || 0) + (liked ? -1 : 1);
         }
         if (reply.children) {
           updateLike(reply.children);
@@ -315,10 +419,8 @@ const handleLikeReply = async (replyId: number) => {
     };
     
     updateLike(posts.value);
-    console.log(`点赞回复: ${replyId}`);
   } catch (err: any) {
     console.error('点赞失败:', err);
-    alert('点赞失败，请重试');
   }
 };
 
@@ -337,24 +439,394 @@ const goBack = () => {
   }
 };
 
-onMounted(() => {
-  if (threadId.value) {
-    fetchThreadDetails();
-    fetchPosts();
-  } else {
-    threadError.value = '未指定讨论帖ID。';
-    postsError.value = '未指定讨论帖ID。';
-    loadingThread.value = false;
-    loadingPosts.value = false;
+const renderMarkdown = (content: string) => {
+  if (!content) return '';
+  return md.render(content);
+};
+
+// 添加更多的调试信息
+watch(thread, (newVal) => {
+  console.log('Thread value changed:', newVal);
+}, { deep: true });
+
+watch(posts, (newVal) => {
+  console.log('Posts value changed:', newVal);
+}, { deep: true });
+
+// 删除主贴
+const handleDeleteThread = async () => {
+  if (!confirm('确定要删除这个帖子吗？此操作不可撤销。')) return;
+  try {
+    await discussionApi.deleteThread(Number(threadId.value));
+    router.back();
+  } catch (err: any) {
+    alert('删除失败，请重试');
   }
+};
+
+onMounted(async () => {
+  console.log('ThreadDetail mounted, threadId:', threadId.value);
+  await fetchThreadDetails();
+  await fetchPosts();
 });
 
 </script>
 
 <style scoped>
-/* For rendering HTML content safely, consider using a library or DOMPurify if content is user-generated and complex */
+.thread-detail-page {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.back-button:hover {
+  transform: translateX(-4px);
+  background: #f8fafc;
+  color: #3b82f6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.thread-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(20px);
+}
+
+.thread-header {
+  padding: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc, white);
+}
+
+.thread-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.thread-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.creator-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.creator-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.creator-name {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.thread-content {
+  padding: 2rem;
+  color: #334155;
+  line-height: 1.8;
+  font-size: 1.1rem;
+}
+
+.replies-section {
+  padding: 2rem;
+  background: #f8fafc;
+}
+
+.replies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.replies-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.replies-count {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.reply-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reply-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
+}
+
+.reply-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.child-replies {
+  margin-left: 3rem;
+  padding-left: 1.5rem;
+  border-left: 2px solid #e2e8f0;
+}
+
+.reply-form-container {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  padding: 2rem;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  color: #dc2626;
+  text-align: center;
+}
+
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+/* Markdown content styles */
+.prose :deep(h1) {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem;
+  color: #1e293b;
+}
+
+.prose :deep(h2) {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem;
+  color: #1e293b;
+}
+
+.prose :deep(h3) {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.75rem;
+  color: #1e293b;
+}
+
 .prose :deep(p) {
-  margin-bottom: 1em;
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+}
+
+.prose :deep(ul), .prose :deep(ol) {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose :deep(li) {
+  margin: 0.5rem 0;
+}
+
+.prose :deep(blockquote) {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: #64748b;
+  font-style: italic;
+}
+
+.prose :deep(code) {
+  background: #f1f5f9;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  color: #2563eb;
+}
+
+.prose :deep(pre) {
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.prose :deep(pre code) {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+.prose :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.prose :deep(hr) {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 2rem 0;
+}
+
+.prose :deep(a) {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.prose :deep(a:hover) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .thread-detail-page {
+    padding: 1rem;
+  }
+
+  .thread-title {
+    font-size: 1.5rem;
+  }
+
+  .thread-header,
+  .thread-content,
+  .replies-section {
+    padding: 1.5rem;
+  }
+
+  .child-replies {
+    margin-left: 1.5rem;
+    padding-left: 1rem;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  font-size: 0.97rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: all 0.18s;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #f1f5f9;
+  border-color: #bcd0e5;
+}
+.btn:active {
+  background: #e2e8f0;
+}
+.btn-delete-thread {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background: #fff;
+}
+.btn-delete-thread:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+.btn-toggle-replies {
+  font-size: 0.95rem;
+  color: #2563eb;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.btn-toggle-replies:hover {
+  background: #e0e7ef;
+  color: #1e40af;
 }
 </style>
 

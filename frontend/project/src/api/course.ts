@@ -1,5 +1,15 @@
 import axios from './axios'
 
+interface Course {
+  id: number;
+  name: string;
+  code: string;
+  outline?: string;
+  objective?: string;
+  assessment?: string;
+  teacherId: number;
+}
+
 const CourseApi = {
   // Get all courses for current user
   getUserCourses(userId: string) {
@@ -108,7 +118,13 @@ const CourseApi = {
 
   getAllCourses() {
     return axios.get('/api/courses/list')
-  }
+  },
+
+  // 获取课程信息
+  getCourseInfo: (courseId: number) => {
+    return axios.get<Course>(`/api/course/${courseId}`);
+  },
 }
 
 export default CourseApi
+export type { Course }
