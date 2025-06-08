@@ -147,14 +147,14 @@
                                 >
                                     <div class="question-header">
                                         <span class="question-number">第{{ index + 1 }}题</span>
-                                        <span class="question-type">{{ question.type }}</span>
+                                        <span class="question-type">{{ questionTypeMap[question.type] }}</span>
                                         <span class="question-score" :class="{ 'full-score': question.isCorrect }">
                                             {{ question.score || 0 }}分
                                         </span>
                                     </div>
                                     <div class="question-content">
                                         <p><strong>题目:</strong> {{ question.content }}</p>
-                                        <p v-if="question.options"><strong>选项:</strong> {{ question.options }}</p>
+                                        <p v-if="question.options && question.type === 'singlechoice'"><strong>选项:</strong> {{ question.options }}</p>
                                         <p><strong>我的答案:</strong> <span :class="question.isCorrect ? 'correct-answer' : 'wrong-answer'">{{ question.studentAnswer || '未作答' }}</span></p>
                                         <p><strong>正确答案:</strong> <span class="correct-answer">{{ question.correctAnswer }}</span></p>
                                         <div v-if="question.analysis" class="question-analysis">
@@ -206,7 +206,7 @@ export interface Question {
     name: string;
     course_id: number;
     teacher_id: string;
-    type: 'single_choice' | 'multiple_choice' | 'true_false' | 'short_answer' | 'fill_blank';
+    type: 'singlechoice' | 'multiplechoice' | 'judge' | 'program' | 'fillblank';
     options: Option[];
     answer: string;
     points: number;
@@ -322,7 +322,7 @@ const fetchPracticeDetail = async () => {
         console.log(response.data)
         practiceData.value = response.data
         // 初始化学生答案（假设从API获取）
-        response.data.questions.forEach((q: Question, idx: number) => {
+        practiceData.value.questions.forEach((q: Question, idx: number) => {
             // 优先用 answerList 覆盖 studentAnswer
             if (answerList && answerList[idx] !== undefined) {
                 q.studentAnswer = answerList[idx]
@@ -330,8 +330,11 @@ const fetchPracticeDetail = async () => {
             } else {
                 studentAnswers.value[q.id] = q.studentAnswer || ''
             }
+            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                q.type = 'multiplechoice'
+            }
         })
-
+        console.log("final数据", practiceData.value)
     } catch (err) {
         error.value = '获取练习详情失败'
     } finally {
@@ -405,6 +408,12 @@ const handleViewRecord = async () => {
             }
             if (!reportData) throw new Error('API返回的数据为空')
             submissionReportModal.value.data = reportData
+            submissionReportModal.value.data.questions.forEach((q: Question, idx: number) => {
+                if (q.type === 'singlechoice' && typeof q.correctAnswer === 'string' && q.correctAnswer.length > 1) {
+                    q.type = 'multiplechoice'
+                }
+            })
+
         } else {
             throw new Error('API响应数据格式不正确')
         }
