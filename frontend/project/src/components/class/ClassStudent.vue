@@ -507,7 +507,6 @@ onMounted(() => {
                 <tr>
                     <th style="width: 25%">姓名</th>
                     <th style="width: 25%">学号</th>
-                    <th style="width: 25%">学习进度</th>
                     <th style="width: 25%">操作</th>
                 </tr>
                 </thead>
@@ -518,7 +517,6 @@ onMounted(() => {
                         <span v-if="student.isTeacher" style="color: #1976d2; font-size: 0.85em; margin-left: 4px;">[老师]</span>
                     </td>
                     <td>{{ student.studentId }}</td>
-                    <td>{{ student.finishedExercise }}/{{ student.sumExercise }}</td>
                     <td class="actions">
                         <button
                             v-if="isTeacher && student.userId !== authStore.user?.id && !student.isTeacher"
