@@ -76,8 +76,7 @@ public class RecordServiceImpl implements RecordService {
             headerRow.createCell(2).setCellValue("资源标题");
             headerRow.createCell(3).setCellValue("学习进度");
             headerRow.createCell(4).setCellValue("观看次数");
-            headerRow.createCell(5).setCellValue("最后观看时间");
-            headerRow.createCell(6).setCellValue("最后观看位置(秒)");
+            headerRow.createCell(5).setCellValue("最后观看位置(秒)");
 
             int rowNum = 1;
             for (StudyRecord record : studyRecords) {
@@ -87,11 +86,10 @@ public class RecordServiceImpl implements RecordService {
                 row.createCell(2).setCellValue(record.getResourceTitle() != null ? record.getResourceTitle() : "");
                 row.createCell(3).setCellValue(record.getFormattedProgress());
                 row.createCell(4).setCellValue(record.getWatchCount() != null ? record.getWatchCount() : 0);
-                row.createCell(5).setCellValue(record.getFormattedLastWatchTime());
-                row.createCell(6).setCellValue(record.getLastPosition() != null ? record.getLastPosition() : 0);
+                row.createCell(5).setCellValue(record.getLastPosition() != null ? record.getLastPosition() : 0);
             }
 
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i < 6; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -120,8 +118,7 @@ public class RecordServiceImpl implements RecordService {
             headerRow.createCell(2).setCellValue("资源标题");
             headerRow.createCell(3).setCellValue("学习进度");
             headerRow.createCell(4).setCellValue("观看次数");
-            headerRow.createCell(5).setCellValue("最后观看时间");
-            headerRow.createCell(6).setCellValue("最后观看位置(秒)");
+            headerRow.createCell(5).setCellValue("最后观看位置(秒)");
             
             int rowNum = 1;
             for (StudyRecord record : studyRecords) {
@@ -131,12 +128,11 @@ public class RecordServiceImpl implements RecordService {
                 row.createCell(2).setCellValue(record.getResourceTitle() != null ? record.getResourceTitle() : "");
                 row.createCell(3).setCellValue(record.getFormattedProgress());
                 row.createCell(4).setCellValue(record.getWatchCount() != null ? record.getWatchCount() : 0);
-                row.createCell(5).setCellValue(record.getFormattedLastWatchTime());
-                row.createCell(6).setCellValue(record.getLastPosition() != null ? record.getLastPosition() : 0);
+                row.createCell(5).setCellValue(record.getLastPosition() != null ? record.getLastPosition() : 0);
             }
             
             // 自动调整列宽
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i < 6; i++) {
                 studySheet.autoSizeColumn(i);
             }
             

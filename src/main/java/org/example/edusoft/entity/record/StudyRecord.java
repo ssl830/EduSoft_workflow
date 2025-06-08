@@ -22,7 +22,7 @@ public class StudyRecord {
     
     // 用于Excel导出的格式化方法
     public String getFormattedProgress() {
-        return String.format("%.2f%%", progress * 100);
+        return String.format("%.2f%%", progress);
     }
     
     public String getFormattedLastWatchTime() {
