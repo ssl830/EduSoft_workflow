@@ -21,11 +21,10 @@ public interface StudyRecordMapper {
                     lp.updated_at,
                     tr.title as resource_title,
                     c.name as course_name,
-                    cs.title as section_title
-                FROM learning_progress lp
+                    cs.title as section_title                FROM learning_progress lp
                 LEFT JOIN teaching_resource tr ON lp.resource_id = tr.id
-                LEFT JOIN CourseSection cs ON tr.chapter_id = cs.id
-                LEFT JOIN Course c ON cs.course_id = c.id
+                LEFT JOIN coursesection cs ON tr.chapter_id = cs.id
+                LEFT JOIN course c ON cs.course_id = c.id
                 WHERE lp.student_id = #{studentId}
                 ORDER BY lp.last_watch_time DESC
             """)

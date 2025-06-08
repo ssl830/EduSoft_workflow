@@ -1,30 +1,36 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { StudyRecord } from '../../api/studyRecords'
 import axios from '../../api/axios'
+
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
 
 const records = ref<StudyRecord[]>([])
 const loading = ref(true)
 const error = ref('')
+const selectedCourse = ref('')
 
 const fetchRecords = async () => {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = '';
   try {
-    const response = await axios.get('/api/record/study')
-    // 兼容后端返回数组的情况
-    if (response.code === 200 && Array.isArray(response.data)) {
-      records.value = response.data
-    } else if (response.code === 200 && response.data) {
-      records.value = [response.data]
+    const response = await axios.get<ApiResponse<StudyRecord[]>>('/api/record/study');
+    const result = response as unknown as ApiResponse<StudyRecord[]>;
+    if (result.code === 200) {
+      // 兼容后端返回数组的情况
+      records.value = Array.isArray(result.data) ? result.data : [result.data];
     } else {
-      error.value = response.message || '获取学习记录失败'
+      error.value = result.message || '获取学习记录失败';
     }
   } catch (err) {
-    error.value = '获取学习记录失败，请稍后再试'
-    console.error('获取学习记录错误:', err)
+    error.value = '获取学习记录失败，请稍后再试';
+    console.error('获取学习记录错误:', err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -41,15 +47,34 @@ const formatDateTime = (dateTimeStr: string) => {
   })
 }
 
+// 从记录中提取所有不重复的课程
+const courseOptions = computed(() => {
+  const courses = new Set(records.value.map(record => record.courseName))
+  return Array.from(courses)
+})
+
+// 根据选中的课程筛选记录
+const filteredRecords = computed(() => {
+  if (!selectedCourse.value) return records.value
+  return records.value.filter(record => record.courseName === selectedCourse.value)
+})
+
 onMounted(() => {
   fetchRecords()
 })
 </script>
 
 <template>
-  <div class="study-record-container">
-    <header class="page-header">
+  <div class="study-record-container">    <header class="page-header">
       <h1>学习记录</h1>
+      <div class="filter-section" v-if="courseOptions.length > 0">
+        <select v-model="selectedCourse" class="course-filter">
+          <option value="">全部课程</option>
+          <option v-for="course in courseOptions" :key="course" :value="course">
+            {{ course }}
+          </option>
+        </select>
+      </div>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -58,11 +83,11 @@ onMounted(() => {
     <div v-else-if="error" class="error-message">
       {{ error }}
     </div>
-    <div v-else-if="records.length === 0" class="empty-state">
+    <div v-else-if="filteredRecords.length === 0" class="empty-state">
       暂无学习记录
     </div>
     <div v-else class="records-list">
-      <div v-for="record in records" :key="record.id" class="record-card">
+      <div v-for="record in filteredRecords" :key="record.id" class="record-card">
         <div class="record-header">
           <h3>{{ record.courseName }}</h3>
           <span class="completion-status"
@@ -77,9 +102,8 @@ onMounted(() => {
         </div>
         <div class="record-content">
           <p class="section-title">{{ record.sectionTitle }}</p>
-          <p class="resource-title">资源：{{ record.resourceTitle }}</p>
-          <div class="progress-bar-container">
-            <div class="progress-bar" :style="{ width: record.formattedProgress }"></div>
+          <p class="resource-title">资源：{{ record.resourceTitle }}</p>          <div class="progress-bar-container">
+            <div class="progress-bar" :style="{ width: `${record.progress}%` }"></div>
           </div>
           <div class="watch-info">
             <span class="watch-count">观看次数：{{ record.watchCount }}</span>
@@ -102,6 +126,9 @@ onMounted(() => {
 
 .page-header {
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .page-header h1 {
@@ -222,6 +249,27 @@ onMounted(() => {
 }
 .last-watch {
   color: #888;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+}
+
+.course-filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #333;
+  background-color: white;
+  min-width: 200px;
+}
+
+.course-filter:focus {
+  border-color: #42b983;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.1);
 }
 
 @media (max-width: 768px) {
