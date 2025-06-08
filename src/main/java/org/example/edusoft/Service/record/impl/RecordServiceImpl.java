@@ -27,6 +27,8 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Cell;
 import java.time.LocalDateTime;
 import com.itextpdf.io.font.PdfEncodings; // 添加这个导入
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -62,7 +64,16 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     public List<PracticeRecord> getPracticeRecordsByCourse(Long studentId, Long courseId) {
-        return practiceRecordMapper.findByStudentIdAndCourseId(studentId, courseId);
+        List<PracticeRecord> records = practiceRecordMapper.findByStudentIdAndCourseId(studentId, courseId);
+        if (records != null) {
+            for (PracticeRecord record : records) {
+                List<QuestionRecord> questions = practiceRecordMapper.findQuestionsBySubmissionId(record.getId());
+                if (questions != null && !questions.isEmpty()) {
+                    record.setQuestions(questions);
+                }
+            }
+        }
+        return records;
     }
 
     @Override
@@ -230,6 +241,10 @@ public class RecordServiceImpl implements RecordService {
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             // 获取所有练习记录（包含题目信息）
             List<PracticeRecord> records = getPracticeRecordsByCourse(studentId, courseId);
+            if (records == null || records.isEmpty()) {
+                throw new RuntimeException("没有找到练习记录");
+            }
+
             // 创建概览sheet
             Sheet sheet = workbook.createSheet("练习记录概览");
             Row headerRow = sheet.createRow(0);
@@ -237,23 +252,31 @@ public class RecordServiceImpl implements RecordService {
             headerRow.createCell(1).setCellValue("课程名称");
             headerRow.createCell(2).setCellValue("总分");
             headerRow.createCell(3).setCellValue("提交时间");
+            headerRow.createCell(4).setCellValue("班级");
 
             // 填充概览数据
             int rowNum = 1;
+            Set<String> usedSheetNames = new HashSet<>();
             for (PracticeRecord record : records) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(record.getPracticeTitle());
                 row.createCell(1).setCellValue(record.getCourseName());
                 row.createCell(2).setCellValue(record.getScore());
-                row.createCell(3).setCellValue(
-                        record.getSubmittedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                row.createCell(3).setCellValue(record.getSubmittedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                row.createCell(4).setCellValue(record.getClassName());
 
                 // 为每个练习创建一个详细sheet
                 if (record.getQuestions() != null && !record.getQuestions().isEmpty()) {
                     // 使用练习标题作为sheet名（去除特殊字符）
-                    String sheetName = record.getPracticeTitle()
-                            .replaceAll("[\\\\/:*?\\[\\]]", "") // 移除Excel不允许的字符
-                            .substring(0, Math.min(31, record.getPracticeTitle().length())); // Excel sheet名最大31字符
+                    String baseSheetName = record.getPracticeTitle().replaceAll("[\\\\/:*?\\[\\]]", "");
+                    String sheetName = baseSheetName;
+                    int idx = 1;
+                    // 保证sheet名唯一
+                    while (usedSheetNames.contains(sheetName) || workbook.getSheet(sheetName) != null) {
+                        sheetName = baseSheetName + "_" + idx;
+                        idx++;
+                    }
+                    usedSheetNames.add(sheetName);
                     Sheet detailSheet = workbook.createSheet(sheetName);
 
                     // 创建详细sheet的表头
@@ -266,43 +289,26 @@ public class RecordServiceImpl implements RecordService {
                     detailHeader.createCell(5).setCellValue("得分");
                     detailHeader.createCell(6).setCellValue("是否正确");
                     detailHeader.createCell(7).setCellValue("解析");
+
                     // 填充题目详情
                     int detailRowNum = 1;
-                    for (QuestionRecord question : record.getQuestions()) {
+                    for (QuestionRecord q : record.getQuestions()) {
                         Row detailRow = detailSheet.createRow(detailRowNum++);
-                        detailRow.createCell(0).setCellValue(question.getContent());
-                        detailRow.createCell(1).setCellValue(question.getType());
-                        detailRow.createCell(2).setCellValue(question.getOptions());
-                        detailRow.createCell(3).setCellValue(question.getStudentAnswer());
-                        detailRow.createCell(4).setCellValue(question.getCorrectAnswer());
-                        detailRow.createCell(5).setCellValue(question.getScore());
-                        detailRow.createCell(6).setCellValue(question.getIsCorrect() ? "正确" : "错误");
-                        detailRow.createCell(7).setCellValue(question.getAnalysis());
-
-                        // 设置自动换行
-                        detailRow.setHeight((short) -1); // 自动行高
-                    }
-
-                    // 设置列宽和样式
-                    detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列宽
-                    detailSheet.setColumnWidth(2, 256 * 30); // 选项列宽
-                    for (int i = 1; i < 8; i++) {
-                        if (i != 2) {
-                            detailSheet.autoSizeColumn(i);
-                        }
+                        detailRow.createCell(0).setCellValue(q.getContent());
+                        detailRow.createCell(1).setCellValue(q.getType());
+                        detailRow.createCell(2).setCellValue(q.getOptions());
+                        detailRow.createCell(3).setCellValue(q.getStudentAnswer());
+                        detailRow.createCell(4).setCellValue(q.getCorrectAnswer());
+                        detailRow.createCell(5).setCellValue(q.getScore());
+                        detailRow.createCell(6).setCellValue(q.getIsCorrect() ? "是" : "否");
+                        detailRow.createCell(7).setCellValue(q.getAnalysis());
                     }
                 }
             }
-
-            // 调整概览sheet的列宽
-            for (int i = 0; i < 4; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
             workbook.write(out);
             return out.toByteArray();
         } catch (IOException e) {
-            throw new RuntimeException("生成Excel文件失败", e);
+            throw new RuntimeException("导出练习记录失败: " + e.getMessage(), e);
         }
     }
 

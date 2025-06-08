@@ -23,6 +23,11 @@ declare module 'vue' {
     CourseResourceList: typeof import('./src/components/course/CourseResourceList.vue')['default']
     CourseSyllabus: typeof import('./src/components/course/CourseSyllabus.vue')['default']
     CourseVideoList: typeof import('./src/components/course/CourseVideoList.vue')['default']
+    ElButton: typeof import('element-plus/es')['ElButton']
+    ElDialog: typeof import('element-plus/es')['ElDialog']
+    ElForm: typeof import('element-plus/es')['ElForm']
+    ElFormItem: typeof import('element-plus/es')['ElFormItem']
+    ElInput: typeof import('element-plus/es')['ElInput']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']
@@ -35,6 +40,7 @@ declare module 'vue' {
     SimpleKnob: typeof import('./src/components/littlecomponents/SimpleKnob.vue')['default']
     Theme: typeof import('./src/components/littlecomponents/Theme.vue')['default']
     ThemeToggle: typeof import('./src/components/littlecomponents/ThemeToggle.vue')['default']
+    TopNav: typeof import('./src/components/layout/TopNav.vue')['default']
     WriteBoard: typeof import('./src/components/littlecomponents/WriteBoard.vue')['default']
   }
 }
