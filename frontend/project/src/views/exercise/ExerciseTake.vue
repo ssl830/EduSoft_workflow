@@ -8,7 +8,6 @@
 
         <!-- 练习主体 -->
         <div v-if="exercise" class="exercise-content">
-
             <!-- 题目列表 -->
             <div class="question-list">
                 <div
@@ -23,47 +22,48 @@
                     </div>
 
                     <!-- 单选题 -->
-                    <div v-if="question.type === 'single_choice'" class="options">
+                    <div v-if="question.type === 'singlechoice'" class="options">
                         <label
-                            v-for="option in question.options"
-                            :key="option.key"
+                            v-for="(option, optIdx) in question.options"
+                            :key="optIdx"
                             class="option-item"
                         >
                             <input
                                 type="radio"
                                 :name="'q'+question.id"
-                                :value="option.key"
+                                :value="getOptionKey(optIdx)"
                                 v-model="answers[question.id]"
                                 class="radio-input"
                             />
                             <span class="option-text">
-                                {{ option.key }}. {{ option.text }}
+                                {{ getOptionKey(optIdx) }}. {{ option }}
                             </span>
                         </label>
                     </div>
 
                     <!-- 多选题 -->
-                    <div v-else-if="question.type === 'multiple_choice'" class="options">
+                    <div v-else-if="question.type === 'multiplechoice'" class="options">
                         <label
-                            v-for="option in question.options"
-                            :key="option.key"
+                            v-for="(option, optIdx) in question.options"
+                            :key="optIdx"
                             class="option-item"
                         >
                             <input
                                 type="checkbox"
-                                :name="'q'+question.id"
-                                :value="option.key"
-                                v-model="answers[question.id]"
+                                :name="'q'+question.id+'_'+optIdx"
+                                :value="getOptionKey(optIdx)"
+                                :checked="isChecked(question.id, getOptionKey(optIdx))"
+                                @change="onMultiChange(question.id, getOptionKey(optIdx), $event)"
                                 class="checkbox-input"
                             />
                             <span class="option-text">
-                                {{ option.key }}. {{ option.text }}
+                                {{ getOptionKey(optIdx) }}. {{ option }}
                             </span>
                         </label>
                     </div>
 
                     <!-- 判断题 -->
-                    <div v-else-if="question.type === 'true_false'" class="options">
+                    <div v-else-if="question.type === 'judge'" class="options">
                         <label class="option-item">
                             <input
                                 type="radio"
@@ -134,17 +134,41 @@ const questionTypeMap = {
     'fillblank': '填空题'
 }
 
+// 生成选项字母
+const getOptionKey = (idx: number) => String.fromCharCode(65 + idx) // 0->A, 1->B, ...
+
+// 多选题选项是否被选中
+const isChecked = (qid, key) => {
+    return Array.isArray(answers.value[qid]) && answers.value[qid].includes(key)
+}
+
+// 多选题选项变更
+const onMultiChange = (qid, key, event) => {
+    if (!Array.isArray(answers.value[qid])) {
+        answers.value[qid] = []
+    }
+    if (event.target.checked) {
+        if (!answers.value[qid].includes(key)) {
+            answers.value[qid].push(key)
+        }
+    } else {
+        answers.value[qid] = answers.value[qid].filter(k => k !== key)
+    }
+    // 始终保持从小到大排序
+    answers.value[qid].sort()
+}
+
 // 获取练习详情
 const fetchExercise = async () => {
     try {
         const res = await ExerciseApi.takeExercise(practiceId.value)
         exercise.value = res.data
-        console.log("herrrrrrrrrrrrr")
-        console.log(exercise.value)
-        // 初始化多选题答案结构
-        exercise.value.questions.forEach(question => {
-            if (question.type === 'multiple_choice') {
-                // 显式初始化为数组
+        // 类型修正：单选题但答案长度大于1，视为多选题
+        exercise.value.questions.forEach((question, id) => {
+            if (question.type === 'singlechoice' && typeof question.answer === 'string' && question.answer.length > 1) {
+                question.type = 'multiplechoice'
+            }
+            if (question.type === 'multiplechoice') {
                 answers.value[question.id] = []
             }
         })
@@ -165,15 +189,21 @@ const submitAnswers = async () => {
     isSubmitting.value = true
     try {
         // 创建字符串数组格式的答案
-        const answerList = exercise.value.questions.map(question => {
+        const answerList = exercise.value.questions.map((question, id) => {
             const ans = answers.value[question.id]
 
-            // 处理多选题 - 用|||拼接数组
-            if (question.type === 'multiple_choice' || question.type === 'multiplechoice') {
+            // 单选题直接返回选项字母
+            if (question.type === 'singlechoice') {
+                return ans || ''
+            }
+
+            // 多选题 - 拼接已排序的选项字母，用|分隔
+            if (question.type === 'multiplechoice' || question.type === 'multiple_choice') {
                 if (Array.isArray(ans)) {
-                    return ans.join('|||') // 用|||拼接多选题答案
+                    const sorted = [...ans].sort()
+                    return sorted.join('|')
                 }
-                return ans || '' // 如果意外不是数组，转为字符串
+                return ans || ''
             }
 
             // 处理其他题型
@@ -181,12 +211,12 @@ const submitAnswers = async () => {
                 return ans
             }
             if (Array.isArray(ans)) {
-                return ans.join('') // 其他题型如果是数组（意外情况），拼接成字符串
+                return ans.join('')
             }
-            return '' // 未作答返回空字符串
+            return ''
         })
 
-        console.log("提交的答案数组:", answerList)
+        console.log(answerList)
 
         const res = await ExerciseApi.submitExercise({
             practiceId: practiceId.value,
@@ -194,11 +224,10 @@ const submitAnswers = async () => {
             answers: answerList  // 直接提交字符串数组
         })
 
-        console.log(res)
-
         router.push({
             name: 'ExerciseFeedback',
-            params: { practiceId: practiceId.value, submissionId: res.data }
+            params: { practiceId: practiceId.value, submissionId: res.data },
+            state: { answerList } // 通过state传递
         })
     } catch (err) {
         error.value = '提交失败，请检查网络连接'
@@ -212,12 +241,11 @@ onMounted(() => {
     fetchExercise()
     // 初始化多选题答案为数组
     exercise.value?.questions.forEach(question => {
-        if (question.type === 'multiple_choice') {
+        if (question.type === 'multiple_choice' || question.type === 'multiplechoice') {
             answers.value[question.id] = []
         }
     })
 })
-
 </script>
 
 <style scoped>

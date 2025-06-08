@@ -45,6 +45,12 @@ const fetchQuestionBank = async () => {
     } else if (res.data && Array.isArray(res.data.data?.questions)) {
       list = res.data.data.questions
     }
+    // 类型修正：单选题但答案长度大于1，视为多选题
+    list.forEach(q => {
+      if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+        q.type = 'multiplechoice'
+      }
+    })
     questionBankList.value = list
   } catch (err) {
     questionBankError.value = '获取题库失败'

@@ -16,7 +16,7 @@ interface Question {
   options?: Array<{ key: string; text: string }>;
   explanation?: string;
   answer?: string;
-  points: number;
+  score: number;
 }
 
 const exercise = reactive({
@@ -45,7 +45,7 @@ const tempSectionId = ref(0)
 // Temporary question data for editing
 // 修改tempQuestion的响应式对象
 const tempQuestion = reactive({
-    type: 'single_choice',
+    type: 'singlechoice',
     content: '',
     options: [
         { key: 'A', text: '' },
@@ -54,12 +54,12 @@ const tempQuestion = reactive({
         { key: 'D', text: '' }
     ],
     explanation: '',
-    points: 5,
+    score: 5,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
-        if (this.type === 'multiple_choice') {
+        if (this.type === 'multiplechoice') {
             if (typeof this.answer === 'string') {
-                return this.answer ? this.answer.split(',') : [];
+                return this.answer ? this.answer.split('|') : [];
             }
             return [];
         }
@@ -196,22 +196,22 @@ const prevStep = () => {
 }
 
 const typeMap = {
-    single_choice: 'singlechoice',
-    multiple_choice: 'singlechoice',
-    true_false: 'program',
-    short_answer: 'program',
-    fill_blank: 'fillblank'
+    'singlechoice': 'singlechoice',
+    'multiplechoice': 'singlechoice',
+    'judge': 'judge',
+    'program': 'program',
+    'fillblank': 'fillblank'
 };
 
 const addOrUpdateQuestion = async () => {
     // Validate question data
-    if (!tempQuestion.content || tempQuestion.points < 0) {
+    if (!tempQuestion.content || tempQuestion.score < 0) {
         error.value = '请完成题目内容并设置分值'
         return
     }
 
     // Validate options for choice questions
-    if (['single_choice', 'multiple_choice'].includes(tempQuestion.type)) {
+    if (['singlechoice', 'multiplechoice'].includes(tempQuestion.type)) {
         const hasEmptyOption = tempQuestion.options.some(opt => !opt.text)
         if (hasEmptyOption) {
             error.value = '请填写所有选项内容'
@@ -225,7 +225,7 @@ const addOrUpdateQuestion = async () => {
     }
 
     // 处理多选题答案格式
-    if (tempQuestion.type === 'multiple_choice') {
+    if (tempQuestion.type === 'multiplechoice') {
         if (!tempQuestion.answerArray.length) {
             error.value = '请设置正确答案';
             return;
@@ -243,14 +243,15 @@ const addOrUpdateQuestion = async () => {
             type: typeMap[tempQuestion.type] || tempQuestion.type,
             content: tempQuestion.content,
             options: tempQuestion.options.map(opt => opt.text),
-            answer: tempQuestion.type === 'multiple_choice'
-                ? tempQuestion.answerArray.join(',')
+            answer: tempQuestion.type === 'multiplechoice'
+                ? tempQuestion.answerArray.join('|')
                 : (typeof tempQuestion.answer === 'string' ? tempQuestion.answer : ''),
             analysis: tempQuestion.explanation,
             courseId: exercise.courseId, // 使用练习的课程ID
             sectionId: tempSectionId.value, // 绑定的章节ID
             creatorId: authStore.user?.id
         };
+        console.log(questionData)
         const createResponse = await QuestionApi.createQuestion(questionData);
         const questionId = createResponse.data?.data?.questionId;
         // 将题目添加到当前练习
@@ -258,7 +259,7 @@ const addOrUpdateQuestion = async () => {
             await ExerciseApi.importQuestionsToPractice({
                 practiceId: exercise.practiceId,
                 questionIds: [questionId],
-                scores: [tempQuestion.points]
+                scores: [tempQuestion.score]
             });
         }
         await fetchRepoQuestions();
@@ -277,6 +278,11 @@ const fetchPracticeQuestions = async () => {
     try {
         const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
         exercise.questions = response.data;
+        exercise.questions.forEach(q => {
+            if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
+                q.type = 'multiplechoice'
+            }
+        })
     } catch (err) {
         exercise.questions = [];
         console.error('获取练习题目失败', err);
@@ -298,7 +304,7 @@ const removeQuestion = (question: Question) => {
 
 // Reset the question form
 const resetQuestionForm = () => {
-  tempQuestion.type = 'single_choice'
+  tempQuestion.type = 'singlechoice'
   tempQuestion.content = ''
   tempQuestion.options = [
     { key: 'A', text: '' },
@@ -306,8 +312,8 @@ const resetQuestionForm = () => {
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
-  tempQuestion.answer = tempQuestion.type === 'multiple_choice' ? [] : ''
-  tempQuestion.points = 5
+  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? [] : ''
+  tempQuestion.score = 5
 
   selectedQuestion.value = null
   isEditingQuestion.value = false
@@ -425,7 +431,7 @@ const addRepoQuestion = async (question: any) => {
             content: question.name,
             options: question.options,
             explanation: '',
-            points: score,
+            score: score,
             answer: question.answer
         };
 
@@ -440,8 +446,8 @@ const addRepoQuestion = async (question: any) => {
 
 // 新增：格式化答案显示
 const formatRepoAnswer = (question: any) => {
-    if (question.type === 'multiple_choice') {
-        return question.answer.split(',').join(', ');
+    if (question.type === 'multiplechoice') {
+        return question.answer.split('|').join('|');
     }
     return question.answer;
 };
@@ -553,13 +559,13 @@ const handleClassChange = (classId: number) => {
               <span class="question-number">{{ index + 1 }}</span>
               <span class="question-type-badge" :class="question.type">
                 {{
-                  question.type === 'single_choice' ? '单选题' :
-                  question.type === 'multiple_choice' ? '多选题' :
-                  question.type === 'true_false' ? '判断题' :
-                  question.type === 'short_answer' ? '简答题' : '填空题'
+                  question.type === 'singlechoice' ? '单选题' :
+                  question.type === 'multiplechoice' ? '多选题' :
+                  question.type === 'judge' ? '判断题' :
+                  question.type === 'program' ? '简答题' : '填空题'
                 }}
               </span>
-              <span class="question-points">{{ question.points }}分</span>
+              <span class="question-points">{{ question.score }}分</span>
             </div>
 
             <div class="question-list-content">
@@ -602,11 +608,11 @@ const handleClassChange = (classId: number) => {
         <div class="form-group">
           <label for="questionType">题目类型</label>
           <select id="questionType" v-model="tempQuestion.type">
-            <option value="single_choice">单选题</option>
-            <option value="multiple_choice">多选题</option>
-            <option value="true_false">判断题</option>
-            <option value="short_answer">简答题</option>
-            <option value="fill_blank">填空题</option>
+            <option value="singlechoice">单选题</option>
+            <option value="multiplechoice">多选题</option>
+            <option value="judge">判断题</option>
+            <option value="program">简答题</option>
+            <option value="fillblank">填空题</option>
           </select>
         </div>
 
@@ -621,7 +627,7 @@ const handleClassChange = (classId: number) => {
         </div>
 
         <!-- Options for choice questions -->
-        <div v-if="['single_choice', 'multiple_choice'].includes(tempQuestion.type)" class="form-group">
+        <div v-if="['singlechoice', 'multiplechoice'].includes(tempQuestion.type)" class="form-group">
           <label>选项</label>
           <div
             v-for="(option, index) in tempQuestion.options"
@@ -655,7 +661,7 @@ const handleClassChange = (classId: number) => {
         </div>
 
         <!-- Answer for choice questions -->
-        <div v-if="tempQuestion.type === 'single_choice'" class="form-group">
+        <div v-if="tempQuestion.type === 'singlechoice'" class="form-group">
           <label for="singleAnswer">正确答案</label>
           <select id="singleAnswer" v-model="tempQuestion.answer">
             <option value="" disabled>选择正确答案</option>
@@ -669,7 +675,7 @@ const handleClassChange = (classId: number) => {
           </select>
         </div>
 
-          <div v-if="tempQuestion.type === 'multiple_choice'" class="form-group">
+          <div v-if="tempQuestion.type === 'multiplechoice'" class="form-group">
               <label>正确答案 (多选)</label>
               <div class="checkbox-group">
                   <div
@@ -680,14 +686,23 @@ const handleClassChange = (classId: number) => {
                       <input
                           :id="`answer-${option.key}`"
                           type="checkbox"
-                          v-model="tempQuestion.answerArray"
-                          :value="option.key"
+                          :checked="tempQuestion.answerArray.includes(option.key)"
+                          @change="e => {
+                              let arr = tempQuestion.answerArray.slice();
+                              if(e.target.checked) {
+                                  if(!arr.includes(option.key)) arr.push(option.key);
+                              } else {
+                                  arr = arr.filter(k => k !== option.key);
+                              }
+                              arr.sort();
+                              tempQuestion.answer = arr.join('|');
+                          }"
                       />
                       <label :for="`answer-${option.key}`">{{ option.key }}</label>
                   </div>
               </div>
           </div>
-        <div v-if="tempQuestion.type === 'true_false'" class="form-group">
+        <div v-if="tempQuestion.type === 'judge'" class="form-group">
           <label for="truefalseAnswer">正确答案</label>
           <select id="truefalseAnswer" v-model="tempQuestion.answer">
             <option value="" disabled>选择正确答案</option>
@@ -695,7 +710,7 @@ const handleClassChange = (classId: number) => {
             <option value="False">错误</option>
           </select>
         </div>
-        <div v-if="tempQuestion.type === 'fill_blank'" class="form-group">
+        <div v-if="tempQuestion.type === 'fillblank'" class="form-group">
           <label for="fillBlankAnswer">正确答案</label>
           <input
             id="fillBlankAnswer"
@@ -717,7 +732,7 @@ const handleClassChange = (classId: number) => {
           <label for="questionPoints">分值</label>
           <input
             id="questionPoints"
-            v-model.number="tempQuestion.points"
+            v-model.number="tempQuestion.score"
             type="number"
             min="1"
           />
@@ -803,10 +818,10 @@ const handleClassChange = (classId: number) => {
                     <div class="detail-row">
                         <label>题目类型:</label>
                         <span>{{
-                                selectedRepoQuestion.type === 'single_choice' ? '单选题' :
-                                    selectedRepoQuestion.type === 'multiple_choice' ? '多选题' :
-                                        selectedRepoQuestion.type === 'true_false' ? '判断题' :
-                                            selectedRepoQuestion.type === 'short_answer' ? '简答题' : '填空题'
+                                selectedRepoQuestion.type === 'singlechoice' ? '单选题' :
+                                    selectedRepoQuestion.type === 'multiplechoice' ? '多选题' :
+                                        selectedRepoQuestion.type === 'judge' ? '判断题' :
+                                            selectedRepoQuestion.type === 'program' ? '简答题' : '填空题'
                             }}</span>
                     </div>
                     <div class="detail-row">
@@ -816,7 +831,7 @@ const handleClassChange = (classId: number) => {
 
                     <!-- 选项展示 -->
                     <div
-                        v-if="['single_choice', 'multiple_choice'].includes(selectedRepoQuestion.type)"
+                        v-if="['singlechoice', 'multiplechoice'].includes(selectedRepoQuestion.type)"
                         class="detail-row"
                     >
                         <label>题目选项:</label>
@@ -1072,27 +1087,27 @@ const handleClassChange = (classId: number) => {
   color: #1565c0;
 }
 
-.question-type-badge.single_choice {
+.question-type-badge.singlechoice {
   background-color: #e3f2fd;
   color: #1565c0;
 }
 
-.question-type-badge.multiple_choice {
+.question-type-badge.multiplechoice {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
 
-.question-type-badge.true_false {
+.question-type-badge.judge {
   background-color: #fff3e0;
   color: #e65100;
 }
 
-.question-type-badge.short_answer {
+.question-type-badge.shortanswer {
   background-color: #f3e5f5;
   color: #7b1fa2;
 }
 
-.question-type-badge.fill_blank {
+.question-type-badge.fillblank {
   background-color: #e8eaf6;
   color: #3949ab;
 }
