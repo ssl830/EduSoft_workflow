@@ -59,7 +59,7 @@ const fetchPractices = async () => {
     try {
         if(isStudent.value){ // 学生视图
             // 调用新的API端点
-            const response = await ExerciseApi.getPracticeList(props.classId)
+            const response = await ExerciseApi.getPracticeList(authStore.user?.id, props.classId)
             // 更新数据结构处理
             practices.value = response.data
             console.log("Hereeeeeeeeeeeeeeeeeeee", response.data)
