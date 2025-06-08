@@ -18,7 +18,7 @@ public class PracticeController {
 
     @Autowired
     private PracticeService practiceService;
-
+ 
     @PostMapping("/create")
     public Result<Map<String, Object>> createPractice(@RequestBody Practice practice) {
         try {
