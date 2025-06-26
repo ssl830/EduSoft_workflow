@@ -63,6 +63,8 @@ public class TeachingResourceController {
         try {
             TeachingResource resource = resourceService.uploadResource(
                 file, courseId, chapterId, chapterName, title, description, createdBy);
+            // 课件上传成功后，自动同步到AI知识库
+            resourceService.syncToAIKnowledgeBase(file, resource.getId());
             return Result.ok(resource, "资源上传成功");
         } catch (Exception e) {
             return Result.error("资源上传失败：" + e.getMessage());

@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.Date;
 import java.net.URL;
+import org.example.edusoft.ai.AIServiceClient;
 
 /**
  * 教学资源服务实现类
@@ -51,6 +52,9 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
 
     @Autowired
     private FsServerProperties fsServerProperties;
+
+    @Autowired
+    private AIServiceClient aiServiceClient;
 
     /**
      * 上传教学资源
@@ -313,5 +317,19 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
         resourceMapper.update(resource);
         
         return resource;
+    }
+
+    /**
+     * 课件上传后自动同步AI知识库（AI微服务）
+     */
+    @Override
+    public void syncToAIKnowledgeBase(MultipartFile file, Long resourceId) {
+        try {
+            // 调用AI微服务，将课件文件上传并入库
+            String result = aiServiceClient.uploadMaterial(file);
+            log.info("AI知识库同步结果: {}", result);
+        } catch (Exception e) {
+            log.error("同步AI知识库失败: {}", e.getMessage());
+        }
     }
 } 

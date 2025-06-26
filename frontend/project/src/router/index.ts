@@ -296,6 +296,21 @@ const routes: RouteRecordRaw[] = [
     component: LearningRecordsAnalysis,
   },
   {
+    path: '/course/:courseId',
+    component: () => import('@/views/course/CourseDetail.vue'),
+    children: [
+      {
+        path: 'teaching-content',
+        name: 'CourseTeachingContent',
+        component: () => import('@/views/course/CourseTeachingContent.vue'),
+        meta: {
+          requiresAuth: true,
+          title: '教学内容生成'
+        }
+      }
+    ]
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

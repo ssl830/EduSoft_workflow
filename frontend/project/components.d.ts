@@ -22,6 +22,7 @@ declare module 'vue' {
     CourseEditDialog: typeof import('./src/components/course/CourseEditDialog.vue')['default']
     CourseExerciseList: typeof import('./src/components/course/CourseExerciseList.vue')['default']
     CourseResourceList: typeof import('./src/components/course/CourseResourceList.vue')['default']
+    CourseResourceUpload: typeof import('./src/components/course/CourseResourceUpload.vue')['default']
     CourseSyllabus: typeof import('./src/components/course/CourseSyllabus.vue')['default']
     CourseVideoList: typeof import('./src/components/course/CourseVideoList.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']

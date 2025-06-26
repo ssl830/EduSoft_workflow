@@ -104,4 +104,11 @@ public interface TeachingResourceService {
      * @return 更新后的资源对象
      */
     TeachingResource updateResourceDuration(Long resourceId, Integer duration);
+
+    /**
+     * 课件上传后自动同步AI知识库（AI微服务）
+     * @param file 课件文件
+     * @param resourceId 资源ID
+     */
+    void syncToAIKnowledgeBase(MultipartFile file, Long resourceId);
 } 

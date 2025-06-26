@@ -1,4 +1,6 @@
 import axios from './axios'
+import  http  from './axios'
+import type { AxiosProgressEvent } from 'axios'
 
 const ResourceApi = {
   // 获取课程视频列表
@@ -135,6 +137,45 @@ const ResourceApi = {
       }
     }>(`/api/resources/progress/${resourceId}/${studentId}`)
   }
+}
+
+/**
+ * 上传课程资源
+ */
+export function uploadResource(
+  formData: FormData,
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+) {
+  return http.post('/api/resources/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    onUploadProgress
+  })
+}
+
+/**
+ * 获取课程资源列表
+ */
+export function getResourceList(courseId: number) {
+  return http.get(`/api/resources/list/${courseId}`)
+}
+
+/**
+ * 删除课程资源
+ */
+export function deleteResource(resourceId: number) {
+  return http.delete(`/api/resources/${resourceId}`)
+}
+
+/**
+ * 更新资源信息
+ */
+export function updateResource(resourceId: number, data: {
+  name: string
+  description: string
+}) {
+  return http.put(`/api/resources/${resourceId}`, data)
 }
 
 export default ResourceApi

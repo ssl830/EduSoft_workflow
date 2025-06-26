@@ -100,7 +100,6 @@ CREATE TABLE PracticeQuestion (
     question_id BIGINT,
     sort_order BIGINT,
     score INT NOT NULL,
-    sort_order BIGINT,
     PRIMARY KEY (practice_id, question_id),
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)
@@ -261,7 +260,7 @@ CREATE TABLE IF NOT EXISTS learning_progress (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     resource_id BIGINT NOT NULL,           -- 教学资源ID
     student_id BIGINT NOT NULL,            -- 学生ID
-    progress DECIMAL(5,2) NOT NULL;        -- 学习进度
+    progress DECIMAL(5,2) NOT null,       -- 学习进度
     last_position INTEGER NOT NULL,        -- 最后观看位置（秒）
     watch_count INTEGER DEFAULT 0,         -- 观看次数
     last_watch_time DATETIME,              -- 最后观看时间
@@ -415,7 +414,7 @@ VALUES
 ('第一次作业', '请完成ER图设计', 1, 1, '/attachments/hw1.pdf', '/homework/hw1.pdf', NOW() + INTERVAL 7 DAY);
 
 -- 插入作业提交记录（小红提交）
-INSERT INTO homework_submission (homework_id, student_id, file_url, object_name)
+INSERT INTO homeworksubmission (homework_id, student_id, file_url, object_name)
 
 VALUES 
     (1, 3, '/attachments/hw1_s2.pdf', '/homework_submissions/s2_hw1.pdf');

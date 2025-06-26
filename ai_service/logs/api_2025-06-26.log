@@ -1,0 +1,120 @@
+2025-06-26 16:09:51,632 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:09:51,633 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:09:51,634 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:09:51,635 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:09:51,636 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:12:43,666 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:12:43,666 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:12:43,666 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:12:43,666 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:12:43,675 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:16:27,657 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:16:27,658 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:16:27,658 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:16:27,659 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:16:27,659 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:17:29,221 - api - INFO - Saved document to storage\documents\1\20250626\1. 软件工程概述_161729.pdf
+2025-06-26 16:17:29,222 - api - INFO - Saved document to storage\documents\1\20250626\1. 软件工程概述_161729.pdf
+2025-06-26 16:17:38,351 - api - INFO - Successfully parsed file 1. 软件工程概述.pdf into 12 chunks
+2025-06-26 16:17:40,820 - api - ERROR - Error processing file 1. 软件工程概述.pdf: Error code: 404 - {'error_msg': 'Not Found. Please check the configuration.'}
+2025-06-26 16:22:35,358 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:22:35,358 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:22:35,358 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:22:35,358 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:22:35,358 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:23:42,705 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:23:42,706 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:23:42,707 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:23:42,707 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:23:42,708 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:25:12,607 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:25:12,608 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:25:12,609 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:25:12,610 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:25:12,611 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:25:19,295 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:25:19,295 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:25:19,296 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:25:19,296 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:25:19,296 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:26:11,200 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:26:11,201 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:26:11,202 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:26:11,203 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:26:11,204 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:27:51,518 - api - INFO - Ensured directory exists: storage
+2025-06-26 16:27:51,519 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 16:27:51,519 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 16:27:51,520 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 16:27:51,520 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 16:28:28,964 - api - INFO - Saved document to storage\documents\1\20250626\1. 软件工程概述_162828.pdf
+2025-06-26 16:28:28,966 - api - INFO - Saved document to storage\documents\1\20250626\1. 软件工程概述_162828.pdf
+2025-06-26 16:28:38,008 - api - INFO - Successfully parsed file 1. 软件工程概述.pdf into 12 chunks
+2025-06-26 16:28:40,358 - api - ERROR - Error processing file 1. 软件工程概述.pdf: Error code: 404 - {'error_msg': 'Not Found. Please check the configuration.'}
+2025-06-26 17:00:22,608 - api - INFO - Ensured directory exists: storage
+2025-06-26 17:00:22,609 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 17:00:22,610 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 17:00:22,610 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 17:00:22,611 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 17:01:36,611 - api - INFO - Ensured directory exists: storage
+2025-06-26 17:01:36,612 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 17:01:36,612 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 17:01:36,613 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 17:01:36,613 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 17:05:23,513 - api - INFO - Ensured directory exists: storage
+2025-06-26 17:05:23,513 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 17:05:23,514 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 17:05:23,514 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 17:05:23,515 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 17:07:46,623 - api - INFO - Saved document to storage\documents\1\20250626\人工智能第4讲：机器学习-有监督学习线性判别分析与支持向量机张晶_170746.pdf
+2025-06-26 17:07:46,623 - api - INFO - Saved document to storage\documents\1\20250626\人工智能第4讲：机器学习-有监督学习线性判别分析与支持向量机张晶_170746.pdf
+2025-06-26 17:07:50,112 - api - INFO - Successfully parsed file 人工智能第4讲：机器学习-有监督学习线性判别分析与支持向量机张晶.pdf into 0 chunks
+2025-06-26 17:07:50,113 - api - ERROR - Error processing file 人工智能第4讲：机器学习-有监督学习线性判别分析与支持向量机张晶.pdf: not enough values to unpack (expected 2, got 1)
+2025-06-26 17:15:45,943 - api - INFO - Ensured directory exists: storage
+2025-06-26 17:15:45,944 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 17:15:45,945 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 17:15:45,945 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 17:15:45,946 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 17:34:00,425 - api - INFO - Saved document to storage\documents\1\20250626\第1章-信号与系统基本概念-W01_173400.pdf
+2025-06-26 17:34:00,426 - api - INFO - Saved document to storage\documents\1\20250626\第1章-信号与系统基本概念-W01_173400.pdf
+2025-06-26 17:34:04,871 - api - INFO - Successfully parsed file 第1章-信号与系统基本概念-W01.pdf into 60 chunks
+2025-06-26 17:34:32,948 - api - INFO - Successfully added 60 chunks to knowledge base
+2025-06-26 17:36:54,972 - api - INFO - Ensured directory exists: storage
+2025-06-26 17:36:54,973 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 17:36:54,973 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 17:36:54,974 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 17:36:54,974 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 18:37:21,796 - api - ERROR - Error generating teaching content: 'list' object has no attribute 'shape'
+2025-06-26 18:38:19,188 - api - INFO - Ensured directory exists: storage
+2025-06-26 18:38:19,189 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 18:38:19,190 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 18:38:19,191 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 18:38:19,191 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 19:05:19,430 - api - INFO - Ensured directory exists: storage
+2025-06-26 19:05:19,431 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 19:05:19,431 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 19:05:19,432 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 19:05:19,432 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 19:07:16,415 - api - ERROR - Error generating teaching content: Error code: 400 - {'error': {'code': 'InvalidParameter', 'param': None, 'message': 'input.texts should not be null', 'type': 'InvalidParameter'}, 'id': '869b49af-03e6-9938-815d-93a8e088b48c', 'request_id': '869b49af-03e6-9938-815d-93a8e088b48c'}
+2025-06-26 19:08:50,855 - api - INFO - Ensured directory exists: storage
+2025-06-26 19:08:50,856 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 19:08:50,856 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 19:08:50,857 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 19:08:50,857 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 19:08:59,202 - api - INFO - Ensured directory exists: storage
+2025-06-26 19:08:59,205 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 19:08:59,205 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 19:08:59,206 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 19:08:59,207 - api - INFO - Ensured directory exists: storage\logs
+2025-06-26 19:10:45,039 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-26 19:11:24,643 - api - INFO - Ensured directory exists: storage
+2025-06-26 19:11:24,643 - api - INFO - Ensured directory exists: storage\documents
+2025-06-26 19:11:24,644 - api - INFO - Ensured directory exists: storage\temp
+2025-06-26 19:11:24,645 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-26 19:11:24,646 - api - INFO - Ensured directory exists: storage\logs
