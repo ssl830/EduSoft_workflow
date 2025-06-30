@@ -3,10 +3,10 @@ AI服务主入口
 负责初始化 FastAPI 应用、配置跨域请求、中间件、加载各个服务模块，以及定义 API 接口。
 """
 import os
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from services.doc_parser import DocumentParser
 from services.embedding import EmbeddingService
 from services.faiss_db import FAISSDatabase
@@ -47,6 +47,25 @@ class ExerciseGenerationRequest(BaseModel):
     fill_blank_count: Optional[int] = 5
     question_count: Optional[int] = 2
     custom_types: Optional[Dict[str, int]] = None
+
+class SubjectiveAnswerEvalRequest(BaseModel):
+    question: str
+    student_answer: str
+    reference_answer: str
+    max_score: float
+
+class ExerciseQuestion(BaseModel):
+    content: str
+    error_rate: float
+    type: str
+    score: Optional[float] = None
+    student_count: Optional[int] = None
+    correct_count: Optional[int] = None
+    additional_info: Optional[Dict[str, Any]] = None
+
+class ExerciseAnalysisRequest(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    exercise_questions: List[ExerciseQuestion]
 
 @app.post("/embedding/upload")
 async def upload_file(
@@ -128,6 +147,37 @@ async def generate_exercise(request: ExerciseGenerationRequest):
         return result
     except Exception as e:
         logger.error(f"Error generating exercises: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/evaluate_subjective")
+async def evaluate_subjective_answer(request: SubjectiveAnswerEvalRequest):
+    """
+    评估主观题答案
+    """
+    try:
+        result = rag_service.evaluate_subjective_answer(
+            question=request.question,
+            student_answer=request.student_answer,
+            reference_answer=request.reference_answer,
+            max_score=request.max_score
+        )
+        logger.info(f"Successfully evaluated subjective answer")
+        return result
+    except Exception as e:
+        logger.error(f"Error evaluating subjective answer: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/analyze_exercise")
+async def analyze_exercise(request: ExerciseAnalysisRequest):
+    """
+    分析练习整体情况
+    """
+    try:
+        result = rag_service.analyze_exercise(exercise_questions=request.exercise_questions)
+        logger.info(f"Successfully analyzed exercise")
+        return result
+    except Exception as e:
+        logger.error(f"Error analyzing exercise: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
