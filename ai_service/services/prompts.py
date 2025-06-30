@@ -2,6 +2,7 @@
 提示词管理模块
 """
 from typing import List, Dict
+import json
 
 class PromptTemplates:
     """提示词模板管理"""
@@ -92,6 +93,7 @@ class PromptTemplates:
         5. 确保总课时数与预期课时相符
         6. teachingAdvice 字段必须是字符串格式
 
+
         请只返回标准 JSON 格式，不要 Markdown、不要注释、不要多余内容。
         """
 
@@ -137,12 +139,18 @@ class PromptTemplates:
                 {{
                     "type": "题目类型",
                     "question": "题目描述",
+                    "options": "选项数组", //Array(String),选择题使用，除了单选、多选外数组返回空即可
                     "answer": "参考答案",
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
                 }}
             ]
         }}
+
+        特殊要求：题目类型应当返回:尽管生成题目是按照上面要求的各种类型生成，但最终为了方便数据库存储，返回的类型应当属于'singlechoice', 'program', 'fillblank','judge' 四个的其中一个
+        所有选择题,无论单选还是多选,type统一返回singlechoice。
+        填空题为"fillblank", "judge"为判断题
+        除此以外所有题目类型都显示"program"
         """
 
     @staticmethod
@@ -180,6 +188,77 @@ class PromptTemplates:
             "suggestions": ["改进建议1", "改进建议2"]
         }}
         """
+
+    @staticmethod
+    def get_subjective_answer_evaluation_prompt(question: str, student_answer: str, reference_answer: str, max_score: float) -> str:
+        return f"""你是一个专业的教育评估专家。请根据以下信息评估学生的答案：
+
+        题目：{question}
+
+        参考答案：{reference_answer}
+
+        学生答案：{student_answer}
+
+        满分：{max_score}分
+
+        请按照以下JSON格式返回评估结果：
+        {{
+            "score": float,  // 得分，不超过满分
+            "analysis": {{
+                "correct_points": [string],  // 答对的要点列表
+                "incorrect_points": [string],  // 答错或缺失的要点列表
+                "knowledge_points": [string]  // 相关知识点列表，包括章节位置
+            }},
+            "feedback": string,  // 具体的修正建议
+            "improvement_suggestions": [string]  // 改进建议列表
+        }}
+
+        评分标准：
+        1. 根据答案的完整性、准确性和表达的清晰度进行评分
+        2. 正确点和错误点要具体明确
+        3. 反馈要有建设性，并指出具体的改进方向
+        4. 知识点要标明具体的章节位置
+
+        请确保返回的是合法的JSON格式。"""
+
+    @staticmethod
+    def get_exercise_analysis_prompt(exercise_questions: list) -> str:
+        questions_str = json.dumps(exercise_questions, ensure_ascii=False, indent=2)
+        return f"""你是一个专业的教育分析专家。请分析以下练习题的完成情况：
+
+        练习题信息：
+        {questions_str}
+
+        请按照以下JSON格式返回分析结果：
+        {{
+            "overall_analysis": {{
+                "average_score": float,  // 平均得分率
+                "difficulty_analysis": string,  // 难度分析
+                "common_issues": [string]  // 普遍存在的问题
+            }},
+            "knowledge_points_analysis": [
+                {{
+                    "point": string,  // 知识点
+                    "mastery_level": string,  // 掌握程度：excellent/good/fair/poor
+                    "error_rate": float,  // 错误率
+                    "chapter_location": string,  // 所在章节
+                    "improvement_suggestions": [string]  // 改进建议
+                }}
+            ],
+            "teaching_suggestions": {{
+                "key_focus_areas": [string],  // 需要重点关注的领域
+                "recommended_methods": [string],  // 建议的教学方法
+                "resource_suggestions": [string]  // 建议的补充资源
+            }}
+        }}
+
+        分析要求：
+        1. 全面评估学生的知识掌握情况
+        2. 找出普遍存在的问题和薄弱环节
+        3. 提供具体可行的教学建议
+        4. 建议要具体且有针对性
+
+        请确保返回的是合法的JSON格式。"""
 
     @staticmethod
     def _format_knowledge_base(knowledge_base: Dict[str, List[Dict[str, str]]]) -> str:
