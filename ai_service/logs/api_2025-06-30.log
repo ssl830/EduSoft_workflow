@@ -13,3 +13,72 @@
 2025-06-30 09:42:04,512 - api - INFO - Ensured directory exists: storage\temp
 2025-06-30 09:42:04,512 - api - INFO - Ensured directory exists: storage\vector_db
 2025-06-30 09:42:04,514 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 12:15:04,059 - api - INFO - Ensured directory exists: storage
+2025-06-30 12:15:04,060 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 12:15:04,060 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 12:15:04,061 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 12:15:04,061 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 12:15:19,324 - api - INFO - Ensured directory exists: storage
+2025-06-30 12:15:19,324 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 12:15:19,325 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 12:15:19,325 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 12:15:19,326 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 12:43:37,895 - api - INFO - Ensured directory exists: storage
+2025-06-30 12:43:37,895 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 12:43:37,896 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 12:43:37,897 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 12:43:37,897 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 12:49:29,788 - api - INFO - Saved document to storage\documents\1\20250630\upload-14507506258348637041-《学科前沿讲座》期末报告—232115+23373125+付宁远_124929.docx
+2025-06-30 12:49:29,790 - api - INFO - Saved document to storage\documents\1\20250630\upload-14507506258348637041-《学科前沿讲座》期末报告—232115+23373125+付宁远_124929.docx
+2025-06-30 12:49:29,997 - api - INFO - Successfully parsed file upload-14507506258348637041-《学科前沿讲座》期末报告—232115+23373125+付宁远.docx into 7 chunks
+2025-06-30 12:49:34,333 - api - INFO - Successfully added 7 chunks to knowledge base
+2025-06-30 12:49:34,360 - api - INFO - Saved document to storage\documents\1\20250630\upload-14437495790382175380-《学科前沿讲座》期末报告—232115+23373125+付宁远_124934.docx
+2025-06-30 12:49:34,365 - api - INFO - Saved document to storage\documents\1\20250630\upload-14437495790382175380-《学科前沿讲座》期末报告—232115+23373125+付宁远_124934.docx
+2025-06-30 12:49:34,466 - api - INFO - Successfully parsed file upload-14437495790382175380-《学科前沿讲座》期末报告—232115+23373125+付宁远.docx into 7 chunks
+2025-06-30 12:49:35,709 - api - INFO - Successfully added 7 chunks to knowledge base
+2025-06-30 12:50:05,138 - api - INFO - Saved document to storage\documents\1\20250630\upload-9513338049255030311-23373125-付宁远-网络信息法论文_125005.docx
+2025-06-30 12:50:05,139 - api - INFO - Saved document to storage\documents\1\20250630\upload-9513338049255030311-23373125-付宁远-网络信息法论文_125005.docx
+2025-06-30 12:50:05,323 - api - INFO - Successfully parsed file upload-9513338049255030311-23373125-付宁远-网络信息法论文.docx into 48 chunks
+2025-06-30 12:50:13,651 - api - INFO - Successfully added 48 chunks to knowledge base
+2025-06-30 14:49:52,260 - api - INFO - Successfully generated teaching content for 人工智能库
+2025-06-30 14:58:48,645 - api - INFO - Saved document to storage\documents\1\20250630\upload-6244697558691603912-ABAS ERP营销战略深度研究报告_145848.docx
+2025-06-30 14:58:48,647 - api - INFO - Saved document to storage\documents\1\20250630\upload-6244697558691603912-ABAS ERP营销战略深度研究报告_145848.docx
+2025-06-30 14:58:48,956 - api - INFO - Successfully parsed file upload-6244697558691603912-ABAS ERP营销战略深度研究报告.docx into 168 chunks
+2025-06-30 14:59:18,447 - api - INFO - Successfully added 168 chunks to knowledge base
+2025-06-30 14:59:28,562 - api - INFO - Saved document to storage\documents\1\20250630\upload-18442962070461204815-038班+付宁远+23373125_145928.docx
+2025-06-30 14:59:28,564 - api - INFO - Saved document to storage\documents\1\20250630\upload-18442962070461204815-038班+付宁远+23373125_145928.docx
+2025-06-30 14:59:28,636 - api - INFO - Successfully parsed file upload-18442962070461204815-038班+付宁远+23373125.docx into 4 chunks
+2025-06-30 14:59:29,559 - api - INFO - Successfully added 4 chunks to knowledge base
+2025-06-30 15:06:32,768 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:08:06,482 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:11:41,637 - api - ERROR - Error generating teaching content: JSON解析失败，原始内容：```json
+{
+    "lessons": [
+        {
+            "title": "关系数据库的定义与核心特征",
+            "timePlan": [
+                {"step": "导入", "minutes": 5, "content": "通过展示学生熟悉的表格数据（如成绩表、通讯录）引入关系数据库的概念，提问学生这些数据... 错误信息: Expecting value: line 1 column 1 (char 0)
+2025-06-30 15:25:31,633 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:29:22,111 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:40:23,118 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:47:57,145 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 15:59:21,091 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:14:07,077 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:16:21,649 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:34:03,469 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:36:02,523 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:39:53,838 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:46:11,563 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:47:27,666 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 16:54:57,660 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:00:13,701 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:06:18,806 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:08:31,037 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:25:13,833 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:32:19,574 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:36:13,144 - api - INFO - Successfully generated teaching content for 数据库原理
+2025-06-30 17:40:33,712 - api - INFO - Ensured directory exists: storage
+2025-06-30 17:40:33,714 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 17:40:33,716 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 17:40:33,717 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 17:40:33,718 - api - INFO - Ensured directory exists: storage\logs

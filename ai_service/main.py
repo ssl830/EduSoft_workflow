@@ -62,32 +62,32 @@ async def upload_file(
         content = await file.read()
         with open(temp_path, "wb") as f:
             f.write(content)
-        
+
         try:
             # 保存文档
             doc_path = storage_service.save_document(temp_path, course_id)
             logger.info(f"Saved document to {doc_path}")
-            
+
             # 解析文件为文本块（chunks)
             chunks = doc_parser.parse_file(doc_path)
             logger.info(f"Successfully parsed file {file.filename} into {len(chunks)} chunks")
-            
+
             # 添加到RAG知识库
             rag_service.add_to_knowledge_base(chunks)
             logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
-            
+
             return {
                 "status": "success",
                 "message": f"文件 {file.filename} 处理成功",
                 "chunks_count": len(chunks),
                 "file_path": doc_path
             }
-            
+
         finally:
             # 清理临时文件
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            
+
     except Exception as e:
         logger.error(f"Error processing file {file.filename}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -139,4 +139,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)

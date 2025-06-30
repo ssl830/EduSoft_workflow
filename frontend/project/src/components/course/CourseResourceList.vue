@@ -188,6 +188,9 @@ const renewResource = async (resource: any) => {
     uploadForm.value.visibility = resource.visibility
 }
 
+// 新增：上传到知识库勾选项
+const uploadToKnowledgeBase = ref(false)
+
 // Handle file selection
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -236,9 +239,25 @@ const uploadResource = async () => {
   }
 
   try {
-    await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
-      uploadProgress.value = progress
-    })
+    // await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
+    //   uploadProgress.value = progress
+    // })
+
+    // 新增：如果勾选了上传到知识库，则调用知识库上传接口
+    if (uploadToKnowledgeBase.value && uploadForm.value.file) {
+      const kbForm = new FormData()
+      kbForm.append('file', uploadForm.value.file)
+      if (props.courseId) {
+        kbForm.append('course_id', props.courseId)
+      }
+      try {
+          console.log("254 YEAHHHHHHHHHHHHHHHHH")
+        await ResourceApi.uploadToKnowledgeBase(kbForm)
+      } catch (e) {
+        // 可选：知识库上传失败提示
+        console.error('上传到知识库失败', e)
+      }
+    }
 
     // Reset form and refresh list
     showUploadForm.value = false
@@ -290,11 +309,11 @@ const previewResource = async (resource: any) => {
         // 3. 其他文件使用 Blob 预览
         const fileResponse = await fetch(previewUrl)
         const blob = await fileResponse.blob()
-        
+
         // 4. 创建带正确 MIME type 的新 Blob
         const mimeType = getMimeType(fileName)
         const file = new Blob([blob], { type: mimeType })
-        
+
         // 5. 创建预览 URL 并在新窗口打开
         const blobUrl = URL.createObjectURL(file)
         window.open(blobUrl, '_blank')
@@ -420,6 +439,14 @@ onMounted(() => {
         />
       </div>
 
+      <!-- 新增：上传到知识库勾选项 -->
+      <div class="form-group">
+        <label>
+          <input type="checkbox" v-model="uploadToKnowledgeBase" />
+          上传到知识库
+        </label>
+      </div>
+
       <div class="form-row">
         <div class="form-group form-group-half">
           <label for="sectionId">所属章节</label>
@@ -429,9 +456,9 @@ onMounted(() => {
             class="form-select"
           >
             <option value="-1">无章节</option>
-            <option 
-              v-for="section in course?.sections" 
-              :key="section.id" 
+            <option
+              v-for="section in course?.sections"
+              :key="section.id"
               :value="section.id"
             >
               {{ section.title }}
@@ -582,9 +609,9 @@ onMounted(() => {
           class="form-select"
         >
           <option value="">所有章节</option>
-          <option 
-            v-for="section in course?.sections" 
-            :key="section.id" 
+          <option
+            v-for="section in course?.sections"
+            :key="section.id"
             :value="section.id"
           >
             {{ section.title }}
