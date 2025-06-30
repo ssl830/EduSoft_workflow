@@ -9,6 +9,7 @@ target/
 src/main/resources/application-*.properties
 src\main\resources\application.properties
 
+*.env
 ### STS ###
 .apt_generated
 .classpath
@@ -36,3 +37,4 @@ build/
 
 ### VS Code ###
 .vscode/
+ai_service/.env
