@@ -12,7 +12,7 @@ class FAISSDatabase:
     
     def __init__(self, dim: int = 1536):  # DeepSeek embedding维度为1536
         """初始化FAISS索引"""
-        self.index = faiss.IndexFlatL2(dim)  # 使用L2距离
+        self.index = faiss.IndexFlatL2(dim)  # 使用L2距离（欧几里得距离）
         self.contents: List[str] = []  # 存储文本内容
         self.sources: List[str] = []   # 存储来源信息
         
