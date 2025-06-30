@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {ref, onMounted, watch, onBeforeMount, reactive, computed} from 'vue'
-import {useRouter} from 'vue-router'
-import { ElMessage } from 'element-plus'
+import {ref, onMounted, watch, onBeforeMount, computed} from 'vue'
+// import {useRouter} from 'vue-router'
+// import { ElMessage } from 'element-plus'
 import { useAuthStore } from "../../stores/auth"
 import QuestionApi from '../../api/question'
 import CourseApi from '../../api/course'
-import request from '../../api/axios'
+// import request from '../../api/axios'
+import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
 const isTeacher = authStore.userRole === 'teacher'
@@ -21,36 +22,12 @@ const selectedChapter = ref('')
 const selectedCourse = ref()
 
 // Chapters and types (will be populated from questions)
-const chapters = ref([])
 const courses = ref<Course[]>([])
 
 // File upload
 const showUploadForm = ref(false)
-const uploadForm = ref({
-    courseId: 0,
-    sectionId: 0,
-    uploaderId: 0,
-    title: '',
-    type: '',
-    file: null as File | null,
-    visibility: '',
-})
 const uploadProgress = ref(0)
 const uploadError = ref('')
-
-// Temporary question data for editing
-interface Question {
-    type: string;
-    content: string;
-    options: { key: string; text: string; }[];
-    answer: string;
-    courseId: number;
-    sectionId: number;
-    analysis: string;
-    creatorId: number | undefined;
-    answerArray: string[];
-    range?: string;
-}
 
 // 临时存储题目数据
 const tempQuestion = ref({
@@ -81,6 +58,18 @@ const tempQuestion = ref({
     },
     answer: '' // 始终保持字符串类型
 })
+
+const generateForm = ref({
+    course_id: 0,
+    course_name: '',
+    section_id: 0,
+    lesson_content: '',
+    difficulty: 'medium',
+    choose_count: 0,
+    fill_blank_count: 0,
+    question_count: 0,
+    custom_types: {} as Record<string, number>
+});
 
 // Add an option for choice questions
 const addOption = () => {
@@ -218,6 +207,24 @@ watch(selectedCourse, (newCourse) => {
 
 // 监听课程选择变化
 watch(() => tempQuestion.value.courseId, async (newCourseId) => {
+    if (newCourseId) {
+        try {
+            const response = await CourseApi.getCourseById(String(newCourseId))
+            if (response?.code === 200 && response.data?.sections) {
+                sections.value = response.data.sections
+            } else {
+                sections.value = []
+            }
+        } catch (err) {
+            console.error('获取课程章节失败:', err)
+            sections.value = []
+        }
+    } else {
+        sections.value = []
+    }
+    tempQuestion.value.sectionId = 0
+})
+watch(() => generateForm.value.course_id, async (newCourseId) => {
     if (newCourseId) {
         try {
             const response = await CourseApi.getCourseById(String(newCourseId))
@@ -461,19 +468,110 @@ const questionTypes = [
 
 // 添加一个用于筛选题目类型的状态
 const selectedType = ref('')
+
+// 新增弹窗功能，用于填写生成题目的参数。
+const showGenerateDialog = ref(false);
+
+const addCustomType = () => {
+    if (!generateForm.value.custom_types || typeof generateForm.value.custom_types !== 'object') {
+        generateForm.value.custom_types = {};
+    }
+    const newKey = `custom_type_${Object.keys(generateForm.value.custom_types).length + 1}`;
+    generateForm.value.custom_types[newKey] = 0;
+};
+
+const removeCustomType = (key: string) => {
+    if (generateForm.value.custom_types && typeof generateForm.value.custom_types === 'object') {
+        // Vue3 响应式对象安全删除
+        const { [key]: _, ...rest } = generateForm.value.custom_types;
+        generateForm.value.custom_types = { ...rest };
+    }
+};
+
+const updateCustomTypeKey = (oldKey: string, newKey: string) => {
+    if (
+        newKey &&
+        oldKey !== newKey &&
+        generateForm.value.custom_types &&
+        typeof generateForm.value.custom_types === 'object'
+    ) {
+        generateForm.value.custom_types[newKey] = generateForm.value.custom_types[oldKey];
+        const { [oldKey]: _, ...rest } = generateForm.value.custom_types;
+        generateForm.value.custom_types = { ...rest };
+    }
+};
+
+const generateQuestions = async () => {
+    console.warn('=== 开始生成题目 ===');
+    try {
+        // 只传递纯对象，避免循环引用
+        const reqData = JSON.parse(JSON.stringify(generateForm.value));
+        const response = await QuestionApi.generateExercise(reqData);
+        console.log('生成题目响应:', response);
+        console.log(Array.isArray(response.exercises))
+
+        if (response && Array.isArray(response.exercises)) {
+            for (const question of response.exercises) {
+                const questionData = {
+                    type: question.type,
+                    content: question.question,
+                    options: question.options || [],
+                    answer: question.answer,
+                    courseId: generateForm.value.course_id,
+                    sectionId: generateForm.value.section_id,
+                    analysis: question.explanation,
+                    creatorId: authStore.user?.id
+                };
+                await QuestionApi.createQuestion(questionData);
+            }
+            ElMessage.success('题目生成并保存成功！');
+            fetchQuestions();
+        } else {
+            ElMessage.error('生成题目失败，请稍后再试！');
+        }
+    } catch (err) {
+        console.error('生成题目失败:', err);
+        ElMessage.error('生成题目失败，请稍后再试！');
+    } finally {
+        showGenerateDialog.value = false;
+    }
+};
+
+// 更新课程选择
+const updateCourseSelection = (courseId: number) => {
+    const selectedCourse = courses.value.find(course => course.id === courseId);
+    generateForm.value.course_id = selectedCourse?.id || 0;
+    generateForm.value.course_name = selectedCourse?.name || '';
+};
+
+// 新增：章节选择时同步更新 section_id 和 lesson_content
+const updateSectionSelection = (sectionId: number) => {
+    generateForm.value.section_id = sectionId;
+    const selectedSection = sections.value.find(section => section.id === sectionId);
+    generateForm.value.lesson_content = selectedSection ? selectedSection.title : '';
+};
 </script>
 
 <template>
     <div class="question-bank-container">
         <div class="resource-header">
             <h2>题库中心</h2>
-            <button
-                v-if="isTeacher"
-                class="btn-primary"
-                @click="showUploadForm = !showUploadForm"
-            >
-                {{ showUploadForm ? '取消新建' : '新建题目' }}
-            </button>
+            <div class="header-btn-group">
+                <button
+                    v-if="isTeacher"
+                    class="btn-primary"
+                    @click="showUploadForm = !showUploadForm"
+                >
+                    {{ showUploadForm ? '取消新建' : '新建题目' }}
+                </button>
+                <button
+                    v-if="isTeacher"
+                    class="btn-secondary"
+                    @click="showGenerateDialog = true"
+                >
+                    生成题目
+                </button>
+            </div>
         </div>
 
         <!-- Upload Form -->
@@ -781,7 +879,7 @@ const selectedType = ref('')
                                 <span v-if="selectedQuestion.answer.split('|').includes(opt.key)" class="correct-badge">✓</span>
                             </template>
                             <template v-else>
-                                <span v-if="selectedQuestion.answer === opt.key" class="correct-badge">✓</span>
+                                <span v-if="selectedQuestion.answer === opt.key || selectedQuestion.answer === opt.text" class="correct-badge">✓</span>
                             </template>
                         </div>
                     </div>
@@ -794,9 +892,144 @@ const selectedType = ref('')
             </div>
         </div>
     </div>
+
+    <!-- 生成题目弹窗 -->
+    <div v-if="showGenerateDialog" class="modal-mask" @click="showGenerateDialog = false">
+        <div class="modal-container" @click.stop>
+            <div class="modal-header">
+                <h3>生成题目</h3>
+                <button class="modal-close" @click="showGenerateDialog = false">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="courseSelect">所属课程</label>
+                        <select
+                            id="courseSelect"
+                            v-model="generateForm.course_id"
+                            @change="updateCourseSelection(generateForm.course_id)"
+                            required
+                        >
+                            <option value="" disabled>请选择课程</option>
+                            <option
+                                v-for="course in courses.filter(c => c.id !== 0)"
+                                :key="course.id"
+                                :value="course.id"
+                            >
+                                {{ course.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-group-half">
+                        <label for="sectionSelect">所属章节</label>
+                        <select
+                            id="sectionSelect"
+                            v-model="generateForm.section_id"
+                            @change="updateSectionSelection(Number(generateForm.section_id))"
+                            :disabled="!generateForm.course_id"
+                        >
+                            <option value="" disabled>请选择章节</option>
+                            <template v-if="sections.length">
+                                <option
+                                    v-for="section in sections"
+                                    :key="section.id"
+                                    :value="section.id"
+                                >
+                                    {{ section.title }}
+                                </option>
+                            </template>
+                            <option v-else disabled>加载中...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="difficulty">难度</label>
+                    <select id="difficulty" v-model="generateForm.difficulty">
+                        <option value="easy">简单</option>
+                        <option value="medium">中等</option>
+                        <option value="hard">困难</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="chooseCount">选择题数量</label>
+                    <input
+                        id="chooseCount"
+                        v-model.number="generateForm.choose_count"
+                        type="number"
+                        min="0"
+                        placeholder="输入选择题数量"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="fillBankCount">填空题数量</label>
+                    <input
+                        id="fillBankCount"
+                        v-model.number="generateForm.fill_blank_count"
+                        type="number"
+                        min="0"
+                        placeholder="输入填空题数量"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="programCount">简答题数量</label>
+                    <input
+                        id="programCount"
+                        v-model.number="generateForm.question_count"
+                        type="number"
+                        min="0"
+                        placeholder="输入简答题数量"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>自定义题型</label>
+                    <div v-for="(value, key) in generateForm.custom_types" :key="key" class="custom-type-row">
+                        <input
+                            :value="key"
+                            @blur="updateCustomTypeKey(key, $event.target.value)"
+                            type="text"
+                            placeholder="题型名称"
+                        />
+                        <input
+                            v-model.number="generateForm.custom_types[key]"
+                            type="number"
+                            min="0"
+                            placeholder="数量"
+                        />
+                        <button type="button" class="btn-icon" @click="removeCustomType(key)">✕</button>
+                    </div>
+                    <button type="button" class="btn-text" @click="addCustomType">+ 添加题型</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" @click="showGenerateDialog = false">取消</button>
+                <span style="display:inline-block;width:16px"></span>
+                <button class="btn-primary" @click="generateQuestions">生成</button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
+.btn-text {
+    background: none;
+    border: none;
+    color: #2c6ecf;
+    padding: 0;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.btn-text:hover {
+    text-decoration: underline;
+}
+
+.modal-footer {
+    margin-bottom: 20px;
+}
 .checkbox-group {
     display: flex;
     flex-wrap: wrap;
@@ -904,6 +1137,13 @@ const selectedType = ref('')
 
 .resource-header h2 {
     margin: 0;
+}
+
+/* 新增按钮组样式，控制间距 */
+.header-btn-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .upload-form {
@@ -1123,6 +1363,7 @@ select:disabled {
     background-color: #f5f5f5;
     color: #424242;
     border: 1px solid #ddd;
+    margin-left: 20px;
 }
 
 .btn-secondary:hover {
@@ -1199,6 +1440,23 @@ select:disabled {
     }
 }
 
+.question-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 减小卡片宽度 */
+    gap: 16px; /* 减小卡片间距 */
+    padding: 10px;
+}
+.question-cards-container {
+    padding: 20px;
+}
+
+.question-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 10px;
+}
+
 /* 调整题目卡片的样式，使其更小 */
 .question-card {
     background: white;
@@ -1212,11 +1470,27 @@ select:disabled {
     gap: 8px; /* 减小间距 */
 }
 
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
 .question-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 12px; /* 减小字体大小 */
+}
+
+.question-type {
+    background: #e6f7ff;
+    color: #1890ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.question-course {
+    color: #666;
 }
 
 .question-content {
@@ -1236,198 +1510,6 @@ select:disabled {
     align-items: center;
     margin-top: auto;
     font-size: 12px; /* 减小字体大小 */
-}
-
-.question-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 减小卡片宽度 */
-    gap: 16px; /* 减小卡片间距 */
-    padding: 10px;
-}
-
-.question-list-section, .question-form-byhand-section, question-form-fromrepo-section {
-    margin-bottom: 2rem;
-}
-
-.question-list {
-    margin-top: 1rem;
-}
-
-.question-list-item {
-    padding: 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    background-color: #f9f9f9;
-}
-
-.question-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.question-number {
-    font-weight: bold;
-}
-
-.question-type-badge {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    background-color: #e3f2fd;
-    color: #1565c0;
-}
-
-.question-type-badge.singlechoice {
-    background-color: #e3f2fd;
-    color: #1565c0;
-}
-
-.question-type-badge.multiplechoice {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.question-type-badge.true_false {
-    background-color: #fff3e0;
-    color: #e65100;
-}
-
-.question-type-badge.short_answer {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
-}
-
-.question-type-badge.fill_blank {
-    background-color: #e8eaf6;
-    color: #3949ab;
-}
-
-.question-points {
-    font-weight: 500;
-}
-
-.question-list-content {
-    margin-bottom: 1rem;
-}
-
-.question-list-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-}
-
-.option-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.option-key {
-    flex: 0 0 2rem;
-    text-align: center;
-    font-weight: 500;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin-right: 0.5rem;
-}
-
-.option-input {
-    flex: 1;
-}
-
-.empty-state {
-    padding: 2rem;
-    text-align: center;
-    color: #757575;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-}
-
-.btn-text {
-    background: none;
-    border: none;
-    color: #2c6ecf;
-    padding: 0;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    margin-top: 0.5rem;
-}
-
-.btn-text:hover {
-    text-decoration: underline;
-}
-
-.question-cards-container {
-    padding: 20px;
-}
-
-.question-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-    padding: 10px;
-}
-
-.question-card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    padding: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.question-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.question-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-}
-
-.question-type {
-    background: #e6f7ff;
-    color: #1890ff;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.question-course {
-    color: #666;
-}
-
-.question-content {
-    font-size: 14px;
-    color: #333;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.question-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-    font-size: 12px;
 }
 
 .question-section {
