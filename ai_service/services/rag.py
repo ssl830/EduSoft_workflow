@@ -195,4 +195,72 @@ class RAGService:
             
         except Exception as e:
             logger.error(f"Error evaluating answer: {str(e)}")
+            raise
+
+    def evaluate_subjective_answer(self, question: str, student_answer: str, reference_answer: str, max_score: float) -> Dict:
+        """评估主观题答案"""
+        try:
+            # 1. 获取相关知识点的内容
+            relevant_docs = self.search_knowledge_base(question)
+            
+            # 2. 生成评估提示
+            prompt = PromptTemplates.get_subjective_answer_evaluation_prompt(
+                question=question,
+                student_answer=student_answer,
+                reference_answer=reference_answer,
+                max_score=max_score
+            )
+            
+            # 3. 调用大模型进行评估
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            # 4. 解析结果
+            content = response.choices[0].message.content
+            result = self.safe_json_loads(content)
+            
+            # 5. 添加知识点位置信息
+            if relevant_docs:
+                result['knowledge_context'] = relevant_docs
+                
+            logger.info("Successfully evaluated subjective answer")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error evaluating subjective answer: {str(e)}")
+            raise
+            
+    def analyze_exercise(self, exercise_questions: List[Dict]) -> Dict:
+        """分析练习整体情况"""
+        try:
+            # 1. 提取所有题目的知识点
+            all_knowledge_points = []
+            for question in exercise_questions:
+                relevant_docs = self.search_knowledge_base(question.content)
+                all_knowledge_points.extend(relevant_docs)
+            # 2. 对象转字典，便于序列化
+            exercise_questions_dict = [vars(q) for q in exercise_questions]
+            # 3. 生成分析提示
+            prompt = PromptTemplates.get_exercise_analysis_prompt(exercise_questions_dict)
+            
+            # 4. 调用大模型进行分析
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            # 5. 解析结果
+            content = response.choices[0].message.content
+            result = self.safe_json_loads(content)
+            
+            # 6. 添加知识点上下文
+            result['knowledge_context'] = all_knowledge_points
+            
+            logger.info("Successfully analyzed exercise")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analyzing exercise: {str(e)}")
             raise 
