@@ -1,19 +1,74 @@
 package org.example.edusoft.service.ai;
 
-import org.example.edusoft.dto.ai.AiAskRequest;
-import org.example.edusoft.dto.ai.AiAskResponse;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Map;
 
 @Service
 public class AiAssistantService {
-    public AiAskResponse ask(AiAskRequest request) {
-        // TODO: 集成本地知识库检索与大模型API，RAG流程
-        // 1. 检索知识库相关内容
-        // 2. 调用大模型生成答案
-        // 3. 返回答案和知识点出处
-        AiAskResponse response = new AiAskResponse();
-        response.setAnswer("[AI答案占位符] 这里将返回基于知识库和大模型的智能解答。");
-        response.setSources(new String[]{"知识库文档1.pdf 第3页"});
-        return response;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
+
+    public Map<String, Object> uploadEmbeddingFile(MultipartFile file, String courseId) {
+        try {
+            // 保存到临时文件
+            Path tempFile = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
+            file.transferTo(tempFile.toFile());
+
+            // 构造请求
+            String url = aiServiceUrl + "/embedding/upload";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(tempFile.toFile()));
+            if (courseId != null) {
+                body.add("course_id", courseId);
+            }
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            // 调用 Python 微服务
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            // 删除临时文件
+            Files.deleteIfExists(tempFile);
+
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI服务调用失败: " + e.getMessage()
+            );
+        }
     }
-} 
+
+    public Map<String, Object> generateTeachingContent(Map<String, Object> req) {
+        try {
+            String url = aiServiceUrl + "/rag/generate";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI教案生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+}

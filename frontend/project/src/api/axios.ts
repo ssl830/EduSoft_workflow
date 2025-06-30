@@ -10,7 +10,7 @@ interface ApiResponse<T> {
 // Create an axios instance
 const instance = axios.create({
   baseURL: 'http://localhost:8080',  // 修改为本地后端服务器地址
-  timeout: 10000,
+  timeout: 1000000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -74,10 +74,19 @@ instance.interceptors.response.use(
         console.error('响应错误:', error.response.status);
         console.error('错误数据:', error.response.data);
 
-        // 返回标准错误格式
+        // 修正：兼容Spring Boot静态资源404和message字段
+        let msg = error.response.data?.msg || error.response.data?.message || '请求失败';
+        // 针对静态资源404的特殊提示
+        if (
+          error.response.status === 500 &&
+          typeof msg === 'string' &&
+          msg.includes('No static resource')
+        ) {
+          msg = '后端未正确转发到AI微服务，请检查Spring Boot路由配置或接口路径。';
+        }
         return Promise.reject({
           code: error.response.status,
-          msg: error.response.data?.msg || '请求失败',
+          msg,
           data: error.response.data
         });
       } else {

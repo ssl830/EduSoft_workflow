@@ -5,17 +5,17 @@ from typing import List, Dict
 
 class PromptTemplates:
     """提示词模板管理"""
-    
+
     @staticmethod
     def get_knowledge_points_extraction_prompt(course_name: str, course_outline: str) -> str:
         """提取知识点的提示词"""
         return f"""
         作为一名经验丰富的教育专家，请分析以下课程大纲，提取关键知识点：
-        
+
         课程名称：{course_name}
         课程大纲：
         {course_outline}
-        
+
         请列出所有关键知识点，要求：
         1. 每个知识点独占一行
         2. 知识点应该具体且可操作
@@ -34,35 +34,35 @@ class PromptTemplates:
         """生成教学内容的提示词"""
         return f"""
         作为一名资深教育专家，请根据以下信息生成详细的教学方案：
-        
+
         课程名称：{course_name}
         预期课时：{expected_hours}
         课程大纲：
         {course_outline}
-        
+
         参考资料：
         {PromptTemplates._format_knowledge_base(knowledge_base)}
-        
+
         请生成一个完整的教学方案，重点如下：
-        
+
         1. 课时规划（简要说明）：
            - 将内容合理分配到{expected_hours}个课时（大部分情况只有一个课时）
            - 每个课时的时长为45分钟，老师希望你帮忙详细规划这45分钟的每个环节
            - 课时安排要循序渐进，难度逐步提升
-        
+
         2. 每个课时必须包含（主要内容）：
            - 标题：简洁清晰地概括本课时内容
            - 详细的45分钟时间分配（如5min导入、10min知识讲解、15min案例分析、10min练习、5min总结），每个环节都要有具体内容说明
            - 知识点讲解：详细的教学内容，包括概念解释、原理分析、案例说明等
            - 实训练习：针对本课时内容设计的实践任务，帮助学生巩固所学知识
            - 教学指导建议：包括教学方法、重难点提示、可能的学生疑问及解答等
-        
+
         3. 整体教学建议（简要说明）：
            - 总体时间分配策略
            - 教学方法和教具使用建议
            - 学生参与度提升建议
            - 课程难点突破建议
-        
+
         请以JSON格式返回，结构如下：
         {{
             "lessons": [
@@ -83,14 +83,15 @@ class PromptTemplates:
             "totalHours": "总课时数",
             "teachingAdvice": "整体教学建议"
         }}
-        
+
         注意事项：
         1. 每个课时的时间分配要具体、合理，内容要详细，便于老师直接使用
         2. 充分利用参考资料中的内容，确保生成的内容与资料保持一致
         3. 实训练习要贴近实际，难度适中
         4. 教学指导要具体实用，便于教师参考
         5. 确保总课时数与预期课时相符
-        
+        6. teachingAdvice 字段必须是字符串格式
+
         请只返回标准 JSON 格式，不要 Markdown、不要注释、不要多余内容。
         """
 
@@ -115,21 +116,21 @@ class PromptTemplates:
             type_desc = f"1. 选择题 {choose_count}道\n2. 填空题 {fill_blank_count}道\n3. 计算或者简答题 {question_count}道"
         return f"""
         作为一名专业的教育测评专家，请根据以下课程内容生成练习题：
-        
+
         课程名称：{course_name}
         课程内容：
         {lesson_content}
         难度要求：{difficulty}
-        
+
         请生成多种类型的练习题，包括：
         {type_desc}
-        
+
         每道题目必须包含：
         1. 题目描述
         2. 参考答案
         3. 解题思路
         4. 相关知识点
-        
+
         请以JSON格式返回，结构如下：
         {{
             "exercises": [
@@ -153,23 +154,23 @@ class PromptTemplates:
         """评估学生答案的提示词"""
         return f"""
         作为一名经验丰富的教育评估专家，请评估学生的答案：
-        
+
         题目：
         {question}
-        
+
         标准答案：
         {reference_answer}
-        
+
         学生答案：
         {student_answer}
-        
+
         请提供以下评估内容：
         1. 得分（0-100分）
         2. 答案正确性分析
         3. 思路完整性分析
         4. 表达准确性分析
         5. 具体改进建议
-        
+
         请以JSON格式返回，结构如下：
         {{
             "score": "得分",
@@ -189,4 +190,4 @@ class PromptTemplates:
             for doc in docs:
                 formatted.append(f"- 来源：{doc['source']}")
                 formatted.append(f"  内容：{doc['content']}\n")
-        return "\n".join(formatted) 
+        return "\n".join(formatted)

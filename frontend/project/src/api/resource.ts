@@ -25,21 +25,21 @@ const ResourceApi = {
       }
     })
   },
- 
 
 
-  // Get resources for a course 
+
+  // Get resources for a course
   getCourseResources(courseId: number, data: {
     courseId: number;
     userId: number;
-    chapter?: number; 
+    chapter?: number;
     type?: string;
     title?: string;
     isTeacher: boolean;
   }) {
-    return axios.post(`/api/courses/${courseId}/filelist`, { 
+    return axios.post(`/api/courses/${courseId}/filelist`, {
       ...data,
-      courseId: Number(courseId), 
+      courseId: Number(courseId),
     })
   },
 
@@ -136,7 +136,16 @@ const ResourceApi = {
         watchCount: number;
       }
     }>(`/api/resources/progress/${resourceId}/${studentId}`)
-  }
+  },
+
+  // 修正：上传到知识库
+  uploadToKnowledgeBase(formData: FormData) {
+    return axios.post('/api/ai/embedding/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
 }
 
 /**

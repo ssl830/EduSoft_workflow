@@ -124,10 +124,15 @@ const CourseApi = {
   getTeacherPractices() {
     return axios.get('/api/practices/teacher');
   },
-  
+
   // 获取课程信息
   getCourseInfo: (courseId: number) => {
     return axios.get<Course>(`/api/course/${courseId}`);
+  },
+
+  // 生成教案
+  generateTeachingContent(params: { course_name: string; course_outline: string; expected_hours: number }) {
+    return axios.post('/api/ai/rag/generate', params)
   },
 }
 

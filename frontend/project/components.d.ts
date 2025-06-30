@@ -8,7 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    '(1)': typeof import('./src/components/course/CourseVideoList (1).vue')['default']
     AppHeader: typeof import('./src/components/layout/AppHeader.vue')['default']
     AppSidebar: typeof import('./src/components/layout/AppSidebar.vue')['default']
     Background: typeof import('./src/components/layout/Background.vue')['default']
@@ -26,10 +25,16 @@ declare module 'vue' {
     CourseSyllabus: typeof import('./src/components/course/CourseSyllabus.vue')['default']
     CourseVideoList: typeof import('./src/components/course/CourseVideoList.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElCollapse: typeof import('element-plus/es')['ElCollapse']
+    ElCollapseItem: typeof import('element-plus/es')['ElCollapseItem']
     ElDialog: typeof import('element-plus/es')['ElDialog']
+    ElDivider: typeof import('element-plus/es')['ElDivider']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
+    ElTable: typeof import('element-plus/es')['ElTable']
+    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTag: typeof import('element-plus/es')['ElTag']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']
