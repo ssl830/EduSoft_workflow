@@ -1,9 +1,10 @@
 """
 AI服务主入口
+负责初始化 FastAPI 应用、配置跨域请求、中间件、加载各个服务模块，以及定义 API 接口。
 """
 import os
 from typing import List, Dict, Optional
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from services.doc_parser import DocumentParser
@@ -41,7 +42,11 @@ class TeachingContentRequest(BaseModel):
 class ExerciseGenerationRequest(BaseModel):
     course_name: str
     lesson_content: str
-    difficulty: str = "medium"
+    difficulty: Optional[str] = "medium"
+    choose_count: Optional[int] = 5
+    fill_blank_count: Optional[int] = 5
+    question_count: Optional[int] = 2
+    custom_types: Optional[Dict[str, int]] = None
 
 @app.post("/embedding/upload")
 async def upload_file(
@@ -63,11 +68,11 @@ async def upload_file(
             doc_path = storage_service.save_document(temp_path, course_id)
             logger.info(f"Saved document to {doc_path}")
             
-            # 解析文件
+            # 解析文件为文本块（chunks)
             chunks = doc_parser.parse_file(doc_path)
             logger.info(f"Successfully parsed file {file.filename} into {len(chunks)} chunks")
             
-            # 添加到知识库
+            # 添加到RAG知识库
             rag_service.add_to_knowledge_base(chunks)
             logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
             
@@ -113,7 +118,11 @@ async def generate_exercise(request: ExerciseGenerationRequest):
         result = rag_service.generate_exercises(
             course_name=request.course_name,
             lesson_content=request.lesson_content,
-            difficulty=request.difficulty
+            difficulty=request.difficulty,
+            choose_count=request.choose_count,
+            fill_blank_count=request.fill_blank_count,
+            question_count=request.question_count,
+            custom_types=request.custom_types
         )
         logger.info(f"Successfully generated exercises for {request.course_name}")
         return result

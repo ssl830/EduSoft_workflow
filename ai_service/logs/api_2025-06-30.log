@@ -1,0 +1,15 @@
+2025-06-30 09:12:27,710 - api - INFO - Ensured directory exists: storage
+2025-06-30 09:12:27,710 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 09:12:27,711 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 09:12:27,711 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 09:12:27,712 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 09:42:04,452 - api - INFO - Ensured directory exists: storage
+2025-06-30 09:42:04,453 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 09:42:04,453 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 09:42:04,453 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 09:42:04,454 - api - INFO - Ensured directory exists: storage\logs
+2025-06-30 09:42:04,510 - api - INFO - Ensured directory exists: storage
+2025-06-30 09:42:04,511 - api - INFO - Ensured directory exists: storage\documents
+2025-06-30 09:42:04,512 - api - INFO - Ensured directory exists: storage\temp
+2025-06-30 09:42:04,512 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-30 09:42:04,514 - api - INFO - Ensured directory exists: storage\logs

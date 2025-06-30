@@ -1,0 +1,18 @@
+2025-06-30 09:12:27,713 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:12:27,713 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:12:27,714 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536
+2025-06-30 09:12:27,767 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:12:27,768 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:12:27,769 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536
+2025-06-30 09:42:04,454 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:42:04,455 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:42:04,455 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536
+2025-06-30 09:42:04,491 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:42:04,492 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:42:04,493 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536
+2025-06-30 09:42:04,514 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:42:04,514 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:42:04,514 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536
+2025-06-30 09:42:04,557 - embedding - INFO - Qwen API base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+2025-06-30 09:42:04,558 - embedding - INFO - Qwen API key: 已加载
+2025-06-30 09:42:04,558 - embedding - INFO - Qwen embedding model: text-embedding-v4, dimensions: 1536

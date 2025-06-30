@@ -1,5 +1,5 @@
 """
-Embedding服务，使用DeepSeek API生成文本向量
+Embedding服务，使用Qwen text-embedding-v4 API生成文本向量
 """
 import os
 from typing import List

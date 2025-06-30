@@ -1,6 +1,6 @@
 """
 RAG (Retrieval-Augmented Generation) 服务
-用于基于本地知识库生成教学内容
+用于基于本地知识库生成教学内容、习题等
 """
 import os
 import json
@@ -12,6 +12,7 @@ from .faiss_db import FAISSDatabase
 from .prompts import PromptTemplates
 from utils.logger import rag_logger as logger
 import numpy as np
+import re
 
 load_dotenv()
 
@@ -48,7 +49,7 @@ class RAGService:
             raise
         
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, str]]:
-        """搜索知识库"""
+        """搜索知识库，将query编码，查询最相关的top_k个文本块"""
         try:
             query_embedding = self.embedding_service.get_embedding(query)
             # 如果返回的是 list，转为 np.ndarray
@@ -61,10 +62,29 @@ class RAGService:
             logger.error(f"Error searching knowledge base: {str(e)}")
             raise
         
+    def safe_json_loads(self, text):
+        """
+        尝试从文本中提取并解析 JSON。
+        """
+        try:
+            return json.loads(text)
+        except Exception as e1:
+            try:
+                # 尝试用正则提取最外层 JSON 对象
+                match = re.search(r'(\{[\s\S]*\})', text)
+                if match:
+                    json_str = match.group(1)
+                    # 去除常见的格式化占位符（如 ... 或 '）
+                    json_str = re.sub(r'\\?"[^"]*\\?": ?"[^"]*\.{2,}[^"]*"', '"key": "value"', json_str)
+                    return json.loads(json_str)
+            except Exception as e2:
+                pass
+            raise ValueError(f"JSON解析失败，原始内容：{text[:200]}... 错误信息: {e1}")
+        
     def generate_teaching_content(self, course_outline: str, course_name: str, expected_hours: int) -> Dict:
         """根据课程大纲生成教学内容"""
         try:
-            # 1. 从大纲中提取关键知识点
+            # 1. 调用大模型从大纲中提取关键知识点
             prompt = PromptTemplates.get_knowledge_points_extraction_prompt(
                 course_name=course_name,
                 course_outline=course_outline
@@ -91,46 +111,65 @@ class RAGService:
                 knowledge_base[point] = relevant_docs
             
             # 3. 生成教学内容
+            logger.info("start generate teaching content\n")
             prompt = PromptTemplates.get_teaching_content_generation_prompt(
                 course_name=course_name,
                 course_outline=course_outline,
                 expected_hours=expected_hours,
                 knowledge_base=knowledge_base
             )
-            
+            logger.info("test1\n");
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+            logger.info("test2\n")
             content = response.choices[0].message.content
-            result = json.loads(content)
+            logger.info("大模型原始返回内容: %s", content)
+            try:
+                logger.info(f"准备进入 safe_json_loads 解析内容")
+                result = self.safe_json_loads(content)
+                logger.info(f"safe_json_loads 解析成功，结果类型: {type(result)}")
+                # 检查并适配新结构
+                lessons = result.get('lessons', [])
+                for lesson in lessons:
+                    # timePlan 字段应为详细的时间分配列表
+                    time_plan = lesson.get('timePlan', [])
+                    logger.info(f"课时: {lesson.get('title', '')}，时间分配: {time_plan}")
+                    # 其它字段如 knowledgePoints、practiceContent、teachingGuidance 也做日志
+                    logger.info(f"知识点: {lesson.get('knowledgePoints', [])}")
+                    logger.info(f"实训练习: {lesson.get('practiceContent', '')}")
+                    logger.info(f"教学指导: {lesson.get('teachingGuidance', '')}")
+            except Exception as e:
+                logger.error(f"JSON解析失败，原始内容：{content[:200]}... 错误信息: {e}")
+                raise
             logger.info("Successfully generated teaching content")
             return result
-            
         except Exception as e:
             logger.error(f"Error generating teaching content: {str(e)}")
             raise
             
-    def generate_exercises(self, course_name: str, lesson_content: str, difficulty: str = "medium") -> Dict:
+    def generate_exercises(self, course_name: str, lesson_content: str, difficulty: str = "medium", choose_count: int = 5, fill_blank_count: int = 5, question_count: int = 2, custom_types: dict = None) -> Dict:
         """生成练习题"""
         try:
             prompt = PromptTemplates.get_exercise_generation_prompt(
                 course_name=course_name,
                 lesson_content=lesson_content,
-                difficulty=difficulty
+                difficulty=difficulty,
+                choose_count=choose_count,
+                fill_blank_count=fill_blank_count,
+                question_count=question_count,
+                custom_types=custom_types
             )
-            
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
             content = response.choices[0].message.content
-            result = json.loads(content)
+            logger.info(f"LLM raw output:\n{content}")
+            result = self.safe_json_loads(content)
             logger.info(f"Successfully generated exercises for {course_name}")
             return result
-            
         except Exception as e:
             logger.error(f"Error generating exercises: {str(e)}")
             raise

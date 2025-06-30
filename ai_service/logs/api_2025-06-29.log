@@ -1,0 +1,200 @@
+2025-06-29 11:11:21,932 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:11:21,933 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:11:21,933 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:11:21,934 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:11:21,935 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:20:37,131 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:20:37,132 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:20:37,132 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:20:37,133 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:20:37,142 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:28:29,517 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 11:30:45,639 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:30:45,640 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:30:45,640 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:30:45,641 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:30:45,641 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:31:40,337 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 11:32:54,241 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:32:54,242 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:32:54,243 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:32:54,243 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:32:54,244 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:40:37,572 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 11:41:44,542 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:41:44,544 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:41:44,544 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:41:44,545 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:41:44,545 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:43:30,169 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 11:57:41,238 - api - INFO - Ensured directory exists: storage
+2025-06-29 11:57:41,242 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 11:57:41,243 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 11:57:41,243 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 11:57:41,243 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 11:58:43,978 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 12:02:13,986 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:02:13,987 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:02:13,988 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:02:13,989 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:02:13,989 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:02:53,647 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:02:53,648 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:02:53,648 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:02:53,649 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:02:53,649 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:03:31,009 - api - ERROR - Error generating teaching content: Invalid format specifier ' "课时标题",
+                    "content": "知识点讲解内容",
+                    "practiceContent": "实训练习内容",
+                    "teachingGuidance": "教学指导建议",
+                    "suggestedHours": "建议课时数",
+                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
+                ' for object of type 'str'
+2025-06-29 12:10:33,039 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:10:33,040 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:10:33,040 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:10:33,041 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:10:33,041 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:10:41,288 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:10:41,288 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:10:41,289 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:10:41,290 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:10:41,291 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:12:16,088 - api - INFO - Successfully generated teaching content for 信号处理技术
+2025-06-29 12:23:39,789 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:23:39,790 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:23:39,790 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:23:39,791 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:23:39,791 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:24:44,499 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:24:44,500 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:24:44,500 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:24:44,501 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:24:44,501 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:24:47,835 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:24:47,835 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:24:47,836 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:24:47,836 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:24:47,837 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:25:53,745 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:25:53,746 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:25:53,747 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:25:53,747 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:25:53,748 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 12:29:06,421 - api - INFO - Successfully generated teaching content for 信号处理基础
+2025-06-29 12:29:47,034 - api - INFO - Ensured directory exists: storage
+2025-06-29 12:29:47,035 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 12:29:47,035 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 12:29:47,036 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 12:29:47,036 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:21:30,097 - api - ERROR - Error generating exercises: Invalid format specifier ' "题目类型",
+                    "question": "题目描述",
+                    "answer": "参考答案",
+                    "explanation": "解题思路",
+                    "knowledge_points": ["相关知识点1", "相关知识点2"]
+                ' for object of type 'str'
+2025-06-29 16:24:07,069 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:24:07,077 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:24:07,077 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:24:07,077 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:24:07,077 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:24:25,243 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:24:25,243 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:24:25,251 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:24:25,251 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:24:25,251 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:25:10,796 - api - ERROR - Error generating exercises: Expecting value: line 1 column 1 (char 0)
+2025-06-29 16:26:35,318 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:26:35,318 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:26:35,318 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:26:35,318 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:26:35,318 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:31:33,879 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:31:33,879 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:31:33,879 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:31:33,879 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:31:33,879 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:32:10,130 - api - ERROR - Error generating exercises: Expecting value: line 1 column 1 (char 0)
+2025-06-29 16:35:26,746 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:35:26,746 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:35:26,746 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:35:26,746 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:35:26,746 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:37:00,529 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:37:00,529 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:37:00,531 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:37:00,532 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:37:00,533 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:38:37,366 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:38:37,366 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:38:37,366 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:38:37,366 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:38:37,366 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:39:39,915 - api - INFO - Successfully generated exercises for 信号与系统
+2025-06-29 16:42:24,425 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:42:24,425 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:42:24,425 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:42:24,425 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:42:24,425 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:44:22,991 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:44:22,991 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:44:22,991 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:44:22,991 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:44:22,991 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:50:57,320 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:50:57,320 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:50:57,335 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:50:57,335 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:50:57,335 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:52:16,413 - api - INFO - Successfully generated exercises for string
+2025-06-29 16:57:45,374 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:57:45,374 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:57:45,374 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:57:45,374 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:57:45,374 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:57:49,535 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:57:49,535 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:57:49,535 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:57:49,535 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:57:49,535 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:57:54,049 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:57:54,049 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:57:54,057 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:57:54,057 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:57:54,057 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 16:59:18,474 - api - INFO - Ensured directory exists: storage
+2025-06-29 16:59:18,482 - api - INFO - Ensured directory exists: storage\documents
+2025-06-29 16:59:18,482 - api - INFO - Ensured directory exists: storage\temp
+2025-06-29 16:59:18,483 - api - INFO - Ensured directory exists: storage\vector_db
+2025-06-29 16:59:18,483 - api - INFO - Ensured directory exists: storage\logs
+2025-06-29 17:01:57,031 - api - INFO - Successfully generated exercises for C语言算法设计

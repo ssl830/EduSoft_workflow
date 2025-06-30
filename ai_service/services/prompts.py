@@ -33,7 +33,7 @@ class PromptTemplates:
     ) -> str:
         """生成教学内容的提示词"""
         return f"""
-        作为一名资深教育专家，请根据以下信息生成详细的教学内容：
+        作为一名资深教育专家，请根据以下信息生成详细的教学方案：
         
         课程名称：{course_name}
         预期课时：{expected_hours}
@@ -43,57 +43,76 @@ class PromptTemplates:
         参考资料：
         {PromptTemplates._format_knowledge_base(knowledge_base)}
         
-        请生成一个完整的教学方案，包含以下内容：
+        请生成一个完整的教学方案，重点如下：
         
-        1. 课时规划：
-           - 将内容合理分配到{expected_hours}个课时
-           - 每个课时的时长应该合适，通常为45-90分钟
+        1. 课时规划（简要说明）：
+           - 将内容合理分配到{expected_hours}个课时（大部分情况只有一个课时）
+           - 每个课时的时长为45分钟，老师希望你帮忙详细规划这45分钟的每个环节
            - 课时安排要循序渐进，难度逐步提升
         
-        2. 每个课时必须包含：
+        2. 每个课时必须包含（主要内容）：
            - 标题：简洁清晰地概括本课时内容
+           - 详细的45分钟时间分配（如5min导入、10min知识讲解、15min案例分析、10min练习、5min总结），每个环节都要有具体内容说明
            - 知识点讲解：详细的教学内容，包括概念解释、原理分析、案例说明等
            - 实训练习：针对本课时内容设计的实践任务，帮助学生巩固所学知识
            - 教学指导建议：包括教学方法、重难点提示、可能的学生疑问及解答等
         
-        3. 整体教学建议：
+        3. 整体教学建议（简要说明）：
            - 总体时间分配策略
            - 教学方法和教具使用建议
            - 学生参与度提升建议
            - 课程难点突破建议
         
         请以JSON格式返回，结构如下：
-        {
+        {{
             "lessons": [
-                {
+                {{
                     "title": "课时标题",
-                    "content": "知识点讲解内容",
+                    "timePlan": [
+                        {{"step": "导入", "minutes": 5, "content": "导入内容"}},
+                        {{"step": "知识讲解", "minutes": 10, "content": "讲解内容"}},
+                        {{"step": "案例分析", "minutes": 15, "content": "案例内容"}},
+                        {{"step": "练习", "minutes": 10, "content": "练习内容"}},
+                        {{"step": "总结", "minutes": 5, "content": "总结内容"}}
+                    ],
+                    "knowledgePoints": ["知识点1", "知识点2"],
                     "practiceContent": "实训练习内容",
-                    "teachingGuidance": "教学指导建议",
-                    "suggestedHours": "建议课时数",
-                    "knowledgeSources": ["知识点来源1", "知识点来源2"]
-                }
+                    "teachingGuidance": "教学指导建议"
+                }}
             ],
             "totalHours": "总课时数",
-            "timeDistribution": "时间分配建议",
             "teachingAdvice": "整体教学建议"
-        }
+        }}
         
         注意事项：
-        1. 内容要具体且可操作，避免空泛的描述
+        1. 每个课时的时间分配要具体、合理，内容要详细，便于老师直接使用
         2. 充分利用参考资料中的内容，确保生成的内容与资料保持一致
         3. 实训练习要贴近实际，难度适中
         4. 教学指导要具体实用，便于教师参考
         5. 确保总课时数与预期课时相符
+        
+        请只返回标准 JSON 格式，不要 Markdown、不要注释、不要多余内容。
         """
 
     @staticmethod
     def get_exercise_generation_prompt(
         course_name: str,
         lesson_content: str,
-        difficulty: str = "medium"
+        difficulty: str = "medium",
+        choose_count: int = 5,
+        fill_blank_count: int = 5,
+        question_count: int = 2,
+        custom_types: dict = None
     ) -> str:
         """生成练习题的提示词"""
+        # 动态题型描述
+        if custom_types:
+            type_lines = []
+            for k, v in custom_types.items():
+                type_lines.append(f"{k}：{v}道")
+            type_desc = "\n".join(type_lines)
+        else:
+            type_desc = f"1. 选择题 {choose_count}道\n2. 填空题 {fill_blank_count}道\n3. 计算或者简答题 {question_count}道"
         return f"""
         作为一名专业的教育测评专家，请根据以下课程内容生成练习题：
         
@@ -103,10 +122,7 @@ class PromptTemplates:
         难度要求：{difficulty}
         
         请生成多种类型的练习题，包括：
-        1. 概念理解题
-        2. 应用实践题
-        3. 分析思考题
-        4. 综合案例题
+        {type_desc}
         
         每道题目必须包含：
         1. 题目描述
@@ -115,17 +131,17 @@ class PromptTemplates:
         4. 相关知识点
         
         请以JSON格式返回，结构如下：
-        {
+        {{
             "exercises": [
-                {
+                {{
                     "type": "题目类型",
                     "question": "题目描述",
                     "answer": "参考答案",
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
-                }
+                }}
             ]
-        }
+        }}
         """
 
     @staticmethod
@@ -155,13 +171,13 @@ class PromptTemplates:
         5. 具体改进建议
         
         请以JSON格式返回，结构如下：
-        {
+        {{
             "score": "得分",
             "correctness": "正确性分析",
             "completeness": "完整性分析",
             "accuracy": "准确性分析",
             "suggestions": ["改进建议1", "改进建议2"]
-        }
+        }}
         """
 
     @staticmethod
