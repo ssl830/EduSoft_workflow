@@ -39,6 +39,9 @@ const QuestionApi = {
         "free-fs-token": authStore.token
       }
     })
+  },
+  generateExercise(data: any) {
+    return axios.post('/api/ai/rag/generate_exercise', data);
   }
 }
 
