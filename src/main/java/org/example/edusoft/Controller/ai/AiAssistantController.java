@@ -33,4 +33,11 @@ public class AiAssistantController {
         logger.info("收到生成教案请求: {}", req);
         return aiAssistantService.generateTeachingContent(req);
     }
+
+    @PostMapping("/rag/generate_exercise")
+    public Map<String, Object> generateExercises(@RequestBody Map<String, Object> req) {
+        logger.info("收到生成题目请求: {}", req);
+        return aiAssistantService.generateExercises(req);
+    }
+
 }
