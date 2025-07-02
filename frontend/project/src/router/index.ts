@@ -311,6 +311,16 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/assistant',
+    name: 'OnlineAssistant',
+    component: () => import('../views/assistant/OnlineAssistant.vue'),
+    meta: {
+      title: '在线学习助手',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

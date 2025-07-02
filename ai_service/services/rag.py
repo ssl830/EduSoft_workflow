@@ -4,7 +4,7 @@ RAG (Retrieval-Augmented Generation) 服务
 """
 import os
 import json
-from typing import List, Dict
+from typing import List, Dict, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
 from .embedding import EmbeddingService
@@ -263,4 +263,59 @@ class RAGService:
             
         except Exception as e:
             logger.error(f"Error analyzing exercise: {str(e)}")
-            raise 
+            raise
+
+    def answer_student_question(self, question: str, course_name: Optional[str] = None, chat_history: Optional[List[Dict[str, str]]] = None, top_k: int = 5) -> Dict:
+        """在线学习助手 - 回答学生问题
+
+        参数:
+            question: 学生提出的问题
+            course_name: 课程名称，可选，用于日志或过滤资料
+            chat_history: 对话上下文，可选，列表元素格式同 OpenAI messages
+            top_k: 检索的文档数量
+        返回:
+            {{"answer": str, "references": List[Dict], "knowledgePoints": List[str]}}
+        """
+        try:
+            # 1. 检索相关知识库内容
+            relevant_docs = self.search_knowledge_base(question, top_k=top_k)
+
+            # 2. 构造提示词
+            prompt = PromptTemplates.get_online_assistant_prompt(
+                question=question,
+                relevant_docs=relevant_docs,
+                course_name=course_name or "",
+                chat_history=chat_history
+            )
+
+            # 3. 调用大模型生成回答
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info("LLM 返回内容: %s", content)
+
+            # 4. 解析JSON
+            result = self.safe_json_loads(content)
+
+            # 5. 如果需要，补充引用材料原始信息
+            if "references" in result and isinstance(result["references"], list):
+                # 可能模型返回的引用仅含摘要，确保包含source
+                enriched_refs = []
+                for ref in result["references"]:
+                    source = ref.get("source")
+                    # 查找原 doc content
+                    match_doc = next((d for d in relevant_docs if d["source"] == source), None)
+                    if match_doc:
+                        ref.setdefault("content", match_doc["content"])
+                    enriched_refs.append(ref)
+                result["references"] = enriched_refs
+
+            logger.info("Successfully answered student question")
+            return result
+        except Exception as e:
+            logger.error(f"Error answering student question: {str(e)}")
+            raise
+
+ 
