@@ -34,6 +34,18 @@ export interface TeachingContentResponse {
   teachingAdvice: string
 }
 
+export interface AssistantRequest {
+  question: string
+  courseName?: string
+  chatHistory?: { role: 'user' | 'assistant'; content: string }[]
+}
+
+export interface AssistantResponse {
+  answer: string
+  references: { source: string; content: string }[]
+  knowledgePoints: string[]
+}
+
 // AI问答
 export function askAI(question: string) {
   return http.post('/api/ai/ask', { question })
@@ -46,4 +58,9 @@ export function generateTeachingContent(request: TeachingContentRequest) {
 
 export function askQuestion(data: AiAskRequest) {
   return http.post<AiAskResponse>('/api/ai/ask', data);
+}
+
+// 在线学习助手
+export function askAssistant(data: AssistantRequest) {
+  return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
 } 

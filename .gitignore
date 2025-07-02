@@ -38,3 +38,10 @@ build/
 ### VS Code ###
 .vscode/
 ai_service/.env
+
+# 忽略虚拟环境
+venv/
+ai_service/venv/
+ai_service/logs/
+ai_service/data/
+ai_service/storage/

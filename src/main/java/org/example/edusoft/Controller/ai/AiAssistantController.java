@@ -40,4 +40,10 @@ public class AiAssistantController {
         return aiAssistantService.generateExercises(req);
     }
 
+    @PostMapping("/rag/assistant")
+    public Map<String, Object> onlineAssistant(@RequestBody Map<String, Object> req) {
+        logger.info("收到在线学习助手请求: {}", req);
+        return aiAssistantService.onlineAssistant(req);
+    }
+
 }

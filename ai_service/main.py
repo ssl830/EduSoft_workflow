@@ -4,7 +4,7 @@ AI服务主入口
 """
 import os
 from typing import List, Dict, Optional, Any
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from services.doc_parser import DocumentParser
@@ -66,6 +66,13 @@ class ExerciseQuestion(BaseModel):
 class ExerciseAnalysisRequest(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     exercise_questions: List[ExerciseQuestion]
+
+# 新增：学生在线学习助手请求模型
+class StudentAssistantRequest(BaseModel):
+    question: str
+    course_name: Optional[str] = None
+    chat_history: Optional[List[Dict[str, str]]] = None
+
 
 @app.post("/embedding/upload")
 async def upload_file(
@@ -178,6 +185,23 @@ async def analyze_exercise(request: ExerciseAnalysisRequest):
         return result
     except Exception as e:
         logger.error(f"Error analyzing exercise: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/assistant")
+async def online_learning_assistant(request: StudentAssistantRequest):
+    """
+    在线学习助手 - 回答学生问题
+    """
+    try:
+        result = rag_service.answer_student_question(
+            question=request.question,
+            course_name=request.course_name,
+            chat_history=request.chat_history
+        )
+        logger.info("Successfully answered student question")
+        return result
+    except Exception as e:
+        logger.error(f"Error answering student question: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")

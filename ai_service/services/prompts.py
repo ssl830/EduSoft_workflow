@@ -1,7 +1,7 @@
 """
 提示词管理模块
 """
-from typing import List, Dict
+from typing import List, Dict, Optional
 import json
 
 class PromptTemplates:
@@ -270,3 +270,71 @@ class PromptTemplates:
                 formatted.append(f"- 来源：{doc['source']}")
                 formatted.append(f"  内容：{doc['content']}\n")
         return "\n".join(formatted)
+
+    @staticmethod
+    def get_online_assistant_prompt(
+        question: str,
+        relevant_docs: List[Dict[str, str]],
+        course_name: str = "",
+        chat_history: Optional[List[Dict[str, str]]] = None
+    ) -> str:
+        """生成在线学习助手回答问题的提示词
+
+        参数说明：
+        - question: 学生提出的问题
+        - relevant_docs: 与问题最相关的知识库片段，列表元素形如{"content": "...", "source": "..."}
+        - course_name: 当前课程名称，可选
+        - chat_history: 历史对话，用于上下文记忆，可选，列表元素形如{"role": "user/assistant", "content": "..."}
+        """
+        # 格式化参考资料
+        formatted_docs = []
+        for doc in relevant_docs:
+            formatted_docs.append(f"来源：{doc['source']}\n内容：{doc['content']}")
+        docs_str = "\n\n".join(formatted_docs) if formatted_docs else "无"
+
+        # 格式化历史对话
+        history_lines = []
+        if chat_history:
+            for idx, msg in enumerate(chat_history, 1):
+                role = "学生" if msg.get("role") == "user" else "助教"
+                history_lines.append(f"{role}{idx}: {msg.get('content', '')}")
+        history_str = "\n".join(history_lines) if history_lines else "无"
+
+        return f"""
+        你是一名在线学习助教，需要基于课程资料为学生提供权威、详细且易于理解的回答。
+
+        课程名称：{course_name if course_name else '未指定'}
+
+        历史对话（如有）：
+        {history_str}
+
+        学生问题：
+        {question}
+
+        可参考的课程资料片段：
+        {docs_str}
+
+        请遵循以下要求生成回答：
+        1. 首先给出对学生问题的详细解答，条理清晰、逻辑严谨。
+        2. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
+        3. 提取与问题相关的关键知识点列表。
+        4. 指出回答引用的资料来源（source 字段）及其内容摘要。
+
+        请仅以 JSON 格式返回，结构如下：
+        {{
+            "answer": string,          // 详细回答
+            "references": [            // 引用的资料片段
+                {{
+                    "source": string, // 资料来源，例如 "教材P12" 或 "文件名 第3页"
+                    "content": string // 被引用内容摘要
+                }}
+            ],
+            "knowledgePoints": [string] // 相关知识点列表
+        }}
+
+        注意：
+        1. 返回必须是合法 JSON，不要包含 Markdown、注释或多余文字。
+        2. references、knowledgePoints 至少返回一个元素，如无可用内容则返回空数组。
+        """
+
+   
