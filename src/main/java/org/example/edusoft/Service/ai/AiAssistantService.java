@@ -149,7 +149,7 @@ public class AiAssistantService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(url, requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
             return response.getBody();
         } catch (Exception e) {
             return Map.of(
@@ -170,7 +170,7 @@ public class AiAssistantService {
                 "max_score", maxScore
             );
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(url, requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
             return response.getBody();
         } catch (Exception e) {
             return Map.of(
@@ -178,5 +178,14 @@ public class AiAssistantService {
                 "message", "AI主观题评测调用失败: " + e.getMessage()
             );
         }
+    }
+
+    // 兼容 Map<String, Object> 参数的主观题评测方法
+    public Map<String, Object> evaluateSubjective(Map<String, Object> req) {
+        String question = (String) req.getOrDefault("question", "");
+        String studentAnswer = (String) req.getOrDefault("student_answer", "");
+        String referenceAnswer = (String) req.getOrDefault("reference_answer", "");
+        Double maxScore = req.get("max_score") instanceof Number ? ((Number) req.get("max_score")).doubleValue() : 5.0;
+        return evaluateSubjectiveAnswer(question, studentAnswer, referenceAnswer, maxScore);
     }
 }

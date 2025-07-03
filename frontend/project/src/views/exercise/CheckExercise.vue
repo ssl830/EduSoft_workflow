@@ -14,11 +14,14 @@
                             class="score-field" />
                     </label>
                 </div>
-                <div v-if="question.aiResult && question.aiResult.error" class="ai-card ai-score">
+                <div v-if="question.aiResult === undefined || question.aiResult === null" class="ai-card ai-score ai-loading">
+                    <span class="ai-label">AI分析中...</span>
+                </div>
+                <div v-else-if="question.aiResult && question.aiResult.error" class="ai-card ai-score">
                     <span class="ai-label">AI分析出错</span>
                     <span style="color:#e74c3c">{{ question.aiResult.error }}</span>
                 </div>
-                <div v-else-if="question.aiResult">
+                <div v-else>
                     <div class="ai-card ai-score">
                         <span class="ai-label">AI评分建议</span>
                         <span class="ai-score-value">{{ question.aiResult.score }} 分</span>
@@ -257,6 +260,14 @@ const submitScores = async () => {
     color: #e67e22;
     font-weight: bold;
     margin-left: 16px;
+}
+.ai-loading {
+    text-align: center;
+    color: #3498db;
+    font-size: 18px;
+    font-weight: 500;
+    background: #f3f8fd;
+    border-left: 5px solid #d0e6fa;
 }
 .ai-detail-btn {
     margin-left: 24px;
