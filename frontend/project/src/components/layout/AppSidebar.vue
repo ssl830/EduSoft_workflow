@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
-const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 const isTeacher = computed(() => authStore.userRole === 'teacher')
@@ -24,32 +21,32 @@ export default {
     <div class="sidebar-section">
       <h3 class="sidebar-title">快速导航</h3>
       <ul class="sidebar-menu">
-        <li>
+        <li v-if="isStudent || isTeacher">
           <router-link to="/" class="sidebar-link">
             <span class="icon">🏠</span> 课程中心
           </router-link>
         </li>
-        <li>
+        <li v-if="isStudent || isTeacher">
           <router-link to="/class" class="sidebar-link">
             <span class="icon">👥</span> 班级中心
           </router-link>
         </li>
-        <li>
+        <li v-if="isStudent || isTeacher">
           <router-link to="/schedule" class="sidebar-link">
             <span class="icon">📅</span> 课表
           </router-link>
         </li>
-        <li v-if="isTutor || isTeacher">
+        <li v-if="isTeacher">
           <router-link to="/questionBank" class="sidebar-link">
             <span class="icon">📚</span> 题库中心
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent">
+        <li v-if="isStudent">
           <router-link to="/questionFavor" class="sidebar-link">
             <span class="icon">📚</span> 收藏题库
           </router-link>
         </li>
-        <li v-if="isTutor || isStudent">
+        <li v-if="isStudent">
           <router-link to="/questionWrong" class="sidebar-link">
             <span class="icon">📈</span> 错误题库
           </router-link>
@@ -69,16 +66,35 @@ export default {
             <span class="icon">📊</span> 练习分析
           </router-link>
         </li>
-        <li>
+        <li v-if="isStudent || isTeacher">
           <router-link to="/notifications" class="sidebar-link">
             <span class="icon">🔔</span> 通知中心
           </router-link>
         </li>
-        <li>          <router-link to="/discussions" class="sidebar-link">
+        <li v-if="isStudent || isTeacher">
+          <router-link to="/discussions" class="sidebar-link">
             <span class="icon">💬</span> 讨论区
           </router-link>
         </li>
-
+        <li v-if="isStudent || isTeacher">
+          <router-link to="/assistant" class="sidebar-link">
+              <span class="icon">❓️</span> AI助手
+          </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/teachers" class="sidebar-link">
+              <span class="icon">👩‍🏫</span> 教师管理
+          </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/students" class="sidebar-link">
+              <span class="icon">👨‍🎓</span> 学生管理
+          </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/tutors" class="sidebar-link">
+              <span class="icon">🖥️</span> 管理员管理
+          </router-link>
         <li v-if="isStudent">
           <router-link to="/ai-selftest" class="sidebar-link">
             <span class="icon">🤖</span> AI自测
@@ -89,15 +105,9 @@ export default {
             <span class="icon">📝</span> 自测历史
           </router-link>
         </li>
-
-          <li>          <router-link to="/assistant" class="sidebar-link">
-              <span class="icon">？</span> AI助手
-          </router-link>
-          </li>
-
       </ul>
     </div>
-    <div class="sidebar-section" v-if="isTeacher || isTutor">
+    <div class="sidebar-section" v-if="isTeacher">
       <h3 class="sidebar-title">教师工具</h3>
       <ul class="sidebar-menu">
         <li v-if="isTeacher">
@@ -105,7 +115,7 @@ export default {
             <span class="icon">➕</span> 创建课程
           </router-link>
         </li>
-        <li v-if="isTeacher || isTutor">
+        <li v-if="isTeacher">
           <router-link to="/exercise/create" class="sidebar-link">
             <span class="icon">📝</span> 创建练习
           </router-link>

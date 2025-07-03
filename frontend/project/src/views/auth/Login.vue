@@ -23,8 +23,12 @@ const handleLogin = async () => {
 
   try {
     await authStore.login(username.value, password.value)
-    const redirectPath = route.query.redirect as string || '/'
-    router.push(redirectPath)
+    if( authStore.userRole === 'tutor' ){
+        router.push('/teachers')
+    }else{
+        const redirectPath = route.query.redirect as string || '/'
+        router.push(redirectPath)
+    }
   } catch (err: any) {
     error.value = err.message || '登录失败，请检查用户ID和密码'
   } finally {

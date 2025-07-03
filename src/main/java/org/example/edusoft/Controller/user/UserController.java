@@ -14,7 +14,9 @@ import org.example.edusoft.service.user.UserService;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.example.edusoft.common.domain.Result;
 
 @RestController
 @Validated
@@ -140,7 +142,7 @@ public class UserController {
         }
     }
 
-    
+
     // 更新用户信息
     @PostMapping("/update")
     public SaResult updateUserInfo(@Valid @RequestBody UserUpdate updateDTO) {
@@ -226,10 +228,61 @@ public class UserController {
             // 注销成功后，清除登录状态
             StpUtil.logout();
             return SaResult.ok("账号已注销");
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return SaResult.error("注销失败：" + e.getMessage());
+        }
+    }
+
+    // 获取全部老师信息
+    @GetMapping("/teachers")
+    public Result<List<User>> getAllTeachers() {
+        try {
+            List<User> teachers = userService.getAllTeachers();
+            if (teachers == null) {
+                return Result.error("老师不存在");
+            }
+            return Result.ok(teachers, "获取老师列表成功");
+        } catch (Exception e) {
+            return Result.error("获取老师列表失败：" + e.getMessage());
+        }
+    }
+
+    // 获取全部学生信息
+    @GetMapping("/students")
+    public Result<List<User>> getAllStudents() {
+        try {
+            List<User> students = userService.getAllStudents();
+            if (students == null) {
+                return Result.error("学生不存在");
+            }
+            return Result.ok(students, "获取学生列表成功");
+        } catch (Exception e) {
+            return Result.error("获取学生列表失败：" + e.getMessage());
+        }
+    }
+
+    @GetMapping("/tutor")
+    public Result<List<User>> getAllTutors() {
+        try {
+            List<User> students = userService.getAllTutors();
+            if (students == null) {
+                return Result.error("管理员不存在");
+            }
+            return Result.ok(students, "获取管理员列表成功");
+        } catch (Exception e) {
+            return Result.error("获取管理员列表失败：" + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result<Boolean> deleteUser(@PathVariable Long id) {
+        try {
+            boolean success = userService.deleteUser(id);
+            return Result.ok(success, "删除用户成功");
+        } catch (Exception e) {
+            return Result.error(500, "删除用户失败：" + e.getMessage());
         }
     }
 }

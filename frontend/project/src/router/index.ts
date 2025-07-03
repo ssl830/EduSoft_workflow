@@ -321,6 +321,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/teachers',
+    name: 'TeachersList',
+    component: () => import('../views/management/TeachersList.vue'),
+    meta: {
+      title: '教师列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/ai-selftest',
     name: 'AISelfTest',
     component: () => import('../views/practice/AISelfTest.vue'),
@@ -332,6 +342,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/students',
+    name: 'StudentsList',
+    component: () => import('../views/management/StudentsList.vue'),
+    meta: {
+      title: '学生列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/selfpractice/history',
     name: 'SelfPracticeHistory',
     component: () => import('../views/practice/SelfPracticeHistory.vue'),
@@ -339,6 +359,16 @@ const routes: RouteRecordRaw[] = [
       title: '自测历史',
       requiresAuth: true,
       roles: ['student'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/tutors',
+    name: 'TutorsList',
+    component: () => import('../views/management/TutorsList.vue'),
+    meta: {
+      title: '管理员列表',
+      requiresAuth: true,
       showSidebar: true
     }
   },
