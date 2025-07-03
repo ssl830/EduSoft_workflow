@@ -78,10 +78,23 @@ export default {
             <span class="icon">💬</span> 讨论区
           </router-link>
         </li>
+
+        <li v-if="isStudent">
+          <router-link to="/ai-selftest" class="sidebar-link">
+            <span class="icon">🤖</span> AI自测
+          </router-link>
+        </li>
+        <li v-if="isStudent">
+          <router-link to="/selfpractice/history" class="sidebar-link">
+            <span class="icon">📝</span> 自测历史
+          </router-link>
+        </li>
+
           <li>          <router-link to="/assistant" class="sidebar-link">
               <span class="icon">？</span> AI助手
           </router-link>
           </li>
+
       </ul>
     </div>
     <div class="sidebar-section" v-if="isTeacher || isTutor">
