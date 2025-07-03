@@ -3,31 +3,60 @@
     <div class="chat-window">
       <div v-for="(msg, idx) in messages" :key="idx" :class="['chat-bubble', msg.role]">
         <div class="bubble-content">
+          <h2>
+            {{ msg.role }}
+            <span v-if="msg.role === 'user'">(*´･д･)?</span>
+            <span v-else-if="msg.role === 'assistant'">(ゝ∀･)</span>
+          </h2>
           <p>{{ msg.content }}</p>
+          <!-- 修改引用资料展示方式，避免黑点 -->
           <template v-if="msg.role === 'assistant' && msg.references">
             <details>
               <summary>引用资料</summary>
-              <ul>
-                <li v-for="(ref, i) in msg.references" :key="i">
+              <div class="references-list">
+                <div v-for="(ref, i) in msg.references" :key="i" class="reference-item">
                   <strong>{{ ref.source }}:</strong> {{ ref.content }}
-                </li>
-              </ul>
+                </div>
+              </div>
+            </details>
+          </template>
+          <!-- 新增知识点展示 -->
+          <template v-if="msg.role === 'assistant' && msg.knowledgePoints && msg.knowledgePoints.length">
+            <details>
+              <summary>知识点</summary>
+              <div class="knowledge-list">
+                <div v-for="(kp, i) in msg.knowledgePoints" :key="i" class="knowledge-item">
+                  {{ kp }}
+                </div>
+              </div>
             </details>
           </template>
         </div>
       </div>
     </div>
 
-    <div class="input-area">
-      <input v-model="input" @keyup.enter="send" placeholder="请输入你的问题..." />
-      <button @click="send" :disabled="loading || !input">发送</button>
+    <!-- 合并背景的输入区域 -->
+    <div class="input-bar-combined">
+      <div class="course-select-bar" v-if="courses.length > 0">
+        <label>@课程：</label>
+        <select v-model="selectedCourseId">
+          <option value="">不指定课程</option>
+          <option v-for="c in courses" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+      <div class="input-area">
+        <input v-model="input" @keyup.enter="send" placeholder="请输入你的问题..." />
+        <button @click="send" :disabled="loading || !input">发送</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { askAssistant, AssistantRequest, AssistantResponse } from '@/api/ai'
+import CourseApi from '@/api/course'
+import { useAuthStore } from '@/stores/auth'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -40,6 +69,29 @@ const messages = ref<ChatMessage[]>([])
 const input = ref('')
 const loading = ref(false)
 
+// 新增：课程相关
+const courses = ref<any[]>([])
+const selectedCourseId = ref<string | number>('')
+
+// 获取课程列表
+const authStore = useAuthStore()
+const fetchCourses = async () => {
+  if (!authStore.user?.id) return
+  try {
+    const resp = await CourseApi.getUserCourses(authStore.user.id)
+    courses.value = Array.isArray(resp.data) ? resp.data : []
+  } catch (e) {
+    courses.value = []
+  }
+}
+onMounted(fetchCourses)
+
+function getSelectedCourseName() {
+  if (!selectedCourseId.value) return ''
+  const course = courses.value.find(c => String(c.id) === String(selectedCourseId.value))
+  return course?.name || ''
+}
+
 async function send() {
   if (!input.value.trim()) return
   // 1. push user msg
@@ -49,18 +101,30 @@ async function send() {
   loading.value = true
 
   try {
-    const payload: AssistantRequest = {
+    const payload: AssistantRequest & { course_name?: string } = {
       question,
-      chatHistory: messages.value.map((m) => ({ role: m.role, content: m.content }))
+      chat_history: messages.value.map((m) => ({ role: m.role, content: m.content }))
     }
+    // 新增：带上course_name参数
+    const courseName = getSelectedCourseName()
+    if (courseName) payload.course_name = courseName
+    console.log('发送请求:', payload)
     const resp = await askAssistant(payload)
-    const data = resp.data as AssistantResponse
-    messages.value.push({
-      role: 'assistant',
-      content: data.answer,
-      references: data.references,
-      knowledgePoints: data.knowledgePoints
-    })
+    console.log('收到响应:', resp)
+      if(!resp.status || resp.status != 'fail'){
+          messages.value.push({
+              role: 'assistant',
+              content: resp.answer,
+              references: resp.references,
+              knowledgePoints: resp.knowledgePoints
+          })
+      }else{
+            messages.value.push({
+                role: 'assistant',
+                content: '抱歉，无法处理您的请求。'
+            })
+      }
+
   } catch (err) {
     console.error(err)
     messages.value.push({ role: 'assistant', content: '抱歉，服务暂时不可用。' })
@@ -74,17 +138,25 @@ async function send() {
 .assistant-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 64px); /* 头部栏高度为56px时，自动适配剩余空间 */
   padding: 16px;
+  box-sizing: border-box;
 }
 .chat-window {
-  flex: 1;
+  flex: 1 1 0%; /* 填满剩余空间 */
+  min-height: 0; /* 允许flex容器收缩 */
   overflow-y: auto;
   margin-bottom: 12px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e0e7ef;
+  /* 始终显示滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: #b2dfdb #f8fafc;
 }
 .chat-bubble {
-  max-width: 80%;
-  margin: 8px 0;
+  max-width: 70%;
+  margin: 8px auto;
   padding: 8px 12px;
   border-radius: 6px;
 }
@@ -96,15 +168,124 @@ async function send() {
   align-self: flex-start;
   background: #f1f8e9;
 }
+/* 合并背景的输入区域样式 */
+.input-bar-combined {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  background: #f8fafc;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px 0 #e0e7ef33;
+  padding: 12px 18px;
+  border: 1.5px solid #e0f7fa;
+}
+.course-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  min-width: 220px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 0;
+  height: 44px; /* 统一高度 */
+}
+.course-select-bar label {
+  font-weight: bold;
+  color: #00838f;
+  font-size: 16px;
+  margin-right: 4px;
+  margin-bottom: 0;
+}
+.course-select-bar select {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #26c6da;
+  background: #fff;
+  font-size: 15px;
+  color: #00838f;
+  outline: none;
+  transition: border 0.2s;
+  margin-left: 0;
+  margin-bottom: 0;
+  box-shadow: 0 1px 4px 0 #e0e7ef22;
+  height: 40px; /* 统一高度 */
+  line-height: 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+.course-select-bar select:focus {
+  border-color: #00bfae;
+}
 .input-area {
+  flex: 1;
   display: flex;
   gap: 8px;
+  align-items: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-width: 0;
+  height: 44px; /* 统一高度 */
 }
 input {
   flex: 1;
-  padding: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid #26c6da;
+  border-radius: 8px;
+  outline: none;
+  font-size: 16px;
+  background: #fff;
+  box-shadow: 0 1px 4px 0 #e0e7ef22;
+  transition: border 0.2s;
+  min-width: 0;
+  height: 40px; /* 统一高度 */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+input:focus {
+  border-color: #00bfae;
 }
 button {
-  padding: 8px 16px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #26c6da 0%, #00bfae 100%);
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px 0 #26c6da22;
+  transition: background 0.2s, box-shadow 0.2s;
+  height: 40px; /* 统一高度 */
+  display: flex;
+  align-items: center;
 }
-</style> 
+button:disabled {
+  background: #b2dfdb;
+  cursor: not-allowed;
+  color: #fff;
+}
+button:not(:disabled):hover {
+  background: linear-gradient(90deg, #00bfae 0%, #26c6da 100%);
+  box-shadow: 0 4px 12px 0 #26c6da33;
+}
+.references-list, .knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0 0;
+}
+.reference-item, .knowledge-item {
+  padding-left: 4px;
+  /* 可选：更好区分每条 */
+}
+</style>

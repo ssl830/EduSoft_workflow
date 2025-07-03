@@ -11,14 +11,19 @@ from .embedding import EmbeddingService
 from .faiss_db import FAISSDatabase
 from .prompts import PromptTemplates
 from utils.logger import rag_logger as logger
+from pydantic import BaseModel
 import numpy as np
 import re
 
 load_dotenv()
+class TimePlanItem(BaseModel):
+    content: str
+    minutes: int
+    step: str
 
 class RAGService:
     """RAG服务类"""
-    
+
     def __init__(self):
         """初始化服务"""
         self.embedding_service = EmbeddingService()
@@ -27,7 +32,7 @@ class RAGService:
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com/v1"
         )
-        
+
         # 加载已有的知识库
         if os.path.exists('data/vector_db'):
             try:
@@ -36,7 +41,7 @@ class RAGService:
             except Exception as e:
                 logger.error(f"Error loading vector database: {str(e)}")
                 raise
-            
+
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
         """将文档添加到知识库"""
         try:
@@ -47,7 +52,7 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error adding chunks to knowledge base: {str(e)}")
             raise
-        
+
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, str]]:
         """搜索知识库，将query编码，查询最相关的top_k个文本块"""
         try:
@@ -61,7 +66,7 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error searching knowledge base: {str(e)}")
             raise
-        
+
     def safe_json_loads(self, text):
         """
         尝试从文本中提取并解析 JSON。
@@ -80,7 +85,7 @@ class RAGService:
             except Exception as e2:
                 pass
             raise ValueError(f"JSON解析失败，原始内容：{text[:200]}... 错误信息: {e1}")
-        
+
     def generate_teaching_content(self, course_outline: str, course_name: str, expected_hours: int) -> Dict:
         """根据课程大纲生成教学内容"""
         try:
@@ -89,14 +94,14 @@ class RAGService:
                 course_name=course_name,
                 course_outline=course_outline
             )
-            
+
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
             knowledge_points = [k.strip() for k in response.choices[0].message.content.strip().split('\n') if k.strip()]
             logger.info(f"Extracted {len(knowledge_points)} knowledge points")
-            
+
             # 2. 为每个知识点检索相关内容
             knowledge_base = {}
             for point in knowledge_points:
@@ -109,7 +114,7 @@ class RAGService:
                     logger.error(f"知识点 '{point}' 检索失败: {e}")
                     relevant_docs = []
                 knowledge_base[point] = relevant_docs
-            
+
             # 3. 生成教学内容
             logger.info("start generate teaching content\n")
             prompt = PromptTemplates.get_teaching_content_generation_prompt(
@@ -148,7 +153,54 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error generating teaching content: {str(e)}")
             raise
-            
+
+    def generate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem]) -> Dict:
+        """根据已有教案生成详细教案（内容更丰富，但仅基于传入参数）"""
+        try:
+            # 构造详细教案生成的提示词
+            prompt = PromptTemplates.get_teaching_content_detail_prompt(
+                title=title,
+                knowledgePoints=knowledgePoints,
+                practiceContent=practiceContent,
+                teachingGuidance=teachingGuidance,
+                timePlan=timePlan
+            )
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info("详细教案 LLM 返回内容: %s", content)
+            result = self.safe_json_loads(content)
+            logger.info("Successfully generated detailed teaching content")
+            return result
+        except Exception as e:
+            logger.error(f"Error generating teaching content detail: {str(e)}")
+            raise
+
+    def regenerate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem]) -> Dict:
+        """根据已有教案生成一版全新的教案（内容充实度保持一致，无需更丰富）"""
+        try:
+            prompt = PromptTemplates.get_regenerate_teaching_content_prompt(
+                title=title,
+                knowledgePoints=knowledgePoints,
+                practiceContent=practiceContent,
+                teachingGuidance=teachingGuidance,
+                timePlan=timePlan
+            )
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info("全新教案 LLM 返回内容: %s", content)
+            result = self.safe_json_loads(content)
+            logger.info("Successfully regenerated teaching content detail")
+            return result
+        except Exception as e:
+            logger.error(f"Error regenerating teaching content detail: {str(e)}")
+            raise
+
     def generate_exercises(self, course_name: str, lesson_content: str, difficulty: str = "medium", choose_count: int = 5, fill_blank_count: int = 5, question_count: int = 2, custom_types: dict = None) -> Dict:
         """生成练习题"""
         try:
@@ -173,7 +225,7 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error generating exercises: {str(e)}")
             raise
-            
+
     def evaluate_answer(self, question: str, student_answer: str, reference_answer: str) -> Dict:
         """评估学生答案"""
         try:
@@ -182,17 +234,17 @@ class RAGService:
                 student_answer=student_answer,
                 reference_answer=reference_answer
             )
-            
+
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             content = response.choices[0].message.content
             result = json.loads(content)
             logger.info("Successfully evaluated student answer")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error evaluating answer: {str(e)}")
             raise
@@ -202,7 +254,7 @@ class RAGService:
         try:
             # 1. 获取相关知识点的内容
             relevant_docs = self.search_knowledge_base(question)
-            
+
             # 2. 生成评估提示
             prompt = PromptTemplates.get_subjective_answer_evaluation_prompt(
                 question=question,
@@ -210,28 +262,28 @@ class RAGService:
                 reference_answer=reference_answer,
                 max_score=max_score
             )
-            
+
             # 3. 调用大模型进行评估
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             # 4. 解析结果
             content = response.choices[0].message.content
             result = self.safe_json_loads(content)
-            
+
             # 5. 添加知识点位置信息
             if relevant_docs:
                 result['knowledge_context'] = relevant_docs
-                
+
             logger.info("Successfully evaluated subjective answer")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error evaluating subjective answer: {str(e)}")
             raise
-            
+
     def analyze_exercise(self, exercise_questions: List[Dict]) -> Dict:
         """分析练习整体情况"""
         try:
@@ -244,23 +296,23 @@ class RAGService:
             exercise_questions_dict = [vars(q) for q in exercise_questions]
             # 3. 生成分析提示
             prompt = PromptTemplates.get_exercise_analysis_prompt(exercise_questions_dict)
-            
+
             # 4. 调用大模型进行分析
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
+
             # 5. 解析结果
             content = response.choices[0].message.content
             result = self.safe_json_loads(content)
-            
+
             # 6. 添加知识点上下文
             result['knowledge_context'] = all_knowledge_points
-            
+
             logger.info("Successfully analyzed exercise")
             return result
-            
+
         except Exception as e:
             logger.error(f"Error analyzing exercise: {str(e)}")
             raise
@@ -318,6 +370,7 @@ class RAGService:
             logger.error(f"Error answering student question: {str(e)}")
             raise
 
+
     def generate_student_exercise(self, requirements: str, knowledge_preferences: str, wrong_questions: Optional[List[Dict[str, Any]]] = None) -> Dict:
         """根据学生需求、知识点偏好以及历史错题生成练习题"""
         try:
@@ -343,3 +396,4 @@ class RAGService:
             raise
 
  
+

@@ -90,6 +90,7 @@ export function askAssistant(data: AssistantRequest) {
   return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
 }
 
+
 // 生成学生自测练习
 export function generateStudentExercise(data: StudentExerciseRequest) {
   return http.post<StudentExerciseResponse>('/api/ai/rag/generate_student_exercise', data)
@@ -111,3 +112,4 @@ export function getSelfPracticeHistory() {
 export function getSelfPracticeDetail(pid: number | string) {
   return http.get(`/api/selfpractice/history/${pid}`)
 } 
+

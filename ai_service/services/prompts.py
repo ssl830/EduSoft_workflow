@@ -338,6 +338,7 @@ class PromptTemplates:
         """
 
     @staticmethod
+
     def get_student_exercise_generation_prompt(
         requirements: str,
         knowledge_preferences: str,
@@ -380,3 +381,116 @@ class PromptTemplates:
         """
 
    
+
+    def get_teaching_content_detail_prompt(
+        title: str,
+        knowledgePoints: list,
+        practiceContent: str,
+        teachingGuidance: str,
+        timePlan: list
+    ) -> str:
+        """
+        根据已有教案生成更详细的教案（内容更丰富，但仅基于传入参数）
+        """
+        return f"""
+        你是一名资深教育专家，请基于以下教案信息，生成内容更详细、丰富的教案。请注意，生成内容只能基于下述参数，不得引入任何外部知识或假设。
+
+        教案标题：{title}
+
+        知识点列表：
+        {json.dumps(knowledgePoints, ensure_ascii=False, indent=2)}
+
+        实训练习内容：
+        {practiceContent}
+
+        教学指导建议：
+        {teachingGuidance}
+
+        时间分配方案（timePlan）：
+        {json.dumps([dict(item) for item in timePlan], ensure_ascii=False, indent=2)}
+
+        要求：
+        1. 对每个时间分配环节（timePlan）进行更细致的内容扩展，明确每个环节的教学目标、具体活动、师生活动细节、互动方式等。
+        2. 对每个知识点，补充更详细的讲解，包括定义、原理、应用场景、常见误区、举例说明等。
+        3. 对实训练习，细化为多个具体任务或步骤，并给出每步的目标与评价标准。
+        4. 教学指导部分要补充更多实用建议，如教学重难点、易错点、师生互动建议、分层教学策略等。
+        5. 生成的详细教案结构与原教案一致，但每个字段内容更丰富、具体，便于教师直接使用。
+        6. 只允许使用传入参数中的内容进行扩展和细化，不得引入任何未给出的知识点或内容。
+        7. practiceContent, teachingGuidance, title 字段必须是字符串格式，knowledgePoints 字段必须是字符串数组
+        8. 返回内容必须为标准JSON格式，结构如下：
+
+        {{
+            "title": "课时标题",
+            "timePlan": [
+                {{
+                    "step": "环节名称",
+                    "minutes": 时长,
+                    "content": "本环节详细内容，包含教学目标、活动安排、师生活动、互动方式等"
+                }}
+            ],
+            "knowledgePoints": ["知识点1"， "知识点2"],
+            "practiceContent": "实训练习内容",
+            "teachingGuidance": "教学指导建议"
+        }}
+
+        注意事项：
+        - 所有内容必须基于输入参数进行扩展和细化，不得添加任何外部知识。
+        - 返回内容必须为合法JSON，不要包含Markdown、注释或多余文字。
+        """
+
+    @staticmethod
+    def get_regenerate_teaching_content_prompt(
+        title: str,
+        knowledgePoints: list,
+        practiceContent: str,
+        teachingGuidance: str,
+        timePlan: list
+    ) -> str:
+        """
+        根据已有教案生成一版全新的教案（内容充实度保持一致，无需更丰富）
+        """
+        return f"""
+        你是一名资深教育专家，请基于以下教案信息，生成一版全新的教案。要求内容结构、充实度与原教案一致，但表达方式、内容细节等需有明显不同，避免与原教案重复。不得引入任何外部知识或假设，仅可基于下述参数。
+
+        教案标题：{title}
+
+        知识点列表：
+        {json.dumps(knowledgePoints, ensure_ascii=False, indent=2)}
+
+        实训练习内容：
+        {practiceContent}
+
+        教学指导建议：
+        {teachingGuidance}
+
+        时间分配方案（timePlan）：
+        {json.dumps([dict(item) for item in timePlan], ensure_ascii=False, indent=2)}
+
+        要求：
+        1. 重新组织每个时间分配环节（timePlan）的内容，表达方式需与原教案不同，但内容充实度保持一致。
+        2. 对每个知识点，重新表述讲解内容，避免与原教案重复，内容详实但不需更丰富。
+        3. 实训练习部分重新拆解为具体任务或步骤，表达方式需有变化。
+        4. 教学指导部分用不同表述方式给出建议，内容充实度与原教案一致。
+        5. 生成的教案结构与原教案一致，便于教师直接使用。
+        6. 只允许使用传入参数中的内容进行改写和重组，不得引入任何未给出的知识点或内容。
+        7. 返回内容必须为标准JSON格式，结构如下：
+
+        {{
+            "title": "课时标题",
+            "timePlan": [
+                {{
+                    "step": "环节名称",
+                    "minutes": 时长,
+                    "content": "本环节详细内容"
+                }}
+            ],
+            "knowledgePoints": ["知识点1", "知识点2"],
+            "practiceContent": "实训练习内容",
+            "teachingGuidance": "教学指导建议"
+        }}
+
+        注意事项：
+        - 所有内容必须基于输入参数进行改写和重组，不得添加任何外部知识。
+        - 返回内容必须为合法JSON，不要包含Markdown、注释或多余文字。
+        """
+

@@ -134,6 +134,14 @@ const CourseApi = {
   generateTeachingContent(params: { course_name: string; course_outline: string; expected_hours: number }) {
     return axios.post('/api/ai/rag/generate', params)
   },
+
+  generateTeachingContentDetail(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[] }) {
+    return axios.post('/api/ai/rag/detail', params)
+  },
+
+  regenerateTeachingContent(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[] }) {
+    return axios.post('/api/ai/rag/regenerate', params)
+  },
 }
 
 export default CourseApi
