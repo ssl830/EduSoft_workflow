@@ -46,6 +46,31 @@ export interface AssistantResponse {
   knowledgePoints: string[]
 }
 
+export interface StudentExerciseRequest {
+  requirements: string
+  knowledge_preferences: string
+  wrongQuestions?: any[]
+}
+
+export interface ExerciseItem {
+  id?: number
+  type: string
+  question: string
+  options: string[]
+  answer: string
+  explanation: string
+  knowledge_points: string[]
+}
+
+export interface StudentExerciseResponse {
+  exercises: ExerciseItem[]
+}
+
+export interface SelfPracticeProgressRequest {
+  practiceId: number
+  answers: any[]
+}
+
 // AI问答
 export function askAI(question: string) {
   return http.post('/api/ai/ask', { question })
@@ -64,3 +89,44 @@ export function askQuestion(data: AiAskRequest) {
 export function askAssistant(data: AssistantRequest) {
   return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
 }
+// 评估主观题答案
+export interface EvaluateSubjectiveRequest {
+  question: string;
+  student_answer: string;
+  reference_answer: string;
+  max_score: number;
+}
+
+export interface EvaluateSubjectiveResponse {
+  score: number;
+  analysis: any;
+  feedback: string;
+  improvement_suggestions: string[];
+  knowledge_context: any[];
+}
+
+export function evaluateSubjectiveAnswer(data: EvaluateSubjectiveRequest) {
+  return http.post<EvaluateSubjectiveResponse>('/api/ai/evaluate-subjective', data)
+}
+
+// 生成学生自测练习
+export function generateStudentExercise(data: StudentExerciseRequest) {
+  return http.post<StudentExerciseResponse>('/api/ai/rag/generate_student_exercise', data)
+}
+
+export function saveSelfPracticeProgress(data: SelfPracticeProgressRequest) {
+  return http.post('/api/selfpractice/save-progress', data)
+}
+
+export function submitSelfPractice(data: SelfPracticeProgressRequest) {
+  return http.post('/api/selfpractice/submit', data)
+}
+
+// ========== 学生自测历史 ==========
+export function getSelfPracticeHistory() {
+  return http.get('/api/selfpractice/history')
+}
+
+export function getSelfPracticeDetail(pid: number | string) {
+  return http.get(`/api/selfpractice/history/${pid}`)
+} 

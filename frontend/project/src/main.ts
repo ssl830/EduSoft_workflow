@@ -55,21 +55,10 @@ const pinia = createPinia()
 app.use(pinia)
     .use(router)
     .use(ElementPlus)
-    .use(Quasar)
+    .use(Quasar, { plugins: {} })
     .use(Varlet)
     .component('ProgressKnob', ProgressKnob)
     .component('WriteBoard', WriteBoard)
 
-// 注册全局实例
-
-//全局注册组件
-// app.component('ProgressKnob', ProgressKnob)  // 删除重复注册
-// app.component('WriteBoard', WriteBoard)      // 删除重复注册
-// app.use(createPinia())  // 删除重复创建
-app.use(Varlet)
-app.use(ElementPlus)
-app.use(Quasar, {
-  plugins: {}, // 可以在此导入 Quasar 插件
-})
 // 挂载应用
 app.mount('#app')

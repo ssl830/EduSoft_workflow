@@ -4,7 +4,7 @@ RAG (Retrieval-Augmented Generation) 服务
 """
 import os
 import json
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from openai import OpenAI
 from dotenv import load_dotenv
 from .embedding import EmbeddingService
@@ -369,3 +369,31 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error answering student question: {str(e)}")
             raise
+
+
+    def generate_student_exercise(self, requirements: str, knowledge_preferences: str, wrong_questions: Optional[List[Dict[str, Any]]] = None) -> Dict:
+        """根据学生需求、知识点偏好以及历史错题生成练习题"""
+        try:
+            prompt = PromptTemplates.get_student_exercise_generation_prompt(
+                requirements=requirements,
+                knowledge_preferences=knowledge_preferences,
+                wrong_questions=wrong_questions or []
+            )
+
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            content = response.choices[0].message.content
+            logger.info(f"LLM raw output for student exercise:\n{content}")
+
+            result = self.safe_json_loads(content)
+            logger.info("Successfully generated student exercise")
+            return result
+        except Exception as e:
+            logger.error(f"Error generating student exercise: {str(e)}")
+            raise
+
+ 
+

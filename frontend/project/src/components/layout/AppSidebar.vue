@@ -95,6 +95,15 @@ export default {
           <router-link to="/tutors" class="sidebar-link">
               <span class="icon">🖥️</span> 管理员管理
           </router-link>
+        <li v-if="isStudent">
+          <router-link to="/ai-selftest" class="sidebar-link">
+            <span class="icon">🤖</span> AI自测
+          </router-link>
+        </li>
+        <li v-if="isStudent">
+          <router-link to="/selfpractice/history" class="sidebar-link">
+            <span class="icon">📝</span> 自测历史
+          </router-link>
         </li>
       </ul>
     </div>

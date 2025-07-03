@@ -430,3 +430,65 @@ INSERT INTO learning_progress (resource_id, student_id, progress, last_position,
 VALUES 
 (1, 2, 300, 300, 1),
 (1, 3, 120, 120, 1);
+
+-- ###############################################
+-- 学生自建练习相关表（AI 自测）
+-- ###############################################
+
+-- 学生自建练习主体表
+CREATE TABLE SelfPractice (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_id BIGINT NOT NULL COMMENT '发起学生 ID',
+    title VARCHAR(200) NOT NULL COMMENT '练习标题',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES User(id)
+);
+
+-- 自建练习与题目关联表
+CREATE TABLE SelfPracticeQuestion (
+    self_practice_id BIGINT,
+    question_id BIGINT,
+    sort_order INT DEFAULT 0,
+    score INT NOT NULL,
+    PRIMARY KEY (self_practice_id, question_id),
+    FOREIGN KEY (self_practice_id) REFERENCES SelfPractice(id),
+    FOREIGN KEY (question_id) REFERENCES Question(id)
+);
+
+-- 进度暂存表
+CREATE TABLE SelfProgress (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    self_practice_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    progress_json JSON NOT NULL COMMENT '题目作答进度(JSON)',
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (self_practice_id) REFERENCES SelfPractice(id),
+    FOREIGN KEY (student_id) REFERENCES User(id)
+);
+
+-- 最终提交表
+CREATE TABLE SelfSubmission (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    self_practice_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    score INT DEFAULT 0,
+    is_judged BOOLEAN DEFAULT FALSE,
+    feedback JSON,
+    FOREIGN KEY (self_practice_id) REFERENCES SelfPractice(id),
+    FOREIGN KEY (student_id) REFERENCES User(id)
+);
+
+-- 提交答案详情表
+CREATE TABLE SelfAnswer (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    submission_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    answer_text TEXT,
+    is_judged BOOLEAN DEFAULT FALSE,
+    correct BOOLEAN,
+    score INT,
+    sort_order INT,
+    FOREIGN KEY (submission_id) REFERENCES SelfSubmission(id),
+    FOREIGN KEY (question_id) REFERENCES Question(id)
+);
