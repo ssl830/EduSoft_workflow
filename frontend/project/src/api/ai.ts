@@ -64,3 +64,23 @@ export function askQuestion(data: AiAskRequest) {
 export function askAssistant(data: AssistantRequest) {
   return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
 } 
+
+// 评估主观题答案
+export interface EvaluateSubjectiveRequest {
+  question: string;
+  student_answer: string;
+  reference_answer: string;
+  max_score: number;
+}
+
+export interface EvaluateSubjectiveResponse {
+  score: number;
+  analysis: any;
+  feedback: string;
+  improvement_suggestions: string[];
+  knowledge_context: any[];
+}
+
+export function evaluateSubjectiveAnswer(data: EvaluateSubjectiveRequest) {
+  return http.post<EvaluateSubjectiveResponse>('/api/ai/evaluate-subjective', data)
+}

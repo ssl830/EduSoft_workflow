@@ -46,4 +46,9 @@ public class AiAssistantController {
         return aiAssistantService.onlineAssistant(req);
     }
 
+    @PostMapping("/evaluate-subjective")
+    public Map<String, Object> evaluateSubjective(@RequestBody Map<String, Object> req) {
+        logger.info("收到主观题AI评估请求: {}", req);
+        return aiAssistantService.evaluateSubjective(req);
+    }
 }

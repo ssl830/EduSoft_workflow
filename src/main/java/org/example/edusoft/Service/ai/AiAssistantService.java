@@ -106,5 +106,21 @@ public class AiAssistantService {
             );
         }
     }
+    
+    public Map<String, Object> evaluateSubjective(Map<String, Object> req) {
+        try {
+            String url = aiServiceUrl + "/rag/evaluate_subjective";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI主观题评估服务调用失败: " + e.getMessage()
+            );
+        }
+    }
 }

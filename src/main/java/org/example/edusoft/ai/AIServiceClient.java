@@ -90,4 +90,13 @@ public class AIServiceClient {
         ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
         return response.getBody();
     }
+
+    public Map<String, Object> evaluateSubjective(Map<String, Object> req) {
+        String url = aiServiceProperties.getBaseUrl() + "/rag/evaluate_subjective";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+        return response.getBody();
+    }
 } 
