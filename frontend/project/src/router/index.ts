@@ -321,6 +321,39 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/ai-selftest',
+    name: 'AISelfTest',
+    component: () => import('../views/practice/AISelfTest.vue'),
+    meta: {
+      title: 'AI自测',
+      requiresAuth: true,
+      roles: ['student'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/selfpractice/history',
+    name: 'SelfPracticeHistory',
+    component: () => import('../views/practice/SelfPracticeHistory.vue'),
+    meta: {
+      title: '自测历史',
+      requiresAuth: true,
+      roles: ['student'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/selfpractice/history/:pid',
+    name: 'SelfPracticeDetail',
+    component: () => import('../views/practice/SelfPracticeDetail.vue'),
+    meta: {
+      title: '自测详情',
+      requiresAuth: true,
+      roles: ['student'],
+      showSidebar: false
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

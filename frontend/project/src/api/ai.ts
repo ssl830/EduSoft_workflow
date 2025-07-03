@@ -46,6 +46,31 @@ export interface AssistantResponse {
   knowledgePoints: string[]
 }
 
+export interface StudentExerciseRequest {
+  requirements: string
+  knowledge_preferences: string
+  wrongQuestions?: any[]
+}
+
+export interface ExerciseItem {
+  id?: number
+  type: string
+  question: string
+  options: string[]
+  answer: string
+  explanation: string
+  knowledge_points: string[]
+}
+
+export interface StudentExerciseResponse {
+  exercises: ExerciseItem[]
+}
+
+export interface SelfPracticeProgressRequest {
+  practiceId: number
+  answers: any[]
+}
+
 // AI问答
 export function askAI(question: string) {
   return http.post('/api/ai/ask', { question })
@@ -63,4 +88,26 @@ export function askQuestion(data: AiAskRequest) {
 // 在线学习助手
 export function askAssistant(data: AssistantRequest) {
   return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
+}
+
+// 生成学生自测练习
+export function generateStudentExercise(data: StudentExerciseRequest) {
+  return http.post<StudentExerciseResponse>('/api/ai/rag/generate_student_exercise', data)
+}
+
+export function saveSelfPracticeProgress(data: SelfPracticeProgressRequest) {
+  return http.post('/api/selfpractice/save-progress', data)
+}
+
+export function submitSelfPractice(data: SelfPracticeProgressRequest) {
+  return http.post('/api/selfpractice/submit', data)
+}
+
+// ========== 学生自测历史 ==========
+export function getSelfPracticeHistory() {
+  return http.get('/api/selfpractice/history')
+}
+
+export function getSelfPracticeDetail(pid: number | string) {
+  return http.get(`/api/selfpractice/history/${pid}`)
 } 

@@ -11,6 +11,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.dev33.satoken.stp.StpUtil;
+import org.springframework.web.context.ContextLoader;
+import org.example.edusoft.service.selfpractice.SelfPracticeService;
+
 @RestController
 @RequestMapping("/api/ai")
 public class AiAssistantController {
@@ -18,6 +22,9 @@ public class AiAssistantController {
 
     @Autowired
     private AiAssistantService aiAssistantService;
+
+    @Autowired
+    private SelfPracticeService selfPracticeService;
 
     @PostMapping("/embedding/upload")
     public Map<String, Object> uploadEmbeddingFile(
@@ -44,6 +51,22 @@ public class AiAssistantController {
     public Map<String, Object> onlineAssistant(@RequestBody Map<String, Object> req) {
         logger.info("收到在线学习助手请求: {}", req);
         return aiAssistantService.onlineAssistant(req);
+    }
+
+    @PostMapping("/rag/generate_student_exercise")
+    public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req) {
+        logger.info("收到学生自测练习生成请求: {}", req);
+        Map<String,Object> body = aiAssistantService.generateStudentExercise(req);
+        if (StpUtil.isLogin()) {
+            try {
+                Long studentId = StpUtil.getLoginIdAsLong();
+                Long pid = selfPracticeService.saveGeneratedPractice(studentId, body);
+                body.put("practiceId", pid);
+            } catch (Exception e) {
+                logger.error("保存自测练习失败", e);
+            }
+        }
+        return body;
     }
 
 }

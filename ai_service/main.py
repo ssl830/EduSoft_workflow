@@ -67,12 +67,17 @@ class ExerciseAnalysisRequest(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     exercise_questions: List[ExerciseQuestion]
 
-# 新增：学生在线学习助手请求模型
+# 学生在线学习助手请求模型
 class StudentAssistantRequest(BaseModel):
     question: str
     course_name: Optional[str] = None
     chat_history: Optional[List[Dict[str, str]]] = None
 
+# 学生实时练习生成请求模型
+class StudentExerciseGenerationRequest(BaseModel):
+    requirements: str  # 题目设置要求（题型、数量、难度等）
+    knowledge_preferences: str  # 知识点偏好
+    wrong_questions: Optional[List[Dict[str, Any]]] = None  # 历史错题列表，可为空
 
 @app.post("/embedding/upload")
 async def upload_file(
@@ -210,6 +215,23 @@ async def health_check():
     健康检查接口
     """
     return {"status": "healthy"}
+
+# -------------------- 学生实时练习生成 --------------------
+
+@app.post("/rag/generate_student_exercise")
+async def generate_student_exercise(request: StudentExerciseGenerationRequest):
+    """生成学生自测练习"""
+    try:
+        result = rag_service.generate_student_exercise(
+            requirements=request.requirements,
+            knowledge_preferences=request.knowledge_preferences,
+            wrong_questions=request.wrong_questions
+        )
+        logger.info("Successfully generated student exercise")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating student exercise: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

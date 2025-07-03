@@ -107,4 +107,45 @@ public class AiAssistantService {
         }
     }
 
+    public Map<String, Object> generateStudentExercise(Map<String, Object> req) {
+        try {
+            String url = aiServiceUrl + "/rag/generate_student_exercise";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI学生自测练习生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
+    public Map<String, Object> evaluateSubjectiveAnswer(String question, String studentAnswer, String referenceAnswer, Double maxScore) {
+        try {
+            String url = aiServiceUrl + "/rag/evaluate_subjective";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> body = Map.of(
+                "question", question,
+                "student_answer", studentAnswer,
+                "reference_answer", referenceAnswer,
+                "max_score", maxScore
+            );
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI主观题评测调用失败: " + e.getMessage()
+            );
+        }
+    }
+
 }
