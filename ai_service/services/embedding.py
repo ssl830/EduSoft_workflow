@@ -14,13 +14,13 @@ logger = logging.getLogger("embedding")
 
 class EmbeddingService:
     """文本向量生成服务（Qwen/通义千问 OpenAI 兼容接口）"""
-    
+
     def __init__(self):
         """初始化OpenAI客户端"""
         self.api_key = os.getenv("DASHSCOPE_API_KEY")
         self.base_url = os.getenv("QWEN_EMBEDDING_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
         self.model = os.getenv("QWEN_EMBEDDING_MODEL", "text-embedding-v4")
-        self.dimensions = int(os.getenv("QWEN_EMBEDDING_DIM", "1024"))  # v4支持1024/1536/2048等
+        self.dimensions = int(os.getenv("QWEN_EMBEDDING_DIM", "1536"))  # v4支持1024/1536/2048等
         if not self.api_key:
             logger.error("DASHSCOPE_API_KEY 未设置！")
             raise ValueError("DASHSCOPE_API_KEY 未设置！")
@@ -31,7 +31,7 @@ class EmbeddingService:
             api_key=self.api_key,
             base_url=self.base_url
         )
-        
+
     def get_embedding(self, text: str) -> List[float]:
         """
         获取单个文本的向量表示
@@ -48,7 +48,7 @@ class EmbeddingService:
         except Exception as e:
             logger.error(f"调用 Qwen embedding API 失败: {e}")
             raise
-    
+
     def get_embeddings(self, texts: List[str]) -> np.ndarray:
         """
         批量获取文本向量
@@ -58,7 +58,7 @@ class EmbeddingService:
             embedding = self.get_embedding(text)
             embeddings.append(embedding)
         return np.array(embeddings)
-    
+
     def get_chunks_embeddings(self, chunks: List[dict]) -> tuple:
         """
         获取文档分块的向量表示
@@ -70,4 +70,4 @@ class EmbeddingService:
         contents = [chunk['content'] for chunk in chunks]
         sources = [chunk['source'] for chunk in chunks]
         embeddings = self.get_embeddings(contents)
-        return embeddings, contents, sources 
+        return embeddings, contents, sources

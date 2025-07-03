@@ -3,6 +3,7 @@ AI服务主入口
 负责初始化 FastAPI 应用、配置跨域请求、中间件、加载各个服务模块，以及定义 API 接口。
 """
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 from typing import List, Dict, Optional, Any
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
