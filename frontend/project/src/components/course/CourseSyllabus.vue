@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import CourseApi from "../../api/course.ts";
 import {useRoute} from "vue-router";
 import CourseEditDialog from './CourseEditDialog.vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/message-box/style/css'
 import jsPDF from 'jspdf'
@@ -98,7 +98,8 @@ const handleEditSuccess = async () => {
 
 const showTeachingPlanDialog = ref(false)
 const teachingPlanLoading = ref(false)
-const teachingPlanResult = ref<any>(null)
+const teachingPlanResult = ref(null)
+const exportLoading = ref(false)
 const expectedHours = ref<number | null>(null)
 
 const openTeachingPlanDialog = () => {
@@ -144,16 +145,16 @@ const exportTeachingPlanAsPDF = async () => {
         ElMessage.error('无教案内容，无法导出')
         return
     }
-
-    const doc = new jsPDF('p', 'mm', 'a4')
-    const marginLeft = 15
-    const marginTop = 20
-    const lineHeight = 8
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    let cursorY = marginTop
-
+    exportLoading.value = true // 开始加载
     try {
+        const doc = new jsPDF('p', 'mm', 'a4')
+        const marginLeft = 15
+        const marginTop = 20
+        const lineHeight = 8
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        let cursorY = marginTop
+
         // 1. 使用更可靠的方式加载字体
         const fontName = 'SourceHanSerifSC'
         const fontUrl = '/src/assets/fonts/SourceHanSerifSC-VF.ttf' // 确保字体文件在public目录中
@@ -218,6 +219,8 @@ const exportTeachingPlanAsPDF = async () => {
     } catch (err) {
         console.error('导出PDF失败:', err);
         ElMessage.error('导出失败，请稍后再试');
+    } finally {
+        exportLoading.value = false // 结束加载
     }
 }
 
@@ -250,6 +253,57 @@ watch(renderTeachingPlan, (val) => {
         allLessonIndexes.value = val.lessons.map((_: any, idx: number) => idx)
     }
 })
+
+// 新增：每节课的细节数据
+const lessonDetails = ref<Record<number, any>>({}) // key: lesson idx
+
+// 新增：生成细节和重新生成
+const handleLessonDetail = async (idx: number, lesson: any, type: 'detail' | 'regenerate') => {
+    const loading = ElLoading.service({ text: '正在生成...', background: 'rgba(255,255,255,0.7)' })
+    try {
+        // 构造请求参数
+        const params = {
+            title: lesson.title || '',
+            knowledgePoints: lesson.knowledgePoints || [],
+            practiceContent: lesson.practiceContent || '',
+            teachingGuidance: lesson.teachingGuidance || '',
+            timePlan: lesson.timePlan || []
+        }
+        if( type === 'detail' ){
+            const res = await CourseApi.generateTeachingContentDetail(params)
+            console.log(res)
+            if (res.data) {
+                renderTeachingPlan.value.lessons[idx] = res.data
+                console.log(renderTeachingPlan.value.lessons[idx])
+                console.log(renderTeachingPlan.value.lessons.value[idx])
+            } else {
+                renderTeachingPlan.value.lessons[idx] = res
+            }
+        }else{
+            const res = await CourseApi.regenerateTeachingContent(params)
+            console.log(res)
+            if (res.data) {
+                renderTeachingPlan.value.lessons[idx] = res.data
+                console.log(renderTeachingPlan.value.lessons[idx])
+                console.log(renderTeachingPlan.value.lessons.value[idx])
+            } else {
+                renderTeachingPlan.value.lessons[idx] = res
+            }
+        }
+
+    } catch (e) {
+        ElMessage.error('请求失败，请稍后再试')
+    } finally {
+        loading.close()
+    }
+}
+
+// 新增：教案弹窗关闭时重置
+const handleTeachingPlanDialogClose = () => {
+    teachingPlanResult.value = null
+    teachingPlanLoading.value = false
+    expectedHours.value = null
+}
 </script>
 
 <template>
@@ -375,8 +429,13 @@ watch(renderTeachingPlan, (val) => {
         </section>
 
         <!-- 教案生成弹窗 -->
-        <el-dialog v-model="showTeachingPlanDialog" title="生成教案" width="800px" :close-on-click-modal="false"
-                   @close="() => { teachingPlanResult.value = null; teachingPlanLoading.value = false; expectedHours.value = null }">
+        <el-dialog
+            v-model="showTeachingPlanDialog"
+            title="生成教案"
+            width="800px"
+            :close-on-click-modal="false"
+            @close="handleTeachingPlanDialogClose"
+        >
             <div>
                 <label>请输入预期总课时数：</label>
                 <el-input v-model.number="expectedHours" type="number" min="1" placeholder="如 32" style="width: 200px; margin-bottom: 16px;" />
@@ -385,9 +444,10 @@ watch(renderTeachingPlan, (val) => {
             <div v-if="teachingPlanResult" style="margin-top: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: bold;">教案内容</span>
-                    <el-button size="small" @click="exportTeachingPlanAsPDF">导出</el-button>
+                    <el-button size="small" @click="exportTeachingPlanAsPDF" :loading="exportLoading" :disabled="exportLoading">
+                        导出
+                    </el-button>
                 </div>
-                <!-- 美观展示教案内容 -->
                 <div v-if="renderTeachingPlan" id="teaching-plan-pdf-content" style="margin-top: 12px; background: #fff; padding: 16px;">
                     <div>
                         <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
@@ -402,6 +462,41 @@ watch(renderTeachingPlan, (val) => {
                                 :name="idx"
                             >
                                 <div>
+                                    <!-- 新增：按钮组 -->
+                                    <div style="margin-bottom: 10px;">
+                                        <el-button size="small" @click="handleLessonDetail(idx, lesson, 'detail')">生成细节</el-button>
+                                        <el-button size="small" type="warning" @click="handleLessonDetail(idx, lesson, 'regenerate')">重新生成</el-button>
+                                    </div>
+                                    <!-- 新增：细节展示 -->
+                                    <div v-if="lessonDetails[idx]" class="lesson-detail-block">
+                                        <div v-if="lessonDetails[idx].knowledgePoints && lessonDetails[idx].knowledgePoints.length" style="margin-bottom: 8px;">
+                                            <span style="font-weight: 500;">知识点：</span>
+                                            <ol class="knowledge-list">
+                                                <li v-for="(kp, kidx) in lessonDetails[idx].knowledgePoints" :key="kidx">{{ kp }}</li>
+                                            </ol>
+                                        </div>
+                                        <div v-if="lessonDetails[idx].practiceContent" style="margin-bottom: 6px;">
+                                            <span style="font-weight: 500;">实践内容：</span>
+                                            <span>{{ lessonDetails[idx].practiceContent }}</span>
+                                        </div>
+                                        <div v-if="lessonDetails[idx].teachingGuidance" style="margin-bottom: 6px;">
+                                            <span style="font-weight: 500;">教学提示：</span>
+                                            <span>{{ lessonDetails[idx].teachingGuidance }}</span>
+                                        </div>
+                                        <div v-if="lessonDetails[idx].timePlan && lessonDetails[idx].timePlan.length">
+                                            <span style="font-weight: 500;">时间分配：</span>
+                                            <el-table :data="lessonDetails[idx].timePlan" border size="small" style="margin-bottom: 8px;">
+                                                <el-table-column prop="step" label="教学环节" width="90"/>
+                                                <el-table-column prop="minutes" label="时长" width="60">
+                                                    <template #default="scope">
+                                                        {{ formatMinutes(scope.row.minutes) }}
+                                                    </template>
+                                                </el-table-column>
+                                                <el-table-column prop="content" label="内容"/>
+                                            </el-table>
+                                        </div>
+                                    </div>
+                                    <!-- 原有内容 -->
                                     <div style="margin-bottom: 8px;">
                                         <span style="font-weight: 500;">时间分配：</span>
                                     </div>
@@ -416,12 +511,9 @@ watch(renderTeachingPlan, (val) => {
                                     </el-table>
                                     <div v-if="lesson.knowledgePoints && lesson.knowledgePoints.length" style="margin-bottom: 6px;">
                                         <span style="font-weight: 500;">知识点：</span>
-                                        <el-tag
-                                            v-for="(kp, kidx) in lesson.knowledgePoints"
-                                            :key="kidx"
-                                            type="info"
-                                            style="margin-right: 6px;"
-                                        >{{ kp }}</el-tag>
+                                        <ol class="knowledge-list">
+                                            <li v-for="(kp, kidx) in lesson.knowledgePoints" :key="kidx">{{ kp }}</li>
+                                        </ol>
                                     </div>
                                     <div v-if="lesson.practiceContent" style="margin-bottom: 6px;">
                                         <span style="font-weight: 500;">实践内容：</span>
@@ -716,5 +808,29 @@ watch(renderTeachingPlan, (val) => {
 .info-block .empty-state {
     color: #999;
     font-style: italic;
+}
+
+.lesson-detail-block {
+    background: #f4f8fd;
+    border: 1px solid #e3f2fd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.knowledge-list {
+    margin: 0 0 0 1.5em;
+    padding: 0;
+    list-style-type: decimal;
+    word-break: break-all;
+    white-space: pre-line;
+    /* 让li自动换行 */
+}
+
+.knowledge-list li {
+    margin-bottom: 2px;
+    word-break: break-all;
+    white-space: pre-line;
+    line-height: 1.7;
 }
 </style>

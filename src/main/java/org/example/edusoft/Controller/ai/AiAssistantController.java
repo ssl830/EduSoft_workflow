@@ -34,6 +34,18 @@ public class AiAssistantController {
         return aiAssistantService.generateTeachingContent(req);
     }
 
+    @PostMapping("/rag/detail")
+    public Map<String, Object> generateTeachingContentDetail(@RequestBody Map<String, Object> req) {
+        logger.info("收到生成教案细节请求: {}", req);
+        return aiAssistantService.generateTeachingContentDetail(req);
+    }
+
+    @PostMapping("/rag/regenerate")
+        public Map<String, Object> regenerateTeachingContent(@RequestBody Map<String, Object> req) {
+            logger.info("收到重新生成教案请求: {}", req);
+            return aiAssistantService.regenerateTeachingContent(req);
+        }
+
     @PostMapping("/rag/generate_exercise")
     public Map<String, Object> generateExercises(@RequestBody Map<String, Object> req) {
         logger.info("收到生成题目请求: {}", req);

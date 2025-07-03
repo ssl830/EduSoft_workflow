@@ -63,4 +63,4 @@ export function askQuestion(data: AiAskRequest) {
 // 在线学习助手
 export function askAssistant(data: AssistantRequest) {
   return http.post<AssistantResponse>('/api/ai/rag/assistant', data)
-} 
+}

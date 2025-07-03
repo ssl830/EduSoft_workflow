@@ -3,7 +3,6 @@ AI服务主入口
 负责初始化 FastAPI 应用、配置跨域请求、中间件、加载各个服务模块，以及定义 API 接口。
 """
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 from typing import List, Dict, Optional, Any
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,6 +38,18 @@ class TeachingContentRequest(BaseModel):
     course_name: str
     course_outline: str
     expected_hours: int
+
+class TimePlanItem(BaseModel):
+    content: str
+    minutes: int
+    step: str
+
+class TeachingContentDetail(BaseModel):
+    title: str
+    knowledgePoints: List[str]  # array(string)
+    practiceContent: str        # string
+    teachingGuidance: str       # string
+    timePlan: List[TimePlanItem]  # Array(object)
 
 class ExerciseGenerationRequest(BaseModel):
     course_name: str
@@ -134,6 +145,44 @@ async def generate_teaching_content(request: TeachingContentRequest):
         return result
     except Exception as e:
         logger.error(f"Error generating teaching content: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/detail")
+async def generate_teaching_content_detail(request: TeachingContentDetail):
+    """
+    生成教学内容详细信息
+    """
+    try:
+        result = rag_service.generate_teaching_content_detail(
+            title=request.title,
+            knowledgePoints=request.knowledgePoints,
+            practiceContent=request.practiceContent,
+            teachingGuidance=request.teachingGuidance,
+            timePlan=request.timePlan,
+        )
+        logger.info(f"Successfully generated teaching content detail for {request.title}")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating teaching content detail: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/regenerate")
+async def regenerate_teaching_content_detail(request: TeachingContentDetail):
+    """
+    重新生成教学内容
+    """
+    try:
+        result = rag_service.regenerate_teaching_content_detail(
+            title=request.title,
+            knowledgePoints=request.knowledgePoints,
+            practiceContent=request.practiceContent,
+            teachingGuidance=request.teachingGuidance,
+            timePlan=request.timePlan,
+        )
+        logger.info(f"Successfully regenerated teaching content for {request.title}")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating teaching content detail: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/rag/generate_exercise")

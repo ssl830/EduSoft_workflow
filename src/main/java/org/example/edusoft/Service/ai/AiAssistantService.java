@@ -72,6 +72,42 @@ public class AiAssistantService {
         }
     }
 
+    public Map<String, Object> generateTeachingContentDetail(Map<String, Object> req) {
+        try {
+            String url = aiServiceUrl + "/rag/detail";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI教案细节生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
+    public Map<String, Object> regenerateTeachingContent(Map<String, Object> req) {
+        try {
+            String url = aiServiceUrl + "/rag/regenerate";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI教案重新生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
     public Map<String, Object> generateExercises(Map<String, Object> req) {
         try {
             String url = aiServiceUrl + "/rag/generate_exercise";
