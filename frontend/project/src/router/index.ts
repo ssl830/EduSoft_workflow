@@ -321,6 +321,36 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/teachers',
+    name: 'TeachersList',
+    component: () => import('../views/management/TeachersList.vue'),
+    meta: {
+      title: '教师列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/students',
+    name: 'StudentsList',
+    component: () => import('../views/management/StudentsList.vue'),
+    meta: {
+      title: '学生列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
+    path: '/tutors',
+    name: 'TutorsList',
+    component: () => import('../views/management/TutorsList.vue'),
+    meta: {
+      title: '管理员列表',
+      requiresAuth: true,
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
