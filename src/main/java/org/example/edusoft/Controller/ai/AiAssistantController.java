@@ -11,6 +11,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.dev33.satoken.stp.StpUtil;
+import org.springframework.web.context.ContextLoader;
+import org.example.edusoft.service.selfpractice.SelfPracticeService;
+
 @RestController
 @RequestMapping("/api/ai")
 public class AiAssistantController {
@@ -18,6 +22,9 @@ public class AiAssistantController {
 
     @Autowired
     private AiAssistantService aiAssistantService;
+
+    @Autowired
+    private SelfPracticeService selfPracticeService;
 
     @PostMapping("/embedding/upload")
     public Map<String, Object> uploadEmbeddingFile(
@@ -34,6 +41,18 @@ public class AiAssistantController {
         return aiAssistantService.generateTeachingContent(req);
     }
 
+    @PostMapping("/rag/detail")
+    public Map<String, Object> generateTeachingContentDetail(@RequestBody Map<String, Object> req) {
+        logger.info("收到生成教案细节请求: {}", req);
+        return aiAssistantService.generateTeachingContentDetail(req);
+    }
+
+    @PostMapping("/rag/regenerate")
+        public Map<String, Object> regenerateTeachingContent(@RequestBody Map<String, Object> req) {
+            logger.info("收到重新生成教案请求: {}", req);
+            return aiAssistantService.regenerateTeachingContent(req);
+        }
+
     @PostMapping("/rag/generate_exercise")
     public Map<String, Object> generateExercises(@RequestBody Map<String, Object> req) {
         logger.info("收到生成题目请求: {}", req);
@@ -45,10 +64,24 @@ public class AiAssistantController {
         logger.info("收到在线学习助手请求: {}", req);
         return aiAssistantService.onlineAssistant(req);
     }
-
     @PostMapping("/evaluate-subjective")
     public Map<String, Object> evaluateSubjective(@RequestBody Map<String, Object> req) {
         logger.info("收到主观题AI评估请求: {}", req);
         return aiAssistantService.evaluateSubjective(req);
+    }
+    @PostMapping("/rag/generate_student_exercise")
+    public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req) {
+        logger.info("收到学生自测练习生成请求: {}", req);
+        Map<String,Object> body = aiAssistantService.generateStudentExercise(req);
+        if (StpUtil.isLogin()) {
+            try {
+                Long studentId = StpUtil.getLoginIdAsLong();
+                Long pid = selfPracticeService.saveGeneratedPractice(studentId, body);
+                body.put("practiceId", pid);
+            } catch (Exception e) {
+                logger.error("保存自测练习失败", e);
+            }
+        }
+        return body;
     }
 }
