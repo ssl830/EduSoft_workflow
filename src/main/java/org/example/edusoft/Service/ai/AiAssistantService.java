@@ -18,14 +18,12 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-<<<<<<< HEAD
 import org.example.edusoft.mapper.practice.PracticeQuestionStatMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.HashMap;
-=======
 import cn.dev33.satoken.stp.StpUtil;
->>>>>>> new-origin/psq_4
+
 
 @Service
 public class AiAssistantService {
@@ -34,7 +32,7 @@ public class AiAssistantService {
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
 
     @Autowired
-<<<<<<< HEAD
+
     private PracticeQuestionStatMapper practiceQuestionStatMapper;
 
     /**
@@ -81,7 +79,8 @@ public class AiAssistantService {
         } catch (Exception e) {
             return Map.of("status", "fail", "message", "AI学情分析服务调用失败: " + e.getMessage());
         }
-=======
+    }
+
     private AiServiceCallLogMapper aiServiceCallLogMapper;
 
     // Helper method to log AI service calls
@@ -94,7 +93,6 @@ public class AiAssistantService {
         log.setStatus(status);
         log.setErrorMessage(errorMessage);
         aiServiceCallLogMapper.insertLog(log);
->>>>>>> new-origin/psq_4
     }
 
     public Map<String, Object> uploadEmbeddingFile(MultipartFile file, String courseId) {
@@ -342,3 +340,4 @@ public class AiAssistantService {
 
 
 }
+
