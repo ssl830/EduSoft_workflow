@@ -24,4 +24,10 @@ public interface PracticeQuestionMapper {
      */
     @Select("SELECT * FROM PracticeQuestion WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
     PracticeQuestion findByPracticeIdAndQuestionId(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId);
+
+    /**
+     * 更新指定练习题的得分率
+     */
+    @Update("UPDATE PracticeQuestion SET score_rate = #{scoreRate} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
+    int updateScoreRate(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("scoreRate") Double scoreRate);
 }

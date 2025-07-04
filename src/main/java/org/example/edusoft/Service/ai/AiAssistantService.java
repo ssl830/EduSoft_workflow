@@ -14,11 +14,65 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
+import org.example.edusoft.mapper.practice.PracticeQuestionStatMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.HashMap;
+
 @Service
 public class AiAssistantService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
+
+    @Autowired
+    private PracticeQuestionStatMapper practiceQuestionStatMapper;
+
+    /**
+     * 统计练习每题得分率并调用AI微服务分析
+     */
+    public Map<String, Object> analyzeExercise(Long practiceId) {
+        // 1. 查询所有题目统计信息
+        List<Map<String, Object>> statList = practiceQuestionStatMapper.getPracticeQuestionStats(practiceId);
+        if (statList == null || statList.isEmpty()) {
+            return Map.of("status", "fail", "message", "未找到练习题目");
+        }
+        // 2. 组装参数
+        List<Map<String, Object>> exerciseQuestions = new java.util.ArrayList<>();
+        for (Map<String, Object> stat : statList) {
+            Map<String, Object> q = new HashMap<>();
+            q.put("content", stat.getOrDefault("content", ""));
+            Double scoreRate = stat.get("score_rate") instanceof Number ? ((Number)stat.get("score_rate")).doubleValue() : null;
+            double errorRate = 1.0;
+            if (scoreRate != null) {
+                errorRate = 1 - scoreRate;
+            }
+            q.put("error_rate", errorRate);
+            q.put("type", stat.getOrDefault("type", ""));
+            q.put("score", stat.get("score"));
+            q.put("student_count", stat.get("student_count"));
+            q.put("correct_count", stat.get("correct_count"));
+            q.put("additional_info", null);
+            exerciseQuestions.add(q);
+        }
+        Map<String, Object> req = new HashMap<>();
+        req.put("exercise_questions", exerciseQuestions);
+
+        // 调试输出：打印传给AI微服务的请求体
+        System.out.println("[AI调试] analyzeExercise 请求体: " + req);
+
+        // 3. 调用微服务分析
+        try {
+            String url = aiServiceUrl + "/rag/analyze_exercise";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of("status", "fail", "message", "AI学情分析服务调用失败: " + e.getMessage());
+        }
+    }
 
     public Map<String, Object> uploadEmbeddingFile(MultipartFile file, String courseId) {
         try {
@@ -188,4 +242,6 @@ public class AiAssistantService {
         Double maxScore = req.get("max_score") instanceof Number ? ((Number) req.get("max_score")).doubleValue() : 5.0;
         return evaluateSubjectiveAnswer(question, studentAnswer, referenceAnswer, maxScore);
     }
+
+
 }

@@ -100,6 +100,7 @@ CREATE TABLE PracticeQuestion (
     question_id BIGINT,
     sort_order BIGINT,
     score INT NOT NULL,
+    score_rate DECIMAL(5,4) DEFAULT NULL,
     PRIMARY KEY (practice_id, question_id),
     FOREIGN KEY (practice_id) REFERENCES Practice(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)

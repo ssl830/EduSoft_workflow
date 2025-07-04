@@ -15,9 +15,25 @@ import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.example.edusoft.mapper.record.PracticeRecordMapper;
+import org.example.edusoft.mapper.practice.PracticeQuestionMapper;
+import org.example.edusoft.mapper.practice.SubmissionMapper;
+import org.example.edusoft.mapper.practice.AnswerMapper;
+import org.example.edusoft.entity.practice.PracticeQuestion;
+import org.example.edusoft.entity.practice.Submission;
+import org.example.edusoft.entity.practice.Answer;
 
 @Service
 public class PracticeServiceImpl implements PracticeService {
+    /**
+     * 获取所有已截止且未统计得分率的练习ID（定时任务用）
+     * 实现：查找end_time早于当前时间的所有练习ID
+     */
+    @Override
+    public List<Long> getAllEndedPracticeIds() {
+        // 伪代码：实际应根据业务查找所有已截止且未统计的练习ID
+        // 这里只查end_time早于当前时间的练习
+        return practiceMapper.findAllEndedPracticeIds(java.time.LocalDateTime.now());
+    }
 
     @Autowired
     private PracticeMapper practiceMapper;
@@ -30,6 +46,40 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private PracticeRecordMapper practiceRecordMapper;
+
+    @Autowired
+    private PracticeQuestionMapper practiceQuestionMapper;
+    @Autowired
+    private SubmissionMapper submissionMapper;
+    @Autowired
+    private AnswerMapper answerMapper;
+    /**
+     * 练习截止后统计并写入每题得分率
+     */
+    @Transactional
+    public void updateScoreRateAfterDeadline(Long practiceId) {
+        // 1. 获取练习下所有题目
+        List<PracticeQuestion> pqList = practiceQuestionMapper.findpqByPracticeId(practiceId);
+        if (pqList == null || pqList.isEmpty()) return;
+        // 2. 获取所有提交（必须查所有，不加 is_judged 条件）
+        List<Submission> submissions = submissionMapper.findByPracticeId(practiceId);
+        if (submissions == null || submissions.isEmpty()) return;
+        for (PracticeQuestion pq : pqList) {
+            Long qid = pq.getQuestionId();
+            int totalScore = 0;
+            int maxScore = pq.getScore() != null ? pq.getScore() : 0;
+            int count = 0;
+            for (Submission sub : submissions) {
+                List<Answer> answers = answerMapper.findByQuestionIdsAndSubmissionId(java.util.List.of(qid), sub.getId());
+                if (answers != null && !answers.isEmpty()) {
+                    totalScore += answers.get(0).getScore() != null ? answers.get(0).getScore() : 0;
+                    count++;
+                }
+            }
+            double scoreRate = (maxScore > 0 && count > 0) ? ((double) totalScore / (maxScore * count)) : 0.0;
+            practiceQuestionMapper.updateScoreRate(practiceId, qid, scoreRate);
+        }
+    }
 
     @Override
     @Transactional

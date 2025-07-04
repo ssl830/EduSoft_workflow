@@ -84,4 +84,22 @@ public class AiAssistantController {
         }
         return body;
     }
+
+    
+    /**
+     * 练习学情分析：统计每题得分率，调用AI微服务分析
+     * 请求体需包含 practiceId
+     */
+    @PostMapping("/analyze-exercise")
+    public Map<String, Object> analyzeExercise(@RequestBody Map<String, Object> req) {
+        logger.info("收到学情分析请求: {}", req);
+        Long practiceId = req.get("practiceId") instanceof Number ? ((Number) req.get("practiceId")).longValue() : null;
+        if (practiceId == null) {
+            return Map.of("status", "fail", "message", "缺少practiceId");
+        }
+        // 统计并写入得分率，组装题目内容
+        Map<String, Object> result = aiAssistantService.analyzeExercise(practiceId);
+        return result;
+    }
+    
 }

@@ -23,6 +23,9 @@ public class PracticeQuestion {
     @Column(nullable = false)
     private Integer score;
 
+    @Column(name = "score_rate")
+    private Double scoreRate;
+
     @Column(name = "sort_order")
     private Long sortOrder;
 }

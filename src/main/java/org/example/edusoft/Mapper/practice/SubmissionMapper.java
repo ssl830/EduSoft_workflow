@@ -22,6 +22,6 @@ public interface SubmissionMapper {
     @Select("SELECT * FROM Submission WHERE id = #{id}")
     Submission selectById(Long id);
 
-    @Select("SELECT * FROM Submission WHERE practice_id = #{practiceId} AND is_judged = 0")
-    List<Submission> findByPracticeIdWithUnjudgedAnswers(Long practiceId);
+    @Select("SELECT * FROM Submission WHERE practice_id = #{practiceId}")
+    List<Submission> findByPracticeId(Long practiceId);
 }

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 @RestController
 @RequestMapping("/api/practice")
 public class PracticeController {
@@ -261,5 +263,31 @@ public class PracticeController {
     public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
         Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
         return Result.success(stats);
+    }
+
+    /**
+     * 手动触发：统计并写入练习每题得分率
+     */
+    @PostMapping("/update-score-rate/{practiceId}")
+    public Result<String> updateScoreRate(@PathVariable Long practiceId) {
+        try {
+            practiceService.updateScoreRateAfterDeadline(practiceId);
+            return Result.success("OK", "得分率统计并写入成功");
+        } catch (Exception e) {
+            return Result.error(500, "得分率统计失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 自动定时任务：每天凌晨1点检查所有已截止练习，自动统计得分率
+     * 需在主类加@EnableScheduling
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void autoUpdateScoreRateForAllPractices() {
+        // 伪代码：实际应查找所有已截止且未统计的练习ID
+        List<Long> practiceIds = practiceService.getAllEndedPracticeIds();
+        for (Long pid : practiceIds) {
+            practiceService.updateScoreRateAfterDeadline(pid);
+        }
     }
 }

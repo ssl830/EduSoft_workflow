@@ -8,6 +8,12 @@ import java.util.Map;
 
 @Mapper
 public interface PracticeMapper {
+
+    /**
+     * 查找所有已截止的练习ID（end_time早于当前时间）
+     */
+    @Select("SELECT id FROM Practice WHERE end_time < #{now}")
+    List<Long> findAllEndedPracticeIds(@Param("now") java.time.LocalDateTime now);
     
     @Insert("INSERT INTO Practice (course_id, class_id, title, start_time, end_time, allow_multiple_submission, created_by) " +
             "VALUES (#{courseId}, #{classId}, #{title}, #{startTime}, #{endTime}, #{allowMultipleSubmission}, #{createdBy})")

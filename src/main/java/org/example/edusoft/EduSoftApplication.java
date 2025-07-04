@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -12,6 +13,7 @@ import org.springframework.web.filter.CorsFilter;
 import cn.dev33.satoken.SaManager;
 
 @SpringBootApplication
+@EnableScheduling
 @MapperScan("org.example.edusoft.mapper")  // 告诉 Spring 和 MyBatis 去指定包路径下扫描所有的 Mapper 接口，并将它们注册为 Spring 容器中的 Bean
 @EnableConfigurationProperties({org.example.edusoft.common.properties.FsServerProperties.class})
 // @ComponentScan(basePackages = {

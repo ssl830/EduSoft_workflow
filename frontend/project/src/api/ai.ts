@@ -1,3 +1,4 @@
+
 import  http  from './axios'
 
 export interface AiAskRequest {
@@ -130,3 +131,8 @@ export function getSelfPracticeHistory() {
 export function getSelfPracticeDetail(pid: number | string) {
   return http.get(`/api/selfpractice/history/${pid}`)
 } 
+
+// AI学情分析（练习得分率分析）
+export function analyzeExercise(practiceId: number) {
+  return http.post('/api/ai/analyze-exercise', { practiceId })
+}
