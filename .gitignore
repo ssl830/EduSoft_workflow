@@ -46,5 +46,3 @@ ai_service/logs/
 ai_service/data/
 ai_service/storage/
 
-package-lock.json
-.vite
