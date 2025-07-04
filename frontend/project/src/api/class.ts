@@ -2,7 +2,7 @@ import axios from './axios'
 
 const ClassApi = {
   // Get all classes for current user
-  getUserClasses(id: bigint) {
+  getUserClasses(id: number) {
     return axios.get(`/api/classes/user/${id}`)
   },
 

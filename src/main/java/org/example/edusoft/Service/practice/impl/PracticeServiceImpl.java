@@ -46,6 +46,10 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private PracticeRecordMapper practiceRecordMapper;
+    @Autowired
+    private org.example.edusoft.mapper.practice.SubmissionMapper submissionMapper;
+    @Autowired
+    private org.example.edusoft.mapper.practice.AnswerMapper answerMapper;
 
     @Autowired
     private PracticeQuestionMapper practiceQuestionMapper;
@@ -195,9 +199,21 @@ public class PracticeServiceImpl implements PracticeService {
             throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
         }
 
-        // 先删除练习关联的题目
+        // 获取与练习相关的所有提交记录
+        List<Long> submissionIds = submissionMapper.findSubmissionIdsByPracticeId(id);
+
+        // 删除与这些提交记录相关的答案
+        if (!submissionIds.isEmpty()) {
+            answerMapper.deleteAnswersBySubmissionIds(submissionIds);
+        }
+
+        // 删除练习关联的题目
         questionMapper.removeAllQuestionsFromPractice(id);
-        // 再删除练习
+
+        // 删除练习关联的提交记录
+        submissionMapper.removeSubmissionsByPracticeId(id);
+
+        // 删除练习
         practiceMapper.deletePractice(id);
     }
 
@@ -346,3 +362,4 @@ public class PracticeServiceImpl implements PracticeService {
         return practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
     }
 }
+

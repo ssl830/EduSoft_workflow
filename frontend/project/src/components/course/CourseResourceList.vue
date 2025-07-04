@@ -9,6 +9,7 @@ interface Resource {
     title: string;
     courseId: number;
     sectionId: number;
+    version: number;
     uploaderId: number;
     type: string;
     visibility: string;
@@ -69,6 +70,7 @@ const showHistoryForm = ref(false)
 const isRenew = ref(false)
 
 const authStore = useAuthStore()
+const role = authStore.user?.role
 
 // 上传表单
 const uploadForm = ref<UploadForm>({
@@ -239,9 +241,9 @@ const uploadResource = async () => {
   }
 
   try {
-    // await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
-    //   uploadProgress.value = progress
-    // })
+    await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
+      uploadProgress.value = progress
+    })
 
     // 新增：如果勾选了上传到知识库，则调用知识库上传接口
     if (uploadToKnowledgeBase.value && uploadForm.value.file) {
@@ -375,19 +377,23 @@ onMounted(() => {
             <table class="resource-table">
                 <thead>
                 <tr>
+                    <th v-if="role == 'tutor'">资料ID</th>
                     <th>资料名称</th>
                     <th>所属章节</th>
                     <th>类型</th>
                     <th>上传时间</th>
+                    <th v-if="role == 'tutor'">版本号</th>
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="resource in resourcesVer" :key="resource.id">
+                    <td v-if="role == 'tutor'">{{ resource.id }}</td>
                     <td>{{ resource.title }}</td>
                     <td>{{ resource.sectionId || '-' }}</td>
                     <td>{{ resource.type || '-' }}</td>
                     <td>{{ resource.createdAt || '-' }}</td>
+                    <td v-if="role == 'tutor'">{{ resource.version }}</td>
                     <!--         aTODO: 时间-->
                     <td class="actions">
                         <button
@@ -643,19 +649,23 @@ onMounted(() => {
       <table class="resource-table">
         <thead>
           <tr>
+            <th v-if="role == 'tutor'">资料ID</th>
             <th>资料名称</th>
             <th>所属章节</th>
             <th>类型</th>
             <th>上传时间</th>
+            <th v-if="role == 'tutor'">版本号</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="resource in resources" :key="resource.id">
+            <td v-if="role == 'tutor'">{{ resource.id }}</td>
             <td>{{ resource.title }}</td>
             <td>{{ resource.sectionId || '-' }}</td>
             <td>{{ resource.type || '-' }}</td>
             <td>{{ resource.createdAt || '-' }}</td>
+            <td v-if="role == 'tutor'">{{ resource.version+1 }}</td>
 <!--         aTODO: 时间-->
             <td class="actions">
               <button
@@ -726,6 +736,8 @@ input[type="radio"] {
 
 .resource-table-wrapper {
     overflow-x: auto;
+    max-height: 480px;
+    overflow-y: auto;
 }
 
 .resource-table {
@@ -895,6 +907,8 @@ input[type="radio"] {
 
 .resource-table-wrapper {
   overflow-x: auto;
+  max-height: 480px;
+  overflow-y: auto;
 }
 
 .resource-table {

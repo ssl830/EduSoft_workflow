@@ -63,11 +63,6 @@ const CourseApi = {
     return axios.put(`/api/courses/${id}`, data)
   },
 
-  // Get classes for a course
-  getCourseClasses(courseId: string) {
-    return axios.get(`/courses/${courseId}/classes`)
-  },
-
   // Create class for a course (teacher only)
   createClass(courseId: string, data: {
     name: string;

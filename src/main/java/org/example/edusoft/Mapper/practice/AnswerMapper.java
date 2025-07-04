@@ -85,4 +85,12 @@ public interface AnswerMapper {
     @Select("SELECT * FROM Answer WHERE submission_id = #{submissionId} AND sort_order = #{sortOrder}")
     Answer findBySubmissionIdAndSortOrder(@Param("submissionId") Long submissionId, @Param("sortOrder") Long sortOrder);
 
+    @Delete("<script>" +
+            "DELETE FROM Answer WHERE submission_id IN " +
+            "<foreach collection='submissionIds' item='id' open='(' separator=',' close=')'>" +
+            "#{id}" +
+            "</foreach>" +
+            "</script>")
+    void deleteAnswersBySubmissionIds(@Param("submissionIds") List<Long> submissionIds);
+
 }
