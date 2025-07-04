@@ -24,7 +24,7 @@ const handleLogin = async () => {
   try {
     await authStore.login(username.value, password.value)
     if( authStore.userRole === 'tutor' ){
-        router.push('/teachers')
+        router.push('/manage/teachers')
     }else{
         const redirectPath = route.query.redirect as string || '/'
         router.push(redirectPath)
