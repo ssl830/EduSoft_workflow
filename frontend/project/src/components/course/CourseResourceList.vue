@@ -239,9 +239,9 @@ const uploadResource = async () => {
   }
 
   try {
-    // await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
-    //   uploadProgress.value = progress
-    // })
+     await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
+       uploadProgress.value = progress
+     })
 
     // 新增：如果勾选了上传到知识库，则调用知识库上传接口
     if (uploadToKnowledgeBase.value && uploadForm.value.file) {

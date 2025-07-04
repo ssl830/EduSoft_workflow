@@ -384,6 +384,17 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/dashboard',
+    name: 'DashboardOverview',
+    component: () => import('../views/management/DashboardOverview.vue'),
+    meta: {
+      title: '系统概览',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,

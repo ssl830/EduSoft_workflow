@@ -95,6 +95,12 @@ export default {
           <router-link to="/tutors" class="sidebar-link">
               <span class="icon">🖥️</span> 管理员管理
           </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/dashboard" class="sidebar-link">
+              <span class="icon">📊</span> 系统概览
+          </router-link>
+        </li>
         <li v-if="isStudent">
           <router-link to="/ai-selftest" class="sidebar-link">
             <span class="icon">🤖</span> AI自测

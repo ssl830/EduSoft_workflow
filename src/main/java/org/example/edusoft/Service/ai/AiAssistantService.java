@@ -1,5 +1,8 @@
 package org.example.edusoft.service.ai;
 
+import org.example.edusoft.entity.ai.AiServiceCallLog;
+import org.example.edusoft.mapper.ai.AiServiceCallLogMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,7 +15,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.Map;
+
+import cn.dev33.satoken.stp.StpUtil;
 
 @Service
 public class AiAssistantService {
@@ -20,14 +26,33 @@ public class AiAssistantService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
 
+    @Autowired
+    private AiServiceCallLogMapper aiServiceCallLogMapper;
+
+    // Helper method to log AI service calls
+    private void logAiServiceCall(Long userId, String endpoint, long durationMs, String status, String errorMessage) {
+        AiServiceCallLog log = new AiServiceCallLog();
+        log.setUserId(userId);
+        log.setEndpoint(endpoint);
+        log.setDurationMs(durationMs);
+        log.setCallTime(LocalDateTime.now());
+        log.setStatus(status);
+        log.setErrorMessage(errorMessage);
+        aiServiceCallLogMapper.insertLog(log);
+    }
+
     public Map<String, Object> uploadEmbeddingFile(MultipartFile file, String courseId) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/embedding/upload";
+        Long userId = null;
         try {
-            // 保存到临时文件
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
             Path tempFile = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
             file.transferTo(tempFile.toFile());
 
-            // 构造请求
-            String url = aiServiceUrl + "/embedding/upload";
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -38,15 +63,15 @@ public class AiAssistantService {
             }
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-            // 调用 Python 微服务
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-
-            // 删除临时文件
             Files.deleteIfExists(tempFile);
 
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI服务调用失败: " + e.getMessage()
@@ -55,16 +80,26 @@ public class AiAssistantService {
     }
 
     public Map<String, Object> generateTeachingContent(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/generate";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/generate";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
 
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI教案生成服务调用失败: " + e.getMessage()
@@ -73,16 +108,26 @@ public class AiAssistantService {
     }
 
     public Map<String, Object> generateTeachingContentDetail(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/detail";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/detail";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
 
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI教案细节生成服务调用失败: " + e.getMessage()
@@ -91,16 +136,26 @@ public class AiAssistantService {
     }
 
     public Map<String, Object> regenerateTeachingContent(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/regenerate";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/regenerate";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
 
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI教案重新生成服务调用失败: " + e.getMessage()
@@ -109,16 +164,26 @@ public class AiAssistantService {
     }
 
     public Map<String, Object> generateExercises(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/generate_exercise";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/generate_exercise";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
 
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI题目生成服务调用失败: " + e.getMessage()
@@ -127,15 +192,25 @@ public class AiAssistantService {
     }
 
     public Map<String, Object> onlineAssistant(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/assistant";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/assistant";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI在线助手服务调用失败: " + e.getMessage()
@@ -144,14 +219,24 @@ public class AiAssistantService {
     }
     
     public Map<String, Object> generateStudentExercise(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/generate_student_exercise";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/generate_student_exercise";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(url, requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI学生自测练习生成服务调用失败: " + e.getMessage()
@@ -159,8 +244,14 @@ public class AiAssistantService {
         }
     }
     public Map<String, Object> evaluateSubjectiveAnswer(String question, String studentAnswer, String referenceAnswer, Double maxScore) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/evaluate_subjective";
+        Long userId = null;
         try {
-            String url = aiServiceUrl + "/rag/evaluate_subjective";
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             Map<String, Object> body = Map.of(
@@ -171,8 +262,12 @@ public class AiAssistantService {
             );
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(url, requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI主观题评测调用失败: " + e.getMessage()

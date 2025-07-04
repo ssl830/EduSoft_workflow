@@ -492,3 +492,15 @@ CREATE TABLE SelfAnswer (
     FOREIGN KEY (submission_id) REFERENCES SelfSubmission(id),
     FOREIGN KEY (question_id) REFERENCES Question(id)
 );
+
+-- AI 服务调用日志表
+CREATE TABLE AiServiceCallLog (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT,              -- 调用者ID (如果可以获取，否则为NULL)
+    endpoint VARCHAR(255) NOT NULL, -- 调用的AI服务接口，如 /rag/generate_teaching_content
+    duration_ms BIGINT NOT NULL,    -- 耗时，毫秒
+    call_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50),             -- 调用结果，如 success / fail
+    error_message TEXT,             -- 错误信息
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
