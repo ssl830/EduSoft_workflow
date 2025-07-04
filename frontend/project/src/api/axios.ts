@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 
-interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   code: number;
   message: string;
   data: T;
@@ -48,16 +48,21 @@ instance.interceptors.response.use(
       console.log('响应URL:', response.config.url);
       console.log('响应数据:', response.data);
 
-      // 检查响应格式
-      if (response.data && typeof response.data === 'object') {
-        // 如果响应数据是对象，直接返回
-        return response.data;
+      const data = response.data;
+      // 判断是否已经是标准格式（有 code 和 data 字段）
+      if (
+        data &&
+        typeof data === 'object' &&
+        'code' in data &&
+        'data' in data
+      ) {
+        return data;
       } else {
-        // 如果响应数据不是对象，包装成标准格式
+        // 否则包装成统一格式
         return {
           code: response.status,
-          msg: '请求成功',
-          data: response.data
+          message: '请求成功',
+          data: data
         };
       }
     },

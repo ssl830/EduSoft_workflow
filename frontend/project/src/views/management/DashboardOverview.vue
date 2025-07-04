@@ -38,18 +38,20 @@ const loading = ref(true)
 const overview = ref<typeof initialOverviewState>(initialOverviewState);
 
 // Computed properties for safe access to today and week stats
-const todayStats = computed(() => overview.value?.today || initialOverviewState.today);
-const weekStats = computed(() => overview.value?.week || initialOverviewState.week);
+const todayStats = computed(() => {
+  return overview.value?.today || initialOverviewState.today;
+});
+const weekStats = computed(() => {
+  return overview.value?.week || initialOverviewState.week;
+});
 
 const loadData = async () => {
   try {
     loading.value = true
     const resp = await fetchDashboardOverview()
-    console.log('API Response:', resp);
 
-    if (resp) {
-      const rawData = resp;
-      console.log('Raw Data to process:', rawData);
+    if (resp && resp.data) {
+      const rawData = resp.data;
 
       const newOverviewValue = {
         today: {
@@ -75,8 +77,6 @@ const loadData = async () => {
       };
 
       overview.value = newOverviewValue;
-
-      console.log('Overview after assignment:', overview.value);
     }
   } catch (err) {
     console.error('加载大屏统计失败', err)
@@ -106,7 +106,6 @@ const translateKey = (key: string) => {
 }
 
 const getCourseSectionName = (courseId: number, sectionId: number, period: 'today' | 'week') => {
-  console.log(`getCourseSectionName called for period: ${period}, overview.value:`, overview.value);
   const key = `${courseId}-${sectionId}`
   const targetStats = period === 'today' ? todayStats.value : weekStats.value;
   return targetStats.learningEffect?.courseSectionNames?.[key] || `课程 ${courseId} - 章节 ${sectionId}`
@@ -121,204 +120,175 @@ onMounted(loadData)
     <div v-if="loading" class="loading">加载中...</div>
 
     <div v-else>
-      <div v-if="overview.value">
-        <section class="stats-section">
-          <h3>今日概览</h3>
-          <p class="debug-info">调试：今日教师数据: {{ JSON.stringify(todayStats.value.teacher) }}</p>
-          <p class="debug-info">调试：今日学生数据: {{ JSON.stringify(todayStats.value.student) }}</p>
-          <div class="stats-grid">
-            <div class="stat-card" v-for="(value, key) in todayStats.value.teacher || {}" :key="'today-teacher-' + key">
-              <h4>教师 {{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-            <div class="stat-card" v-for="(value, key) in todayStats.value.student || {}" :key="'today-student-' + key">
-              <h4>学生 {{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="stats-section">
-          <h3>今日教学效率指数</h3>
-          <p class="debug-info">调试：今日效率数据: {{ JSON.stringify(todayStats.value.efficiency) }}</p>
-          <div class="stats-grid">
-            <div class="stat-card" v-for="(value, key) in todayStats.value.efficiency || {}" :key="'today-efficiency-' + key">
-              <h4>{{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="stats-section">
-          <h3>今日学生学习效果</h3>
-          <p class="debug-info">调试：今日学习效果数据: {{ JSON.stringify(todayStats.value.learningEffect) }}</p>
-          <div class="learning-effect-section">
-            <h4>平均正确率趋势 (按课程-章节)</h4>
-            <div class="data-list">
-              <div v-for="item in todayStats.value.learningEffect.correctnessBySection || []" :key="`today-correctness-${item.course_id}-${item.section_id}`">
-                {{ getCourseSectionName(item.course_id, item.section_id, 'today') }}: {{ (item.average_score || 0).toFixed(2) }} 分
+      <div v-if="overview">
+        <div>
+          <section class="stats-section">
+            <h3>今日概览</h3>
+            <div class="stats-grid">
+              <div class="stat-card" v-for="(value, key) in todayStats.teacher" :key="'today-teacher-' + key">
+                <h4>教师 {{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
               </div>
-              <div v-if="!todayStats.value.learningEffect.correctnessBySection?.length">暂无数据</div>
-            </div>
-
-            <h4>高频错误知识点</h4>
-            <div class="data-list">
-              <div v-for="item in todayStats.value.learningEffect.topWrongKnowledgePoints || []" :key="`today-wrong-${item.question_id}`">
-                [{{ getCourseSectionName(item.course_id, item.section_id, 'today') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+              <div class="stat-card" v-for="(value, key) in todayStats.student" :key="'today-student-' + key">
+                <h4>学生 {{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
               </div>
-              <div v-if="!todayStats.value.learningEffect.topWrongKnowledgePoints?.length">暂无数据</div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="stats-section">
-          <h3>近7日概览</h3>
-          <p class="debug-info">调试：本周教师数据: {{ JSON.stringify(weekStats.value.teacher) }}</p>
-          <p class="debug-info">调试：本周学生数据: {{ JSON.stringify(weekStats.value.student) }}</p>
-          <div class="stats-grid">
-            <div class="stat-card" v-for="(value, key) in weekStats.value.teacher || {}" :key="'week-teacher-' + key">
-              <h4>教师 {{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-            <div class="stat-card" v-for="(value, key) in weekStats.value.student || {}" :key="'week-student-' + key">
-              <h4>学生 {{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="stats-section">
-          <h3>近7日教学效率指数</h3>
-          <p class="debug-info">调试：本周效率数据: {{ JSON.stringify(weekStats.value.efficiency) }}</p>
-          <div class="stats-grid">
-            <div class="stat-card" v-for="(value, key) in weekStats.value.efficiency || {}" :key="'week-efficiency-' + key">
-              <h4>{{ translateKey(key) }}</h4>
-              <p>{{ value }}</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="stats-section">
-          <h3>近7日学生学习效果</h3>
-          <p class="debug-info">调试：本周学习效果数据: {{ JSON.stringify(weekStats.value.learningEffect) }}</p>
-          <div class="learning-effect-section">
-            <h4>平均正确率趋势 (按课程-章节)</h4>
-            <div class="data-list">
-              <div v-for="item in weekStats.value.learningEffect.correctnessBySection || []" :key="`week-correctness-${item.course_id}-${item.section_id}`">
-                {{ getCourseSectionName(item.course_id, item.section_id, 'week') }}: {{ (item.average_score || 0).toFixed(2) }} 分
+          <section class="stats-section">
+            <h3>今日教学效率指数</h3>
+            <div class="stats-grid">
+              <div class="stat-card" v-for="(value, key) in todayStats.efficiency" :key="'today-efficiency-' + key">
+                <h4>{{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
               </div>
-              <div v-if="!weekStats.value.learningEffect.correctnessBySection?.length">暂无数据</div>
             </div>
+          </section>
 
-            <h4>高频错误知识点</h4>
-            <div class="data-list">
-              <div v-for="item in weekStats.value.learningEffect.topWrongKnowledgePoints || []" :key="`week-wrong-${item.question_id}`">
-                [{{ getCourseSectionName(item.course_id, item.section_id, 'week') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+          <section class="stats-section">
+            <h3>今日学生学习效果</h3>
+            <div class="learning-effect-section">
+              <h4>平均正确率趋势 (按课程-章节)</h4>
+              <div class="data-list">
+                <div v-for="item in todayStats.learningEffect.correctnessBySection" :key="`today-correctness-${item.course_id}-${item.section_id}`">
+                  {{ getCourseSectionName(item.course_id, item.section_id, 'today') }}: {{ (item.average_score || 0).toFixed(2) }} 分
+                </div>
+                <div v-if="!todayStats.learningEffect.correctnessBySection?.length">暂无数据</div>
               </div>
-              <div v-if="!weekStats.value.learningEffect.topWrongKnowledgePoints?.length">暂无数据</div>
+
+              <h4>高频错误知识点</h4>
+              <div class="data-list">
+                <div v-for="item in todayStats.learningEffect.topWrongKnowledgePoints" :key="`today-wrong-${item.question_id}`">
+                  [{{ getCourseSectionName(item.course_id, item.section_id, 'today') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+                </div>
+                <div v-if="!todayStats.learningEffect.topWrongKnowledgePoints?.length">暂无数据</div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <section class="stats-section">
+            <h3>近7日概览</h3>
+            <div class="stats-grid">
+              <div class="stat-card" v-for="(value, key) in weekStats.teacher" :key="'week-teacher-' + key">
+                <h4>教师 {{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
+              </div>
+              <div class="stat-card" v-for="(value, key) in weekStats.student" :key="'week-student-' + key">
+                <h4>学生 {{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="stats-section">
+            <h3>近7日教学效率指数</h3>
+            <div class="stats-grid">
+              <div class="stat-card" v-for="(value, key) in weekStats.efficiency" :key="'week-efficiency-' + key">
+                <h4>{{ translateKey(key) }}</h4>
+                <p>{{ value }}</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="stats-section">
+            <h3>近7日学生学习效果</h3>
+            <div class="learning-effect-section">
+              <h4>平均正确率趋势 (按课程-章节)</h4>
+              <div class="data-list">
+                <div v-for="item in weekStats.learningEffect.correctnessBySection" :key="`week-correctness-${item.course_id}-${item.section_id}`">
+                  {{ getCourseSectionName(item.course_id, item.section_id, 'week') }}: {{ (item.average_score || 0).toFixed(2) }} 分
+                </div>
+                <div v-if="!weekStats.learningEffect.correctnessBySection?.length">暂无数据</div>
+              </div>
+
+              <h4>高频错误知识点</h4>
+              <div class="data-list">
+                <div v-for="item in weekStats.learningEffect.topWrongKnowledgePoints" :key="`week-wrong-${item.question_id}`">
+                  [{{ getCourseSectionName(item.course_id, item.section_id, 'week') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+                </div>
+                <div v-if="!weekStats.learningEffect.topWrongKnowledgePoints?.length">暂无数据</div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-      <div v-else>未能加载数据或数据为空。</div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .dashboard-overview {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 20px;
 }
-.stats-section {
-  margin-bottom: 2.5rem;
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-small);
-  transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-}
-.stats-section h3 {
-  color: var(--text-dark);
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--primary);
-  padding-bottom: 0.75rem;
-}
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
-.stat-card {
-  background: var(--bg-secondary);
-  border-radius: 10px;
-  padding: 1.2rem;
-  text-align: center;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease-in-out;
-}
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-medium);
-}
-.stat-card h4 {
-  margin-bottom: 0.6rem;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-.stat-card p {
-  font-size: 2rem;
-  font-weight: bold;
-  color: var(--primary);
-  margin-top: 0.5rem;
-}
+
 .loading {
   text-align: center;
-  padding: 4rem;
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+  padding: 20px;
+  font-size: 16px;
+  color: #666;
+}
+
+.stats-section {
+  margin-bottom: 30px;
+}
+
+.stats-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 18px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h4 {
+  margin: 0 0 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.stat-card p {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+  font-weight: bold;
+}
+
+.learning-effect-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .learning-effect-section h4 {
-  font-size: 1.1rem;
-  color: var(--primary-dark);
-  margin-top: 1.5rem;
-  margin-bottom: 0.8rem;
-  padding-left: 0.5rem;
-  border-left: 4px solid var(--primary-light);
+  margin: 0 0 15px;
+  color: #333;
+  font-size: 16px;
 }
 
 .data-list {
-  background: var(--bg-code);
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  border: 1px dashed var(--border-color);
-  max-height: 250px; /* Limit height for scroll */
-  overflow-y: auto;
+  margin-bottom: 20px;
 }
 
-.data-list div {
-  padding: 0.5rem 0;
-  border-bottom: 1px dotted var(--border-color-light);
-  color: var(--text-primary);
-  font-size: 0.95rem;
+.data-list > div {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  color: #666;
 }
 
-.data-list div:last-child {
+.data-list > div:last-child {
   border-bottom: none;
-}
-
-.data-list div:hover {
-  background-color: var(--bg-hover);
-  border-radius: 4px;
-}
-
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style> 

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.example.edusoft.common.Result;
 
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public class DashboardController {
      * @return today / week 的教师 & 学生统计信息
      */
     @GetMapping("/overview")
-    public Map<String, Object> getOverview() {
-        return dashboardService.getDashboardOverview();
+    public Result<Map<String, Object>> getOverview() {
+        return Result.success(dashboardService.getDashboardOverview());
     }
 } 
