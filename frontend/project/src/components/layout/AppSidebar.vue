@@ -97,6 +97,7 @@ export default {
           </router-link>
         </li>
         <li v-if="isTutor">
+<<<<<<< HEAD
           <router-link to="/manage/resources" class="sidebar-link">
               <span class="icon">📂</span> 资源管理
           </router-link>
@@ -104,6 +105,10 @@ export default {
         <li v-if="isTutor">
           <router-link to="/manage/exercise" class="sidebar-link">
               <span class="icon">📃</span> 练习管理
+=======
+          <router-link to="/dashboard" class="sidebar-link">
+              <span class="icon">📊</span> 系统概览
+>>>>>>> new-origin/psq_4
           </router-link>
         </li>
         <li v-if="isStudent">

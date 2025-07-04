@@ -59,8 +59,9 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
             }
             // 直接保存题目避免严格校验字段
             q.setCreatedAt(LocalDateTime.now());
-            q.setCourseId(null);
-            q.setSectionId(null);
+            // 修复：学生自建题目，course_id设为-1，section_id设为1
+            q.setCourseId(-1L);
+            q.setSectionId(1L);
             questionMapper.createQuestion(q);
 
             // 将新题目的ID写回原始列表，便于前端提交作答时使用

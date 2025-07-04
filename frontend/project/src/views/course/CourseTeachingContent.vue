@@ -148,7 +148,8 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { generateTeachingContent, saveTeachingContent } from '@/api/ai'
+//import { generateTeachingContent, saveTeachingContent } from '@/api/ai'
+import { generateTeachingContent } from '@/api/ai'
 import { exportToWord, exportToJson, exportToMarkdown } from '@/utils/export'
 import type { TeachingContentResponse } from '@/api/ai'
 

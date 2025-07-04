@@ -45,3 +45,7 @@ ai_service/venv/
 ai_service/logs/
 ai_service/data/
 ai_service/storage/
+
+*.pyc
+ai_service/data/vector_db/
+

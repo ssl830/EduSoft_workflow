@@ -354,6 +354,7 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+<<<<<<< HEAD
     path: '/manage/teachers',
     name: 'TeachersList',
     component: () => import('../views/management/TeachersList.vue'),
@@ -403,6 +404,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/management/ExerciseList.vue'),
     meta: {
       title: '练习列表',
+=======
+    path: '/dashboard',
+    name: 'DashboardOverview',
+    component: () => import('../views/management/DashboardOverview.vue'),
+    meta: {
+      title: '系统概览',
+>>>>>>> new-origin/psq_4
       requiresAuth: true,
       roles: ['tutor'],
       showSidebar: true
