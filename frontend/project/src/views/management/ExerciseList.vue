@@ -160,7 +160,7 @@ const deleteExercise = async (exerciseId: string) => {
                 <td class="actions">
                   <button class="btn-action download" @click="viewExercise(exercise.id)">查看</button>
                   <button class="btn-action preview" @click="editExercise(exercise.id)">编辑</button>
-                  <button class="btn-action preview" @click="deleteExercise(exercise.id)">删除</button>
+                  <button class="btn-action delete" @click="deleteExercise(exercise.id)">删除</button>
                 </td>
               </tr>
             </tbody>
@@ -342,5 +342,14 @@ const deleteExercise = async (exerciseId: string) => {
 
 .btn-action.download:hover {
   background-color: #c8e6c9;
+}
+
+.btn-action.delete {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.btn-action.delete:hover {
+  background-color: #ffcdd2;
 }
 </style>
