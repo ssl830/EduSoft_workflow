@@ -117,7 +117,8 @@ const ResourceApi = {
 
   // Delete resource (teacher/tutor only)
   deleteResource(resourceId: string) {
-    return axios.delete(`/resources/${resourceId}`)
+    // 修正：operatorId作为查询参数
+    return axios.delete(`/api/resources/deleteFile/${resourceId}`)
   },
 
   // Update resource duration

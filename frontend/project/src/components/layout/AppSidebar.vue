@@ -82,19 +82,30 @@ export default {
           </router-link>
         </li>
         <li v-if="isTutor">
-          <router-link to="/teachers" class="sidebar-link">
+          <router-link to="/manage/teachers" class="sidebar-link">
               <span class="icon">👩‍🏫</span> 教师管理
           </router-link>
         </li>
         <li v-if="isTutor">
-          <router-link to="/students" class="sidebar-link">
+          <router-link to="/manage/students" class="sidebar-link">
               <span class="icon">👨‍🎓</span> 学生管理
           </router-link>
         </li>
         <li v-if="isTutor">
-          <router-link to="/tutors" class="sidebar-link">
+          <router-link to="/manage/tutors" class="sidebar-link">
               <span class="icon">🖥️</span> 管理员管理
           </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/manage/resources" class="sidebar-link">
+              <span class="icon">📂</span> 资源管理
+          </router-link>
+        </li>
+        <li v-if="isTutor">
+          <router-link to="/manage/exercise" class="sidebar-link">
+              <span class="icon">📃</span> 练习管理
+          </router-link>
+        </li>
         <li v-if="isStudent">
           <router-link to="/ai-selftest" class="sidebar-link">
             <span class="icon">🤖</span> AI自测
@@ -120,11 +131,7 @@ export default {
             <span class="icon">📝</span> 创建练习
           </router-link>
         </li>
-        <!--        <li>-->
-        <!--          <router-link to="/exercise/grading" class="sidebar-link">-->
-        <!--            <span class="icon">✓</span> 批阅练习-->
-        <!--          </router-link>-->
-        <!--        </li>-->
+
         <!--        <li>-->
         <!--          <router-link to="/statistics" class="sidebar-link">-->
         <!--            <span class="icon">📈</span> 统计分析-->

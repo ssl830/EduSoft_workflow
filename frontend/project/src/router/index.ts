@@ -321,12 +321,13 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/teachers',
-    name: 'TeachersList',
-    component: () => import('../views/management/TeachersList.vue'),
+    path: '/selfpractice/history',
+    name: 'SelfPracticeHistory',
+    component: () => import('../views/practice/SelfPracticeHistory.vue'),
     meta: {
-      title: '教师列表',
+      title: '自测历史',
       requiresAuth: true,
+      roles: ['student'],
       showSidebar: true
     }
   },
@@ -342,37 +343,6 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/students',
-    name: 'StudentsList',
-    component: () => import('../views/management/StudentsList.vue'),
-    meta: {
-      title: '学生列表',
-      requiresAuth: true,
-      showSidebar: true
-    }
-  },
-  {
-    path: '/selfpractice/history',
-    name: 'SelfPracticeHistory',
-    component: () => import('../views/practice/SelfPracticeHistory.vue'),
-    meta: {
-      title: '自测历史',
-      requiresAuth: true,
-      roles: ['student'],
-      showSidebar: true
-    }
-  },
-  {
-    path: '/tutors',
-    name: 'TutorsList',
-    component: () => import('../views/management/TutorsList.vue'),
-    meta: {
-      title: '管理员列表',
-      requiresAuth: true,
-      showSidebar: true
-    }
-  },
-  {
     path: '/selfpractice/history/:pid',
     name: 'SelfPracticeDetail',
     component: () => import('../views/practice/SelfPracticeDetail.vue'),
@@ -381,6 +351,61 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['student'],
       showSidebar: false
+    }
+  },
+  {
+    path: '/manage/teachers',
+    name: 'TeachersList',
+    component: () => import('../views/management/TeachersList.vue'),
+    meta: {
+      title: '教师列表',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/manage/students',
+    name: 'StudentsList',
+    component: () => import('../views/management/StudentsList.vue'),
+    meta: {
+      title: '学生列表',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/manage/tutors',
+    name: 'TutorsList',
+    component: () => import('../views/management/TutorsList.vue'),
+    meta: {
+      title: '管理员列表',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/manage/resources',
+    name: 'ResourcesList',
+    component: () => import('../views/management/ResourcesList.vue'),
+    meta: {
+      title: '资源列表',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
+    }
+  },
+  {
+    path: '/manage/exercise',
+    name: 'ExerciseList',
+    component: () => import('../views/management/ExerciseList.vue'),
+    meta: {
+      title: '练习列表',
+      requiresAuth: true,
+      roles: ['tutor'],
+      showSidebar: true
     }
   },
   {

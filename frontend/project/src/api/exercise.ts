@@ -51,6 +51,10 @@ const ExerciseApi = {
     return axios.post(`/api/practice/create`, data)
   },
 
+  deleteExercise(id: string) {
+    return axios.delete(`/api/practice/${id}`)
+  },
+
   takeExercise(practiceId: string) {
     return axios.get(`/api/practice/${practiceId}`)
   },

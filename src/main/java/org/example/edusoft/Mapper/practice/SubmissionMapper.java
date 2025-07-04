@@ -19,9 +19,15 @@ public interface SubmissionMapper {
     })
     void update(Submission submission);
 
+    @Delete("DELETE FROM Submission WHERE practice_id = #{id}")
+    void removeSubmissionsByPracticeId(Long practiceId);
+
     @Select("SELECT * FROM Submission WHERE id = #{id}")
     Submission selectById(Long id);
 
     @Select("SELECT * FROM Submission WHERE practice_id = #{practiceId} AND is_judged = 0")
     List<Submission> findByPracticeIdWithUnjudgedAnswers(Long practiceId);
+
+    @Select("SELECT id FROM Submission WHERE practice_id = #{practiceId}")
+    List<Long> findSubmissionIdsByPracticeId(Long practiceId);
 }
