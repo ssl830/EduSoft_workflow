@@ -173,7 +173,7 @@ const nextStep = async () => {
             });
             console.log(response.data)
             console.log()
-            
+
             // 存储练习ID
             exercise.practiceId = response.data.practiceId;
             currentStep.value = 2;
@@ -438,7 +438,10 @@ const repoScores = ref<Record<number, number>>({});
 const addRepoQuestion = async (question: any) => {
     const score = repoScores.value[question.id];
     if (!score || score <= 0) {
-        error.value = '分值必须大于0';
+        repoError.value = '分值必须大于0';
+        setTimeout(() => {
+            repoError.value = ''
+        }, 1500)
         return;
     }
     // 避免重复添加
@@ -1133,6 +1136,8 @@ const handleClassChange = (classId: number) => {
 
 .question-list {
   margin-top: 1rem;
+  max-height: 340px;
+  overflow-y: auto;
 }
 
 .question-list-item {
@@ -1358,6 +1363,8 @@ const handleClassChange = (classId: number) => {
 .resource-table-wrapper {
     overflow-x: auto;
     margin-top: 1rem;
+    max-height: 340px;
+    overflow-y: auto;
 }
 
 .resource-table {

@@ -139,8 +139,8 @@ class PromptTemplates:
                 {{
                     "type": "题目类型",
                     "question": "题目描述",
-                    "options": "选项数组", //Array(String),选择题使用，除了单选、多选外数组返回空即可
-                    "answer": "参考答案",
+                    "options": "选项数组", //Array(String),选择题使用，除了单选、多选外数组返回空即可，生成的选项不要带A. B. C. D. 等前缀，直接返回选项内容即可。
+                    "answer": "参考答案",  //选择题返回的答案依旧是 A|B|C|D 这种格式，而非选项本身
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
                 }}
@@ -371,7 +371,7 @@ class PromptTemplates:
                 {{
                     "type": "singlechoice",
                     "question": "题目描述",
-                    "options": ["A. 选项1", "B. 选项2", "C. 选项3", "D. 选项4"],
+                    "options": ["选项1", "选项2", "选项3", "选项4"],
                     "answer": "A",
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
@@ -380,7 +380,7 @@ class PromptTemplates:
         }}
         """
 
-   
+
 
     def get_teaching_content_detail_prompt(
         title: str,

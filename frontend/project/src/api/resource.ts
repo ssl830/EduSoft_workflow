@@ -140,10 +140,16 @@ const ResourceApi = {
   },
 
   // 修正：上传到知识库
-  uploadToKnowledgeBase(formData: FormData) {
+  uploadToKnowledgeBase(formData: FormData, onUploadProgress?: (progress: number) => void) {
     return axios.post('/api/ai/embedding/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: progressEvent => {
+        if (progressEvent.total && onUploadProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          onUploadProgress(percentCompleted)
+        }
       }
     })
   },

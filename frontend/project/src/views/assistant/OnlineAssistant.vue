@@ -5,8 +5,16 @@
         <div class="bubble-content">
           <h2>
             {{ msg.role }}
+            <!-- 修改：AI思考时颜文字为(*´･д･)?，思考完成后为(ゝ∀･) -->
             <span v-if="msg.role === 'user'">(*´･д･)?</span>
-            <span v-else-if="msg.role === 'assistant'">(ゝ∀･)</span>
+            <span v-else-if="msg.role === 'assistant'">
+              <template v-if="isThinkingMsg(idx)">
+                (*´･д･)?
+              </template>
+              <template v-else>
+                (ゝ∀･)
+              </template>
+            </span>
           </h2>
           <p>{{ msg.content }}</p>
           <!-- 修改引用资料展示方式，避免黑点 -->
@@ -92,6 +100,25 @@ function getSelectedCourseName() {
   return course?.name || ''
 }
 
+// 替换为自定义AI思考动画文案
+const thinkingMsgFrames = [
+  'AI思考中.(。-ω-)✧',
+  'AI思考中..📖_(:3 」∠)_',
+  'AI思考中...（　´_ゝ）旦~☕️',
+  'AI思考中....📚✍️(˘ω˘ )ｽﾔｧ…',
+  'AI思考中.....(๑•̀ㅂ•́)و✧',
+  'AI思考中......─=≡Σ((( つ•̀ω•́)つ'
+]
+let thinkingInterval: number | null = null
+const thinkingFrameIdx = ref(0)
+let thinkingMsgIdx: number | null = null // 记录当前AI思考消息的索引
+
+// 判断当前消息是否为AI思考中动画
+function isThinkingMsg(idx: number) {
+  if (thinkingMsgIdx === null) return false
+  return idx === thinkingMsgIdx && loading.value
+}
+
 async function send() {
   if (!input.value.trim()) return
   // 1. push user msg
@@ -99,6 +126,25 @@ async function send() {
   const question = input.value
   input.value = ''
   loading.value = true
+
+  // 2. 插入AI思考中动画消息
+  thinkingMsgIdx = messages.value.length
+  messages.value.push({
+    role: 'assistant',
+    content: thinkingMsgFrames[0]
+  })
+  thinkingFrameIdx.value = 0
+  if (thinkingInterval) clearInterval(thinkingInterval)
+  thinkingInterval = window.setInterval(() => {
+    thinkingFrameIdx.value = (thinkingFrameIdx.value + 1) % thinkingMsgFrames.length
+    if (
+      typeof thinkingMsgIdx === 'number' &&
+      messages.value[thinkingMsgIdx] &&
+      messages.value[thinkingMsgIdx].role === 'assistant'
+    ) {
+      messages.value[thinkingMsgIdx].content = thinkingMsgFrames[thinkingFrameIdx.value]
+    }
+  }, 1000)
 
   try {
     const payload: AssistantRequest & { course_name?: string } = {
@@ -111,25 +157,39 @@ async function send() {
     console.log('发送请求:', payload)
     const resp = await askAssistant(payload)
     console.log('收到响应:', resp)
-      if(!resp.status || resp.status != 'fail'){
-          messages.value.push({
-              role: 'assistant',
-              content: resp.answer,
-              references: resp.references,
-              knowledgePoints: resp.knowledgePoints
-          })
-      }else{
-            messages.value.push({
-                role: 'assistant',
-                content: '抱歉，无法处理您的请求。'
-            })
-      }
-
-  } catch (err) {
-    console.error(err)
-    messages.value.push({ role: 'assistant', content: '抱歉，服务暂时不可用。' })
-  } finally {
+    if (thinkingInterval) {
+      clearInterval(thinkingInterval)
+      thinkingInterval = null
+    }
     loading.value = false
+    // 替换AI思考中为真实内容
+    if (
+      typeof thinkingMsgIdx === 'number' &&
+      (!resp.status || resp.status != 'fail')
+    ) {
+      messages.value[thinkingMsgIdx] = {
+        role: 'assistant',
+        content: resp.answer,
+        references: resp.references,
+        knowledgePoints: resp.knowledgePoints
+      }
+    } else if (typeof thinkingMsgIdx === 'number') {
+      messages.value[thinkingMsgIdx] = {
+        role: 'assistant',
+        content: '抱歉，无法处理您的请求。'
+      }
+    }
+    thinkingMsgIdx = null
+  } catch (err) {
+    if (thinkingInterval) {
+      clearInterval(thinkingInterval)
+      thinkingInterval = null
+    }
+    loading.value = false
+    if (typeof thinkingMsgIdx === 'number') {
+      messages.value[thinkingMsgIdx] = { role: 'assistant', content: '抱歉，服务暂时不可用。' }
+    }
+    thinkingMsgIdx = null
   }
 }
 </script>
