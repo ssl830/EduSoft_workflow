@@ -175,4 +175,65 @@ public interface DashboardMapper {
             JOIN CourseSection cs ON c.id = cs.course_id
             """)
     List<Map<String, Object>> getAllCoursesAndSections();
+
+    /**
+     * 获取所有班级ID和名称
+     */
+    @Select("SELECT id as class_id, name as class_name FROM Class")
+    List<Map<String, Object>> getAllClasses();
+
+    /**
+     * 获取指定时间段内，每个班级-课程-章节的平均分和通过率。
+     * 返回结果为 { class_id, course_id, section_id, average_score, pass_rate }
+     */
+    @Select("""
+            SELECT
+                p.class_id,
+                q.course_id,
+                q.section_id,
+                AVG(s.score) as average_score,
+                SUM(CASE WHEN s.score >= 60 THEN 1 ELSE 0 END) * 1.0 / COUNT(s.id) as pass_rate
+            FROM Submission s
+            JOIN Practice p ON s.practice_id = p.id
+            JOIN PracticeQuestion pq ON pq.practice_id = p.id
+            JOIN Question q ON pq.question_id = q.id
+            WHERE DATE(s.submitted_at) BETWEEN #{start} AND #{end}
+            GROUP BY p.class_id, q.course_id, q.section_id
+            """)
+    List<Map<String, Object>> getClassCourseSectionStats(@Param("start") LocalDate start,
+                                                        @Param("end") LocalDate end);
+
+    @Select("""
+        SELECT 
+            q.course_id,
+            q.section_id,
+            AVG(a.score) as average_score,
+            COUNT(CASE WHEN a.correct = 0 THEN 1 END) * 100.0 / COUNT(*) as error_rate,
+            COUNT(DISTINCT s.student_id) as student_count
+        FROM Question q
+        JOIN PracticeQuestion pq ON q.id = pq.question_id
+        JOIN Practice p ON pq.practice_id = p.id
+        JOIN Submission s ON p.id = s.practice_id
+        JOIN Answer a ON s.id = a.submission_id AND q.id = a.question_id
+        WHERE q.course_id = #{courseId} AND q.section_id = #{sectionId}
+        GROUP BY q.course_id, q.section_id
+    """)
+    Map<String, Object> getCourseStatistics(Long courseId, Long sectionId);
+
+    @Select("""
+        SELECT 
+            q.content as question_content,
+            COUNT(CASE WHEN a.correct = 0 THEN 1 END) as wrong_count,
+            COUNT(*) as total_attempts
+        FROM Question q
+        JOIN PracticeQuestion pq ON q.id = pq.question_id
+        JOIN Practice p ON pq.practice_id = p.id
+        JOIN Submission s ON p.id = s.practice_id
+        JOIN Answer a ON s.id = a.submission_id AND q.id = a.question_id
+        WHERE q.course_id = #{courseId} AND q.section_id = #{sectionId}
+        GROUP BY q.id, q.content
+        ORDER BY wrong_count DESC
+        LIMIT 5
+    """)
+    List<Map<String, Object>> getTopWrongQuestions(Long courseId, Long sectionId);
 } 

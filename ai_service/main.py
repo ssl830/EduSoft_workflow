@@ -91,6 +91,13 @@ class StudentExerciseGenerationRequest(BaseModel):
     knowledge_preferences: str  # 知识点偏好
     wrong_questions: Optional[List[Dict[str, Any]]] = None  # 历史错题列表，可为空
 
+class CourseOptimizationRequest(BaseModel):
+    courseName: str
+    sectionName: str
+    averageScore: float
+    errorRate: float
+    studentCount: int
+
 @app.post("/embedding/upload")
 async def upload_file(
     file: UploadFile = File(...),
@@ -281,6 +288,25 @@ async def generate_student_exercise(request: StudentExerciseGenerationRequest):
         return result
     except Exception as e:
         logger.error(f"Error generating student exercise: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/optimize_course")
+async def optimize_course(request: CourseOptimizationRequest):
+    """
+    生成课程优化建议
+    """
+    try:
+        result = rag_service.generate_course_optimization(
+            course_name=request.courseName,
+            section_name=request.sectionName,
+            average_score=request.averageScore,
+            error_rate=request.errorRate,
+            student_count=request.studentCount
+        )
+        logger.info(f"Successfully generated optimization suggestions for {request.courseName}")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating optimization suggestions: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -99,4 +99,16 @@ public class AIServiceClient {
         ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
         return response.getBody();
     }
+
+    /**
+     * 获取课程优化建议（调用/rag/optimize_course）
+     */
+    public Map<String, Object> optimizeCourse(Map<String, Object> req) {
+        String url = aiServiceProperties.getBaseUrl() + "/rag/optimize_course";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+        return response.getBody();
+    }
 } 

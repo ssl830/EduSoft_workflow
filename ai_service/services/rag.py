@@ -395,5 +395,43 @@ class RAGService:
             logger.error(f"Error generating student exercise: {str(e)}")
             raise
 
+    def generate_course_optimization(
+        self,
+        course_name: str,
+        section_name: str,
+        average_score: float,
+        error_rate: float,
+        student_count: int
+    ) -> Dict:
+        """生成课程优化建议"""
+        try:
+            # 1. 检索相关知识库内容
+            query = f"{course_name} {section_name}"
+            relevant_docs = self.search_knowledge_base(query)
+
+            # 2. 生成优化建议
+            prompt = PromptTemplates.get_course_optimization_prompt(
+                course_name=course_name,
+                section_name=section_name,
+                average_score=average_score,
+                error_rate=error_rate,
+                student_count=student_count,
+                relevant_docs=relevant_docs
+            )
+
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            content = response.choices[0].message.content
+            result = self.safe_json_loads(content)
+            logger.info("Successfully generated course optimization suggestions")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error generating course optimization suggestions: {str(e)}")
+            raise
+
  
 

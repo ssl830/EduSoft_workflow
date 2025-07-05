@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { Quasar } from 'quasar'
+import { Quasar, QBtn, QTooltip } from 'quasar'
 import { createPinia } from 'pinia'
 import router from './router'
 import './styles/index.scss'
@@ -9,7 +9,7 @@ import 'element-plus/dist/index.css'
 import ProgressKnob from './components/littlecomponents/ProgressKnob.vue' 
 import WriteBoard from './components/littlecomponents/WriteBoard.vue'
 // 导入修改后的 Quasar CSS 以解决 math.div 问题
-// import 'quasar/src/css/index.sass' // 注释掉原来的导入
+import 'quasar/src/css/index.sass'
 // 导入图标集
 import '@quasar/extras/material-icons/material-icons.css'
 import 'font-awesome/css/font-awesome.min.css'
@@ -55,7 +55,13 @@ const pinia = createPinia()
 app.use(pinia)
     .use(router)
     .use(ElementPlus)
-    .use(Quasar, { plugins: {} })
+    .use(Quasar, {
+      components: {
+        QBtn,
+        QTooltip
+      },
+      plugins: {}
+    })
     .use(Varlet)
     .component('ProgressKnob', ProgressKnob)
     .component('WriteBoard', WriteBoard)
