@@ -442,7 +442,7 @@ const isNumberValue = (value: unknown): value is number => {
                 <div v-if="!todayWrongList?.length">暂无数据</div>
               </div>
 
-              <h4>课程章节映射</h4>
+              <h4>关联课程章节</h4>
               <div class="course-section-tags">
                 <span class="cs-tag" v-for="(label, key) in todayCourseSectionNames" :key="'today-cs-' + key">
                   {{ label }}
@@ -541,7 +541,7 @@ const isNumberValue = (value: unknown): value is number => {
                 <div v-if="!weekWrongList?.length">暂无数据</div>
               </div>
 
-              <h4>课程章节映射-2</h4>
+              <h4>关联课程章节</h4>
               <div class="course-section-tags">
                 <span class="cs-tag" v-for="(label, key) in weekCourseSectionNames" :key="'week-cs-' + key">{{ label }}</span>
                 <div v-if="Object.keys(weekCourseSectionNames).length === 0">暂无数据</div>
