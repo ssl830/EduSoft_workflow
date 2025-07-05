@@ -3,8 +3,7 @@ import { onMounted, ref, computed, nextTick, watch } from 'vue'
 import { fetchDashboardOverview } from '@/api/dashboard'
 import { getCourseOptimization } from '@/api/optimization'
 import * as echarts from 'echarts'
-import { useQuasar } from 'quasar'
-import { QBtn, QTooltip } from 'quasar'
+import { useQuasar, Loading, Dialog, Notify, QBtn, QTooltip } from 'quasar'
 
 interface Stats {
   uploadResources: number
@@ -105,6 +104,7 @@ const initialOverviewState: Overview = {
     },
     student: {
       uploadResources: 0,
+      createHomework: 0,
       createPractice: 0,
       correctPractice: 0,
       createQuestions: 0,
@@ -137,7 +137,16 @@ const $q = useQuasar()
 const loading = ref(true)
 const overview = ref<Overview>(initialOverviewState)
 const viewMode = ref<'day' | 'week'>('day')
+const displayMode = ref<'card' | 'chart'>('card')
 const chartRef = ref<HTMLElement | null>(null)
+const teacherStudentBarRef = ref<HTMLElement | null>(null)
+const teacherPieRef = ref<HTMLElement | null>(null)
+const studentPieRef = ref<HTMLElement | null>(null)
+const efficiencyRadarRef = ref<HTMLElement | null>(null)
+const avgScoreBarRef = ref<HTMLElement | null>(null)
+const errorRateBarRef = ref<HTMLElement | null>(null)
+const wrongQuestionBarRef = ref<HTMLElement | null>(null)
+const efficiencyPieRef = ref<HTMLElement | null>(null)
 
 // Computed properties for safe access to today and week stats
 const todayStats = computed(() => {
@@ -177,37 +186,145 @@ const weekEfficiencyCourseSections = computed<Record<string, string>>(() => ((we
 const todayClassNames = computed<Record<string, string>>(() => ((todayStats.value.efficiency as any)?.classNames) || {});
 const weekClassNames = computed<Record<string, string>>(() => ((weekStats.value.efficiency as any)?.classNames) || {});
 
-// 监听视图模式或数据变化重新渲染图表
-watch([viewMode, overview], () => nextTick(renderChart));
+// 监听视图模式 / 展示模式 或数据变化重新渲染图表
+watch([viewMode, displayMode, overview], () => {
+  if (displayMode.value === 'chart') {
+    nextTick(renderCharts)
+  }
+});
 
-const renderChart = () => {
-  if (!chartRef.value) return;
-  const chart = echarts.init(chartRef.value);
-  // 根据视图模式选择数据
+const initChart = (el: HTMLElement | null) => el ? echarts.init(el) : null
+
+const renderCharts = () => {
+  // 选择数据集
   const teacherData = viewMode.value === 'day' ? todayStats.value.teacher : weekStats.value.teacher;
   const studentData = viewMode.value === 'day' ? todayStats.value.student : weekStats.value.student;
-  const categories = Object.keys({ ...teacherData, ...studentData }).map(k => translateKey(k));
-  const teacherSeries = categories.map((name, idx) => {
-    const key = Object.keys({ ...teacherData, ...studentData })[idx];
-    return (teacherData as any)[key] || 0;
-  });
-  const studentSeries = categories.map((name, idx) => {
-    const key = Object.keys({ ...teacherData, ...studentData })[idx];
-    return (studentData as any)[key] || 0;
-  });
+  const effData = viewMode.value === 'day' ? todayStats.value.efficiency : weekStats.value.efficiency;
 
-  const option = {
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['教师', '学生'] },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', data: categories, axisLabel: { rotate: 30 } },
-    yAxis: { type: 'value' },
-    series: [
-      { name: '教师', type: 'bar', data: teacherSeries, itemStyle: { color: '#409EFF' } },
-      { name: '学生', type: 'bar', data: studentSeries, itemStyle: { color: '#67C23A' } }
-    ]
-  };
-  chart.setOption(option);
+  // ---------- 1. 教师/学生柱状图 ----------
+  if (teacherStudentBarRef.value) {
+    const chart = initChart(teacherStudentBarRef.value);
+    const categories = Object.keys({ ...teacherData, ...studentData }).map(k => translateKey(k));
+    const teacherSeries = Object.keys({ ...teacherData, ...studentData }).map(k => (teacherData as any)[k] || 0);
+    const studentSeries = Object.keys({ ...teacherData, ...studentData }).map(k => (studentData as any)[k] || 0);
+    chart?.setOption({
+      title: { text: '教师 VS 学生 活跃度', left: 'center' },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['教师', '学生'], top: 25 },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'category', data: categories, axisLabel: { rotate: 30 } },
+      yAxis: { type: 'value' },
+      series: [
+        { name: '教师', type: 'bar', data: teacherSeries, itemStyle: { color: '#409EFF' } },
+        { name: '学生', type: 'bar', data: studentSeries, itemStyle: { color: '#67C23A' } }
+      ]
+    });
+  }
+
+  // ---------- 2. 教师饼图 ----------
+  if (teacherPieRef.value) {
+    const chart = initChart(teacherPieRef.value);
+    const data = Object.entries(teacherData).map(([k, v]) => ({ name: translateKey(k), value: v as number }));
+    chart?.setOption({
+      title: { text: '教师操作占比', left: 'center' },
+      tooltip: { trigger: 'item' },
+      series: [{ type: 'pie', radius: '60%', data }]
+    });
+  }
+
+  // ---------- 3. 学生饼图 ----------
+  if (studentPieRef.value) {
+    const chart = initChart(studentPieRef.value);
+    const data = Object.entries(studentData).map(([k, v]) => ({ name: translateKey(k), value: v as number }));
+    chart?.setOption({
+      title: { text: '学生操作占比', left: 'center' },
+      tooltip: { trigger: 'item' },
+      series: [{ type: 'pie', radius: '60%', data }]
+    });
+  }
+
+  // ---------- 4. 教学效率雷达 ----------
+  if (efficiencyRadarRef.value) {
+    const chart = initChart(efficiencyRadarRef.value);
+    const radarIndicators = [
+      { name: '备课耗时', max: 100 },
+      { name: '练习耗时', max: 100 },
+      { name: '备课调用次数', max: 100 },
+      { name: '练习调用次数', max: 100 }
+    ];
+    const dataset = [
+      effData.lessonPrepDuration || 0,
+      effData.exerciseDesignDuration || 0,
+      effData.lessonPrepCallCount || 0,
+      effData.exerciseDesignCallCount || 0
+    ];
+    chart?.setOption({
+      title: { text: '教学效率雷达', left: 'center' },
+      tooltip: {},
+      radar: { indicator: radarIndicators },
+      series: [{ type: 'radar', data: [{ value: dataset, name: '效率指标' }] }]
+    });
+  }
+
+  // ---------- 5. 平均分柱状图 ----------
+  if (avgScoreBarRef.value) {
+    const chart = initChart(avgScoreBarRef.value);
+    const avgMap = (viewMode.value === 'day' ? overview.value.today.averageScores : overview.value.week.averageScores) || {};
+    const labels = Object.keys(avgMap);
+    const scores = labels.map(k => (avgMap as any)[k] || 0);
+    chart?.setOption({
+      title: { text: '课程章节平均分', left: 'center' },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: labels, axisLabel: { rotate: 45 } },
+      yAxis: { type: 'value' },
+      series: [{ type: 'line', data: scores, smooth: true, itemStyle: { color: '#e91e63' } }]
+    });
+  }
+
+  // ---------- 6. 错误率柱状图 ----------
+  if (errorRateBarRef.value) {
+    const chart = initChart(errorRateBarRef.value);
+    const errMap = (viewMode.value === 'day' ? overview.value.today.errorRates : overview.value.week.errorRates) || {};
+    const labels = Object.keys(errMap);
+    const errs = labels.map(k => (errMap as any)[k] || 0);
+    chart?.setOption({
+      title: { text: '课程章节错误率', left: 'center' },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: labels, axisLabel: { rotate: 45 } },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: errs, itemStyle: { color: '#ff9800' } }]
+    });
+  }
+
+  // ---------- 7. 高频错误题目柱状 ----------
+  if (wrongQuestionBarRef.value) {
+    const chart = initChart(wrongQuestionBarRef.value);
+    const wrongList = viewMode.value === 'day' ? todayWrongList.value : weekWrongList.value;
+    const topN = wrongList.slice(0, 10);
+    const names = topN.map((q: any) => q.content.slice(0, 20) + '...');
+    const values = topN.map((q: any) => q.wrong_count);
+    chart?.setOption({
+      title: { text: '高频错误题目 TOP10', left: 'center' },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: names, axisLabel: { rotate: 45 } },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: values, itemStyle: { color: '#f44336' } }]
+    });
+  }
+
+  // ---------- 8. 效率指标饼图 ----------
+  if (efficiencyPieRef.value) {
+    const chart = initChart(efficiencyPieRef.value);
+    const data = [
+      { name: '备课调用', value: effData.lessonPrepCallCount || 0 },
+      { name: '练习调用', value: effData.exerciseDesignCallCount || 0 }
+    ];
+    chart?.setOption({
+      title: { text: 'AI 接口调用占比', left: 'center' },
+      tooltip: { trigger: 'item' },
+      series: [{ type: 'pie', radius: ['40%', '70%'], roseType: 'radius', data }]
+    });
+  }
 };
 
 const translateKey = (key: string) => {
@@ -258,7 +375,7 @@ const isEfficiencyKey = (key: string): key is EfficiencyKey => {
 
 const handleOptimize = async (courseId: number, sectionId: number) => {
   try {
-    $q.loading.show({ message: '正在获取优化建议...' })
+    Loading.show({ message: '正在获取优化建议...', backgroundColor: 'grey-2', spinnerColor: 'primary' })
     const response = await getCourseOptimization({
       courseId,
       sectionId,
@@ -267,7 +384,7 @@ const handleOptimize = async (courseId: number, sectionId: number) => {
       studentCount: overview.value.today.studentCounts?.[`${courseId}-${sectionId}`] || 0
     })
 
-    $q.dialog({
+    Dialog.create({
       title: 'AI 优化建议',
       message: `
         <div class="optimization-dialog">
@@ -284,12 +401,12 @@ const handleOptimize = async (courseId: number, sectionId: number) => {
     })
   } catch (error) {
     console.error('获取优化建议失败:', error)
-    $q.notify({
+    Notify.create({
       type: 'negative',
       message: '获取优化建议失败'
     })
   } finally {
-    $q.loading.hide()
+    Loading.hide()
   }
 }
 
@@ -339,7 +456,7 @@ const loadData = async () => {
   }
 }
 
-onMounted(() => { loadData(); nextTick(renderChart); });
+onMounted(() => { loadData(); nextTick(renderCharts); });
 
 // Add type guard for array values
 const isArrayValue = (value: unknown): value is string[] => {
@@ -360,196 +477,214 @@ const isNumberValue = (value: unknown): value is number => {
         <button :class="{ active: viewMode === 'day' }" @click="viewMode = 'day'">日视图</button>
         <button :class="{ active: viewMode === 'week' }" @click="viewMode = 'week'">周视图</button>
       </div>
+      <div class="display-toggle">
+        <button :class="{ active: displayMode === 'card' }" @click="displayMode = 'card'">数据卡片</button>
+        <button :class="{ active: displayMode === 'chart' }" @click="displayMode = 'chart'">可视化图表</button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else>
       <div v-if="overview">
-        <div v-if="viewMode === 'day'">
-          <!-- 日视图 -->
-          <section class="stats-section">
-            <h3>今日概览</h3>
-            <div class="stats-grid">
-              <div class="stat-card" v-for="(value, key) in todayStats.teacher" :key="'today-teacher-' + key">
-                <h4>教师 {{ translateKey(key) }}</h4>
-                <p>{{ value }}</p>
-                <!-- 课程章节映射 & 班级映射 在上方 stat-card 中直接渲染 -->
-              </div>
-              <div class="stat-card" v-for="(value, key) in todayStats.student" :key="'today-student-' + key">
-                <h4>学生 {{ translateKey(key) }}</h4>
-                <p>{{ value }}</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="stats-section">
-            <h3>今日教学效率指数</h3>
-            <div class="stats-grid">
-              <div class="stat-card" v-for="(value, key) in todayStats.efficiency" :key="'today-efficiency-' + key">
-                <h4>{{ translateKey(key) }}</h4>
-                <template v-if="key === 'courseOptimizationDirection'">
-                  <ul class="advice-list">
-                    <li v-for="line in getAdviceLines(value)" :key="line">{{ line }}</li>
-                  </ul>
-                </template>
-                <template v-else-if="key === 'courseSectionNames'">
-                  <div class="course-section-tags">
-                    <span v-for="(label, skey) in value" :key="skey" class="cs-tag">
-                      {{ label }}
-                      <q-btn
-                        flat
-                        round
-                        size="sm"
-                        icon="tune"
-                        @click="handleOptimize(
-                          Number(skey.split('-')[0]),
-                          Number(skey.split('-')[1])
-                        )"
-                      >
-                        <q-tooltip>获取AI优化建议</q-tooltip>
-                      </q-btn>
-                    </span>
-                  </div>
-                </template>
-                <template v-else-if="key === 'classNames'">
-                  <div class="course-section-tags">
-                    <span class="cs-tag secondary" v-for="(label, skey) in value" :key="'cl-day-' + skey">{{ label }}</span>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="data-value">{{ value }}</div>
-                </template>
-              </div>
-            </div>
-          </section>
-
-          <section class="stats-section">
-            <h3>今日学生学习效果</h3>
-            <div class="learning-effect-section">
-              <h4>平均正确率趋势 (按课程-章节)</h4>
-              <div class="data-list">
-                <div v-for="item in todayCorrectnessList" :key="`today-correctness-${item.course_id}-${item.section_id}`">
-                  {{ getCourseSectionName(item.course_id, item.section_id, 'today') }}: {{ (item.correctness || 0).toFixed(2) }} 分
+        <!-- 数据卡片模式 -->
+        <template v-if="displayMode === 'card'">
+          <div v-if="viewMode === 'day'">
+            <!-- 日视图 -->
+            <section class="stats-section">
+              <h3>今日概览</h3>
+              <div class="stats-grid">
+                <div class="stat-card" v-for="(value, key) in todayStats.teacher" :key="'today-teacher-' + key">
+                  <h4>教师 {{ translateKey(key) }}</h4>
+                  <p>{{ value }}</p>
+                  <!-- 课程章节映射 & 班级映射 在上方 stat-card 中直接渲染 -->
                 </div>
-                <div v-if="!todayCorrectnessList?.length">暂无数据</div>
-              </div>
-
-              <h4>高频错误知识点</h4>
-              <div class="data-list">
-                <div v-for="item in todayWrongList" :key="`today-wrong-${item.question_id}`">
-                  [{{ getCourseSectionName(item.course_id, item.section_id, 'today') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+                <div class="stat-card" v-for="(value, key) in todayStats.student" :key="'today-student-' + key">
+                  <h4>学生 {{ translateKey(key) }}</h4>
+                  <p>{{ value }}</p>
                 </div>
-                <div v-if="!todayWrongList?.length">暂无数据</div>
               </div>
+            </section>
 
-              <h4>关联课程章节</h4>
-              <div class="course-section-tags">
-                <span class="cs-tag" v-for="(label, key) in todayCourseSectionNames" :key="'today-cs-' + key">
-                  {{ label }}
-                  <q-btn
-                    flat
-                    round
-                    size="sm"
-                    icon="tune"
-                    @click="handleOptimize(
-                      Number(key.split('-')[0]),
-                      Number(key.split('-')[1])
-                    )"
-                  >
-                    <q-tooltip>获取AI优化建议</q-tooltip>
-                  </q-btn>
-                </span>
-                <div v-if="Object.keys(todayCourseSectionNames).length === 0">暂无数据</div>
+            <section class="stats-section">
+              <h3>今日教学效率指数</h3>
+              <div class="stats-grid">
+                <div class="stat-card" v-for="(value, key) in todayStats.efficiency" :key="'today-efficiency-' + key">
+                  <h4>{{ translateKey(key) }}</h4>
+                  <template v-if="key === 'courseOptimizationDirection'">
+                    <ul class="advice-list">
+                      <li v-for="line in getAdviceLines(value)" :key="line">{{ line }}</li>
+                    </ul>
+                  </template>
+                  <template v-else-if="key === 'courseSectionNames'">
+                    <div class="course-section-tags">
+                      <span v-for="(label, skey) in value" :key="skey" class="cs-tag">
+                        {{ label }}
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          icon="tune"
+                          @click="handleOptimize(
+                            Number(skey.split('-')[0]),
+                            Number(skey.split('-')[1])
+                          )"
+                        >
+                          <q-tooltip>获取AI优化建议</q-tooltip>
+                        </q-btn>
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else-if="key === 'classNames'">
+                    <div class="course-section-tags">
+                      <span class="cs-tag secondary" v-for="(label, skey) in value" :key="'cl-day-' + skey">{{ label }}</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="data-value">{{ value }}</div>
+                  </template>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+
+            <section class="stats-section">
+              <h3>今日学生学习效果</h3>
+              <div class="learning-effect-section">
+                <h4>平均正确率趋势 (按课程-章节)</h4>
+                <div class="data-list">
+                  <div v-for="item in todayCorrectnessList" :key="`today-correctness-${item.course_id}-${item.section_id}`">
+                    {{ getCourseSectionName(item.course_id, item.section_id, 'today') }}: {{ (item.correctness || 0).toFixed(2) }} 分
+                  </div>
+                  <div v-if="!todayCorrectnessList?.length">暂无数据</div>
+                </div>
+
+                <h4>高频错误知识点</h4>
+                <div class="data-list">
+                  <div v-for="item in todayWrongList" :key="`today-wrong-${item.question_id}`">
+                    [{{ getCourseSectionName(item.course_id, item.section_id, 'today') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+                  </div>
+                  <div v-if="!todayWrongList?.length">暂无数据</div>
+                </div>
+
+                <h4>关联课程章节</h4>
+                <div class="course-section-tags">
+                  <span class="cs-tag" v-for="(label, key) in todayCourseSectionNames" :key="'today-cs-' + key">
+                    {{ label }}
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      icon="tune"
+                      @click="handleOptimize(
+                        Number(key.split('-')[0]),
+                        Number(key.split('-')[1])
+                      )"
+                    >
+                      <q-tooltip>获取AI优化建议</q-tooltip>
+                    </q-btn>
+                  </span>
+                  <div v-if="Object.keys(todayCourseSectionNames).length === 0">暂无数据</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div v-else>
+            <!-- 周视图 -->
+            <section class="stats-section">
+              <h3>近7日概览</h3>
+              <div class="stats-grid">
+                <div class="stat-card" v-for="(value, key) in weekStats.teacher" :key="'week-teacher-' + key">
+                  <h4>教师 {{ translateKey(key) }}</h4>
+                  <p>{{ value }}</p>
+                </div>
+                <div class="stat-card" v-for="(value, key) in weekStats.student" :key="'week-student-' + key">
+                  <h4>学生 {{ translateKey(key) }}</h4>
+                  <p>{{ value }}</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="stats-section">
+              <h3>近7日教学效率指数</h3>
+              <div class="stats-grid">
+                <div class="stat-card" v-for="(value, key) in weekStats.efficiency" :key="'week-efficiency-' + key">
+                  <h4>{{ translateKey(key) }}</h4>
+                  <template v-if="key === 'courseOptimizationDirection'">
+                    <ul class="advice-list">
+                      <li v-for="line in getAdviceLines(value)" :key="line">{{ line }}</li>
+                    </ul>
+                  </template>
+                  <template v-else-if="key === 'courseSectionNames'">
+                    <div class="course-section-tags">
+                      <span v-for="(label, skey) in value" :key="skey" class="cs-tag">
+                        {{ label }}
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          icon="tune"
+                          @click="handleOptimize(
+                            Number(skey.split('-')[0]),
+                            Number(skey.split('-')[1])
+                          )"
+                        >
+                          <q-tooltip>获取AI优化建议</q-tooltip>
+                        </q-btn>
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else-if="key === 'classNames'">
+                    <div class="course-section-tags">
+                      <span class="cs-tag secondary" v-for="(label, skey) in value" :key="'cl-week-' + skey">{{ label }}</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="data-value">{{ value }}</div>
+                  </template>
+                </div>
+              </div>
+            </section>
+
+            <section class="stats-section">
+              <h3>近7日学生学习效果</h3>
+              <div class="learning-effect-section">
+                <h4>平均正确率趋势 (按课程-章节)</h4>
+                <div class="data-list">
+                  <div v-for="item in weekCorrectnessList" :key="`week-correctness-${item.course_id}-${item.section_id}`">
+                    {{ getCourseSectionName(item.course_id, item.section_id, 'week') }}: {{ (item.correctness || 0).toFixed(2) }} 分
+                  </div>
+                  <div v-if="!weekCorrectnessList?.length">暂无数据</div>
+                </div>
+
+                <h4>高频错误知识点</h4>
+                <div class="data-list">
+                  <div v-for="item in weekWrongList" :key="`week-wrong-${item.question_id}`">
+                    [{{ getCourseSectionName(item.course_id, item.section_id, 'week') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
+                  </div>
+                  <div v-if="!weekWrongList?.length">暂无数据</div>
+                </div>
+
+                <h4>关联课程章节</h4>
+                <div class="course-section-tags">
+                  <span class="cs-tag" v-for="(label, key) in weekCourseSectionNames" :key="'week-cs-' + key">{{ label }}</span>
+                  <div v-if="Object.keys(weekCourseSectionNames).length === 0">暂无数据</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <!-- 图表模式 -->
+        <div v-if="displayMode === 'chart'" class="charts-grid">
+          <div ref="teacherStudentBarRef" class="chart-box"></div>
+          <div ref="teacherPieRef" class="chart-box"></div>
+          <div ref="studentPieRef" class="chart-box"></div>
+          <div ref="efficiencyRadarRef" class="chart-box"></div>
+          <div ref="avgScoreBarRef" class="chart-box"></div>
+          <div ref="errorRateBarRef" class="chart-box"></div>
+          <div ref="wrongQuestionBarRef" class="chart-box"></div>
+          <div ref="efficiencyPieRef" class="chart-box"></div>
         </div>
-
-        <div v-else>
-          <!-- 周视图 -->
-          <section class="stats-section">
-            <h3>近7日概览</h3>
-            <div class="stats-grid">
-              <div class="stat-card" v-for="(value, key) in weekStats.teacher" :key="'week-teacher-' + key">
-                <h4>教师 {{ translateKey(key) }}</h4>
-                <p>{{ value }}</p>
-              </div>
-              <div class="stat-card" v-for="(value, key) in weekStats.student" :key="'week-student-' + key">
-                <h4>学生 {{ translateKey(key) }}</h4>
-                <p>{{ value }}</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="stats-section">
-            <h3>近7日教学效率指数</h3>
-            <div class="stats-grid">
-              <div class="stat-card" v-for="(value, key) in weekStats.efficiency" :key="'week-efficiency-' + key">
-                <h4>{{ translateKey(key) }}</h4>
-                <template v-if="key === 'courseOptimizationDirection'">
-                  <ul class="advice-list">
-                    <li v-for="line in getAdviceLines(value)" :key="line">{{ line }}</li>
-                  </ul>
-                </template>
-                <template v-else-if="key === 'courseSectionNames'">
-                  <div class="course-section-tags">
-                    <span v-for="(label, skey) in value" :key="skey" class="cs-tag">
-                      {{ label }}
-                      <q-btn
-                        flat
-                        round
-                        size="sm"
-                        icon="tune"
-                        @click="handleOptimize(
-                          Number(skey.split('-')[0]),
-                          Number(skey.split('-')[1])
-                        )"
-                      >
-                        <q-tooltip>获取AI优化建议</q-tooltip>
-                      </q-btn>
-                    </span>
-                  </div>
-                </template>
-                <template v-else-if="key === 'classNames'">
-                  <div class="course-section-tags">
-                    <span class="cs-tag secondary" v-for="(label, skey) in value" :key="'cl-week-' + skey">{{ label }}</span>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="data-value">{{ value }}</div>
-                </template>
-              </div>
-            </div>
-          </section>
-
-          <section class="stats-section">
-            <h3>近7日学生学习效果</h3>
-            <div class="learning-effect-section">
-              <h4>平均正确率趋势 (按课程-章节)</h4>
-              <div class="data-list">
-                <div v-for="item in weekCorrectnessList" :key="`week-correctness-${item.course_id}-${item.section_id}`">
-                  {{ getCourseSectionName(item.course_id, item.section_id, 'week') }}: {{ (item.correctness || 0).toFixed(2) }} 分
-                </div>
-                <div v-if="!weekCorrectnessList?.length">暂无数据</div>
-              </div>
-
-              <h4>高频错误知识点</h4>
-              <div class="data-list">
-                <div v-for="item in weekWrongList" :key="`week-wrong-${item.question_id}`">
-                  [{{ getCourseSectionName(item.course_id, item.section_id, 'week') }}] {{ item.content }} (错误 {{ item.wrong_count }} 次)
-                </div>
-                <div v-if="!weekWrongList?.length">暂无数据</div>
-              </div>
-
-              <h4>关联课程章节</h4>
-              <div class="course-section-tags">
-                <span class="cs-tag" v-for="(label, key) in weekCourseSectionNames" :key="'week-cs-' + key">{{ label }}</span>
-                <div v-if="Object.keys(weekCourseSectionNames).length === 0">暂无数据</div>
-              </div>
-            </div>
-          </section>
-        </div>
-        <div ref="chartRef" style="width: 100%; height: 320px; margin-bottom: 30px;"></div>
       </div>
     </div>
   </div>
@@ -590,6 +725,26 @@ const isNumberValue = (value: unknown): value is number => {
       background: #409eff;
       color: white;
       border-color: #409eff;
+    }
+  }
+}
+
+.display-toggle {
+  display: flex;
+  gap: 8px;
+
+  button {
+    padding: 6px 12px;
+    border: 1px solid #dcdfe6;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &.active {
+      background: #67c23a;
+      color: #fff;
+      border-color: #67c23a;
     }
   }
 }
@@ -789,5 +944,21 @@ const isNumberValue = (value: unknown): value is number => {
   font-size: 24px;
   color: #333;
   font-weight: bold;
+}
+
+/* 图表布局 */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.chart-box {
+  width: 100%;
+  height: 320px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style> 
