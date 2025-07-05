@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { Quasar, QBtn, QTooltip } from 'quasar'
+import { Quasar, QBtn, QTooltip, Loading, Dialog, Notify } from 'quasar'
 import { createPinia } from 'pinia'
 import router from './router'
 import './styles/index.scss'
@@ -60,7 +60,11 @@ app.use(pinia)
         QBtn,
         QTooltip
       },
-      plugins: {}
+      plugins: {
+        Loading,
+        Dialog,
+        Notify
+      }
     })
     .use(Varlet)
     .component('ProgressKnob', ProgressKnob)

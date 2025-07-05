@@ -50,7 +50,7 @@ public class CourseOptimizationService {
         // 构建请求数据
         Map<String, Object> requestData = new HashMap<>();
         requestData.put("courseName", course.getName());
-        requestData.put("sectionTitle", section.getTitle());
+        requestData.put("sectionName", section.getTitle());
         requestData.put("averageScore", statistics.get("average_score"));
         requestData.put("errorRate", statistics.get("error_rate"));
         requestData.put("studentCount", statistics.get("student_count"));
