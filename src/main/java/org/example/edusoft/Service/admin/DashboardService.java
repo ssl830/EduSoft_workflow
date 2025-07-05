@@ -70,8 +70,45 @@ public class DashboardService {
         metrics.put("exerciseDesignAvgDuration", String.format("%.2f", exerciseDesignAvgDuration));
         metrics.put("exerciseDesignCallCount", exerciseDesignCallCount);
 
-        // TODO: 课程优化方向 (如：某学科通过率持续偏低) - 需AI服务提供更具体分析
-        metrics.put("courseOptimizationDirection", "AI自动分析功能待完善");
+        // 课程优化方向分析
+        List<Map<String, Object>> stats = dashboardMapper.getClassCourseSectionStats(start, end);
+        List<Map<String, Object>> allCoursesAndSections = dashboardMapper.getAllCoursesAndSections();
+        List<Map<String, Object>> allClasses = dashboardMapper.getAllClasses();
+        Map<String, String> courseSectionNames = allCoursesAndSections.stream()
+                .collect(Collectors.toMap(
+                        map -> map.get("course_id") + "-" + map.get("section_id"),
+                        map -> map.get("course_name") + " - " + map.get("section_name")
+                ));
+        Map<String, String> classNames = allClasses.stream()
+                .collect(Collectors.toMap(
+                        map -> map.get("class_id").toString(),
+                        map -> map.get("class_name").toString()
+                ));
+        StringBuilder advice = new StringBuilder();
+        int count = 0;
+        for (Map<String, Object> stat : stats) {
+            Double avgScore = stat.get("average_score") instanceof Number ? ((Number)stat.get("average_score")).doubleValue() : null;
+            Double passRate = stat.get("pass_rate") instanceof Number ? ((Number)stat.get("pass_rate")).doubleValue() : null;
+            Long classId = stat.get("class_id") instanceof Number ? ((Number)stat.get("class_id")).longValue() : null;
+            Long courseId = stat.get("course_id") instanceof Number ? ((Number)stat.get("course_id")).longValue() : null;
+            Long sectionId = stat.get("section_id") instanceof Number ? ((Number)stat.get("section_id")).longValue() : null;
+            String className = classId != null ? classNames.getOrDefault(classId.toString(), null) : null;
+            String courseSectionName = (courseId != null && sectionId != null) ? courseSectionNames.getOrDefault(courseId + "-" + sectionId, null) : null;
+            if ((avgScore != null && avgScore < 60) || (passRate != null && passRate < 0.6)) {
+                advice.append(
+                    (className != null ? ("班级:" + className + " ") : "") +
+                    (courseSectionName != null ? ("章节:" + courseSectionName + " ") : "") +
+                    String.format("平均分:%.2f 通过率:%.2f。建议加强该章节讲解。\n", avgScore != null ? avgScore : 0, passRate != null ? passRate : 0)
+                );
+                count++;
+            }
+        }
+        if (count == 0) {
+            advice.append("暂无明显薄弱环节，整体通过率良好。");
+        }
+        metrics.put("courseOptimizationDirection", advice.toString());
+        metrics.put("classNames", classNames);
+        metrics.put("courseSectionNames", courseSectionNames);
 
         return metrics;
     }

@@ -494,3 +494,51 @@ class PromptTemplates:
         - 返回内容必须为合法JSON，不要包含Markdown、注释或多余文字。
         """
 
+    @staticmethod
+    def get_course_optimization_prompt(
+        course_name: str,
+        section_name: str,
+        average_score: float,
+        error_rate: float,
+        student_count: int,
+        relevant_docs: List[Dict[str, str]]
+    ) -> str:
+        """生成课程优化建议的提示词"""
+        # 格式化参考资料
+        formatted_docs = []
+        for doc in relevant_docs:
+            formatted_docs.append(f"来源：{doc['source']}\n内容：{doc['content']}")
+        docs_str = "\n\n".join(formatted_docs) if formatted_docs else "无"
+
+        return f"""
+        作为一名专业的教育分析专家，请根据以下信息为课程章节提供优化建议：
+
+        课程名称：{course_name}
+        章节名称：{section_name}
+        平均得分：{average_score}
+        错误率：{error_rate}%
+        学生人数：{student_count}
+
+        相关课程资料：
+        {docs_str}
+
+        请提供以下分析和建议：
+        1. 根据平均分和错误率，分析学生对该章节的掌握情况
+        2. 找出可能的教学难点和学生易错点
+        3. 提供具体的教学优化建议
+        4. 推荐合适的教学资源和练习方式
+
+        请以JSON格式返回，结构如下：
+        {{
+            "suggestions": [string],  // 具体的优化建议列表
+            "relatedKnowledgePoints": [string],  // 相关知识点列表
+            "recommendedActions": [string]  // 推荐的具体行动列表
+        }}
+
+        注意：
+        1. 建议要具体可行，便于教师直接采用
+        2. 分析要基于实际数据，重点关注异常指标
+        3. 推荐的行动要有针对性，并说明预期效果
+        4. 返回必须是合法JSON，不要包含Markdown、注释或多余文字
+        """
+
