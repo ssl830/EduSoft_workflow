@@ -45,7 +45,7 @@ const ExerciseApi = {
     courseId: number;
     startTime?: string;
     endTime?: string;
-    createdBy?: bigint;
+    createdBy?: string | number;
     allowMultipleSubmission?: boolean;
   }) {
     return axios.post(`/api/practice/create`, data)

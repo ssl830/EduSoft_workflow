@@ -21,7 +21,7 @@ const hours = Array.from({length: endHour - startHour + 1}, (_, i) => startHour 
 const colorPool = [
   '#6fa8dc', '#f6b26b', '#93c47d', '#e06666', '#8e7cc3', '#ffd966', '#76a5af', '#c27ba0', '#a2c4c9', '#b4a7d6', '#f9cb9c', '#b6d7a8', '#ea9999', '#b7b7b7'
 ]
-function getColor(idx) {
+function getColor(idx: number): string {
   return colorPool[idx % colorPool.length]
 }
 
@@ -45,7 +45,15 @@ function stripClassTime(name: string) {
   return name.replace(/(周[一二三四五六日天]\s*\d{1,2}:\d{2}-\d{1,2}:\d{2})/, '').trim()
 }
 
-const scheduledBlocks = computed(() => {
+interface ScheduledBlock {
+  weekIdx: number;
+  start: number;
+  end: number;
+  class: any;
+  colorIdx: number;
+}
+
+const scheduledBlocks = computed<ScheduledBlock[]>(() => {
   // 返回 { weekIdx, hourIdx, start, end, class, colorIdx } 列表
   return classes.value
     .map((c, idx) => {
@@ -63,7 +71,7 @@ const scheduledBlocks = computed(() => {
         colorIdx: idx
       }
     })
-    .filter(Boolean)
+    .filter((b): b is ScheduledBlock => b !== null)
 })
 const unscheduledClasses = computed(() =>
   classes.value.filter(c => !parseClassTime(c.name))
@@ -73,14 +81,14 @@ onMounted(async () => {
   currentWeek.value = calculateCurrentWeek()
   loading.value = true
   try {
-    let response
+    let response: any
     if (authStore.userRole === 'teacher') {
-      response = await ClassApi.getTeacherClasses(authStore.user?.id)
+      response = await ClassApi.getTeacherClasses(authStore.user?.id ?? 0)
     } else {
-      response = await ClassApi.getUserClasses(authStore.user?.id)
+      response = await ClassApi.getUserClasses(authStore.user?.id ?? 0)
     }
     if (response.code === 200 && Array.isArray(response.data)) {
-      classes.value = response.data.map(classItem => ({
+      classes.value = response.data.map((classItem: any) => ({
         ...classItem,
         id: classItem.id || classItem.classId,
         name: classItem.className || classItem.name || '未命名班级',
@@ -98,7 +106,7 @@ onMounted(async () => {
   }
 })
 
-function getBlockStyle(block, hourIdx) {
+function getBlockStyle(block: ScheduledBlock, hourIdx: number) {
   const blockStart = block.start
   const blockEnd = block.end
   const cellStart = hourIdx
@@ -117,11 +125,11 @@ function getBlockStyle(block, hourIdx) {
     '--block-color': getColor(block.colorIdx)
   }
 }
-function getCellBlocks(hourIdx, weekIdx) {
+function getCellBlocks(hourIdx: number, weekIdx: number) {
   // 返回该小时、该周的所有课程块
   return scheduledBlocks.value.filter(b => b.weekIdx === weekIdx && b.start < hourIdx + 1 && b.end > hourIdx)
 }
-function goToClassDetail(classId) {
+function goToClassDetail(classId: number | string) {
   router.push(`/class/${classId}`)
 }
 

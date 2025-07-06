@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import {ref, reactive, onMounted, computed} from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+
+import {ref, reactive, onMounted} from 'vue'
+import { useRoute } from 'vue-router'
+
 import ExerciseApi from '../../api/exercise'
-import {useAuthStore} from "../../stores/auth.ts";
 import { ElMessage } from 'element-plus';
 import QuestionApi from '../../api/question'
 
-const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
 
-const practiceId = Number(route.params.id)
+// 路由参数始终为字符串，保持 string 避免后续不必要的类型转换
+const practiceId = route.params.id as string
 
 const exercise = reactive({
   title: '',
@@ -52,7 +52,7 @@ const fetchQuestionBank = async () => {
       list = res.data.data.questions
     }
     // 类型修正：单选题但答案长度大于1，视为多选题
-    list.forEach(q => {
+    list.forEach((q: any) => {
       if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
         q.type = 'multiplechoice'
       }
@@ -88,7 +88,8 @@ const addAllSelectedQuestions = () => {
 const fetchPracticeDetail = async () => {
   loading.value = true
   try {
-    const res = await ExerciseApi.takeExercise(practiceId)
+    // 接口参数要求 string
+    const res: any = await ExerciseApi.takeExercise(practiceId)
     const data = res.data
     exercise.title = data.title
     exercise.courseId = data.courseId
@@ -117,7 +118,8 @@ onMounted(() => {
 const saveBasicInfo = async () => {
   loading.value = true
   try {
-    const response = await ExerciseApi.updateExercise(practiceId, {
+    // 接口参数要求 string
+    const response: any = await ExerciseApi.updateExercise(practiceId, {
       title: exercise.title,
       startTime: exercise.startTime,
       endTime: exercise.endTime,
@@ -130,7 +132,7 @@ const saveBasicInfo = async () => {
         if (exercise.questions.length > 0) {
             const questionIds = exercise.questions.map(q => q.id)
             const scores = exercise.questions.map(q => q.score || 5)
-            const response = await ExerciseApi.importQuestionsToPractice({
+            const response: any = await ExerciseApi.importQuestionsToPractice({
                 practiceId,
                 questionIds,
                 scores
@@ -151,12 +153,12 @@ const saveBasicInfo = async () => {
   }
 }
 
-const questionTypeMap = {
-    'singlechoice': '单选题',
-    'multiplechoice': '多选题',
-    'judge': '判断题',
-    'program': '简答题',
-    'fillblank': '填空题'
+const questionTypeMap: Record<string, string> = {
+    singlechoice: '单选题',
+    multiplechoice: '多选题',
+    judge: '判断题',
+    program: '简答题',
+    fillblank: '填空题'
 }
 
 // 修改题目分值

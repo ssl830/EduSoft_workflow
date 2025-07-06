@@ -32,12 +32,12 @@ interface Props {
     isTeacher: boolean;
     course?: {
         id: number;
-        sections: Array<{
+        sections?: Array<{
             id: string;
             title: string;
             sortOrder: string;
         }>;
-        classes: Array<{
+        classes?: Array<{
             id: string;
             name: string;
             classCode: string;
@@ -330,7 +330,7 @@ const resetUploadForm = () => {
 const previewResource = async (resource: any) => {
     try {
         // 1. 获取预览链接
-        const response = await ResourceApi.previewResource(resource.id)
+        const response: any = await ResourceApi.previewResource(resource.id)
         const previewUrl = response.data.url
         const fileName = response.data.fileName || resource.title
 
@@ -367,7 +367,7 @@ const previewResource = async (resource: any) => {
 const downloadResource = async (resource: any) => {
     try {
         // 1. 获取文件直链
-        const response = await ResourceApi.downloadResource(resource.id)
+        const response: any = await ResourceApi.downloadResource(resource.id)
         const fileUrl = response.data.url
         const fileName = response.data.fileName || resource.title
 
