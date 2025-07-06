@@ -53,10 +53,6 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private PracticeQuestionMapper practiceQuestionMapper;
-    @Autowired
-    private SubmissionMapper submissionMapper;
-    @Autowired
-    private AnswerMapper answerMapper;
     /**
      * 练习截止后统计并写入每题得分率
      */
