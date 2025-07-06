@@ -192,16 +192,45 @@ const analyzePractice = async (practice: PracticeWithStats) => {
     if (result && typeof result === 'object') {
       if ('data' in result && typeof result.data === 'object') {
         aiModalResult.value = result.data;
+        // 新增：将 overall_analysis.average_score 赋值为 practice.averageScore.toFixed(2)
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 命中 result.data', result.data);
       } else if ('result' in result && typeof result.result === 'object') {
         aiModalResult.value = result.result;
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 命中 result.result', result.result);
       } else {
         aiModalResult.value = result;
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 直接赋值 result', result);
       }
     } else {
       aiModalResult.value = result;
+      if (
+        aiModalResult.value.overall_analysis &&
+        practice.averageScore !== null &&
+        practice.averageScore !== undefined
+      ) {
+        aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+      }
       console.log('[AI弹窗] result 非对象，直接赋值', result);
     }
     console.log('[AI弹窗] 最终 aiModalResult.value', aiModalResult.value);
