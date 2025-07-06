@@ -110,7 +110,11 @@ class PromptTemplates:
         """生成练习题的提示词"""
         # 动态题型描述
         if custom_types:
-            type_lines = []
+            type_lines = [
+                f"1. 选择题 {choose_count}道",
+                f"2. 填空题 {fill_blank_count}道",
+                f"3. 计算或者简答题 {question_count}道"
+            ]
             for k, v in custom_types.items():
                 type_lines.append(f"{k}：{v}道")
             type_desc = "\n".join(type_lines)
@@ -139,8 +143,8 @@ class PromptTemplates:
                 {{
                     "type": "题目类型",
                     "question": "题目描述",
-                    "options": "选项数组", //Array(String),选择题使用，除了单选、多选外数组返回空即可
-                    "answer": "参考答案",
+                    "options": "选项数组", //Array(String),选择题使用，除了单选、多选外数组返回空即可，生成的选项不要带A. B. C. D. 等前缀，直接返回选项内容即可。
+                    "answer": "参考答案",  //选择题返回的答案依旧是 A|B|C|D 这种格式，而非选项本身
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
                 }}
@@ -371,7 +375,7 @@ class PromptTemplates:
                 {{
                     "type": "singlechoice",
                     "question": "题目描述",
-                    "options": ["A. 选项1", "B. 选项2", "C. 选项3", "D. 选项4"],
+                    "options": ["选项1", "选项2", "选项3", "选项4"],
                     "answer": "A",
                     "explanation": "解题思路",
                     "knowledge_points": ["相关知识点1", "相关知识点2"]
@@ -380,7 +384,7 @@ class PromptTemplates:
         }}
         """
 
-   
+
 
     def get_teaching_content_detail_prompt(
         title: str,
@@ -541,4 +545,3 @@ class PromptTemplates:
         3. 推荐的行动要有针对性，并说明预期效果
         4. 返回必须是合法JSON，不要包含Markdown、注释或多余文字
         """
-

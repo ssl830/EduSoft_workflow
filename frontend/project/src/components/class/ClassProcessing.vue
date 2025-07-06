@@ -310,16 +310,16 @@ onMounted(() => {
                                 练习
                             </button>
 
-                            <!-- 查看按钮  TODO 学生查看练习报告？-->
-                            <button
-                                v-if="isStudent"
-                                class="btn-action download"
-                                @click="getPracticeReport(practice.id, practice.submitId)"
-                                title="查看"
-                                :disabled="!practice.isSubmitted"
-                            >
-                                查看
-                            </button>
+<!--                            &lt;!&ndash; 查看按钮  TODO 学生查看练习报告？&ndash;&gt;-->
+<!--                            <button-->
+<!--                                v-if="isStudent"-->
+<!--                                class="btn-action download"-->
+<!--                                @click="getPracticeReport(practice.id, practice.submitId)"-->
+<!--                                title="查看"-->
+<!--                                :disabled="!practice.isSubmitted"-->
+<!--                            >-->
+<!--                                查看-->
+<!--                            </button>-->
                             <!-- 老师端：查看题目按钮 -->
                             <button
                                 v-if="isTeacher"

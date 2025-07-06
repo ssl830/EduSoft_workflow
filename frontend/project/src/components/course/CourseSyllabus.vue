@@ -108,6 +108,30 @@ const openTeachingPlanDialog = () => {
     teachingPlanResult.value = null
 }
 
+// 新增：教案生成弹窗
+const showPlanDialog = ref(false)
+const planDialogMsg = ref('')
+function openPlanDialog(msg: string) {
+  planDialogMsg.value = msg
+  showPlanDialog.value = true
+  if (msg.startsWith('正在生成教案')) {
+    planDialogMsgIndex.value = 0
+    planDialogMsg.value = planDialogMsgs[planDialogMsgIndex.value]
+    planDialogInterval = window.setInterval(() => {
+      planDialogMsgIndex.value = (planDialogMsgIndex.value + 1) % planDialogMsgs.length
+      planDialogMsg.value = planDialogMsgs[planDialogMsgIndex.value]
+    }, 2000)
+  }
+}
+function closePlanDialog() {
+  showPlanDialog.value = false
+  planDialogMsg.value = ''
+  if (planDialogInterval) {
+    clearInterval(planDialogInterval)
+    planDialogInterval = null
+  }
+}
+
 const handleGenerateTeachingPlan = async () => {
     // 防止重复请求
     if (teachingPlanLoading.value) return;
@@ -116,6 +140,7 @@ const handleGenerateTeachingPlan = async () => {
         return
     }
     teachingPlanLoading.value = true
+    openPlanDialog('正在生成教案') // 只需传入任意“正在生成教案”开头的字符串即可
     try {
         const res = await CourseApi.generateTeachingContent({
             course_name: props.course.name,
@@ -127,7 +152,19 @@ const handleGenerateTeachingPlan = async () => {
         } else {
             teachingPlanResult.value = res
         }
+        closePlanDialog()
+        planDialogMsg.value = '生成教案成功(๑˃̵ᴗ˂̵)و✧'
+        showPlanDialog.value = true
+        setTimeout(() => {
+          closePlanDialog()
+        }, 1500)
     } catch (err: any) {
+        closePlanDialog()
+        planDialogMsg.value = '生成教案失败(´；д；)`'
+        showPlanDialog.value = true
+        setTimeout(() => {
+          closePlanDialog()
+        }, 1500)
         ElMessage.error('生成教案失败，请稍后再试')
         teachingPlanResult.value = null
     } finally {
@@ -273,24 +310,30 @@ const handleLessonDetail = async (idx: number, lesson: any, type: 'detail' | 're
             const res = await CourseApi.generateTeachingContentDetail(params)
             console.log(res)
             if (res.data) {
-                renderTeachingPlan.value.lessons[idx] = res.data
-                console.log(renderTeachingPlan.value.lessons[idx])
-                console.log(renderTeachingPlan.value.lessons.value[idx])
+                // 修正：直接操作 teachingPlanResult.value.lessons
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res.data
+                }
             } else {
-                renderTeachingPlan.value.lessons[idx] = res
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res
+                }
             }
+            ElMessage.success('生成成功');
         }else{
             const res = await CourseApi.regenerateTeachingContent(params)
             console.log(res)
             if (res.data) {
-                renderTeachingPlan.value.lessons[idx] = res.data
-                console.log(renderTeachingPlan.value.lessons[idx])
-                console.log(renderTeachingPlan.value.lessons.value[idx])
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res.data
+                }
             } else {
-                renderTeachingPlan.value.lessons[idx] = res
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res
+                }
             }
+            ElMessage.success('生成成功');
         }
-
     } catch (e) {
         ElMessage.error('请求失败，请稍后再试')
     } finally {
@@ -304,6 +347,16 @@ const handleTeachingPlanDialogClose = () => {
     teachingPlanLoading.value = false
     expectedHours.value = null
 }
+
+// 新增：教案生成弹窗动画文案
+const planDialogMsgs = [
+  '正在生成教案(。-ω-)✧',
+  '正在生成教案📖_(:3 」∠)_',
+  '正在生成教案(๑•̀ㅂ•́)و✧',
+  '正在生成教案─=≡Σ((( つ•̀ω•́)つ',
+]
+let planDialogInterval: number | null = null
+const planDialogMsgIndex = ref(0)
 </script>
 
 <template>
@@ -536,6 +589,18 @@ const handleTeachingPlanDialogClose = () => {
                 <textarea v-show="false" :value="JSON.stringify(teachingPlanResult, null, 2)" readonly></textarea>
             </div>
         </el-dialog>
+
+        <!-- 教案生成状态弹窗 -->
+        <div v-if="showPlanDialog" class="kb-dialog-mask">
+          <div class="kb-dialog">
+            <div class="kb-dialog-content">
+              <div v-if="planDialogMsg.startsWith('正在生成教案')">
+                <div class="kb-dialog-spinner"></div>
+              </div>
+              <div class="kb-dialog-msg">{{ planDialogMsg }}</div>
+            </div>
+          </div>
+        </div>
 
         <CourseEditDialog
             v-if="course"
@@ -832,5 +897,55 @@ const handleTeachingPlanDialogClose = () => {
     word-break: break-all;
     white-space: pre-line;
     line-height: 1.7;
+}
+
+/* 教案生成弹窗样式，复用CourseResourceList.vue */
+.kb-dialog-mask {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kb-dialog {
+  background: #fff;
+  border-radius: 12px;
+  min-width: 260px;
+  min-height: 120px;
+  box-shadow: 0 4px 24px rgba(44,110,207,0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  animation: fadein 0.2s;
+}
+.kb-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.kb-dialog-msg {
+  font-size: 1.1rem;
+  color: #512da8;
+  margin-top: 1rem;
+  text-align: center;
+}
+.kb-dialog-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #ede7f6;
+  border-top: 4px solid #8e24aa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>

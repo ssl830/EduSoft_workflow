@@ -15,7 +15,9 @@
             <div class="questions-list2">
                 <div v-for="(question, index) in practiceData.questions" :key="question.id" class="question-item">
                     <div class="question-header2">
-                        <h3>题目 {{ index + 1 }} {{ question.content }}</h3>
+                        <h3 style="max-width: 1000px;">
+                          题目 {{ index + 1 }} {{ question.content }}
+                        </h3>
                         <div style="display: flex; gap: 8px;">
                             <button
                                 @click="toggleFavorite(question)"
@@ -41,23 +43,18 @@
                         <div class="question-type2">{{ questionTypeMap[question.type] }}</div>
                         <div class="question-points">分值：{{ question.score }}分</div>
 
-                        <!-- 客观题展示 -->
-                        <template v-if="isObjective(question.type)">
-                            <div class="answer-section">
-                                <div>标准答案：{{ formatAnswer(question.answer, question.type) }}</div>
-                                <div>你的答案：{{ formatAnswer(studentAnswers[question.id], question.type) }}</div>
-                            </div>
-                        </template>
+                        <div class="answer-section">
+                            <div>标准答案：{{ formatAnswer(question.answer, question.type) || '-' }}</div>
+                            <div>你的答案：{{ formatAnswer(studentAnswers[question.id], question.type) }}</div>
+                        </div>
 
-                        <!-- 主观题展示 -->
-                        <template v-else>
-                            <div class="answer-section">
-                                <div>你的答案：{{ studentAnswers[question.id] || '未回答' }}</div>
-                            </div>
-                        </template>
-
-                        <div v-if="question.explanation" class="explanation">
-                            解析：{{ question.explanation }}
+                        <div class="explanation"
+                             :class="{
+                               'explanation-correct': formatAnswer(question.answer, question.type) === formatAnswer(studentAnswers[question.id], question.type),
+                               'explanation-wrong': formatAnswer(question.answer, question.type) !== formatAnswer(studentAnswers[question.id], question.type)
+                             }"
+                        >
+                            解析：{{ question.analysis || '-' }}
                         </div>
                     </div>
                 </div>
@@ -387,7 +384,9 @@ const handleDownloadReport = async () => {
             return
         }
         const response = await StudyRecordsApi.exportSubmissionReport(submissionId)
+
         if (!response || !(response.data instanceof Blob) || response.data.size === 0) {
+
             downloadStatus.value.error = '服务器返回的数据为空'
             return
         }
@@ -844,5 +843,19 @@ const closeSubmissionReportModal = () => {
 .btn-secondary:hover {
     background: #dee2e6;
     color: #333;
+}
+
+.question-title-correct {
+    color: #43a047;
+}
+.question-title-wrong {
+    color: #e53935;
+}
+
+.explanation-correct {
+    background: #e8f5e9 !important;
+}
+.explanation-wrong {
+    background: #ffebee !important;
 }
 </style>

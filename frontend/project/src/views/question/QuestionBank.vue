@@ -448,14 +448,17 @@ const updateCustomTypeKey = (oldKey: string, newKey: string) => {
 
 const generateQuestions = async () => {
     console.warn('=== 开始生成题目 ===');
+    openGenerateDialog('正在生成题目')
     try {
         // 只传递纯对象，避免循环引用
         const reqData = JSON.parse(JSON.stringify(generateForm.value));
         const response: any = await QuestionApi.generateExercise(reqData);
         console.log('生成题目响应:', response);
+
         console.log(Array.isArray(response.data?.exercises))
 
         if (response?.data && Array.isArray(response.data.exercises)) {
+
             for (const question of response.data.exercises) {
                 const questionData = {
                     type: question.type,
@@ -470,13 +473,16 @@ const generateQuestions = async () => {
                 };
                 await QuestionApi.createQuestion(questionData);
             }
+            closeGenerateDialog()
             ElMessage.success('题目生成并保存成功！');
             fetchQuestions();
         } else {
+            closeGenerateDialog()
             ElMessage.error('生成题目失败，请稍后再试！');
         }
     } catch (err) {
         console.error('生成题目失败:', err);
+        closeGenerateDialog()
         ElMessage.error('生成题目失败，请稍后再试！');
     } finally {
         showGenerateDialog.value = false;
@@ -497,6 +503,7 @@ const updateSectionSelection = (sectionId: number) => {
     generateForm.value.lesson_content = selectedSection ? selectedSection.title : '';
 };
 
+
 // 处理多选答案更改，解决模板中 e.target 类型问题
 const onMultiChoiceChange = (optionKey: string, e: Event) => {
   const target = e.target as HTMLInputElement | null;
@@ -510,6 +517,40 @@ const onMultiChoiceChange = (optionKey: string, e: Event) => {
   arr.sort();
   tempQuestion.value.answer = arr.join('|');
 };
+
+// 生成题目弹窗动画文案
+const generateDialogMsgs = [
+  '正在生成题目(。-ω-)✧',
+  '正在生成题目📖_(:3 」∠)_',
+  '正在生成题目(๑•̀ㅂ•́)و✧',
+  '正在生成题目─=≡Σ((( つ•̀ω•́)つ',
+]
+let generateDialogInterval: number | null = null
+const generateDialogMsgIndex = ref(0)
+const showGenerateLoadingDialog = ref(false)
+const generateDialogMsg = ref('')
+
+function openGenerateDialog(msg: string) {
+  generateDialogMsg.value = msg
+  showGenerateLoadingDialog.value = true
+  if (msg.startsWith('正在生成题目')) {
+    generateDialogMsgIndex.value = 0
+    generateDialogMsg.value = generateDialogMsgs[generateDialogMsgIndex.value]
+    generateDialogInterval = window.setInterval(() => {
+      generateDialogMsgIndex.value = (generateDialogMsgIndex.value + 1) % generateDialogMsgs.length
+      generateDialogMsg.value = generateDialogMsgs[generateDialogMsgIndex.value]
+    }, 2000)
+  }
+}
+function closeGenerateDialog() {
+  showGenerateLoadingDialog.value = false
+  generateDialogMsg.value = ''
+  if (generateDialogInterval) {
+    clearInterval(generateDialogInterval)
+    generateDialogInterval = null
+  }
+}
+
 </script>
 
 <template>
@@ -845,7 +886,7 @@ const onMultiChoiceChange = (optionKey: string, e: Event) => {
     </div>
 
     <!-- 生成题目弹窗 -->
-    <div v-if="showGenerateDialog" class="modal-mask" @click="showGenerateDialog = false">
+    <div v-if="showGenerateDialog" class="modal-mask">
         <div class="modal-container" @click.stop>
             <div class="modal-header">
                 <h3>生成题目</h3>
@@ -958,6 +999,18 @@ const onMultiChoiceChange = (optionKey: string, e: Event) => {
                 <button class="btn-primary" @click="generateQuestions">生成</button>
             </div>
         </div>
+    </div>
+
+    <!-- 生成题目加载弹窗 -->
+    <div v-if="showGenerateLoadingDialog" class="kb-dialog-mask">
+      <div class="kb-dialog">
+        <div class="kb-dialog-content">
+          <div v-if="generateDialogMsg.startsWith('正在生成题目')">
+            <div class="kb-dialog-spinner"></div>
+          </div>
+          <div class="kb-dialog-msg">{{ generateDialogMsg }}</div>
+        </div>
+      </div>
     </div>
 </template>
 
@@ -1630,5 +1683,55 @@ select:disabled {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.9375rem;
+}
+
+/* 生成题目弹窗样式，复用CourseSyllabus */
+.kb-dialog-mask {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kb-dialog {
+  background: #fff;
+  border-radius: 12px;
+  min-width: 260px;
+  min-height: 120px;
+  box-shadow: 0 4px 24px rgba(44,110,207,0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  animation: fadein 0.2s;
+}
+.kb-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.kb-dialog-msg {
+  font-size: 1.1rem;
+  color: #512da8;
+  margin-top: 1rem;
+  text-align: center;
+}
+.kb-dialog-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #ede7f6;
+  border-top: 4px solid #8e24aa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>

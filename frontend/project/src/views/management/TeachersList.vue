@@ -76,7 +76,7 @@ onMounted(fetchTeachers)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="t in teachers" :key="t.id">
+          <tr v-for="t in teachers.filter(t => t.id !== -1)" :key="t.id">
             <td>{{ t.id }}</td>
             <td>{{ t.userId }}</td>
             <td>{{ t.username }}</td>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+
 import {ref, reactive, onMounted} from 'vue'
 import { useRoute } from 'vue-router'
+
 import ExerciseApi from '../../api/exercise'
 import { ElMessage } from 'element-plus';
 import QuestionApi from '../../api/question'
@@ -28,6 +30,12 @@ const questionBankLoading = ref(false)
 const questionBankError = ref('')
 const questionBankList = ref<any[]>([])
 const selectedQuestionIds = ref<number[]>([])
+
+// 计算：过滤掉已在练习题目列表中的题库题目
+const filteredQuestionBankList = computed(() => {
+  const existIds = exercise.questions.map(q => q.id)
+  return questionBankList.value.filter(q => !existIds.includes(q.id))
+})
 
 // 拉取题库题目
 const fetchQuestionBank = async () => {
@@ -253,7 +261,7 @@ const removeQuestion = (questionId: number) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(q, idx) in questionBankList" :key="q.id">
+              <tr v-for="(q, idx) in filteredQuestionBankList" :key="q.id">
                 <td>{{ idx + 1 }}</td>
                 <td class="q-content">{{ q.name || q.content }}</td>
                 <td>
@@ -269,7 +277,7 @@ const removeQuestion = (questionId: number) => {
                   <input type="checkbox" v-model="selectedQuestionIds" :value="q.id" />
                 </td>
               </tr>
-              <tr v-if="!questionBankList.length">
+              <tr v-if="!filteredQuestionBankList.length">
                 <td colspan="6" class="empty">暂无题目</td>
               </tr>
             </tbody>

@@ -63,7 +63,7 @@ onMounted(fetchTutors)
 
 <template>
     <div class="tutors-list-container">
-        <h2>教师基本信息列表</h2>
+        <h2>管理员基本信息列表</h2>
         <div v-if="loading">加载中...</div>
         <div v-else-if="error" style="color:red">{{ error }}</div>
         <div class="table-scroll-wrapper" v-else>

@@ -27,11 +27,6 @@
                 <span v-else>{{ practice.submissionCount }}</span>
               </p>
               <p><strong>平均分：</strong>{{ practice.averageScore !== null ? practice.averageScore.toFixed(2) : '-' }}</p>
-              <!-- 手动统计得分率按钮 -->
-              <button class="score-rate-btn" @click="updateScoreRate(practice)" :disabled="scoreRateLoadingMap[practice.id]" style="margin-bottom: 0.5rem;">
-                <span v-if="scoreRateLoadingMap[practice.id]">统计中...</span>
-                <span v-else>手动统计得分率</span>
-              </button>
               <!-- AI分析按钮 -->
               <button class="ai-analyze-btn" @click="analyzePractice(practice)" :disabled="aiLoadingMap[practice.id]">
                 <svg v-if="aiLoadingMap[practice.id]" class="ai-btn-icon spin" width="18" height="18" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#1890ff" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.4 31.4"/></svg>
@@ -42,17 +37,30 @@
             </div>
             <!-- AI分析结果弹窗 -->
             <div v-if="showAiModal" class="modal-mask">
-              <div class="modal-container">
-                <div class="modal-header">
+              <div class="modal-container ai-modal-container">
+                <!-- 固定标题 -->
+                <div class="modal-header ai-modal-header fixed-header">
                   <h3>AI学情分析结果</h3>
+                  <!-- 导出按钮靠右 -->
+                  <button
+                    class="ai-export-btn"
+                    @click="exportAiAnalysisAsPDF"
+                    :disabled="aiModalLoading || !aiModalResult || exportAiLoading"
+                  >
+                    <svg v-if="exportAiLoading" class="ai-export-icon spin" width="18" height="18" viewBox="0 0 50 50">
+                      <circle cx="25" cy="25" r="20" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.4 31.4" />
+                    </svg>
+                    <svg v-else class="ai-export-icon" width="18" height="18" viewBox="0 0 24 24"><path fill="#ffffff" d="M5 20h14a1 1 0 0 0 1-1v-6h-2v5H6v-5H4v6a1 1 0 0 0 1 1zm7-2v-8.59l3.29 3.3a1 1 0 1 0 1.42-1.42l-5-5a1 1 0 0 0-1.42 0l-5 5a1 1 0 1 0 1.42 1.42L11 9.41V18a1 1 0 0 0 2 0z"/></svg>
+                    <span style="margin-left:6px;">导出</span>
+                  </button>
                   <button class="modal-close" @click="showAiModal = false">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body ai-modal-body">
                   <div v-if="aiModalLoading" class="ai-modal-loading"><span class="ai-loading-spinner"></span> 分析中...</div>
                   <div v-else-if="aiModalError" class="ai-modal-error">{{ aiModalError }}</div>
                   <div v-else-if="!!aiModalResult && !aiModalLoading">
-                    <div class="ai-modal-section ai-modal-beauty">
-                      <h4><span class="ai-icon">📊</span> 整体分析</h4>
+                    <div class="ai-modal-section ai-modal-beauty" id="ai-analysis-pdf-content">
+                      <h4><span class="ai-icon">📊</span> <span class="ai-section-title">整体分析</span></h4>
                       <div class="ai-modal-block">
                         <div class="ai-row"><span class="ai-label">平均分：</span><span class="ai-value ai-score">{{ aiModalResult.overall_analysis?.average_score ?? '-' }}</span></div>
                         <div class="ai-row"><span class="ai-label">难度分析：</span><span class="ai-value">{{ aiModalResult.overall_analysis?.difficulty_analysis ?? '-' }}</span></div>
@@ -63,14 +71,14 @@
                           </ul>
                         </div>
                       </div>
-                      <h4><span class="ai-icon">📚</span> 知识点分析</h4>
+                      <h4><span class="ai-icon">📚</span> <span class="ai-section-title">知识点分析</span></h4>
                       <div class="ai-modal-block">
                         <table class="ai-table ai-table-beauty" v-if="Array.isArray(aiModalResult.knowledge_points_analysis)">
                           <thead>
                             <tr>
                               <th>知识点</th>
                               <th>掌握情况</th>
-                              <th>错误数</th>
+                              <th class="nowrap-th">错误数</th>
                               <th>章节位置</th>
                               <th>提升建议</th>
                             </tr>
@@ -91,7 +99,7 @@
                         </table>
                         <div v-else class="ai-empty">无知识点分析数据</div>
                       </div>
-                      <h4><span class="ai-icon">💡</span> 教学建议</h4>
+                      <h4><span class="ai-icon">💡</span> <span class="ai-section-title">教学建议</span></h4>
                       <div class="ai-modal-block">
                         <div v-if="aiModalResult.teaching_suggestions">
                           <div class="ai-row"><span class="ai-label">重点关注：</span>
@@ -123,6 +131,10 @@
       </div>
     </div>
   </div>
+    <div v-if="exportAiGlobalLoading" class="global-loading-mask">
+        <div class="global-loading-spinner"></div>
+        <div class="global-loading-text">正在导出，请稍候...</div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -130,8 +142,12 @@ import { ref, computed, onMounted } from 'vue';
 import AppSidebar from '@/components/layout/AppSidebar.vue';
 import PracticeApi from '@/api/practice';
 import { analyzeExercise } from '@/api/ai';
+import { ElMessage } from 'element-plus';
+// 新增：引入 jsPDF
+import jsPDF from 'jspdf';
 
-// Define the type for a practice object
+const exportAiLoading = ref(false);
+
 interface Practice {
   id: number;
   title: string;
@@ -140,11 +156,13 @@ interface Practice {
   course_name: string;
   class_id: number; // 班级ID，后端需返回
 }
+
 /*未使用
 interface PracticeStats {
   submissionCount: number;
   averageScore: number | null;
 }*/
+
 
 interface PracticeWithStats extends Practice {
   submissionCount: number;
@@ -165,6 +183,7 @@ const aiModalError = ref<string | null>(null);
 const aiModalResult = ref<any>(null);
 
 const analyzePractice = async (practice: PracticeWithStats) => {
+  await updateScoreRate(practice);
   console.log('[AI弹窗] analyzePractice called', practice);
   aiLoadingMap.value[practice.id] = true;
   showAiModal.value = true;
@@ -180,16 +199,45 @@ const analyzePractice = async (practice: PracticeWithStats) => {
     if (result && typeof result === 'object') {
       if ('data' in result && typeof result.data === 'object') {
         aiModalResult.value = result.data;
+        // 新增：将 overall_analysis.average_score 赋值为 practice.averageScore.toFixed(2)
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 命中 result.data', result.data);
       } else if ('result' in result && typeof result.result === 'object') {
         aiModalResult.value = result.result;
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 命中 result.result', result.result);
       } else {
         aiModalResult.value = result;
+        if (
+          aiModalResult.value.overall_analysis &&
+          practice.averageScore !== null &&
+          practice.averageScore !== undefined
+        ) {
+          aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+        }
         console.log('[AI弹窗] 直接赋值 result', result);
       }
     } else {
       aiModalResult.value = result;
+      if (
+        aiModalResult.value.overall_analysis &&
+        practice.averageScore !== null &&
+        practice.averageScore !== undefined
+      ) {
+        aiModalResult.value.overall_analysis.average_score = practice.averageScore.toFixed(2);
+      }
       console.log('[AI弹窗] result 非对象，直接赋值', result);
     }
     console.log('[AI弹窗] 最终 aiModalResult.value', aiModalResult.value);
@@ -208,9 +256,9 @@ const updateScoreRate = async (practice: any) => {
   scoreRateLoadingMap.value[practice.id] = true;
   try {
     await PracticeApi.updateScoreRate(practice.id);
-    alert('得分率统计成功！');
+    ElMessage.success('得分率统计成功！');
   } catch (e: any) {
-    alert('得分率统计失败：' + (e?.message || '未知错误'));
+    ElMessage.error('得分率统计失败：' + (e?.message || '未知错误'));
   } finally {
     scoreRateLoadingMap.value[practice.id] = false;
   }
@@ -270,6 +318,118 @@ const fetchTeacherPractices = async () => {
 onMounted(() => {
   fetchTeacherPractices();
 });
+const exportAiGlobalLoading = ref(false);
+// 导出AI学情分析结果为PDF
+const exportAiAnalysisAsPDF = async () => {
+  if (!aiModalResult.value) {
+    ElMessage.error('无AI学情分析内容，无法导出');
+    return;
+  }
+  exportAiLoading.value = true;
+  exportAiGlobalLoading.value = true; // 显示全局 loading
+
+  // 使用 setTimeout 将导出逻辑放入异步任务队列，避免阻塞主线程
+  setTimeout(async () => {
+    try {
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const marginLeft = 15;
+      const marginTop = 20;
+      const lineHeight = 8;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let cursorY = marginTop;
+
+      // 字体
+      const fontName = 'SourceHanSerifSC';
+      const fontUrl = '/src/assets/fonts/SourceHanSerifSC-VF.ttf';
+      if (!doc.getFontList()[fontName]) {
+        const fontData = await fetch(fontUrl).then(res => res.arrayBuffer());
+        doc.addFileToVFS(`${fontName}.ttf`, arrayBufferToBase64(fontData));
+        doc.addFont(`${fontName}.ttf`, fontName, 'normal');
+      }
+      doc.setFont(fontName, 'normal');
+      doc.setFontSize(12);
+
+      const maxTextWidth = pageWidth - 2 * marginLeft;
+      const addTextWithWrapping = (text: string) => {
+        const lines = doc.splitTextToSize(text, maxTextWidth);
+        lines.forEach((line: string) => {
+          if (cursorY > pageHeight - marginTop) {
+            doc.addPage();
+            cursorY = marginTop;
+          }
+          doc.text(line, marginLeft, cursorY);
+          cursorY += lineHeight;
+        });
+      };
+
+      // 整体分析
+      addTextWithWrapping('AI学情分析结果');
+      cursorY += lineHeight;
+      addTextWithWrapping('【整体分析】');
+      const overall = aiModalResult.value.overall_analysis || {};
+      addTextWithWrapping(`平均分：${overall.average_score ?? '-'}`);
+      addTextWithWrapping(`难度分析：${overall.difficulty_analysis ?? '-'}`);
+      if (overall.common_issues && overall.common_issues.length) {
+        addTextWithWrapping('常见问题：');
+        overall.common_issues.forEach((issue: string) => addTextWithWrapping('  - ' + issue));
+      }
+      cursorY += lineHeight;
+
+      // 知识点分析
+      addTextWithWrapping('【知识点分析】');
+      const kpArr = Array.isArray(aiModalResult.value.knowledge_points_analysis)
+        ? aiModalResult.value.knowledge_points_analysis : [];
+      if (kpArr.length) {
+        addTextWithWrapping('知识点 | 掌握情况 | 错误数 | 章节位置 | 提升建议');
+        kpArr.forEach((kp: any) => {
+          let sug = Array.isArray(kp.improvement_suggestions)
+            ? kp.improvement_suggestions.join('；') : (kp.improvement_suggestions || '-');
+          addTextWithWrapping(
+            `${kp.point} | ${kp.mastery_level} | ${kp.error_rate} | ${kp.chapter_location} | ${sug}`
+          );
+        });
+      } else {
+        addTextWithWrapping('无知识点分析数据');
+      }
+      cursorY += lineHeight;
+
+      // 教学建议
+      addTextWithWrapping('【教学建议】');
+      const ts = aiModalResult.value.teaching_suggestions || {};
+      if (ts.key_focus_areas && ts.key_focus_areas.length) {
+        addTextWithWrapping('重点关注：');
+        ts.key_focus_areas.forEach((area: string) => addTextWithWrapping('  - ' + area));
+      }
+      if (ts.recommended_methods && ts.recommended_methods.length) {
+        addTextWithWrapping('推荐方法：');
+        ts.recommended_methods.forEach((m: string) => addTextWithWrapping('  - ' + m));
+      }
+      if (ts.resource_suggestions && ts.resource_suggestions.length) {
+        addTextWithWrapping('资源建议：');
+        ts.resource_suggestions.forEach((r: string) => addTextWithWrapping('  - ' + r));
+      }
+      doc.save('AI学情分析.pdf');
+      ElMessage.success('导出成功');
+    } catch (err) {
+      console.error('导出PDF失败:', err);
+      ElMessage.error('导出失败，请稍后再试');
+    } finally {
+      exportAiLoading.value = false;
+      exportAiGlobalLoading.value = false; // 隐藏全局 loading
+    }
+  }, 0);
+};
+
+// 辅助函数：ArrayBuffer转Base64
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
 </script>
 
 <script lang="ts">
@@ -289,6 +449,35 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.global-loading-mask {
+    position: fixed;
+    z-index: 2000;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.global-loading-spinner {
+    border: 6px solid #e3eaf2;
+    border-top: 6px solid #1976d2;
+    border-radius: 50%;
+    width: 54px;
+    height: 54px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 18px;
+}
+.global-loading-text {
+    color: #1976d2;
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
 .ai-table {
   width: 100%;
   border-collapse: collapse;
@@ -516,21 +705,270 @@ export default defineComponent({
   padding: 24px;
 }
 
-@media (max-width: 600px) {
-  .card-container {
-    grid-template-columns: 1fr;
-    gap: 0.7rem;
-    padding: 0;
-  }
-  .practice-card {
-    padding: 0.7rem 0.4rem;
-  }
-  .practice-card h3 {
-    font-size: 1rem;
-    padding: 0.3rem 0.4rem;
-  }
-  .practice-card p {
-    font-size: 0.98rem;
-  }
+.ai-modal-container {
+  background: #fafdff;
+  border-radius: 16px;
+  width: 98%;
+  max-width: 900px;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(24, 144, 255, 0.18), 0 2px 8px rgba(60, 60, 60, 0.08);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  padding-bottom: 8px;
+  animation: modal-pop 0.25s;
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ai-modal-header {
+  padding: 22px 36px 12px 36px;
+  border-bottom: 1px solid #e3eaf2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #e3f0fc 0%, #fafdff 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.ai-modal-header h3 {
+  margin: 0;
+  color: #1a355b;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.ai-modal-body {
+  padding: 28px 36px 24px 36px;
+  font-size: 1.08rem;
+  color: #2d3a4a;
+  background: #fafdff;
+  border-radius: 0 0 16px 16px;
+}
+
+.ai-modal-section {
+  margin-bottom: 2.2em;
+}
+
+.ai-section-title {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin-left: 2px;
+  letter-spacing: 0.5px;
+}
+
+.ai-modal-block {
+  background: #f5f7fa;
+  border-radius: 10px;
+  padding: 1.1em 1.2em 1.1em 1.2em;
+  margin: 0.7em 0 1.2em 0;
+  box-shadow: 0 2px 8px rgba(60, 60, 60, 0.04);
+  font-size: 1.05rem;
+}
+
+.ai-row {
+  margin-bottom: 0.7em;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+.ai-label {
+  color: #1976d2;
+  font-weight: 500;
+  min-width: 5em;
+  display: inline-block;
+}
+
+.ai-value {
+  color: #333;
+  font-weight: 500;
+}
+
+.ai-score {
+  color: #43a047;
+  font-size: 1.13em;
+  font-weight: 700;
+}
+
+.ai-list-dot {
+  padding-left: 1.2em;
+  margin: 0.2em 0;
+  color: #444;
+  font-size: 1em;
+}
+.ai-list-dot li {
+  list-style: disc;
+  margin-bottom: 0.1em;
+}
+
+.ai-list-suggestion {
+  padding-left: 1.2em;
+  margin: 0.2em 0;
+  color: #1976d2;
+  font-size: 0.98em;
+}
+.ai-list-suggestion li {
+  list-style: circle;
+  margin-bottom: 0.1em;
+  word-break: break-all;
+}
+
+.ai-table-beauty {
+  font-size: 1.04em;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(24,144,255,0.06);
+  background: #fff;
+  margin-bottom: 0.5em;
+}
+.ai-table-beauty th, .ai-table-beauty td {
+  padding: 0.6em 0.9em;
+  border: 1px solid #e0e0e0;
+  font-size: 1em;
+  vertical-align: top;
+}
+.ai-table-beauty th {
+  background: #e3f0fc;
+  color: #1976d2;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.ai-table-beauty tr:nth-child(even) {
+  background: #fafdff;
+}
+.ai-table-beauty tr:nth-child(odd) {
+  background: #f5f7fa;
+}
+.ai-table-beauty td ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+.ai-table-beauty td ul li {
+  font-size: 0.98em;
+  color: #1976d2;
+  margin-bottom: 0.1em;
+  word-break: break-all;
+}
+
+.ai-tag {
+  display: inline-block;
+  padding: 0.18em 0.7em;
+  border-radius: 12px;
+  font-size: 0.98em;
+  font-weight: 500;
+  background: #e3f0fc;
+  color: #1976d2;
+  margin-right: 0.2em;
+  letter-spacing: 0.5px;
+}
+.ai-tag-高 { background: #e8f5e9; color: #43a047; }
+.ai-tag-中 { background: #fffde7; color: #fbc02d; }
+.ai-tag-低 { background: #ffebee; color: #e53935; }
+
+.ai-strong {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.ai-icon {
+  font-size: 1.15em;
+  margin-right: 0.3em;
+  vertical-align: middle;
+}
+
+.ai-modal-loading {
+  color: #1976d2;
+  font-size: 1.15em;
+  text-align: center;
+  padding: 2em 0;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.ai-modal-error {
+  color: #e53935;
+  font-size: 1.1em;
+  text-align: center;
+  padding: 2em 0;
+  font-weight: 500;
+}
+
+.ai-empty {
+  color: #888;
+  font-size: 1em;
+  text-align: center;
+  padding: 1.2em 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #1976d2;
+}
+
+.ai-table-beauty th.nowrap-th {
+  white-space: nowrap;
+}
+
+/* 固定标题样式 */
+.fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, #e3f0fc 0%, #fafdff 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 导出按钮样式调整 */
+.ai-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.38em 1.2em;
+  font-size: 1.02rem;
+  font-weight: 500;
+  margin-left: auto; /* 靠右对齐 */
+  margin-right: 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.08);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s, color 0.2s;
+  outline: none;
+  gap: 0.4em;
+}
+.ai-export-btn:disabled {
+  background: #bcd4e6;
+  color: #e3eaf2;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+.ai-export-btn:not(:disabled):hover {
+  background: linear-gradient(90deg, #42a5f5 0%, #1976d2 100%);
+  color: #ffffff;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.13);
+}
+.ai-export-icon {
+  vertical-align: middle;
+  margin-right: 6px;
 }
 </style>

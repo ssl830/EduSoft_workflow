@@ -46,19 +46,13 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Autowired
     private PracticeRecordMapper practiceRecordMapper;
-    /* 
     @Autowired
     private org.example.edusoft.mapper.practice.SubmissionMapper submissionMapper;
     @Autowired
     private org.example.edusoft.mapper.practice.AnswerMapper answerMapper;
-    */
 
     @Autowired
     private PracticeQuestionMapper practiceQuestionMapper;
-    @Autowired
-    private SubmissionMapper submissionMapper;
-    @Autowired
-    private AnswerMapper answerMapper;
     /**
      * 练习截止后统计并写入每题得分率
      */

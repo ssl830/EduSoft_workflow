@@ -5,27 +5,47 @@
         <div class="bubble-content">
           <h2>
             {{ msg.role }}
+            <!-- 修改：AI思考时颜文字为(*´･д･)?，思考完成后为(ゝ∀･) -->
             <span v-if="msg.role === 'user'">(*´･д･)?</span>
-            <span v-else-if="msg.role === 'assistant'">(ゝ∀･)</span>
+            <span v-else-if="msg.role === 'assistant'">
+              <template v-if="isThinkingMsg(idx)">
+                (*´･д･)?
+              </template>
+              <template v-else>
+                (ゝ∀･)
+              </template>
+            </span>
           </h2>
           <p>{{ msg.content }}</p>
           <!-- 修改引用资料展示方式，避免黑点 -->
           <template v-if="msg.role === 'assistant' && msg.references">
-            <details>
-              <summary>引用资料</summary>
+            <details ref="refsDetails" @toggle="onToggle('refs', idx)">
+              <summary class="summary-toggle">
+                <span class="toggle-arrow">{{ refsOpen[idx] ? '▼' : '▶' }}</span>
+                <strong>引用资料</strong>
+              </summary>
               <div class="references-list">
                 <div v-for="(ref, i) in msg.references" :key="i" class="reference-item">
-                  <strong>{{ ref.source }}:</strong> {{ ref.content }}
+                  <span class="big-dot">•</span>
+                  <div class="reference-lines">
+                    <div class="reference-source"><strong>{{ ref.source }}</strong></div>
+                    <div class="reference-content">{{ ref.content }}</div>
+                  </div>
                 </div>
               </div>
             </details>
           </template>
           <!-- 新增知识点展示 -->
           <template v-if="msg.role === 'assistant' && msg.knowledgePoints && msg.knowledgePoints.length">
-            <details>
-              <summary>知识点</summary>
+            <div style="margin-top: 18px;"></div>
+            <details ref="kpDetails" @toggle="onToggle('kp', idx)">
+              <summary class="summary-toggle">
+                <span class="toggle-arrow">{{ kpOpen[idx] ? '▼' : '▶' }}</span>
+                <strong>知识点</strong>
+              </summary>
               <div class="knowledge-list">
                 <div v-for="(kp, i) in msg.knowledgePoints" :key="i" class="knowledge-item">
+                  <span class="big-dot">•</span>
                   {{ kp }}
                 </div>
               </div>
@@ -53,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { askAssistant, AssistantRequest, AssistantResponse } from '@/api/ai'
 import CourseApi from '@/api/course'
 import { useAuthStore } from '@/stores/auth'
@@ -92,6 +112,25 @@ function getSelectedCourseName() {
   return course?.name || ''
 }
 
+// 替换为自定义AI思考动画文案
+const thinkingMsgFrames = [
+  'AI思考中.(。-ω-)✧',
+  'AI思考中..📖_(:3 」∠)_',
+  'AI思考中...（　´_ゝ）旦~☕️',
+  'AI思考中....📚✍️(˘ω˘ )ｽﾔｧ…',
+  'AI思考中.....(๑•̀ㅂ•́)و✧',
+  'AI思考中......─=≡Σ((( つ•̀ω•́)つ'
+]
+let thinkingInterval: number | null = null
+const thinkingFrameIdx = ref(0)
+let thinkingMsgIdx: number | null = null // 记录当前AI思考消息的索引
+
+// 判断当前消息是否为AI思考中动画
+function isThinkingMsg(idx: number) {
+  if (thinkingMsgIdx === null) return false
+  return idx === thinkingMsgIdx && loading.value
+}
+
 async function send() {
   if (!input.value.trim()) return
   // 1. push user msg
@@ -99,6 +138,25 @@ async function send() {
   const question = input.value
   input.value = ''
   loading.value = true
+
+  // 2. 插入AI思考中动画消息
+  thinkingMsgIdx = messages.value.length
+  messages.value.push({
+    role: 'assistant',
+    content: thinkingMsgFrames[0]
+  })
+  thinkingFrameIdx.value = 0
+  if (thinkingInterval) clearInterval(thinkingInterval)
+  thinkingInterval = window.setInterval(() => {
+    thinkingFrameIdx.value = (thinkingFrameIdx.value + 1) % thinkingMsgFrames.length
+    if (
+      typeof thinkingMsgIdx === 'number' &&
+      messages.value[thinkingMsgIdx] &&
+      messages.value[thinkingMsgIdx].role === 'assistant'
+    ) {
+      messages.value[thinkingMsgIdx].content = thinkingMsgFrames[thinkingFrameIdx.value]
+    }
+  }, 1000)
 
   try {
     const payload: AssistantRequest & { course_name?: string } = {
@@ -111,25 +169,48 @@ async function send() {
     console.log('发送请求:', payload)
     const resp = await askAssistant(payload)
     console.log('收到响应:', resp)
-      if(!resp.status || resp.status != 'fail'){
-          messages.value.push({
-              role: 'assistant',
-              content: resp.answer,
-              references: resp.references,
-              knowledgePoints: resp.knowledgePoints
-          })
-      }else{
-            messages.value.push({
-                role: 'assistant',
-                content: '抱歉，无法处理您的请求。'
-            })
-      }
-
-  } catch (err) {
-    console.error(err)
-    messages.value.push({ role: 'assistant', content: '抱歉，服务暂时不可用。' })
-  } finally {
+    if (thinkingInterval) {
+      clearInterval(thinkingInterval)
+      thinkingInterval = null
+    }
     loading.value = false
+    // 替换AI思考中为真实内容
+    if (resp.code == 200) {
+      messages.value[thinkingMsgIdx] = {
+        role: 'assistant',
+        content: resp.data.answer,
+        references: resp.data.references,
+        knowledgePoints: resp.data.knowledgePoints
+      }
+    } else {
+      messages.value[thinkingMsgIdx] = {
+        role: 'assistant',
+        content: '抱歉，无法处理您的请求。'
+      }
+    }
+    thinkingMsgIdx = null
+  } catch (err) {
+    if (thinkingInterval) {
+      clearInterval(thinkingInterval)
+      thinkingInterval = null
+    }
+    loading.value = false
+    if (typeof thinkingMsgIdx === 'number') {
+      messages.value[thinkingMsgIdx] = { role: 'assistant', content: '抱歉，服务暂时不可用。' }
+    }
+    thinkingMsgIdx = null
+  }
+}
+
+// 控制折叠/展开状态
+const refsOpen = reactive<{ [k: number]: boolean }>({})
+const kpOpen = reactive<{ [k: number]: boolean }>({})
+
+function onToggle(type: 'refs' | 'kp', idx: number) {
+  if (type === 'refs') {
+    refsOpen[idx] = !refsOpen[idx]
+  } else {
+    kpOpen[idx] = !kpOpen[idx]
   }
 }
 </script>
@@ -286,6 +367,50 @@ button:not(:disabled):hover {
 }
 .reference-item, .knowledge-item {
   padding-left: 4px;
-  /* 可选：更好区分每条 */
+  display: flex;
+  align-items: flex-start;
+}
+.big-dot {
+  font-size: 1.5em;
+  line-height: 1;
+  margin-right: 8px;
+  color: #26c6da;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+}
+/* 新增：引用资料source和content分行 */
+.reference-lines {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+.reference-source {
+  color: #00838f;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.reference-content {
+  color: #333;
+  word-break: break-all;
+}
+.summary-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 1em;
+}
+.toggle-arrow {
+  font-size: 1.1em;
+  width: 1.2em;
+  display: inline-block;
+  color: #26c6da;
+  font-weight: bold;
+}
+/* 新增：知识点与引用资料间距 */
+.knowledge-list {
+  margin-top: 8px;
 }
 </style>

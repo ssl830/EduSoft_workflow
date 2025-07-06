@@ -84,6 +84,20 @@ const uploadForm = ref<UploadForm>({
 })
 const uploadProgress = ref(0)
 const uploadError = ref('')
+const kbUploadProgress = ref(0)
+const kbUploading = ref(false)
+// 新增：知识库上传弹窗
+const showKbDialog = ref(false)
+const kbDialogMsg = ref('')
+
+function openKbDialog(msg: string) {
+  kbDialogMsg.value = msg
+  showKbDialog.value = true
+}
+function closeKbDialog() {
+  showKbDialog.value = false
+  kbDialogMsg.value = ''
+}
 
 // 单选框选项配置
 const typeOptions = ref([
@@ -218,6 +232,8 @@ const uploadResource = async () => {
 
   uploadProgress.value = 0
   uploadError.value = ''
+  kbUploadProgress.value = 0
+  kbUploading.value = false
 
   const formData = new FormData()
   formData.append('title', uploadForm.value.title)
@@ -253,11 +269,27 @@ const uploadResource = async () => {
       if (props.courseId) {
         kbForm.append('course_id', props.courseId)
       }
+      kbUploading.value = true
+      kbUploadProgress.value = 0
+      openKbDialog('知识库上传中(๑•̀ㅂ•́)و✧')
       try {
-          console.log("254 YEAHHHHHHHHHHHHHHHHH")
-        await ResourceApi.uploadToKnowledgeBase(kbForm)
+        await ResourceApi.uploadToKnowledgeBase(kbForm, (progress: number) => {
+          kbUploadProgress.value = progress
+        })
+        // 上传成功
+        kbUploadProgress.value = 100
+        kbUploading.value = false
+        kbDialogMsg.value = '上传到知识库成功(๑˃̵ᴗ˂̵)و✧'
+        setTimeout(() => {
+          closeKbDialog()
+          kbUploadProgress.value = 0
+        }, 1500)
       } catch (e) {
-        // 可选：知识库上传失败提示
+        kbUploading.value = false
+        kbDialogMsg.value = '上传到知识库失败(´；д；)`'
+        setTimeout(() => {
+          closeKbDialog()
+        }, 1500)
         console.error('上传到知识库失败', e)
       }
     }
@@ -363,60 +395,72 @@ onMounted(() => {
 </script>
 
 <template>
-    <div v-if="showHistoryForm" class="resource-list-container">
-        <div v-if="showHistoryForm" class="resource-header">
-            <h2>版本管理</h2>
-            <button
-                class="btn-primary"
-                @click="showHistoryForm = false"
-            >
-                {{ '取消管理' }}
-            </button>
+  <!-- 知识库上传弹窗 -->
+  <div v-if="showKbDialog" class="kb-dialog-mask">
+    <div class="kb-dialog">
+      <div class="kb-dialog-content">
+        <div v-if="kbDialogMsg === '知识库上传中(๑•̀ㅂ•́)و✧'">
+          <div class="kb-dialog-spinner"></div>
         </div>
-        <!-- Resource List -->
-        <div class="resource-table-wrapper">
-            <table class="resource-table">
-                <thead>
-                <tr>
-                    <th v-if="role == 'tutor'">资料ID</th>
-                    <th>资料名称</th>
-                    <th>所属章节</th>
-                    <th>类型</th>
-                    <th>上传时间</th>
-                    <th v-if="role == 'tutor'">版本号</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="resource in resourcesVer" :key="resource.id">
-                    <td v-if="role == 'tutor'">{{ resource.id }}</td>
-                    <td>{{ resource.title }}</td>
-                    <td>{{ resource.sectionId || '-' }}</td>
-                    <td>{{ resource.type || '-' }}</td>
-                    <td>{{ resource.createdAt || '-' }}</td>
-                    <td v-if="role == 'tutor'">{{ resource.version }}</td>
-                    <!--         aTODO: 时间-->
-                    <td class="actions">
-                        <button
-                            class="btn-action preview"
-                            @click="previewResource(resource)"
-                            title="预览"
-                        >
-                            预览
-                        </button>
-                        <button
-                            class="btn-action download"
-                            @click="downloadResource(resource)"
-                            title="下载"
-                        >
-                            下载
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        <div class="kb-dialog-msg">{{ kbDialogMsg }}</div>
+      </div>
     </div>
+  </div>
+
+  <div v-if="showHistoryForm" class="resource-list-container">
+    <div v-if="showHistoryForm" class="resource-header">
+      <h2>版本管理</h2>
+      <button
+          class="btn-primary"
+          @click="showHistoryForm = false"
+      >
+        {{ '取消管理' }}
+      </button>
+    </div>
+    <!-- Resource List -->
+    <div class="resource-table-wrapper">
+      <table class="resource-table">
+        <thead>
+        <tr>
+          <th v-if="role == 'tutor'">资料ID</th>
+          <th>资料名称</th>
+          <th>所属章节</th>
+          <th>类型</th>
+          <th>上传时间</th>
+          <th v-if="role == 'tutor'">版本号</th>
+          <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="resource in resourcesVer" :key="resource.id">
+          <td v-if="role == 'tutor'">{{ resource.id }}</td>
+          <td>{{ resource.title }}</td>
+          <td>{{ resource.sectionId || '-' }}</td>
+          <td>{{ resource.type || '-' }}</td>
+          <td>{{ resource.createdAt || '-' }}</td>
+          <td v-if="role == 'tutor'">{{ resource.version }}</td>
+          <!--         aTODO: 时间-->
+          <td class="actions">
+            <button
+                class="btn-action preview"
+                @click="previewResource(resource)"
+                title="预览"
+            >
+              预览
+            </button>
+            <button
+                class="btn-action download"
+                @click="downloadResource(resource)"
+                title="下载"
+            >
+              下载
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <div class="resource-list-container">
     <div class="resource-header">
       <h2>教学资料</h2>
@@ -1069,5 +1113,56 @@ input[type="radio"] {
     outline: none;
     border-color: #2c6ecf;
     box-shadow: 0 0 0 2px rgba(44, 110, 207, 0.1);
+}
+
+/* 知识库上传弹窗样式 */
+.kb-dialog-mask {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kb-dialog {
+  background: #fff;
+  border-radius: 12px;
+  min-width: 260px;
+  min-height: 120px;
+  box-shadow: 0 4px 24px rgba(44,110,207,0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  animation: fadein 0.2s;
+}
+.kb-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.kb-dialog-msg {
+  font-size: 1.1rem;
+  color: #512da8;
+  margin-top: 1rem;
+  text-align: center;
+}
+.kb-dialog-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #ede7f6;
+  border-top: 4px solid #8e24aa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>
