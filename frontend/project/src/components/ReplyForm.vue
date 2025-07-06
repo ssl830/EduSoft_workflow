@@ -81,7 +81,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue';
-import discussionApi, { type CreateReplyRequest, type UpdateReplyRequest } from '../api/discussion';
+import discussionApi, { type CreateReplyRequest } from '../api/discussion';
 
 // Props
 interface Props {
@@ -132,8 +132,8 @@ const commonEmojis = [
 
 // Computed
 const canSubmit = computed(() => {
-  return content.value.trim().length > 0 && 
-         content.value.length <= props.maxLength && 
+  return content.value.trim().length > 0 &&
+         content.value.length <= props.maxLength &&
          !isSubmitting.value;
 });
 
@@ -146,12 +146,12 @@ watch(() => props.initialContent, (newValue) => {
 const handleInput = () => {
   hasError.value = false;
   errorMessage.value = '';
-  
+
   if (content.value.length > props.maxLength) {
     hasError.value = true;
     errorMessage.value = `内容长度不能超过 ${props.maxLength} 个字符`;
   }
-  
+
   autoResize();
 };
 
@@ -205,18 +205,18 @@ const toggleEmojiPicker = () => {
 
 const handleSubmit = async () => {
   if (!canSubmit.value) return;
-  
+
   const trimmedContent = content.value.trim();
   if (!trimmedContent) {
     hasError.value = true;
     errorMessage.value = '回复内容不能为空';
     return;
   }
-  
+
   isSubmitting.value = true;
   hasError.value = false;
   errorMessage.value = '';
-  
+
   try {
     if (props.isEditing) {
       // 编辑模式 - 这里应该调用更新API，但需要回复ID
@@ -227,15 +227,15 @@ const handleSubmit = async () => {
       if (!props.discussionId) {
         throw new Error('讨论ID不能为空');
       }
-      
+
       const replyData: CreateReplyRequest = {
         content: trimmedContent,
         parentReplyId: props.parentReplyId || undefined
       };
-      
+
       await discussionApi.createReply(props.discussionId, replyData);
       emit('success');
-      
+
       // 重置表单
       content.value = '';
       showEmojiPicker.value = false;

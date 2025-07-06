@@ -3,6 +3,7 @@ import {onMounted, reactive, ref, computed} from 'vue'
 import { defineProps } from 'vue'
 import ClassApi from '../../api/class'
 import {useAuthStore} from "../../stores/auth.ts";
+import { ElMessage } from 'element-plus' // 新增：引入Element Plus消息组件
 
 import Papa from 'papaparse'  // CSV解析库
 import * as XLSX from 'xlsx'  // 新增：xlsx解析库
@@ -24,7 +25,7 @@ const showUploadAloneForm = ref(false)
 const uploadFileForm = ref({
     classId: props.classId,
     file: null as File | null,
-    parsedStudents: []
+    parsedStudents: <any>[]
 })
 let uploadAloneForm = reactive({
     classId: props.classId,
@@ -119,13 +120,14 @@ const handleFileChange = async (event: Event) => {
             const sheet = workbook.Sheets[sheetName]
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 })
             // 第一行为表头
-            const [header, ...rows] = json
+            const [headerRaw, ...rows] = json
+            const header = headerRaw as string[]; // 类型断言为string[]
             if (!header || !header.includes('name') || !header.includes('id')) {
                 throw new Error('XLSX格式错误：必须包含"name"和"id"表头')
             }
             const nameIdx = header.indexOf('name')
             const idIdx = header.indexOf('id')
-            const parsedData = rows.filter(r => r.length >= 2).map(r => ({
+            const parsedData = rows.filter((r:any) => r.length >= 2).map((r:any) => ({
                 name: r[nameIdx],
                 id: r[idIdx]
             }))
@@ -145,11 +147,11 @@ const handleFileChange = async (event: Event) => {
 }
 
 // CSV文件验证
-const validateCSVFile = (file: File) => {
-    const validTypes = ['text/csv', 'application/vnd.ms-excel']
-    const validExtension = file.name.endsWith('.csv')
-    return validTypes.includes(file.type) || validExtension
-}
+// const validateCSVFile = (file: File) => {
+//     const validTypes = ['text/csv', 'application/vnd.ms-excel']
+//     const validExtension = file.name.endsWith('.csv')
+//     return validTypes.includes(file.type) || validExtension
+// }
 
 // 修正parseCSV，自动检测分隔符，增强兼容性
 const parseCSV = (file: File): Promise<any[]> => {
@@ -203,11 +205,11 @@ const uploadFileStudents = async () => {
 
     try {
         // 适配后端参数：student_id和student_name
-        const response = await ClassApi.uploadStudents({
+        const response : any = await ClassApi.uploadStudents({
             classId: props.classId,
             operatorId: authStore.user?.id,
             importType: 'FILE', // 文件导入
-            studentData: uploadFileForm.value.parsedStudents.map(s => ({
+            studentData: uploadFileForm.value.parsedStudents.map((s : any) => ({
                 ...s,
                 student_id: s.id, // 后端要求
                 student_name: s.name // 后端如需
@@ -253,7 +255,7 @@ const uploadAloneStudents = async () => {
 
     try {
         // 适配后端参数：student_id和student_name
-        const response = await ClassApi.uploadStudents({
+        const response : any = await ClassApi.uploadStudents({
             classId: props.classId,
             operatorId: authStore.user?.id,
             importType: 'MANUAL', // 手动导入
@@ -329,7 +331,7 @@ const deleteStudentByIndex = (index: number) => {
 // Preview resource
 const deleteStudent = async(userId: string) => {
     if (!props.isTeacher) {
-        alert('只有老师可以删除学生！')
+        ElMessage.warning('只有老师可以删除学生！')
         return
     }
     try {
@@ -337,9 +339,10 @@ const deleteStudent = async(userId: string) => {
         students.value = students.value.filter(s => String(s.userId) !== String(userId));
         console.log(response)
         fetchStudents()  // 刷新列表
-        alert('删除成功！')
+        ElMessage.success('删除成功！')
     } catch (err) {
         uploadAloneError.value = '删除学生失败，请稍后再试'
+        ElMessage.error('删除学生失败，请稍后再试')
         console.error(err)
     }
 }
@@ -360,21 +363,25 @@ onMounted(() => {
 
 <template>
     <div class="resource-list-container">
-        <div class="resource-header">
-            <h2>班级成员管理</h2>
+        <div class="resource-header header-flex">
+            <h2 class="header-title">班级成员管理</h2>
             <div class="button-group">
                 <button
                     v-if="isTeacher"
-                    class="btn-primary"
+                    class="btn-primary el-button el-button--primary"
+                    style="display: flex; align-items: center; gap: 6px; height: 40px;"
                     @click="toggleUploadForm"
                 >
+                    <i class="el-icon-upload"></i>
                     {{ showUploadFileForm ? '取消导入' : '批量导入' }}
                 </button>
                 <button
                     v-if="isTeacher"
-                    class="btn-primary"
+                    class="btn-primary el-button el-button--success"
+                    style="display: flex; align-items: center; gap: 6px; height: 40px;"
                     @click="showUploadAloneForm = !showUploadAloneForm"
                 >
+                    <i class="el-icon-plus"></i>
                     {{ showUploadAloneForm ? '取消导入' : '手动导入' }}
                 </button>
             </div>
@@ -407,25 +414,30 @@ onMounted(() => {
                         class="btn-icon"
                         @click="deleteStudentByIndex(index)"
                         :disabled="uploadAloneForm.students.length <= 1"
+                        title="删除"
                     >
-                        ✕
+                        <i class="el-icon-delete"></i>
                     </button>
                 </div>
 
                 <button
                     type="button"
-                    class="btn-text"
+                    class="btn-text el-button el-button--info"
+                    style="margin-top: 8px;"
                     @click="addStudent"
                 >
+                    <i class="el-icon-plus"></i>
                     + 添加学生
                 </button>
             </div>
             <div class="form-actions">
                 <button
                     type="button"
-                    class="btn-primary"
+                    class="btn-primary el-button el-button--primary"
+                    style="width: 120px;"
                     @click="uploadAloneStudents"
                 >
+                    <i class="el-icon-upload"></i>
                     上传
                 </button>
             </div>
@@ -447,8 +459,14 @@ onMounted(() => {
                     required
                 />
                 <div class="file-hint">支持格式：CSV/XLSX（需包含"name"和"id"列）
-                    <button type="button" class="btn-text" @click="downloadTemplate">下载XLSX模板</button>
-                    <button type="button" class="btn-text" @click="downloadCSVTemplate">下载CSV模板</button>
+                    <button type="button" class="btn-text el-button el-button--info" @click="downloadTemplate">
+                        <i class="el-icon-download"></i>
+                        下载XLSX模板
+                    </button>
+                    <button type="button" class="btn-text el-button el-button--info" @click="downloadCSVTemplate">
+                        <i class="el-icon-download"></i>
+                        下载CSV模板
+                    </button>
                 </div>
             </div>
 
@@ -479,16 +497,20 @@ onMounted(() => {
             <div class="form-actions">
                 <button
                     type="button"
-                    class="btn-secondary"
+                    class="btn-secondary el-button el-button--default"
+                    style="width: 120px;"
                     @click="resetUploadFileForm"
                 >
+                    <i class="el-icon-refresh"></i>
                     重置
                 </button>
                 <button
                     type="button"
-                    class="btn-primary"
+                    class="btn-primary el-button el-button--primary"
+                    style="width: 120px;"
                     @click="uploadFileStudents"
                 >
+                    <i class="el-icon-upload"></i>
                     上传
                 </button>
             </div>
@@ -520,10 +542,11 @@ onMounted(() => {
                     <td class="actions">
                         <button
                             v-if="isTeacher && student.userId !== authStore.user?.id && !student.isTeacher"
-                            class="btn-action preview"
+                            class="btn-action preview el-button el-button--danger"
                             @click="deleteStudent(student.userId)"
                             title="删除"
                         >
+                            <i class="el-icon-delete"></i>
                             删除
                         </button>
                         <span v-else-if="student.userId === authStore.user?.id" style="color: #aaa;">不可删除</span>
@@ -711,175 +734,6 @@ input[type="radio"] {
     background-color: #bbdefb;
 }
 
-.resource-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.resource-header h2 {
-    margin: 0;
-}
-
-.upload-form {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e0e0e0;
-}
-
-.upload-form h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-.form-row {
-    display: flex;
-    gap: 1rem;
-}
-
-.form-group-half {
-    flex: 1;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.upload-progress {
-    margin-top: 1rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.progress-value {
-    height: 100%;
-    background-color: #2c6ecf;
-    border-radius: 4px;
-}
-
-.progress-text {
-    text-align: right;
-    font-size: 0.875rem;
-    color: #616161;
-}
-
-.resource-filters {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-    align-items: center;
-}
-
-.filter-section {
-    display: flex;
-    align-items: center;
-}
-
-.filter-section label {
-    margin-right: 0.5rem;
-    white-space: nowrap;
-}
-
-.filter-section select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9375rem;
-}
-
-.filter-section.search {
-    flex-grow: 1;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9375rem;
-}
-
-.resource-table-wrapper {
-    overflow-x: auto;
-}
-
-.resource-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.resource-table th,
-.resource-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.resource-table th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-}
-
-.resource-table tr:hover {
-    background-color: #f9f9f9;
-}
-
-.actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-action {
-    padding: 0.375rem 0.75rem;
-    border-radius: 4px;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-action.preview {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.btn-action.preview:hover {
-    background-color: #bbdefb;
-}
-
 .btn-action.download {
     background-color: #e8f5e9;
     color: #2e7d32;
@@ -962,6 +816,19 @@ input[type="radio"] {
 
 .btn-secondary:hover {
     background-color: #e0e0e0;
+}
+
+.resource-header.header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.header-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 @media (max-width: 768px) {

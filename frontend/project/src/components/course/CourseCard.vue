@@ -11,7 +11,7 @@ interface ClassInfo {
 interface Course {
     id: number;
     teacherID: string;
-    teacherName: string; 
+    teacherName: string;
     name: string;
     code: string;
     outline: string;
@@ -34,7 +34,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <router-link :to="`/course/${course.id}`" class="course-card">
+  <router-link :to="`/course/${props.course.id}`" class="course-card">
     <div class="course-header">
       <h3 class="course-title">{{ course.name }} {{ course.code }}</h3>
       <span class="course-code">{{ course.teacherName }}</span>

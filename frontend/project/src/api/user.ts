@@ -1,5 +1,4 @@
 import apiClient from './axios'
-import axios from 'axios'
 
 // 用户信息接口
 export interface User {

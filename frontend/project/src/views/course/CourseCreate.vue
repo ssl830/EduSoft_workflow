@@ -45,7 +45,7 @@ const submitCourse = async () => {
     error.value = ''
 
     try {
-        const response = await CourseApi.createCourse(course);
+        const response:any = await CourseApi.createCourse(course);
         console.log(response.code)
         if (response.code !== 200) {
             // 请求失败时回滚状态

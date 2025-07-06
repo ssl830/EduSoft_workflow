@@ -12,7 +12,7 @@ interface Course {
 
 const CourseApi = {
   // Get all courses for current user
-  getUserCourses(userId: string) {
+  getUserCourses(userId: number | undefined | string) {
     if (!userId) {
       console.error('userId is required')
       return Promise.reject(new Error('userId is required'))
@@ -41,13 +41,12 @@ const CourseApi = {
 
   // Create new course (teacher only)
   createCourse(data: {
-    teacherId: bigint;
+    teacherId: number | undefined;
     name: string;
-    code?: string;
-    outline?: string;
-    objective?: string;
-    assessment?: string;
-  }) {
+    code: string;
+    outline: string;
+    objective: string;
+    assessment: string; }) {
     return axios.post('/api/courses', data)
   },
 

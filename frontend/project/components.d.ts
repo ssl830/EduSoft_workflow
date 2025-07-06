@@ -34,7 +34,6 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
-    ElTag: typeof import('element-plus/es')['ElTag']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ImageScroll: typeof import('./src/components/littlecomponents/ImageScroll.vue')['default']
     Knob: typeof import('./src/components/littlecomponents/knob.vue')['default']

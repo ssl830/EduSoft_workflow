@@ -46,9 +46,9 @@
             </button>
           </div>
         </div>
-        
+
         <div class="thread-content prose" v-html="renderedContent"></div>
-        
+
         <!-- 回复区折叠按钮 -->
         <div class="flex justify-end mb-2">
           <button class="btn btn-toggle-replies" @click="repliesCollapsed = !repliesCollapsed">
@@ -56,7 +56,7 @@
             {{ repliesCollapsed ? '展开回复' : '收起回复' }}
           </button>
         </div>
-        
+
         <!-- Replies Section -->
         <div class="replies-section" v-show="!repliesCollapsed">
           <div class="replies-header">
@@ -65,12 +65,12 @@
               <span class="replies-count">{{ posts.length }}</span>
             </h2>
           </div>
-          
+
           <!-- Reply List -->
           <div v-if="posts.length > 0" class="reply-list">
             <div v-for="post in posts" :key="post.id" class="reply-container">
-              <ReplyItem 
-                :reply="post" 
+              <ReplyItem
+                :reply="post"
                 :level="0"
                 @delete="handleDeleteReply"
                 @edit="handleEditReply"
@@ -78,13 +78,13 @@
                 @like="handleLikeReply"
                 @load-children="loadChildReplies"
               />
-              
+
               <!-- Child Replies -->
               <div v-if="post.children && post.children.length > 0" class="child-replies">
-                <ReplyItem 
-                  v-for="childReply in post.children" 
+                <ReplyItem
+                  v-for="childReply in post.children"
                   :key="childReply.id"
-                  :reply="childReply" 
+                  :reply="childReply"
                   :level="1"
                   @delete="handleDeleteReply"
                   @edit="handleEditReply"
@@ -94,7 +94,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Empty Replies State -->
           <div v-else class="empty-state">
             <div class="empty-state-icon">
@@ -107,7 +107,7 @@
 
           <!-- Reply Form -->
           <div class="reply-form-container">
-          <ReplyForm 
+          <ReplyForm
             :discussion-id="Number(threadId)"
             :parent-reply-id="null"
             @success="handleReplySuccess"
@@ -123,9 +123,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed, provide, watch } from 'vue';
+import { ref, onMounted, computed, provide, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import discussionApi, { type Discussion, type DiscussionReply } from '../../api/discussion';
+import discussionApi, { type DiscussionReply } from '../../api/discussion';
 import ReplyItem from '../../components/ReplyItem.vue';
 import ReplyForm from '../../components/ReplyForm.vue';
 import MarkdownIt from 'markdown-it';
@@ -142,7 +142,7 @@ provide('currentUserId', currentUserId.value);
 provide('userRole', userRole.value);
 
 const threadId = ref<string>(route.params.threadId as string);
-const thread = ref<Discussion | null>(null);
+const thread = ref<any>(null);
 const posts = ref<DiscussionReply[]>([]);
 const loadingChildren = ref<{ [key: number]: boolean }>({});
 
@@ -165,36 +165,36 @@ const renderedContent = computed(() => {
   return md.render(thread.value.content);
 });
 
-// 计算顶层回复
-const topLevelPosts = computed(() => {
-  return posts.value.filter(post => !post.parentReplyId);
-});
-
-// 构建回复树结构
-const buildReplyTree = (replies: DiscussionReply[]): DiscussionReply[] => {
-  const replyMap = new Map<number, DiscussionReply>();
-  const topLevel: DiscussionReply[] = [];
-
-  // 初始化所有回复，确保children数组存在
-  replies.forEach(reply => {
-    replyMap.set(reply.id, { ...reply, children: [] });
-  });
-
-  // 构建树结构
-  replies.forEach(reply => {
-    const replyWithChildren = replyMap.get(reply.id)!;
-    if (reply.parentReplyId) {
-      const parent = replyMap.get(reply.parentReplyId);
-      if (parent) {
-        parent.children!.push(replyWithChildren);
-      }
-    } else {
-      topLevel.push(replyWithChildren);
-    }
-  });
-
-  return topLevel;
-};
+// // 计算顶层回复
+// const topLevelPosts = computed(() => {
+//   return posts.value.filter(post => !post.parentReplyId);
+// });
+//
+// // 构建回复树结构
+// const buildReplyTree = (replies: DiscussionReply[]): DiscussionReply[] => {
+//   const replyMap = new Map<number, DiscussionReply>();
+//   const topLevel: DiscussionReply[] = [];
+//
+//   // 初始化所有回复，确保children数组存在
+//   replies.forEach(reply => {
+//     replyMap.set(reply.id, { ...reply, children: [] });
+//   });
+//
+//   // 构建树结构
+//   replies.forEach(reply => {
+//     const replyWithChildren = replyMap.get(reply.id)!;
+//     if (reply.parentReplyId) {
+//       const parent = replyMap.get(reply.parentReplyId);
+//       if (parent) {
+//         parent.children!.push(replyWithChildren);
+//       }
+//     } else {
+//       topLevel.push(replyWithChildren);
+//     }
+//   });
+//
+//   return topLevel;
+// };
 
 const fetchThreadDetails = async () => {
   loadingThread.value = true;
@@ -217,11 +217,11 @@ const fetchPosts = async () => {
   postsError.value = null;
   try {
     // 获取顶层回复
-    const response = await discussionApi.getTopLevelReplies(Number(threadId.value));
+    const response:any = await discussionApi.getTopLevelReplies(Number(threadId.value));
     console.log('Top level replies response:', response);
-    
+
     // 将后端返回的数据结构转换为前端需要的格式
-    posts.value = response.map(reply => ({
+    posts.value = response.map((reply:any) => ({
       id: reply.id,
       content: reply.content,
       creatorId: reply.userId,
@@ -239,10 +239,10 @@ const fetchPosts = async () => {
       if (!loadingChildren.value[post.id]) {
         loadingChildren.value[post.id] = true;
         try {
-          const childrenResponse = await discussionApi.getChildReplies(post.id);
+          const childrenResponse:any = await discussionApi.getChildReplies(post.id);
           console.log(`Child replies for post ${post.id}:`, childrenResponse);
-          
-          post.children = (childrenResponse || []).map(child => ({
+
+          post.children = (childrenResponse || []).map((child:any) => ({
             id: child.id,
             content: child.content,
             creatorId: child.userId,
@@ -273,12 +273,12 @@ const fetchPosts = async () => {
 // 加载子回复
 const loadChildReplies = async (parentId: number) => {
   try {
-    const response = await discussionApi.getChildReplies(parentId);
+    const response:any = await discussionApi.getChildReplies(parentId);
     console.log(`Loading child replies for parent ${parentId}:`, response);
-    
+
     const parent = posts.value.find(p => p.id === parentId);
     if (parent) {
-      parent.children = (response || []).map(child => ({
+      parent.children = (response || []).map((child:any) => ({
         id: child.id,
         content: child.content,
         creatorId: child.userId,
@@ -295,37 +295,37 @@ const loadChildReplies = async (parentId: number) => {
   }
 };
 
-// 加载更多子回复
-const loadMoreChildren = async (parent: DiscussionReply) => {
-  loadingChildren.value[parent.id] = true;
-  try {
-    const response = await discussionApi.getChildReplies(parent.id);
-    console.log(`Loading more children for parent ${parent.id}:`, response);
-    
-    parent.children = (response || []).map(child => ({
-      id: child.id,
-      content: child.content,
-      creatorId: child.userId,
-      creatorNum: child.userNum,
-      discussionId: child.discussionId,
-      isTeacher: child.isTeacherReply || false,
-      createdAt: child.createdAt,
-      updatedAt: child.updatedAt,
-      parentReplyId: child.parentReplyId
-    }));
-  } catch (err: any) {
-    console.error('Failed to load more children:', err);
-  } finally {
-    loadingChildren.value[parent.id] = false;
-  }
-};
-
-// 检查是否有更多子回复
-const hasMoreChildren = (parent: DiscussionReply): boolean => {
-  // 这里可以根据实际API返回的数据来判断
-  // 暂时简单判断：如果子回复数量为3（我们的限制），可能还有更多
-  return (parent.children?.length || 0) === 3;
-};
+// // 加载更多子回复
+// const loadMoreChildren = async (parent: DiscussionReply) => {
+//   loadingChildren.value[parent.id] = true;
+//   try {
+//     const response = await discussionApi.getChildReplies(parent.id);
+//     console.log(`Loading more children for parent ${parent.id}:`, response);
+//
+//     parent.children = (response || []).map(child => ({
+//       id: child.id,
+//       content: child.content,
+//       creatorId: child.userId,
+//       creatorNum: child.userNum,
+//       discussionId: child.discussionId,
+//       isTeacher: child.isTeacherReply || false,
+//       createdAt: child.createdAt,
+//       updatedAt: child.updatedAt,
+//       parentReplyId: child.parentReplyId
+//     }));
+//   } catch (err: any) {
+//     console.error('Failed to load more children:', err);
+//   } finally {
+//     loadingChildren.value[parent.id] = false;
+//   }
+// };
+//
+// // 检查是否有更多子回复
+// const hasMoreChildren = (parent: DiscussionReply): boolean => {
+//   // 这里可以根据实际API返回的数据来判断
+//   // 暂时简单判断：如果子回复数量为3（我们的限制），可能还有更多
+//   return (parent.children?.length || 0) === 3;
+// };
 
 // 处理回复成功
 const handleReplySuccess = () => {
@@ -337,7 +337,7 @@ const handleDeleteReply = async (replyId: number) => {
   if (!confirm('确定要删除这条回复吗？此操作不可撤销。')) {
     return;
   }
-  
+
   try {
     await discussionApi.deleteReply(replyId);
     // 从列表中移除被删除的回复
@@ -352,7 +352,7 @@ const handleDeleteReply = async (replyId: number) => {
         return true;
       });
     };
-    
+
     posts.value = removeReply(posts.value);
   } catch (err: any) {
     console.error('删除失败:', err);
@@ -364,7 +364,7 @@ const handleDeleteReply = async (replyId: number) => {
 const handleEditReply = async (replyId: number, newContent: string) => {
   try {
     const response = await discussionApi.updateReply(replyId, { content: newContent });
-    
+
     // 更新本地数据
     const updateReply = (replies: DiscussionReply[]): void => {
       replies.forEach(reply => {
@@ -377,7 +377,7 @@ const handleEditReply = async (replyId: number, newContent: string) => {
         }
       });
     };
-    
+
     updateReply(posts.value);
   } catch (err: any) {
     console.error('编辑失败:', err);
@@ -417,7 +417,7 @@ const handleLikeReply = async (replyId: number) => {
         }
       });
     };
-    
+
     updateLike(posts.value);
   } catch (err: any) {
     console.error('点赞失败:', err);
@@ -439,10 +439,10 @@ const goBack = () => {
   }
 };
 
-const renderMarkdown = (content: string) => {
-  if (!content) return '';
-  return md.render(content);
-};
+// const renderMarkdown = (content: string) => {
+//   if (!content) return '';
+//   return md.render(content);
+// };
 
 // 添加更多的调试信息
 watch(thread, (newVal) => {
@@ -456,12 +456,12 @@ watch(posts, (newVal) => {
 // 删除主贴
 const handleDeleteThread = async () => {
   if (!confirm('确定要删除这个帖子吗？此操作不可撤销。')) return;
-  try {
-    await discussionApi.deleteThread(Number(threadId.value));
-    router.back();
-  } catch (err: any) {
-    alert('删除失败，请重试');
-  }
+  // try {
+  //   await discussionApi.deleteThread(Number(threadId.value));
+  //   router.back();
+  // } catch (err: any) {
+  //   alert('删除失败，请重试');
+  // }
 };
 
 onMounted(async () => {

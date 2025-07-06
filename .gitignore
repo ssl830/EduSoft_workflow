@@ -49,3 +49,5 @@ ai_service/storage/
 *.pyc
 ai_service/data/vector_db/
 
+# 忽略npm run build生成的文件
+frontend/project/dist

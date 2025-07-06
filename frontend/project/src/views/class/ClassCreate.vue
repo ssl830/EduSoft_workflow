@@ -17,7 +17,7 @@ const classForm = reactive({
   classCode: ''
 })
 
-const courses = ref([])
+const courses = ref(<any>[])
 
 const resetClassForm = () => {
   classForm.courseId = 0
@@ -72,7 +72,7 @@ const submitClass = async () => {
     }
     console.log("classData:", classData)
     console.log()
-    const resp = await ClassApi.createClass(classData)
+    const resp:any = await ClassApi.createClass(classData)
     if (resp.code !== 200) {
       error.value = resp.message || '创建班级失败，请稍后再试'
     } else {

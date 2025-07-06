@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Actions
   const login = async (userId: string, password: string) => {
     try {
-      const response = await authApi.login({ userId, password })
+      const response:any = await authApi.login({ userId, password })
 
       if (response.code === 200) {
         const userData = {
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
       delete (registerData as any).password // 删除 password 字段
 
-      const response = await authApi.register(registerData)
+      const response:any = await authApi.register(registerData)
 
       if (response.code === 200) {
         return response
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
   const fetchUserInfo = async () => {
     try {
-      const response = await authApi.getProfile()
+      const response:any = await authApi.getProfile()
 
       console.log('获取用户信息响应:', response);
 
@@ -180,7 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
     bio?: string;
   }) => {
     try {
-      const response = await authApi.updateProfile(data)
+      const response:any = await authApi.updateProfile(data)
 
       if (response.code === 200) {
         // 更新成功后重新获取用户信息
@@ -203,11 +203,11 @@ export const useAuthStore = defineStore('auth', () => {
       const formData = new URLSearchParams();
       formData.append('oldPassword', oldPassword);
       formData.append('newPassword', newPassword);
-      
+
       console.log('构建的表单数据:', formData.toString());
       console.log('发送请求到:', '/api/user/changePassword');
 
-      const response = await apiClient.post('/api/user/changePassword', formData, {
+      const response:any = await apiClient.post('/api/user/changePassword', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -229,7 +229,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const uploadAvatar = async (formData: FormData) => {
     try {
-      const response = await authApi.uploadAvatar(formData);
+      const response:any = await authApi.uploadAvatar(formData);
       console.log('上传头像响应:', response);
 
       if (response.code === 200) {
@@ -248,6 +248,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 新增：清除用户数据方法
+  const clearUserData = () => {
+    user.value = null;
+    token.value = null;
+    localStorage.removeItem('free-fs-token');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('user');
+  };
+
   return {
     user,
     token,
@@ -259,6 +268,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUserInfo,
     updateProfile,
     changePassword,
-    uploadAvatar
+    uploadAvatar,
+    clearUserData // 新增导出
   }
 })

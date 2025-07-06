@@ -1,5 +1,6 @@
+// @ts-ignore
 import { saveAs } from 'file-saver'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } from 'docx'
+import { Document, Packer, Paragraph, HeadingLevel, Table, TableRow, TableCell, WidthType } from 'docx'
 import type { TeachingContentResponse, LessonContent } from '@/api/ai'
 
 /**
@@ -18,7 +19,7 @@ export async function exportToWord(content: TeachingContentResponse, courseName:
                         after: 200
                     }
                 }),
-                
+
                 // 总体信息
                 new Paragraph({
                     text: '总体教学安排',
@@ -45,14 +46,14 @@ export async function exportToWord(content: TeachingContentResponse, courseName:
                     text: content.teachingAdvice,
                     spacing: { after: 400 }
                 }),
-                
+
                 // 课时内容
                 new Paragraph({
                     text: '课时详细内容',
                     heading: HeadingLevel.HEADING_1,
                     spacing: { before: 400, after: 200 }
                 }),
-                
+
                 ...content.lessons.flatMap((lesson, index) => [
                     // 课时标题
                     new Paragraph({
@@ -66,7 +67,7 @@ export async function exportToWord(content: TeachingContentResponse, courseName:
             ]
         }]
     })
-    
+
     const blob = await Packer.toBlob(doc)
     saveAs(blob, `${courseName}-教学内容设计.docx`)
 }
@@ -204,7 +205,7 @@ ${lesson.teachingGuidance}
 ${lesson.knowledgeSources.map(source => `- ${source}`).join('\n')}
 `).join('\n')}
 `
-    
+
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
     saveAs(blob, `${courseName}-教学内容设计.md`)
-} 
+}
