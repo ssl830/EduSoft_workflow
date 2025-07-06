@@ -1,14 +1,14 @@
 <template>
-  <div class="ai-selftest-page">
-    <h1>AI 自测练习生成</h1>
+  <div class="ai-selftest-page" ref="pageTop">
+    <h1 class="main-title">AI 自测练习生成</h1>
 
     <div class="form-section">
-      <label>练习要求（题型、数量、难度等）</label>
+      <label class="form-label-lg">练习要求（题型、数量、难度等）</label>
       <textarea v-model="form.requirements" placeholder="例如：选择题3道，填空题1道，难度 medium" />
     </div>
 
     <div class="form-section">
-      <label>知识点偏好</label>
+      <label class="form-label-lg">知识点偏好</label>
       <textarea v-model="form.knowledge_preferences" placeholder="例如：进程调度、同步机制" />
     </div>
 
@@ -18,27 +18,52 @@
       <textarea v-model="form.wrongQuestionsJson" placeholder="[{\"type\":\"singlechoice\", ...}]" />
     </div> -->
 
-    <button class="btn primary" :disabled="loading" @click="generate">
-      {{ loading ? '生成中...' : '生成练习' }}
-    </button>
+    <div class="button-group">
+      <button class="btn primary" :disabled="loading" @click="generate">
+        {{ loading ? '生成中...' : '生成练习' }}
+      </button>
+      <button
+        v-if="exercises.length"
+        class="btn"
+        @click="saveProgress"
+        :disabled="saveLoading"
+      >{{ saveLoading ? '保存中...' : '暂存进度' }}</button>
+      <button
+        v-if="exercises.length"
+        class="btn success"
+        @click="submitPractice"
+        :disabled="submitLoading"
+      >{{ submitLoading ? '提交中...' : '提交练习' }}</button>
+    </div>
 
     <div v-if="loading" class="progress-wrapper">
       <div class="progress-bar"></div>
     </div>
 
-    <button v-if="exercises.length" class="btn" @click="saveProgress">暂存进度</button>
-    <button v-if="exercises.length" class="btn success" @click="submitPractice">提交练习</button>
-
     <div v-if="error" class="error-msg">{{ error }}</div>
 
     <div v-if="exercises.length" class="exercise-list">
-      <h2>生成结果</h2>
+      <h2 class="result-title">生成结果</h2>
       <div v-for="(item, idx) in exercises" :key="idx" class="exercise-item">
-        <h3>{{ idx + 1 }}. [{{ item.type }}] {{ item.question }}</h3>
-        <ul v-if="item.options && item.options.length">
+        <div class="exercise-question">
+          <span class="type-tag" :class="'type-' + (item.type || '').toLowerCase()">
+            {{ typeLabel(item.type) }}
+          </span>
+          <span class="question-text">{{ idx + 1 }}. {{ item.question }}</span>
+        </div>
+        <ul v-if="item.type && item.type.toLowerCase() === 'singlechoice' && item.options && item.options.length">
+          <li v-for="(opt, oIdx) in item.options" :key="oIdx">
+            {{ String.fromCharCode(65 + oIdx) + '. ' + opt }}
+          </li>
+        </ul>
+        <ul v-else-if="item.options && item.options.length">
           <li v-for="(opt, oIdx) in item.options" :key="oIdx">{{ opt }}</li>
         </ul>
-        <input v-model="answers[idx].answer" placeholder="请输入答案" class="answer-input" />
+        <input
+          v-model="answers[idx].answer"
+          :placeholder="inputPlaceholder(item.type)"
+          class="answer-input"
+        />
         <div v-if="resultDetails.length" class="result-detail">
           <span :class="resultDetails[idx].correct ? 'correct' : 'wrong'">
             {{ resultDetails[idx].correct ? '✔ 正确' : '✘ 错误' }}，得分 {{ resultDetails[idx].score }}/{{ resultDetails[idx].maxScore }}
@@ -48,6 +73,7 @@
         </div>
       </div>
       <div v-if="result.totalScore !== undefined" class="total-score">总得分：{{ result.totalScore }}/{{ result.totalPossible }}</div>
+      <button class="btn" style="margin: 1.5rem auto 0; display: block;" @click="scrollToTop">回到顶部</button>
     </div>
   </div>
 </template>
@@ -55,6 +81,9 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { generateStudentExercise, StudentExerciseRequest, StudentExerciseResponse, ExerciseItem, submitSelfPractice } from '@/api/ai'
+import { ElMessage } from 'element-plus'
+
+const pageTop = ref<HTMLElement | null>(null)
 
 const form = reactive<StudentExerciseRequest>({
   requirements: '',
@@ -73,6 +102,8 @@ const answers = ref<any[]>([])
 const result = reactive<any>({})
 const resultDetails = ref<any[]>([])
 const practiceId = ref<number | null>(null)
+const saveLoading = ref(false)
+const submitLoading = ref(false)
 
 async function generate() {
   error.value = ''
@@ -88,11 +119,11 @@ async function generate() {
     //   form.wrongQuestions = JSON.parse(wrongQuestionsJson.value)
     // }
     const res = await generateStudentExercise(form) as unknown as StudentExerciseResponse & { practiceId?: number }
-    exercises.value = res.exercises || []
+    exercises.value = res.data.exercises || []
     // 初始化答案结构
     answers.value = exercises.value.map(q => ({ questionId: q.id || 0, answer: '', type: q.type, correctAnswer: q.answer }))
-    if(res.practiceId){
-      practiceId.value = res.practiceId
+    if(res.data.practiceId){
+      practiceId.value = res.data.practiceId
     } else {
       practiceId.value = null
     }
@@ -104,23 +135,66 @@ async function generate() {
 }
 
 async function saveProgress() {
+  saveLoading.value = true
   try {
     localStorage.setItem('aiSelfTestProgress', JSON.stringify(answers.value))
-    alert('进度已保存')
+    ElMessage.success('进度已保存')
   } catch (e) {
-    alert('保存失败')
+    ElMessage.error('保存失败')
+  } finally {
+    saveLoading.value = false
   }
 }
 
 async function submitPractice() {
+  submitLoading.value = true
   try {
     const res = await submitSelfPractice({ practiceId: practiceId.value || 0, answers: answers.value }) as unknown as any
-    result.totalScore = res.totalScore
-    result.totalPossible = res.totalPossible
-    resultDetails.value = res.details || []
-    alert('提交成功')
+    result.totalScore = res.data.totalScore
+    result.totalPossible = res.data.totalPossible
+    resultDetails.value = res.data.details || []
+    ElMessage.success('提交成功')
   } catch (e) {
-    alert('提交失败')
+    ElMessage.error('提交失败')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+// 题型标签映射（仅保留指定四种类型）
+function typeLabel(type: string) {
+  switch ((type || '').toLowerCase()) {
+    case 'singlechoice':
+      return '选择题'
+    case 'fillblank':
+      return '填空题'
+    case 'judge':
+      return '判断题'
+    case 'program':
+      return '简答题'
+    default:
+      return type || '题目'
+  }
+}
+
+// 回到顶部
+function scrollToTop() {
+  if (pageTop.value) {
+    pageTop.value.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// 输入框 placeholder 根据题型变化
+function inputPlaceholder(type: string) {
+  switch ((type || '').toLowerCase()) {
+    case 'judge':
+      return "填写‘正确’或‘错误’"
+    case 'singlechoice':
+      return "例：A"
+    default:
+      return "请输入答案"
   }
 }
 </script>
@@ -131,6 +205,26 @@ async function submitPractice() {
   margin: 0 auto;
   padding: 2rem 1rem;
 }
+.main-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 2.2rem;
+  letter-spacing: 1px;
+  color: #1976d2;
+}
+.result-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #333;
+  text-align: left;
+}
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
 .form-section {
   margin-bottom: 1.5rem;
 }
@@ -138,6 +232,12 @@ async function submitPractice() {
   display: block;
   font-weight: 500;
   margin-bottom: 0.5rem;
+}
+.form-label-lg {
+  font-size: 1.18rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
 }
 textarea {
   width: 100%;
@@ -192,8 +292,52 @@ textarea:focus {
   padding: 1.25rem 1rem;
   border-radius: 8px;
 }
-.exercise-item h3 {
+.exercise-question {
+  font-size: 1.18rem;
+  font-weight: 600;
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+.type-tag {
+  display: inline-block;
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 0.12em 0.8em;
+  border-radius: 1em;
+  margin-right: 0.5em;
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #90caf9;
+  vertical-align: middle;
+  letter-spacing: 1px;
+  white-space: nowrap; /* 保证type标签永远单行 */
+}
+.type-singlechoice {
+  background: #e3f2fd;
+  color: #1976d2;
+  border-color: #90caf9;
+}
+.type-fillblank {
+  background: #fffde7;
+  color: #fbc02d;
+  border-color: #ffe082;
+}
+.type-judge {
+  background: #e8f5e9;
+  color: #388e3c;
+  border-color: #a5d6a7;
+}
+.type-program {
+  background: #fbe9e7;
+  color: #d84315;
+  border-color: #ffab91;
+}
+.question-text {
+  font-size: 1.13em;
+  font-weight: 500;
+  color: #222;
 }
 .exercise-item ul {
   padding-left: 1.25rem;
@@ -256,4 +400,4 @@ textarea:focus {
   font-size: 0.9rem;
   margin-top: 0.25rem;
 }
-</style> 
+</style>

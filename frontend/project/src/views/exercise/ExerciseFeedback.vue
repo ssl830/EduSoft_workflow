@@ -15,7 +15,9 @@
             <div class="questions-list2">
                 <div v-for="(question, index) in practiceData.questions" :key="question.id" class="question-item">
                     <div class="question-header2">
-                        <h3 style="max-width: 1000px;">题目 {{ index + 1 }} {{ question.content }}</h3>
+                        <h3 style="max-width: 1000px;">
+                          题目 {{ index + 1 }} {{ question.content }}
+                        </h3>
                         <div style="display: flex; gap: 8px;">
                             <button
                                 @click="toggleFavorite(question)"
@@ -46,7 +48,12 @@
                             <div>你的答案：{{ formatAnswer(studentAnswers[question.id], question.type) }}</div>
                         </div>
 
-                        <div class="explanation">
+                        <div class="explanation"
+                             :class="{
+                               'explanation-correct': formatAnswer(question.answer, question.type) === formatAnswer(studentAnswers[question.id], question.type),
+                               'explanation-wrong': formatAnswer(question.answer, question.type) !== formatAnswer(studentAnswers[question.id], question.type)
+                             }"
+                        >
                             解析：{{ question.analysis || '-' }}
                         </div>
                     </div>
@@ -357,13 +364,13 @@ const handleDownloadReport = async () => {
             return
         }
         const response = await StudyRecordsApi.exportSubmissionReport(submissionId)
-        if (!response || !(response instanceof Blob) || response.size === 0) {
+        if (!response || !(response.data instanceof Blob) || response.size === 0) {
             downloadStatus.value.error = '服务器返回的数据为空'
             return
         }
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
         const filename = `提交报告_${submissionId}_${timestamp}.pdf`
-        const url = window.URL.createObjectURL(response)
+        const url = window.URL.createObjectURL(response.data)
         const link = document.createElement('a')
         link.href = url
         link.setAttribute('download', filename)
@@ -814,5 +821,19 @@ const closeSubmissionReportModal = () => {
 .btn-secondary:hover {
     background: #dee2e6;
     color: #333;
+}
+
+.question-title-correct {
+    color: #43a047;
+}
+.question-title-wrong {
+    color: #e53935;
+}
+
+.explanation-correct {
+    background: #e8f5e9 !important;
+}
+.explanation-wrong {
+    background: #ffebee !important;
 }
 </style>

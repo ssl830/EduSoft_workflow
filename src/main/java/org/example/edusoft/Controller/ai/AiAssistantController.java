@@ -85,7 +85,7 @@ public class AiAssistantController {
         return body;
     }
 
-    
+
     /**
      * 练习学情分析：统计每题得分率，调用AI微服务分析
      * 请求体需包含 practiceId
@@ -101,5 +101,5 @@ public class AiAssistantController {
         Map<String, Object> result = aiAssistantService.analyzeExercise(practiceId);
         return result;
     }
-    
+
 }

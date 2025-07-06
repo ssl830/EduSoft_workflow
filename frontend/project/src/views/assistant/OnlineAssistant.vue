@@ -19,21 +19,33 @@
           <p>{{ msg.content }}</p>
           <!-- 修改引用资料展示方式，避免黑点 -->
           <template v-if="msg.role === 'assistant' && msg.references">
-            <details>
-              <summary>引用资料</summary>
+            <details ref="refsDetails" @toggle="onToggle('refs', idx)">
+              <summary class="summary-toggle">
+                <span class="toggle-arrow">{{ refsOpen[idx] ? '▼' : '▶' }}</span>
+                <strong>引用资料</strong>
+              </summary>
               <div class="references-list">
                 <div v-for="(ref, i) in msg.references" :key="i" class="reference-item">
-                  <strong>{{ ref.source }}:</strong> {{ ref.content }}
+                  <span class="big-dot">•</span>
+                  <div class="reference-lines">
+                    <div class="reference-source"><strong>{{ ref.source }}</strong></div>
+                    <div class="reference-content">{{ ref.content }}</div>
+                  </div>
                 </div>
               </div>
             </details>
           </template>
           <!-- 新增知识点展示 -->
           <template v-if="msg.role === 'assistant' && msg.knowledgePoints && msg.knowledgePoints.length">
-            <details>
-              <summary>知识点</summary>
+            <div style="margin-top: 18px;"></div>
+            <details ref="kpDetails" @toggle="onToggle('kp', idx)">
+              <summary class="summary-toggle">
+                <span class="toggle-arrow">{{ kpOpen[idx] ? '▼' : '▶' }}</span>
+                <strong>知识点</strong>
+              </summary>
               <div class="knowledge-list">
                 <div v-for="(kp, i) in msg.knowledgePoints" :key="i" class="knowledge-item">
+                  <span class="big-dot">•</span>
                   {{ kp }}
                 </div>
               </div>
@@ -61,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { askAssistant, AssistantRequest, AssistantResponse } from '@/api/ai'
 import CourseApi from '@/api/course'
 import { useAuthStore } from '@/stores/auth'
@@ -163,17 +175,14 @@ async function send() {
     }
     loading.value = false
     // 替换AI思考中为真实内容
-    if (
-      typeof thinkingMsgIdx === 'number' &&
-      (!resp.status || resp.status != 'fail')
-    ) {
+    if (resp.code == 200) {
       messages.value[thinkingMsgIdx] = {
         role: 'assistant',
-        content: resp.answer,
-        references: resp.references,
-        knowledgePoints: resp.knowledgePoints
+        content: resp.data.answer,
+        references: resp.data.references,
+        knowledgePoints: resp.data.knowledgePoints
       }
-    } else if (typeof thinkingMsgIdx === 'number') {
+    } else {
       messages.value[thinkingMsgIdx] = {
         role: 'assistant',
         content: '抱歉，无法处理您的请求。'
@@ -190,6 +199,18 @@ async function send() {
       messages.value[thinkingMsgIdx] = { role: 'assistant', content: '抱歉，服务暂时不可用。' }
     }
     thinkingMsgIdx = null
+  }
+}
+
+// 控制折叠/展开状态
+const refsOpen = reactive<{ [k: number]: boolean }>({})
+const kpOpen = reactive<{ [k: number]: boolean }>({})
+
+function onToggle(type: 'refs' | 'kp', idx: number) {
+  if (type === 'refs') {
+    refsOpen[idx] = !refsOpen[idx]
+  } else {
+    kpOpen[idx] = !kpOpen[idx]
   }
 }
 </script>
@@ -346,6 +367,50 @@ button:not(:disabled):hover {
 }
 .reference-item, .knowledge-item {
   padding-left: 4px;
-  /* 可选：更好区分每条 */
+  display: flex;
+  align-items: flex-start;
+}
+.big-dot {
+  font-size: 1.5em;
+  line-height: 1;
+  margin-right: 8px;
+  color: #26c6da;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+}
+/* 新增：引用资料source和content分行 */
+.reference-lines {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+.reference-source {
+  color: #00838f;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.reference-content {
+  color: #333;
+  word-break: break-all;
+}
+.summary-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 1em;
+}
+.toggle-arrow {
+  font-size: 1.1em;
+  width: 1.2em;
+  display: inline-block;
+  color: #26c6da;
+  font-weight: bold;
+}
+/* 新增：知识点与引用资料间距 */
+.knowledge-list {
+  margin-top: 8px;
 }
 </style>

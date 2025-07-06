@@ -4,6 +4,7 @@ import ManageApi from "@/api/management.ts";
 import ExerciseApi from '@/api/exercise'
 import router from "@/router"
 import ClassApi from "@/api/class.ts";
+import { ElMessage } from 'element-plus'
 
 const teachers = ref<{id: number, username: string}[]>([])
 const courses = ref<{id: number, name: string}[]>([])
@@ -75,10 +76,11 @@ watch(selectedTeacher, (val) => {
   selectedClass.value = ''
   courses.value = []
   classes.value = []
-  exercises.value = []
+  exercises.value = [] // 切换教师时清空练习列表
   if (val) fetchClasses(val)
 })
 
+// 监听班级变化，自动拉取练习列表
 watch(selectedClass, (val) => {
   exercises.value = []
   if (val) fetchExercises(val)
@@ -96,15 +98,34 @@ const editExercise = (exerciseId: number) => {
   router.push({ name: 'ExerciseEdit', params: { id: exerciseId } })
 }
 
-const deleteExercise = async (exerciseId: string) => {
-  if (!confirm('确定要删除此练习吗？')) return
+const showDeleteDialog = ref(false)
+const deleteTargetId = ref<string | null>(null)
+const deleteLoading = ref(false)
+
+const askDeleteExercise = (exerciseId: string) => {
+  deleteTargetId.value = exerciseId
+  showDeleteDialog.value = true
+}
+
+const confirmDeleteExercise = async () => {
+  if (!deleteTargetId.value) return
+  deleteLoading.value = true
   try {
-    await ExerciseApi.deleteExercise(exerciseId)
-    exercises.value = exercises.value.filter(e => e.id !== exerciseId)
-    alert('练习已删除')
+    await ExerciseApi.deleteExercise(deleteTargetId.value)
+    exercises.value = exercises.value.filter(e => e.id !== deleteTargetId.value)
+    ElMessage.success('练习已删除')
+    showDeleteDialog.value = false
+    deleteTargetId.value = null
   } catch (e) {
-    alert('删除练习失败，请稍后再试')
+    ElMessage.error('删除练习失败，请稍后再试')
+  } finally {
+    deleteLoading.value = false
   }
+}
+
+const cancelDeleteExercise = () => {
+  showDeleteDialog.value = false
+  deleteTargetId.value = null
 }
 </script>
 
@@ -117,7 +138,7 @@ const deleteExercise = async (exerciseId: string) => {
             <label>教师：</label>
             <select v-model="selectedTeacher" :disabled="loadingTeachers">
               <option value=-1>请选择教师</option>
-              <option v-for="t in teachers" :key=t.id :value=t.id>{{ t.username }}</option>
+              <option v-for="t in teachers.filter(t => t.id !== -1)" :key=t.id :value=t.id>{{ t.username }}</option>
             </select>
           </div>
           <div class="filter-group">
@@ -160,11 +181,24 @@ const deleteExercise = async (exerciseId: string) => {
                 <td class="actions">
                   <button class="btn-action download" @click="viewExercise(exercise.id)">查看</button>
                   <button class="btn-action preview" @click="editExercise(exercise.id)">编辑</button>
-                  <button class="btn-action delete" @click="deleteExercise(exercise.id)">删除</button>
+                  <button class="btn-action delete" @click="askDeleteExercise(exercise.id)">删除</button>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+    <!-- 自定义删除弹窗 -->
+    <div v-if="showDeleteDialog" class="modal-mask">
+      <div class="modal-dialog">
+        <div class="modal-title">删除确认</div>
+        <div class="modal-content">确定要删除此练习吗？</div>
+        <div class="modal-actions">
+          <button class="modal-btn cancel" @click="cancelDeleteExercise" :disabled="deleteLoading">取消</button>
+          <button class="modal-btn confirm" @click="confirmDeleteExercise" :disabled="deleteLoading">
+            {{ deleteLoading ? '删除中...' : '确定' }}
+          </button>
         </div>
       </div>
     </div>
@@ -351,5 +385,78 @@ const deleteExercise = async (exerciseId: string) => {
 
 .btn-action.delete:hover {
   background-color: #ffcdd2;
+}
+
+.modal-mask {
+  position: fixed;
+  z-index: 3000;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(44, 62, 80, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-dialog {
+  background: #fff;
+  border-radius: 12px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px 0 rgba(44,62,80,0.18);
+  padding: 2rem 2.2rem 1.5rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: modal-pop 0.18s;
+}
+@keyframes modal-pop {
+  0% { transform: scale(0.92); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #223;
+  margin-bottom: 1.1rem;
+  letter-spacing: 1px;
+}
+.modal-content {
+  font-size: 1.08rem;
+  color: #444;
+  margin-bottom: 1.6rem;
+  text-align: center;
+}
+.modal-actions {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  justify-content: center;
+}
+.modal-btn {
+  min-width: 80px;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.modal-btn.cancel {
+  background: #f5f6fa;
+  color: #888;
+}
+.modal-btn.cancel:hover:enabled {
+  background: #e1e4ea;
+}
+.modal-btn.confirm {
+  background: #e53935;
+  color: #fff;
+}
+.modal-btn.confirm:hover:enabled {
+  background: #c62828;
+}
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

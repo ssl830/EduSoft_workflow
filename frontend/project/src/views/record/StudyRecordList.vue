@@ -92,13 +92,13 @@ const exportSelectedCourseRecords = async () => {
     const courseId = getCourseIdByName(selectedCourse.value)
     if (!courseId) throw new Error('未找到课程ID')
     const response = await StudyRecordsApi.exportStudyRecordsByCourse(String(courseId))
-    if (!response || !(response instanceof Blob)) {
+    if (!response || !(response.data instanceof Blob)) {
       throw new Error('服务器返回的数据格式不正确')
     }
-    if (response.size > 0) {
+    if (response.data.size > 0) {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
       const filename = `${selectedCourse.value}_学习记录_${timestamp}.xlsx`
-      const url = window.URL.createObjectURL(response)
+      const url = window.URL.createObjectURL(response.data)
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', filename)

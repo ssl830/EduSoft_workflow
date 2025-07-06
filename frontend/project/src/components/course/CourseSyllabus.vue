@@ -310,24 +310,30 @@ const handleLessonDetail = async (idx: number, lesson: any, type: 'detail' | 're
             const res = await CourseApi.generateTeachingContentDetail(params)
             console.log(res)
             if (res.data) {
-                renderTeachingPlan.value.lessons[idx] = res.data
-                console.log(renderTeachingPlan.value.lessons[idx])
-                console.log(renderTeachingPlan.value.lessons.value[idx])
+                // 修正：直接操作 teachingPlanResult.value.lessons
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res.data
+                }
             } else {
-                renderTeachingPlan.value.lessons[idx] = res
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res
+                }
             }
+            ElMessage.success('生成成功');
         }else{
             const res = await CourseApi.regenerateTeachingContent(params)
             console.log(res)
             if (res.data) {
-                renderTeachingPlan.value.lessons[idx] = res.data
-                console.log(renderTeachingPlan.value.lessons[idx])
-                console.log(renderTeachingPlan.value.lessons.value[idx])
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res.data
+                }
             } else {
-                renderTeachingPlan.value.lessons[idx] = res
+                if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
+                  teachingPlanResult.value.lessons[idx] = res
+                }
             }
+            ElMessage.success('生成成功');
         }
-
     } catch (e) {
         ElMessage.error('请求失败，请稍后再试')
     } finally {
