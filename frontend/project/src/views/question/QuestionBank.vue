@@ -509,10 +509,11 @@ const generateQuestions = async () => {
         const reqData = JSON.parse(JSON.stringify(generateForm.value));
         const response = await QuestionApi.generateExercise(reqData);
         console.log('生成题目响应:', response);
-        console.log(Array.isArray(response.exercises))
+        console.log('生成题目响应:', response.data);
+        console.log(Array.isArray(response.data.exercises))
 
-        if (response && Array.isArray(response.exercises)) {
-            for (const question of response.exercises) {
+        if (response && Array.isArray(response.data.exercises)) {
+            for (const question of response.data.exercises) {
                 const questionData = {
                     type: question.type,
                     content: question.question,
@@ -931,7 +932,7 @@ function closeGenerateDialog() {
     </div>
 
     <!-- 生成题目弹窗 -->
-    <div v-if="showGenerateDialog" class="modal-mask" @click="showGenerateDialog = false">
+    <div v-if="showGenerateDialog" class="modal-mask">
         <div class="modal-container" @click.stop>
             <div class="modal-header">
                 <h3>生成题目</h3>

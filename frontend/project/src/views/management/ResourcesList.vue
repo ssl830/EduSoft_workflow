@@ -70,7 +70,7 @@ const selectedCourseObj = computed(() =>
             <label>教师：</label>
             <select v-model="selectedTeacher" :disabled="loadingTeachers">
               <option value="">请选择教师</option>
-              <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.username }}</option>
+              <option v-for="t in teachers.filter(t => t.id !== -1)" :key="t.id" :value="t.id">{{ t.username }}</option>
             </select>
           </div>
           <div class="filter-group">
@@ -87,6 +87,7 @@ const selectedCourseObj = computed(() =>
       </div>
       <div v-else>
         <CourseResourceList
+          :key="selectedCourse"
           :courseId="selectedCourse"
           :isTeacher="true"
           :course="selectedCourseObj"

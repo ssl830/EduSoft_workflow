@@ -81,6 +81,7 @@ public class AiAssistantService {
         }
     }
 
+    @Autowired
     private AiServiceCallLogMapper aiServiceCallLogMapper;
 
     // Helper method to log AI service calls
@@ -271,7 +272,7 @@ public class AiAssistantService {
             );
         }
     }
-    
+
     public Map<String, Object> generateStudentExercise(Map<String, Object> req) {
         long startTime = System.currentTimeMillis();
         String endpoint = "/rag/generate_student_exercise";

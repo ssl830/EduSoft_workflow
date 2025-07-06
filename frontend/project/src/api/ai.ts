@@ -64,7 +64,10 @@ export interface ExerciseItem {
 }
 
 export interface StudentExerciseResponse {
-  exercises: ExerciseItem[]
+  data:{
+    exercises: ExerciseItem[]
+    practiceId?: number
+  }
 }
 
 export interface SelfPracticeProgressRequest {
@@ -130,7 +133,7 @@ export function getSelfPracticeHistory() {
 
 export function getSelfPracticeDetail(pid: number | string) {
   return http.get(`/api/selfpractice/history/${pid}`)
-} 
+}
 
 // AI学情分析（练习得分率分析）
 export function analyzeExercise(practiceId: number) {

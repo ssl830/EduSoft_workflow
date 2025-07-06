@@ -91,6 +91,7 @@ interface QuestionItem {
     maxScore: number;
     score: number;
     sortOrder: number;
+    aiResult: any;
 }
 const route = useRoute()
 const router = useRouter()
@@ -114,7 +115,7 @@ const fetchPendingAnswers = async () => {
             showAiDetail.value = questions.value.map(() => false);
             // 针对每道题调用AI评估
             await Promise.all(
-                questions.value.map(async (q, idx) => {
+                questions.value.map(async (q) => {
                     try {
                         const res = await evaluateSubjectiveAnswer({
                             question: q.questionName,
@@ -122,7 +123,7 @@ const fetchPendingAnswers = async () => {
                             reference_answer: '',
                             max_score: q.maxScore || 5
                         });
-                        q.aiResult = res;
+                        q.aiResult = res.data;
                     } catch (e) {
                         q.aiResult = { error: 'AI评估失败，请稍后重试' };
                     }

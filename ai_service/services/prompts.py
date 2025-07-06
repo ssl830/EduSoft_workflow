@@ -110,7 +110,11 @@ class PromptTemplates:
         """生成练习题的提示词"""
         # 动态题型描述
         if custom_types:
-            type_lines = []
+            type_lines = [
+                f"1. 选择题 {choose_count}道",
+                f"2. 填空题 {fill_blank_count}道",
+                f"3. 计算或者简答题 {question_count}道"
+            ]
             for k, v in custom_types.items():
                 type_lines.append(f"{k}：{v}道")
             type_desc = "\n".join(type_lines)
@@ -541,4 +545,3 @@ class PromptTemplates:
         3. 推荐的行动要有针对性，并说明预期效果
         4. 返回必须是合法JSON，不要包含Markdown、注释或多余文字
         """
-
