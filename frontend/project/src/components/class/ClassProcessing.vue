@@ -22,14 +22,14 @@ const selectedType = ref('')
 const selectedExer = ref(-1)
 
 // Chapters and types (will be populated from resources)
-const names = ref([])
-const practicesTypes = ref([
-    { value: 'unFinished', label: '未完成' },
-    { value: 'unScored', label: '待批改' },
-    { value: 'scored', label: '已批改' },
-    { value: 'overdue', label: '已过期' },
-])
-const practicesName = ref([])
+// const names = ref([])
+// const practicesTypes = ref([
+//     { value: 'unFinished', label: '未完成' },
+//     { value: 'unScored', label: '待批改' },
+//     { value: 'scored', label: '已批改' },
+//     { value: 'overdue', label: '已过期' },
+// ])
+const practicesName = ref<{ id: any; title: any }[]>([])
 
 const authStore = useAuthStore()
 const isTeacher = computed(() => authStore.userRole === 'teacher')
@@ -148,13 +148,13 @@ const checkPractice = (submissionId: number) => {
 }
 
 // 查看练习
-const getPracticeReport = async (practiceId: number, submissionId: number) => {
-    // TODO: 或者跳转到"学习记录"
-    router.push({
-        name: 'ExerciseFeedback',
-        params: { practiceId, submissionId }
-    })
-}
+// const getPracticeReport = async (practiceId: number, submissionId: number) => {
+//     // TODO: 或者跳转到"学习记录"
+//     router.push({
+//         name: 'ExerciseFeedback',
+//         params: { practiceId, submissionId }
+//     })
+// }
 
 // 切换视图
 const switchView = (view: string) => {
@@ -173,12 +173,12 @@ watch([selectedChapter, selectedType, selectedExer], () => {
 })
 
 // 新增：在<script setup>中添加：
-const viewPracticeDetail = (practiceId) => {
+const viewPracticeDetail = (practiceId: any) => {
     router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
 }
 
 // 在<script setup>中添加：
-const editPractice = (practiceId) => {
+const editPractice = (practiceId: any) => {
     router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
 }
 

@@ -95,19 +95,19 @@ interface QuestionItem {
 }
 const route = useRoute()
 const router = useRouter()
-const practiceId = route.params.practiceId
+// const practiceId = route.params.practiceId
 const submissionId = route.params.submissionId
 
 const error = ref('')
 
 const questions = ref<QuestionItem[]>([]);
 const loading = ref(true);
-const isLoading = ref(false);
+// const isLoading = ref(false);
 const showAiDetail = ref<Array<boolean>>([]);
 
 const fetchPendingAnswers = async () => {
     try {
-        const response = await ExerciseApi.fetchPendingAnswers({
+        const response:any = await ExerciseApi.fetchPendingAnswers({
             submissionId: submissionId,
         });
         if (response.code === 200) {
@@ -165,7 +165,7 @@ const submitScores = async () => {
     };
 
     try {
-        const response = await Exercise.gradeAnswer(requestData);
+        const response:any = await Exercise.gradeAnswer(requestData);
         if (response.code === 200) {
             router.push('/')
         } else {

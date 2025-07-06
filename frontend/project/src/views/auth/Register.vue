@@ -105,7 +105,7 @@ const keyError = ref('')
 const keySuccess = ref(false) // 新增：验证通过提示
 
 // 监听role变化，管理员需验证密钥
-watch(role, (newVal, oldVal) => {
+watch(role, (newVal) => {
   if (newVal === 'tutor') {
     adminKeyInput.value = ''
     keyError.value = ''

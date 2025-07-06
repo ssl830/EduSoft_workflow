@@ -21,7 +21,7 @@
               <q-icon name="quiz" color="primary" size="md" />
               <h2>常见问题</h2>
             </div>
-            
+
             <q-expansion-item
               v-for="(faq, index) in faqs"
               :key="index"
@@ -45,7 +45,7 @@
               <q-icon name="library_books" color="secondary" size="md" />
               <h2>使用指南</h2>
             </div>
-            
+
             <div class="guide-links">
               <q-btn
                 v-for="guide in guides"
@@ -70,7 +70,7 @@
               <q-icon name="feedback" color="accent" size="md" />
               <h2>意见反馈</h2>
             </div>
-            
+
             <q-form @submit="submitFeedback" class="feedback-form">
               <q-select
                 v-model="feedbackForm.type"
@@ -141,7 +141,7 @@
               <q-icon name="contact_support" color="info" size="md" />
               <h2>联系我们</h2>
             </div>
-            
+
             <div class="contact-info">
               <div class="contact-item">
                 <q-icon name="email" color="primary" />
@@ -150,7 +150,7 @@
                   <div class="contact-value">support@edusoft.com</div>
                 </div>
               </div>
-              
+
               <div class="contact-item">
                 <q-icon name="schedule" color="primary" />
                 <div>
@@ -158,7 +158,7 @@
                   <div class="contact-value">周一至周五 9:00-18:00</div>
                 </div>
               </div>
-              
+
               <div class="contact-item">
                 <q-icon name="chat" color="primary" />
                 <div>
@@ -245,17 +245,17 @@ const openGuide = (guide: any) => {
 // 提交反馈
 const submitFeedback = async () => {
   submitting.value = true
-  
+
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     $q.notify({
       type: 'positive',
       message: '反馈提交成功！我们会尽快处理您的意见。',
       position: 'top'
     })
-    
+
     resetForm()
   } catch (error) {
     $q.notify({
@@ -289,20 +289,18 @@ const resetForm = () => {
 .page-header {
   text-align: center;
   margin-bottom: 32px;
-  
+
   .page-title {
     font-size: 2rem;
     font-weight: 600;
-    color: $primary;
     margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
+
   .page-description {
     font-size: 1rem;
-    color: $grey-7;
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.6;
@@ -313,7 +311,7 @@ const resetForm = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  
+
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
   }
@@ -323,7 +321,7 @@ const resetForm = () => {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  
+
   &:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   }
@@ -333,17 +331,15 @@ const resetForm = () => {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  
+
   h2 {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 0 12px;
-    color: $grey-8;
   }
 }
 
 .faq-answer {
-  color: $grey-7;
   line-height: 1.6;
 }
 
@@ -358,10 +354,7 @@ const resetForm = () => {
   padding: 12px 16px;
   border-radius: 8px;
   transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: $grey-2;
-  }
+
 }
 
 .feedback-form {
@@ -382,15 +375,13 @@ const resetForm = () => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  
+
   .contact-label {
     font-weight: 500;
-    color: $grey-8;
     margin-bottom: 4px;
   }
-  
+
   .contact-value {
-    color: $grey-6;
     font-size: 0.9rem;
   }
 }
@@ -400,13 +391,13 @@ const resetForm = () => {
   .help-feedback-container {
     padding: 16px;
   }
-  
+
   .page-header {
     .page-title {
       font-size: 1.5rem;
     }
   }
-  
+
   .content-grid {
     gap: 16px;
   }

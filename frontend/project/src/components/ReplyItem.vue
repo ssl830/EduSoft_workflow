@@ -7,7 +7,7 @@
         <div class="author-avatar">
           {{ getInitials(reply.creatorNum) }}
         </div>
-        
+
         <!-- 用户信息 -->
         <div class="flex flex-col">
           <div class="flex items-center">
@@ -19,21 +19,21 @@
         <span class="text-sm text-gray-500">{{ formatDate(reply.createdAt) }}</span>
         </div>
       </div>
-      
+
       <!-- 回复操作按钮 -->
       <div class="flex items-center space-x-4">
         <!-- 编辑按钮 -->
-        <button 
+        <button
           v-if="canEdit"
-          @click="$emit('edit', reply)"
+          @click="$emit('edit', reply.id, reply.content)"
           class="edit-btn"
         >
           <i class="fas fa-edit mr-1"></i>
           编辑
         </button>
-        
+
         <!-- 删除按钮 -->
-        <button 
+        <button
           v-if="canDelete"
           @click="$emit('delete', reply.id)"
           class="delete-btn"
@@ -43,13 +43,13 @@
         </button>
       </div>
     </div>
-    
+
     <!-- 回复内容 -->
     <div class="prose max-w-none text-gray-700 mb-4" v-html="renderedContent"></div>
-    
+
     <!-- 编辑表单 -->
     <div v-if="isEditing" class="mb-3">
-      <ReplyForm 
+      <ReplyForm
         :initial-content="reply.content"
         :is-editing="true"
         @success="handleEditSuccess"
@@ -58,10 +58,10 @@
         submit-text="保存修改"
       />
     </div>
-    
+
     <!-- 回复表单 -->
     <div v-if="showReplyForm" class="mt-4 border-t pt-4">
-      <ReplyForm 
+      <ReplyForm
         :discussion-id="reply.discussionId"
         :parent-reply-id="reply.id"
         @success="handleReplySuccess"
@@ -70,10 +70,10 @@
         submit-text="提交回复"
       />
     </div>
-    
+
     <!-- 子回复加载按钮 -->
     <div v-if="hasChildren && level === 0" class="mt-3">
-      <button 
+      <button
         @click="$emit('load-children', reply.id)"
         class="text-blue-600 hover:text-blue-800 text-sm flex items-center"
       >
@@ -87,11 +87,12 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
+import MarkdownIt from 'markdown-it';
 import { ref, computed, inject } from 'vue';
 import type { DiscussionReply } from '../api/discussion';
-import discussionApi from '../api/discussion';
+// import discussionApi from '../api/discussion';
 import ReplyForm from './ReplyForm.vue';
-import MarkdownIt from 'markdown-it';
 
 // Props
 interface Props {
@@ -136,40 +137,40 @@ const childrenCount = computed(() => {
 });
 
 // 点赞相关
-const isLiked = ref(props.reply.likedByMe || false);
-const showLikeUsers = ref(false);
-const likeUsers = ref<{userNum: string; userId: number}[]>([]);
-const loadingLikeUsers = ref(false);
+// const isLiked = ref(props.reply.likedByMe || false);
+// const showLikeUsers = ref(false);
+// const likeUsers = ref<{userNum: string; userId: number}[]>([]);
+// const loadingLikeUsers = ref(false);
 
 // 处理点赞
-const handleLike = async () => {
-  try {
-    await emit('like', props.reply.id);
-  } catch (err) {
-    console.error('点赞失败:', err);
-  }
-};
+// const handleLike = async () => {
+//   try {
+//     await emit('like', props.reply.id);
+//   } catch (err) {
+//     console.error('点赞失败:', err);
+//   }
+// };
 
 // 加载点赞用户列表
-const loadLikeUsers = async () => {
-  if (loadingLikeUsers.value) return;
-  
-  loadingLikeUsers.value = true;
-  try {
-    const response = await discussionApi.getLikeUsers(props.reply.id);
-    likeUsers.value = response.data;
-    showLikeUsers.value = true;
-  } catch (err) {
-    console.error('Failed to load like users:', err);
-  } finally {
-    loadingLikeUsers.value = false;
-  }
-};
+// const loadLikeUsers = async () => {
+//   if (loadingLikeUsers.value) return;
+//
+//   loadingLikeUsers.value = true;
+//   try {
+//     const response = await discussionApi.getLikeUsers(props.reply.id);
+//     likeUsers.value = response.data;
+//     showLikeUsers.value = true;
+//   } catch (err) {
+//     console.error('Failed to load like users:', err);
+//   } finally {
+//     loadingLikeUsers.value = false;
+//   }
+// };
 
 // 关闭点赞用户列表
-const closeLikeUsers = () => {
-  showLikeUsers.value = false;
-};
+// const closeLikeUsers = () => {
+//   showLikeUsers.value = false;
+// };
 
 // 方法
 const getInitials = (name: string): string => {
@@ -182,7 +183,7 @@ const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
+
   if (diffInMinutes < 1) {
     return '刚刚';
   } else if (diffInMinutes < 60) {
@@ -214,14 +215,14 @@ const toggleReplyForm = () => {
   }
 };
 
-const handleDelete = () => {
-  if (confirm('确定要删除这条回复吗？')) {
-    emit('delete', props.reply.id);
-  }
-};
+// const handleDelete = () => {
+//   if (confirm('确定要删除这条回复吗？')) {
+//     emit('delete', props.reply.id);
+//   }
+// };
 
-const handleEditSuccess = (content: string) => {
-  emit('edit', props.reply.id, content);
+const handleEditSuccess = (content?: string) => {
+  emit('edit', props.reply.id, content ?? '');
   isEditing.value = false;
 };
 

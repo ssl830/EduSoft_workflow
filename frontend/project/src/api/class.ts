@@ -6,7 +6,7 @@ const ClassApi = {
     return axios.get(`/api/classes/user/${id}`)
   },
 
-  uploadStudents(data: { classId: string, operatorId: string|number, importType: string, studentData: any[] }) {
+  uploadStudents(data: { classId: string, operatorId: number | undefined , importType: string, studentData: any[] }) {
     return axios.post(`/api/imports/students`, data,
       {
         headers: {
@@ -17,28 +17,26 @@ const ClassApi = {
   },
 
   // Get class by ID
-  getClassById(id: bigint) {
+  getClassById(id:  string | string[]) {
     return axios.get(`/api/classes/${id}`)
   },
 
   // Create new class (teacher only)
   createClass(data: {
-    courseId: bigint;
-    name: string;
-    code?: string;
+    courseId: number;   name: string;   classCode: string;   creatorId: number;
   }) {
     return axios.post('/api/classes', data)
   },
 
-  getHomeworkList(classId: bigint) {
+  getHomeworkList(classId: string) {
     return axios.get(`/api/homework/list?classId=${classId}`)
   },
 
-  deleteHomework(homeworkId: bigint) {
+  deleteHomework(homeworkId: number) {
     return axios.delete(`/api/homework/${homeworkId}`)
   },
 
-  fetchSubmissions(homeworkId: bigint) {
+  fetchSubmissions(homeworkId: number) {
     return axios.get(`/api/homework/submissions/${homeworkId}`)
   },
 
@@ -48,7 +46,7 @@ const ClassApi = {
   },
 
   // Upload resource
-  uploadSubmissionFile(homeworkId: bigint, formData: FormData) {
+  uploadSubmissionFile(homeworkId: number | undefined , formData: FormData) {
     return axios.post(`/api/homework/submit/${homeworkId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -132,7 +130,7 @@ const ClassApi = {
    * @param teacherId 老师用户ID
    * @returns Promise
    */
-  getTeacherClasses(teacherId: bigint | number | string) {
+  getTeacherClasses(teacherId: number | undefined) {
     return axios.get(`/api/classes/teacher/simple/${teacherId}`)
   },
 
@@ -142,11 +140,14 @@ const ClassApi = {
    * @param studentId 学生ID
    * @returns Promise
    */
-  getStudentSubmission(homeworkId: bigint | number | string, studentId: bigint | number | string) {
-    const params = new URLSearchParams({
-      homeworkId,
-      studentId
-    });
+  getStudentSubmission(homeworkId: bigint | number | string, studentId: number | undefined ) {
+    const params = new URLSearchParams();
+    // 确保 homeworkId 转换为字符串（因类型不含 undefined，直接转换）
+    params.append('homeworkId', String(homeworkId));
+    // 仅在 studentId 有值时添加（过滤 undefined）
+    if (studentId !== undefined) {
+      params.append('studentId', String(studentId));
+    }
     return axios.get(`/api/homework/submission?${params.toString()}`)
   },
 }

@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import {ref, onMounted, computed} from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import ClassCard from '../../components/class/ClassCard.vue'
 import ClassApi from '../../api/class'
 import CourseApi from '../../api/course'  // 新增课程API引入
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
-const classes = ref([])
-const courses = ref([])
+const classes = ref(<any>[])
+const courses = ref(<any>[])
 const loading = ref(true)
 const error = ref('')
 const errorDialog = ref('')
@@ -53,7 +52,7 @@ const joinClass = async () => {
     // 刷新班级列表
     await fetchClasses()
   } catch (err) {
-    errorDialog.value = '加入班级失败: ' + (err.response?.data?.message || '请检查代码是否正确')
+    errorDialog.value = '加入班级失败: ' + '请检查代码是否正确'
     console.error(err)
   }
 }
@@ -68,29 +67,44 @@ const resetJoinForm = () => {
 // 获取班级列表（根据身份适配接口）
 const fetchClasses = async () => {
   try {
-    let response
     if (authStore.userRole === 'teacher') {
       // 老师用专用接口，避免查到自己是成员
-      response = await ClassApi.getTeacherClasses(authStore.user?.id)
+      const response : any = await ClassApi.getTeacherClasses(authStore.user?.id)
+      console.log('获取班级列表响应:', response)
+
+      if (response.code === 200 && Array.isArray(response.data)) {
+        classes.value = response.data.map((classItem:any) => ({
+            ...classItem,
+            id: classItem.id || classItem.classId, // 兼容老师/学生接口，统一id字段，避免跳转出错
+            name: classItem.className || classItem.name || '未命名班级',
+            code: classItem.classCode || classItem.code || '无代码',
+            courseName: classItem.courseName || '未知课程',
+            createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
+        }))
+        console.log('处理后的班级数据:', classes.value)
+      } else {
+          classes.value = []
+          error.value = response.message || '获取班级列表失败'
+      }
     } else {
       // 学生用原有接口
-      response = await ClassApi.getUserClasses(authStore.user?.id)
-    }
-    console.log('获取班级列表响应:', response)
+      const response:any = await ClassApi.getUserClasses(authStore.user?.id ? Number(authStore.user.id) : 0)
+      console.log('获取班级列表响应:', response)
 
-    if (response.code === 200 && Array.isArray(response.data)) {
-      classes.value = response.data.map(classItem => ({
-        ...classItem,
-        id: classItem.id || classItem.classId, // 兼容老师/学生接口，统一id字段，避免跳转出错
-        name: classItem.className || classItem.name || '未命名班级',
-        code: classItem.classCode || classItem.code || '无代码',
-        courseName: classItem.courseName || '未知课程',
-        createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
-      }))
-      console.log('处理后的班级数据:', classes.value)
-    } else {
-      classes.value = []
-      error.value = response.message || '获取班级列表失败'
+      if (response.code === 200 && Array.isArray(response.data)) {
+          classes.value = response.data.map((classItem:any) => ({
+              ...classItem,
+              id: classItem.id || classItem.classId, // 兼容老师/学生接口，统一id字段，避免跳转出错
+              name: classItem.className || classItem.name || '未命名班级',
+              code: classItem.classCode || classItem.code || '无代码',
+              courseName: classItem.courseName || '未知课程',
+              createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
+          }))
+          console.log('处理后的班级数据:', classes.value)
+      } else {
+          classes.value = []
+          error.value = response.message || '获取班级列表失败'
+      }
     }
   } catch (err) {
     classes.value = []
@@ -117,18 +131,18 @@ const resetUploadForm = () => {
 }
 
 // 可以添加更严格的时间有效性验证（可选）
-const isValidTime = (time: string) => {
-  const hours = parseInt(time.slice(0, 2))
-  const minutes = parseInt(time.slice(2))
-  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59
-}
+// const isValidTime = (time: string) => {
+//   const hours = parseInt(time.slice(0, 2))
+//   const minutes = parseInt(time.slice(2))
+//   return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59
+// }
 
 const validateClassForm = () => {
   if (!newClass.value.courseId) {
     errorDialog.value = '请选择课程';
     return false;
   }
-  const course = courses.value.find(c => c.id === newClass.value.courseId)
+  const course = courses.value.find((c:any) => c.id === newClass.value.courseId)
   let className = course?.name || ''
   if (selectedWeek.value !== '未确定') {
     if (!startTime.value || !endTime.value) {
@@ -158,13 +172,13 @@ const validateClassForm = () => {
 
 const createClass = async () => {
   if (!validateClassForm()) return;
-  
+
   if (!authStore.user?.id) {
     errorDialog.value = '请先登录';
     return;
   }
 
-  const course = courses.value.find(c => c.id === newClass.value.courseId)
+  const course = courses.value.find((c:any) => c.id === newClass.value.courseId)
   let className = course?.name || ''
   if (selectedWeek.value !== '未确定') {
     className += `${selectedWeek.value} ${startTime.value}-${endTime.value}`
@@ -177,7 +191,7 @@ const createClass = async () => {
       creatorId: authStore.user.id  // 添加创建者ID
     }
     console.log('发送的班级数据:', classData)
-    const response = await ClassApi.createClass(classData)
+    const response:any = await ClassApi.createClass(classData)
     if (response?.code !== 200) {
       errorDialog.value = response?.message || '创建班级失败';
       return;
@@ -185,7 +199,7 @@ const createClass = async () => {
     ElMessage.success('班级创建成功')
     resetUploadForm()
     fetchClasses()
-  } catch (error) {
+  } catch (error:any) {
     errorDialog.value = error?.response?.data?.message || error?.message || '创建班级失败，请重试';
   }
 }

@@ -264,10 +264,10 @@ const totalScore = computed(() => {
     return practiceData.value.questions.reduce((sum, q) => sum + (q.score ?? 0), 0)
 })
 
-// 判断是否客观题
-const isObjective = (type: string) => {
-    return ['singlechoice', 'multiplechoice', 'judge', 'fillblank'].includes(type)
-}
+// // 判断是否客观题
+// const isObjective = (type: string) => {
+//     return ['singlechoice', 'multiplechoice', 'judge', 'fillblank'].includes(type)
+// }
 
 // 格式化答案显示
 const formatAnswer = (answer: string | string[], type: string) => {

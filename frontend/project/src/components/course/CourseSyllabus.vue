@@ -66,7 +66,7 @@ const route = useRoute()
 const courseId = computed(() => route.params.id as string)
 const fetchCourse = async() => {
     try {
-        const response = await CourseApi.getCourseById(courseId.value)
+        const response : any = await CourseApi.getCourseById(courseId.value)
         if (response.code === 200) {
             Object.assign(props.course, response.data)
         } else {
@@ -83,7 +83,7 @@ const fetchCourse = async() => {
 const deleteSection = async (sectionId: bigint) => {
     try {
         const response = await CourseApi.deleteSection(props.course.id, sectionId)
-        props.course.sections = props.course.sections.filter(s => s.id !== sectionId);
+        props.course.sections = props.course.sections.filter((s:any) => s.id !== sectionId);
         console.log(response)
         // 删除section
     } catch (err) {
@@ -98,7 +98,7 @@ const handleEditSuccess = async () => {
 
 const showTeachingPlanDialog = ref(false)
 const teachingPlanLoading = ref(false)
-const teachingPlanResult = ref(null)
+const teachingPlanResult = ref<any>(null)
 const exportLoading = ref(false)
 const expectedHours = ref<number | null>(null)
 
@@ -142,7 +142,7 @@ const handleGenerateTeachingPlan = async () => {
     teachingPlanLoading.value = true
     openPlanDialog('正在生成教案') // 只需传入任意“正在生成教案”开头的字符串即可
     try {
-        const res = await CourseApi.generateTeachingContent({
+        const res : any = await CourseApi.generateTeachingContent({
             course_name: props.course.name,
             course_outline: props.course.outline || '',
             expected_hours: expectedHours.value
@@ -230,9 +230,9 @@ const exportTeachingPlanAsPDF = async () => {
             `总课时数：${renderTeachingPlan.value.totalHours}`,
             '',
             '课时安排：',
-            ...renderTeachingPlan.value.lessons.flatMap((lesson, idx) => [
+            ...renderTeachingPlan.value.lessons.flatMap((lesson:any, idx:any) => [
                 `${idx + 1}. ${lesson.title}`,
-                ...lesson.timePlan.map(tp => `  【${tp.step}】${tp.minutes}分钟：${tp.content}`),
+                ...lesson.timePlan.map((tp:any) => `  【${tp.step}】${tp.minutes}分钟：${tp.content}`),
                 ...(lesson.knowledgePoints?.length ? [`  知识点：${lesson.knowledgePoints.join('，')}`] : []),
                 ...(lesson.practiceContent ? [`  实践内容：${lesson.practiceContent}`] : []),
                 ...(lesson.teachingGuidance ? [`  教学提示：${lesson.teachingGuidance}`] : []),
@@ -275,7 +275,7 @@ const formatMinutes = (min: number) => min + ' 分钟'
 
 const renderTeachingPlan = computed(() => {
     if (!teachingPlanResult.value) return null
-    const data = teachingPlanResult.value
+    const data:any = teachingPlanResult.value
     return {
         lessons: Array.isArray(data.lessons) ? data.lessons : [],
         totalHours: data.totalHours,

@@ -11,7 +11,7 @@ import ClassProcessing from '../../components/class/ClassProcessing.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const aclassId = computed(() => route.params.id as bigint)
+const aclassId = computed(() => route.params.id)
 
 const loading = ref(true)
 const error = ref('')
@@ -24,7 +24,7 @@ const isTeacherOrTutor = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await ClassApi.getClassById(aclassId.value)
+    const response:any = await ClassApi.getClassById(aclassId.value)
     console.log('班级详情响应:', response)
 
     if (response.code === 200 && response.data) {
@@ -91,7 +91,7 @@ onMounted(async () => {
           <!-- Panel 1: 学生管理 -->
           <ClassStudent
               v-if="activeTab === 'students'"
-              :class-id="aclassId"
+              :class-id="String(aclassId)"
               :is-teacher="isTeacherOrTutor"
               :teacher-id="aclass.teacherId"
           />
@@ -99,14 +99,14 @@ onMounted(async () => {
           <!-- Panel 2: 在线练习 -->
           <ClassHomework
               v-else-if="activeTab === 'homework'"
-              :class-id="aclassId"
+              :class-id="String(aclassId)"
               :is-teacher="isTeacherOrTutor"
           />
 
           <!-- Panel 3: 学习进度 -->
           <ClassProcessing
               v-else-if="activeTab === 'processing'"
-              :class-id="aclassId"
+              :class-id="String(aclassId)"
               :is-teacher="isTeacherOrTutor"
           />
         </div>

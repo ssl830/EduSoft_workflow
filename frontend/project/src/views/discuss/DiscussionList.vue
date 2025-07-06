@@ -10,17 +10,17 @@
               <span class="text-gray-800 text-xl font-semibold">讨论区 {{ courseName ? '- ' + courseName : '' }}</span>
               <span v-if="unreadNotificationsCount > 0" class="badge">{{ unreadNotificationsCount }}</span>
             </h1>
-          </div>          
+          </div>
           <div class="toolbar-right">
             <!-- 删除了发起讨论和刷新按钮，保留右侧导航栏的功能 -->
           </div>
         </div>
-        
+
         <!-- 搜索栏 -->
         <div class="search-container">
           <div class="search-inner">
-            <input 
-              type="text" 
+            <input
+              type="text"
               v-model="searchQuery"
               placeholder="搜索帖子标题或内容..."
               class="search-input"
@@ -39,8 +39,8 @@
           <div class="filter-section">
             <span class="filter-label">筛选：</span>
             <div class="filter-options">
-              <button 
-                v-for="option in filterOptions" 
+              <button
+                v-for="option in filterOptions"
                 :key="option.value"
                 @click="currentFilter = option.value"
                 :class="['filter-option', { active: currentFilter === option.value }]"
@@ -49,16 +49,16 @@
               </button>
             </div>
           </div>
-          
+
           <div class="sort-section">
             <span class="sort-label">排序：</span>
-            <select 
-              v-model="currentSort" 
+            <select
+              v-model="currentSort"
               class="sort-select"
             >
-              <option 
-                v-for="option in sortOptions" 
-                :key="option.value" 
+              <option
+                v-for="option in sortOptions"
+                :key="option.value"
                 :value="option.value"
               >
                 {{ option.label }}
@@ -113,8 +113,8 @@
             <i class="fa fa-plus-circle"></i>
             发起第一个讨论
           </button>
-        </div>        
-        <div v-else>          
+        </div>
+        <div v-else>
           <div
             v-for="thread in filteredThreads"
             :key="thread.id"
@@ -125,7 +125,7 @@
             <div v-if="thread.isPinned" class="pin-indicator">
               <i class="fa fa-thumbtack"></i>
             </div>
-            
+
             <div class="discussion-header">
               <div class="discussion-meta">
                 <span v-if="thread.isPinned" class="tag pin-tag">
@@ -162,9 +162,9 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 主要内容区域，点击可以导航 -->
-            <div 
+            <div
               class="thread-content-area"
               @click="navigateToThread(thread.id)"
             >
@@ -183,10 +183,10 @@
                   {{ thread.courseName || '课程讨论' }}
                 </span>
               </div>
-              
+
               <div class="discussion-actions">
                 <!-- 置顶按钮（仅助教和老师可见） -->
-                <button 
+                <button
                   v-if="userRole === 'assistant' || userRole === 'teacher'"
                   @click.stop="togglePinThread(thread)"
                   class="action-btn"
@@ -197,7 +197,7 @@
                 </button>
 
                 <!-- 关闭/开启讨论帖按钮（仅助教和老师可见） -->
-                <button 
+                <button
                   v-if="userRole === 'assistant' || userRole === 'teacher'"
                   @click.stop="toggleCloseThread(thread)"
                   class="action-btn"
@@ -208,7 +208,7 @@
                 </button>
 
                 <!-- 点赞按钮 -->
-                <button 
+                <button
                   @click.stop="likeThread(thread.id)"
                   class="action-btn like-btn"
                   :class="{'liked': isLikedByUser(thread.id)}"
@@ -230,7 +230,7 @@
                 </button>
 
                 <!-- 删除按钮（仅作者、助教和老师可见） -->
-                <button 
+                <button
                   v-if="canDeleteThread(thread)"
                   @click.stop="confirmDeleteThread(thread.id)"
                   class="action-btn delete-btn"
@@ -275,28 +275,28 @@
                   <i class="fa fa-times"></i>
                 </button>
               </div>
-              
+
               <div v-if="loadingReplies" class="replies-loading">
                 <div class="loading-spinner">
                   <i class="fa fa-spinner fa-spin"></i>
                   加载回复中...
                 </div>
               </div>
-              
+
               <div v-else-if="repliesError" class="replies-error">
                 <i class="fa fa-exclamation-triangle"></i>
                 {{ repliesError }}
                 <button @click="loadReplies(thread.id)" class="retry-btn">重试</button>
               </div>
-              
+
               <div v-else-if="!threadReplies[thread.id] || threadReplies[thread.id].length === 0" class="no-replies">
                 <i class="fa fa-comment-o"></i>
                 暂无回复，来发表第一个回复吧！
               </div>
-              
+
               <div v-else class="replies-list">
-                <div 
-                  v-for="reply in threadReplies[thread.id]" 
+                <div
+                  v-for="reply in threadReplies[thread.id]"
                   :key="reply.id"
                   class="reply-item"
                 >                  <div class="reply-header">
@@ -310,7 +310,7 @@
                     <div class="reply-meta">
                       <span class="reply-date">{{ formatDate(reply.createdAt) }}</span>
                       <div v-if="canDeleteReply(reply)" class="reply-actions">
-                        <button 
+                        <button
                           @click="confirmDeleteReply(reply.id)"
                           class="delete-reply-btn"
                           title="删除回复"
@@ -332,7 +332,7 @@
           <div v-if="showCreateInput" class="modal-overlay" @click.self="showCreateInput = false">
             <div class="create-modal-container">
               <div class="create-modal-content">
-                
+
                 <div class="create-modal-header">
                   <div class="header-content">
                     <div class="header-icon-wrapper">
@@ -347,7 +347,7 @@
                     <i class="fa fa-times"></i>
                   </button>
                 </div>
-                
+
                 <div class="create-modal-body">
                   <!-- 进度指示器 -->
                   <div class="progress-indicator">
@@ -388,7 +388,7 @@
                           讨论标题
                           <span class="required-asterisk">*</span>
                         </label>
-                        <div class="char-count enhanced-char-count" 
+                        <div class="char-count enhanced-char-count"
                              :class="{'warning': newThread.title.length > 80, 'error': newThread.title.length > 100, 'success': newThread.title.length >= 3 && newThread.title.length <= 80}">
                           <span class="count-text">{{ newThread.title.length }}</span>
                           <span class="count-separator">/</span>
@@ -396,11 +396,11 @@
                         </div>
                       </div>
                       <div class="input-wrapper" :class="{'focused': titleFocused, 'error': titleError, 'success': !titleError && newThread.title.length >= 3}">
-                        <input 
-                          id="thread-title" 
-                          v-model="newThread.title" 
-                          type="text" 
-                          class="form-input enhanced-input" 
+                        <input
+                          id="thread-title"
+                          v-model="newThread.title"
+                          type="text"
+                          class="form-input enhanced-input"
                           placeholder="输入一个吸引人的标题，让更多人参与讨论..."
                           :class="{'error-input': titleError, 'focus-input': titleFocused}"
                           @focus="titleFocused = true"
@@ -426,7 +426,7 @@
                         </span>
                       </transition>
                     </div>
-                  </div>                  
+                  </div>
                   <!-- 内容编辑器组 -->
                   <div class="form-group enhanced-form-group">
                     <div class="input-group-wrapper">
@@ -436,18 +436,18 @@
                           讨论内容
                           <span class="required-asterisk">*</span>
                         </label>
-                        <div class="char-count enhanced-char-count" 
+                        <div class="char-count enhanced-char-count"
                              :class="{'warning': getContentLength() > 2000, 'error': getContentLength() > 3000, 'success': getContentLength() >= 10 && getContentLength() <= 2000}">
                           <span class="count-text">{{ getContentLength() }}</span>
                           <span class="count-separator">/</span>
                           <span class="count-max">3000</span>
                         </div>
                       </div>
-                      <div class="content-editor-wrapper" 
+                      <div class="content-editor-wrapper"
                            :class="{'focused': contentFocused, 'error': contentError, 'success': !contentError && getContentLength() >= 10}"
                            ref="contentEditorContainer">
-                        <WriteBoard 
-                          v-model="newThread.content" 
+                        <WriteBoard
+                          v-model="newThread.content"
                           @focus="contentFocused = true"
                           @blur="contentFocused = false; validateContent()"
                           class="enhanced-editor"
@@ -472,7 +472,7 @@
                       </transition>
                     </div>
                   </div>
-                  
+
                   <!-- 全局错误提示 -->
                   <transition name="error-slide">
                     <div v-if="createThreadError" class="form-error-global enhanced-error-global">
@@ -486,7 +486,7 @@
                     </div>
                   </transition>
                 </div>
-                
+
                 <!-- 美化的底部操作区 -->
                 <div class="create-modal-footer enhanced-footer">
                   <div class="footer-info">
@@ -495,12 +495,12 @@
                   </div>
                   <div class="footer-buttons">
                     <button @click="showCreateInput = false" class="btn btn-secondary enhanced-btn">
-                      <i class="fa fa-times"></i> 
+                      <i class="fa fa-times"></i>
                       <span>取消</span>
                     </button>
-                    <button 
-                      @click="validateAndCreateThread" 
-                      :disabled="creatingThread || !isFormValid" 
+                    <button
+                      @click="validateAndCreateThread"
+                      :disabled="creatingThread || !isFormValid"
                       class="btn btn-primary enhanced-btn"
                       :class="{'loading': creatingThread, 'pulse': isFormValid && !creatingThread}"
                     >
@@ -512,7 +512,7 @@
             </div>
           </div>
         </transition>
-        
+
         <!-- 用户讨论记录（内联显示） -->
         <div v-if="showUserRecordPane" class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-fadeIn">
           <div class="flex justify-between items-center mb-4">
@@ -554,7 +554,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 通知列表（内联显示） -->
         <div v-if="showNotificationPane" class="bg-white rounded-lg shadow-lg p-6 mb-8 animate-fadeIn">
           <div class="flex justify-between items-center mb-4">
@@ -576,8 +576,8 @@
               暂无通知。
             </div>
             <ul v-else class="space-y-3">
-              <li 
-                v-for="notification in notifications" 
+              <li
+                v-for="notification in notifications"
                 :key="notification.id"
                 class="p-3 rounded-md border cursor-pointer transition-colors"
                 :class="notification.isRead ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'"
@@ -597,7 +597,7 @@
       </div>
     </div>
     <!-- 右侧操作导航栏 -->
-    <nav class="discussion-action-bar">      
+    <nav class="discussion-action-bar">
       <div class="action-nav-item" @click="fetchThreads">
         <svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2M9 15h4.581" />
@@ -623,7 +623,7 @@
         <span v-if="unreadNotificationsCount > 0" class="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{{ unreadNotificationsCount }}</span>
       </div>
     </nav>
-    
+
     <!-- 状态提示条 -->
     <div v-if="showStatus" class="status-toast" :class="statusType">
       <i v-if="statusType === 'success'" class="fa fa-check-circle"></i>
@@ -679,12 +679,12 @@ interface CreateThreadData {
   courseId: string;
 }
 
-// 创建兼容层，用新接口适配旧代码  
+// 创建兼容层，用新接口适配旧代码
 const legacyDiscussionApi = {
   getAllThreads: async () => {
     console.log('=== getAllThreads 开始执行 ===');
     console.log('当前courseId.value:', courseId.value);
-    
+
     try {
       // 如果有courseId，使用courseId获取讨论列表
       if (courseId.value) {
@@ -693,15 +693,15 @@ const legacyDiscussionApi = {
           console.log('getAllThreads API响应完整对象:', response);
         console.log('getAllThreads response 类型:', typeof response);
         console.log('getAllThreads response 是否为数组:', Array.isArray(response));
-        
+
         // 由于axios拦截器已经返回了response.data，所以这里response就是数据本身
         const discussionList = Array.isArray(response) ? response : [];
         console.log('getAllThreads 讨论列表长度:', discussionList.length);
-        
+
         if (discussionList.length > 0) {
           console.log('getAllThreads 第一条讨论数据:', discussionList[0]);
         }
-        
+
         const mappedData = discussionList.map((item: Discussion): Thread => {
           console.log('getAllThreads 正在映射讨论项:', item);
           const mapped = {
@@ -722,7 +722,7 @@ const legacyDiscussionApi = {
           console.log('getAllThreads 映射后的数据:', mapped);
           return mapped;
         });
-        
+
         console.log('getAllThreads 最终返回的数据:', { data: mappedData });
         return { data: mappedData };
       } else {
@@ -737,25 +737,25 @@ const legacyDiscussionApi = {
   getThreadsByCourse: async (courseId: string) => {
     console.log('=== getThreadsByCourse 开始执行 ===');
     console.log('传入的courseId:', courseId);
-    
+
     try {
       console.log('正在调用 getDiscussionListByCourse，courseId:', Number(courseId));
       const response = await discussionApi.getDiscussionListByCourse(Number(courseId));
-      
+
       console.log('getThreadsByCourse API响应完整对象:', response);
       console.log('getThreadsByCourse response 类型:', typeof response);
       console.log('getThreadsByCourse response 是否为数组:', Array.isArray(response));
-      
+
       const discussionList = Array.isArray(response) ? response : [];
       console.log('getThreadsByCourse 讨论列表长度:', discussionList.length);
-      
+
       if (discussionList.length > 0) {
         console.log('getThreadsByCourse 第一条讨论数据:', discussionList[0]);
       }
-      
+
       // 获取课程名称
       const courseName = await getCourseInfo(Number(courseId));
-      
+
       const mappedData = discussionList.map((item: Discussion) => {
         console.log('getThreadsByCourse 正在映射讨论项:', item);
         const mapped = {
@@ -776,7 +776,7 @@ const legacyDiscussionApi = {
         console.log('getThreadsByCourse 映射后的数据:', mapped);
         return mapped;
       });
-      
+
       console.log('getThreadsByCourse 最终返回的数据:', { data: mappedData });
       return { data: mappedData };
     } catch (err) {
@@ -789,7 +789,7 @@ const legacyDiscussionApi = {
     try {
       // 需要courseId和classId，这里假设classId为1（实际项目中需要从路由或上下文获取）
       const classId = 1; // 临时硬编码，实际需要动态获取
-      const response = await discussionApi.createDiscussion(Number(data.courseId), classId, {
+      const response:any = await discussionApi.createDiscussion(Number(data.courseId), classId, {
         title: data.title,
         content: data.content
       });
@@ -850,11 +850,11 @@ const legacyDiscussionApi = {
       }
       const response = await discussionApi.getDiscussionListByCourse(Number(courseId.value));
       // 在前端进行简单的关键词过滤
-      const filteredData = (response.data || []).filter((item: Discussion) => 
+      const filteredData = (response.data || []).filter((item: Discussion) =>
         item.title.toLowerCase().includes(keyword.toLowerCase()) ||
         item.content.toLowerCase().includes(keyword.toLowerCase())
       );
-      
+
       return {
         data: filteredData.map((item: Discussion): Thread => ({
           id: String(item.id),
@@ -1060,14 +1060,14 @@ const stripHtml = (html: string) => {
 // 计算表单完成进度（用于进度条）
 const formProgress = computed(() => {
   let progress = 0;
-  
+
   // 标题完成度（40%权重）
   if (newThread.title.length >= 3) {
     progress += 40;
   } else if (newThread.title.length > 0) {
     progress += 20;
   }
-  
+
   // 内容完成度（50%权重）
   const contentLength = getContentLength();
   if (contentLength >= 10) {
@@ -1075,12 +1075,12 @@ const formProgress = computed(() => {
   } else if (contentLength > 0) {
     progress += 25;
   }
-  
+
   // 验证完成度（10%权重）
   if (!titleError.value && !contentError.value && newThread.title.length >= 3 && contentLength >= 10) {
     progress += 10;
   }
-  
+
   return Math.min(progress, 100);
 });
 
@@ -1096,9 +1096,9 @@ const progressText = computed(() => {
 
 // 检查表单是否完全有效
 const isFormValid = computed(() => {
-  return !titleError.value && 
-         !contentError.value && 
-         newThread.title.length >= 3 && 
+  return !titleError.value &&
+         !contentError.value &&
+         newThread.title.length >= 3 &&
          getContentLength() >= 10;
 });
 
@@ -1176,23 +1176,23 @@ const currentFilter = ref('all');
 const filteredThreads = computed(() => {
   // 应用搜索过滤
   let filtered = threads.value;
-  
+
   if (searchQuery.value.trim()) {
     const searchTerms = searchQuery.value.toLowerCase().split(/\s+/);
     filtered = filtered.filter(thread => {
-      const titleMatch = searchTerms.every(term => 
+      const titleMatch = searchTerms.every(term =>
         thread.title.toLowerCase().includes(term)
       );
-      const contentMatch = searchTerms.every(term => 
+      const contentMatch = searchTerms.every(term =>
         thread.content.toLowerCase().includes(term)
       );
-      const authorMatch = searchTerms.every(term => 
+      const authorMatch = searchTerms.every(term =>
         thread.author.toLowerCase().includes(term)
       );
       return titleMatch || contentMatch || authorMatch;
     });
   }
-  
+
   // 应用状态过滤
   if (currentFilter.value === 'pinned') {
     filtered = filtered.filter(t => t.isPinned);
@@ -1201,18 +1201,18 @@ const filteredThreads = computed(() => {
   } else if (currentFilter.value === 'open') {
     filtered = filtered.filter(t => !t.isClosed);
   }
-  
+
   // 计算热度值（如果尚未计算）
   filtered.forEach(t => {
     if (!t.heat) t.heat = (t.likes || 0) + (t.replyCount || 0) * 2;
   });
-  
+
   // 应用排序
   return [...filtered].sort((a, b) => {
     // 置顶帖优先显示
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    
+
     // 应用选定排序
     if (currentSort.value === 'createdAt') {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -1238,7 +1238,7 @@ const showStatusMessage = (message: string, type: 'success' | 'error' | 'warning
   statusMessage.value = message;
   statusType.value = type;
   showStatus.value = true;
-  
+
   // 自动隐藏
   setTimeout(() => {
     hideStatusMessage();
@@ -1253,13 +1253,13 @@ const hideStatusMessage = () => {
 // 刷新讨论列表
 const refreshDiscussions = async () => {
   if (loading.value) return; // 防止重复加载
-  
+
   loading.value = true;
   try {
     if (courseId.value) {
       const response = await legacyDiscussionApi.getThreadsByCourse(courseId.value);
       threads.value = response.data;
-      
+
       // 获取课程名称（如果API返回的话）
       if (threads.value.length > 0 && threads.value[0].courseName) {
         courseName.value = threads.value[0].courseName;
@@ -1285,17 +1285,17 @@ const performSearch = async () => {
     await fetchThreads(); // 如果搜索词为空，获取所有帖子
     return;
   }
-  
+
   loading.value = true;
   error.value = null;
-  
+
   try {
     // 如果已经有帖子数据，直接使用 filteredThreads 进行过滤
     if (threads.value.length > 0) {
       loading.value = false;
       return;
     }
-    
+
     // 如果没有帖子数据，先获取帖子
     await fetchThreads();
   } catch (err: any) {
@@ -1312,7 +1312,7 @@ const fetchThreads = async () => {
   loading.value = true;
   error.value = null;
   threads.value = [];
-  
+
   try {
     let response;
     if (courseId.value) {
@@ -1322,7 +1322,7 @@ const fetchThreads = async () => {
       response = await legacyDiscussionApi.getAllThreads();
       courseName.value = '所有讨论';
     }
-    
+
     if (response && response.data) {
       threads.value = response.data;
     }
@@ -1341,7 +1341,7 @@ const validateAndCreateThread = () => {
   titleError.value = null;
   contentError.value = null;
   createThreadError.value = null;
-  
+
   // 验证标题
   if (!newThread.title.trim()) {
     titleError.value = '请输入讨论标题';
@@ -1353,7 +1353,7 @@ const validateAndCreateThread = () => {
     titleError.value = '标题不能超过100个字符';
     return false;
   }
-  
+
   // 验证内容
   if (!newThread.content.trim()) {
     contentError.value = '请输入讨论内容';
@@ -1362,7 +1362,7 @@ const validateAndCreateThread = () => {
     contentError.value = '内容太短，请至少输入10个字符';
     return false;
   }
-  
+
   // 如果所有验证都通过，则创建讨论帖
   createThread();
   return true;
@@ -1371,7 +1371,7 @@ const validateAndCreateThread = () => {
 // 优化创建讨论帖函数
 const createThread = async () => {
   creatingThread.value = true;
-  
+
   try {
     // 如果没有选择课程，则使用当前课程ID
     if (!newThread.courseId && courseId.value) {
@@ -1383,19 +1383,19 @@ const createThread = async () => {
       creatingThread.value = false;
       return;
     }
-    
+
     const response = await legacyDiscussionApi.createThread(newThread);
-    
+
     // 将新创建的帖子添加到列表顶部
     threads.value = [response.data, ...threads.value];
-    
+
     // 重置表单
     newThread.title = '';
     newThread.content = '';
-    
+
     // 隐藏创建表单
     showCreateInput.value = false;
-    
+
     // 显示成功消息
     showStatusMessage('讨论创建成功！', 'success');
   } catch (err: any) {
@@ -1451,8 +1451,8 @@ const navigateToThread = (threadId: string) => {
 // 检查是否可以删除帖子
 const canDeleteThread = (thread: Thread) => {
   // 作者本人、教师和助教可以删除帖子
-  return thread.authorId === currentUserId.value || 
-         userRole.value === 'teacher' || 
+  return thread.authorId === currentUserId.value ||
+         userRole.value === 'teacher' ||
          userRole.value === 'assistant';
 };
 
@@ -1470,8 +1470,8 @@ const getActualReplyCount = (threadId: string) => {
 // 检查是否可以删除回复
 const canDeleteReply = (reply: DiscussionReply) => {
   // 回复创建者本人、教师和助教可以删除回复
-  return reply.creatorId === Number(currentUserId.value) || 
-         userRole.value === 'teacher' || 
+  return reply.creatorId === Number(currentUserId.value) ||
+         userRole.value === 'teacher' ||
          userRole.value === 'assistant';
 };
 
@@ -1499,7 +1499,7 @@ const toggleCloseThread = async (thread: Thread) => {
   try {
     await discussionApi.closeDiscussion(Number(thread.id), !thread.isClosed);
     thread.isClosed = !thread.isClosed;
-    
+
     const actionName = thread.isClosed ? '关闭' : '开启';
     showStatusMessage(`已${actionName}讨论`, 'success');
   } catch (err: any) {
@@ -1559,14 +1559,14 @@ const formatDate = (dateStr: string) => {
 const fetchUserDiscussionRecords = async () => {
   loadingUserRecords.value = true;
   userRecordsError.value = null;
-  
+
   try {
     const response = await legacyDiscussionApi.getUserThreads();
     userThreads.value = response.data;
-    
+
     // 暂时模拟用户回复数据，实际项目中需要从API获取
     userPosts.value = [];
-    
+
     loadingUserRecords.value = false;
   } catch (err: any) {
     console.error('获取用户记录失败', err);
@@ -1579,7 +1579,7 @@ const fetchUserDiscussionRecords = async () => {
 const fetchNotifications = async () => {
   loadingNotifications.value = true;
   notificationsError.value = null;
-  
+
   try {
     // 模拟空通知列表，实际项目中应调用通知API
     notifications.value = [];
@@ -1596,7 +1596,7 @@ const fetchNotifications = async () => {
 const markNotificationAsRead = async (notificationId: string) => {
   try {
     await legacyDiscussionApi.markNotificationAsRead(notificationId);
-    
+
     // 更新本地状态
     const notification = notifications.value.find(n => n.id === notificationId);
     if (notification && !notification.isRead) {
@@ -1614,10 +1614,10 @@ onMounted(async () => {
   if (newThread) {
     newThread.courseId = courseId.value || '1';
   }
-  
+
   // 获取真实的讨论数据
   await fetchThreads();
-  
+
   // 初始化未读通知计数（实际项目中应从API获取）
   unreadNotificationsCount.value = 0;
 });
@@ -1651,10 +1651,10 @@ watch(showNotificationPane, (newVal) => {
 // 加载回复列表
 const loadReplies = async (threadId: string) => {
   if (loadingReplies.value) return;
-  
+
   loadingReplies.value = true;
   repliesError.value = null;
-  
+
   try {
     const response = await discussionApi.getAllReplies(Number(threadId));
     threadReplies[threadId] = Array.isArray(response) ? response : [];
@@ -1690,12 +1690,12 @@ const hideRepliesList = () => {
 const deleteReply = async (replyId: number) => {
   try {
     await discussionApi.deleteReply(replyId);
-    
+
     // 更新本地状态，移除已删除的回复，并更新相关讨论的回复数量
     for (const threadId in threadReplies) {
       const originalLength = threadReplies[threadId].length;
       threadReplies[threadId] = threadReplies[threadId].filter(r => r.id !== replyId);
-      
+
       // 如果回复数量发生了变化，更新讨论帖的回复数量
       if (threadReplies[threadId].length < originalLength) {
         const thread = threads.value.find(t => t.id === threadId);
@@ -1704,7 +1704,7 @@ const deleteReply = async (replyId: number) => {
         }
       }
     }
-    
+
     showStatusMessage('回复已删除', 'success');
   } catch (err: any) {
     console.error('删除回复失败:', err);
@@ -1796,7 +1796,7 @@ const getCourseInfo = async (courseId: number) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
@@ -1972,7 +1972,7 @@ const getCourseInfo = async (courseId: number) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.05) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.05) 0%, transparent 50%);
   pointer-events: none;
@@ -3275,7 +3275,7 @@ const getCourseInfo = async (courseId: number) => {
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(25px);
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15),
               0 0 0 1px rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
@@ -3295,9 +3295,9 @@ const getCourseInfo = async (courseId: number) => {
   justify-content: space-between;
   align-items: center;
   padding: 2rem 2.5rem 1.5rem;
-  background: linear-gradient(135deg, 
-    var(--primary) 0%, 
-    var(--secondary) 50%, 
+  background: linear-gradient(135deg,
+    var(--primary) 0%,
+    var(--secondary) 50%,
     rgba(102, 126, 234, 0.9) 100%);
   color: white;
   position: relative;
@@ -3490,7 +3490,7 @@ const getCourseInfo = async (courseId: number) => {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
   }
   50% {
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6), 
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6),
                 0 0 0 8px rgba(102, 126, 234, 0.1);
   }
 }

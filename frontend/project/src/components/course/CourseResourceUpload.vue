@@ -138,7 +138,7 @@ function handleFileSelect(newFiles: File[]) {
     status: 'pending',
     progress: 0
   })) as UploadFile[]
-  
+
   uploadQueue.value = [...uploadQueue.value, ...newUploadFiles]
 }
 
@@ -161,19 +161,21 @@ async function uploadFile(file: UploadFile) {
   try {
     file.status = 'uploading'
     currentFile.value = file
-    
+
     const formData = new FormData()
     formData.append('file', file)
-    
+
     await uploadResource(formData, (progressEvent) => {
-      if (progressEvent.lengthComputable) {
-        file.progress = progressEvent.loaded / progressEvent.total
+      if (progressEvent.lengthComputable && progressEvent?.total) {
+        file.progress = progressEvent.loaded / progressEvent?.total
+      }else{
+        file.progress = 0
       }
     })
-    
+
     file.status = 'success'
     file.progress = 1
-    
+
     $q.notify({
       type: 'positive',
       message: `${file.name} 上传成功`
@@ -189,10 +191,10 @@ async function uploadFile(file: UploadFile) {
 
 async function startUpload() {
   if (uploadQueue.value.length === 0) return
-  
+
   uploading.value = true
   showProgress.value = true
-  
+
   try {
     for (const file of uploadQueue.value) {
       if (file.status === 'pending') {
@@ -222,4 +224,4 @@ function cancelUpload() {
 .upload-card {
   width: 100%;
 }
-</style> 
+</style>

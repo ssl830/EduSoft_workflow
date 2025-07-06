@@ -5,22 +5,22 @@ const authStore = useAuthStore()
 
 const ExerciseApi = {
   // Get exercises for a course
-  getClassExercises(classId: string, data: {
-    practice_id: number,
-    type: string,
-    name: string,
-  }) {
-    return axios.get(`/classes/${classId}/exercises`, data)
-  },
+  // getClassExercises(classId: string, data: {
+  //   practice_id: number,
+  //   type: string,
+  //   name: string,
+  // }) {
+  //   return axios.get(`/classes/${classId}/exercises`, data)
+  // },
 
   // 从题库中导入题目
-  importQuestionsToPractice(data){
+  importQuestionsToPractice(data: any){
     return axios.post('/api/practice/question/import', data)
   },
 
   // 获取待批改练习列表
   getPendingJudgeList(data:{
-    practiceId: bigint,
+    practiceId: number | undefined ,
     classId: string,
   }){
     console.log("data:", data)
@@ -64,7 +64,7 @@ const ExerciseApi = {
   },
 
   // Get exercise details
-  getExerciseDetails(exerciseId: string, data: {submissionId: any}) {
+  getExerciseDetails(exerciseId: string, data: any) {
     return axios.get(`/api/practice/${exerciseId}`, data
       // ,{
       // headers: {
@@ -75,11 +75,14 @@ const ExerciseApi = {
   },
 
   // 获取学生所有练习
-  getPracticeList(studentId: string, classId: string) {
-    const params = new URLSearchParams({
-      studentId,
-      classId
-    });
+  getPracticeList(studentId: number | undefined , classId: string) {
+    const params = new URLSearchParams();
+    // 确保 homeworkId 转换为字符串（因类型不含 undefined，直接转换）
+    params.append('classId', String(classId));
+    // 仅在 studentId 有值时添加（过滤 undefined）
+    if (studentId !== undefined) {
+      params.append('studentId', String(studentId));
+    }
     return axios.get(`/api/practice/student/list?${params.toString()}`)
   },
 
@@ -106,7 +109,7 @@ const ExerciseApi = {
       }
     )
   },
-  fetchPendingAnswers(data){
+  fetchPendingAnswers(data: any){
     console.log(data)
     console.log()
     return axios.post('/api/judge/pending', data)

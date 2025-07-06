@@ -377,7 +377,7 @@ onMounted(() => {
     /* 强制使用原生复选框样式 */
     -webkit-appearance: checkbox;
     -moz-appearance: checkbox;
-    appearance: checkbox;
+    appearance: auto;
     width: 18px;
     height: 18px;
     margin-right: 1rem;

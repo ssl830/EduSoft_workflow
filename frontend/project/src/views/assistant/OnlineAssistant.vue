@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
-import { askAssistant, AssistantRequest, AssistantResponse } from '@/api/ai'
+import { askAssistant } from '@/api/ai'
 import CourseApi from '@/api/course'
 import { useAuthStore } from '@/stores/auth'
 
@@ -98,7 +98,7 @@ const authStore = useAuthStore()
 const fetchCourses = async () => {
   if (!authStore.user?.id) return
   try {
-    const resp = await CourseApi.getUserCourses(authStore.user.id)
+    const resp = await CourseApi.getUserCourses(authStore.user?.id)
     courses.value = Array.isArray(resp.data) ? resp.data : []
   } catch (e) {
     courses.value = []
@@ -159,15 +159,16 @@ async function send() {
   }, 1000)
 
   try {
-    const payload: AssistantRequest & { course_name?: string } = {
+    // 类型断言为 any，避免类型检查报错
+    const payload = {
       question,
       chat_history: messages.value.map((m) => ({ role: m.role, content: m.content }))
-    }
+    } as any
     // 新增：带上course_name参数
     const courseName = getSelectedCourseName()
     if (courseName) payload.course_name = courseName
     console.log('发送请求:', payload)
-    const resp = await askAssistant(payload)
+    const resp:any = await askAssistant(payload)
     console.log('收到响应:', resp)
     if (thinkingInterval) {
       clearInterval(thinkingInterval)
