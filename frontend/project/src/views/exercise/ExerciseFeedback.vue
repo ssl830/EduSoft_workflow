@@ -181,7 +181,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
 import ExerciseApi from "../../api/exercise.ts";
 import QuestionApi from '../../api/question'
 // 新增
@@ -203,18 +202,22 @@ export interface PracticeDetail {
 
 export interface Question {
     id: number;
-    name: string;
-    course_id: number;
-    teacher_id: string;
+    name?: string;
+    content?: string;
+    course_id?: number;
+    teacher_id?: string;
     type: 'singlechoice' | 'multiplechoice' | 'judge' | 'program' | 'fillblank';
-    options: Option[];
+    options?: Option[];
     answer: string;
-    points: number;
+    score?: number;
+    points?: number;
     explanation?: string;
+    correctAnswer?: string;
+    isCorrect?: boolean;
+    analysis?: string;
     isFavorited?: boolean;
     studentAnswer?: string | string[];
-    isadded: boolean;
-
+    isadded?: boolean;
 }
 
 interface Option {
@@ -222,12 +225,21 @@ interface Option {
     text: string;
 }
 
-const authStore = useAuthStore()
 const route = useRoute()
 const practiceId = route.params.practiceId as string
 const submissionId = route.params.submissionId as string
 
-const practiceData = ref<PracticeDetail | null>(null)
+const practiceData = ref<PracticeDetail>({
+    title: '',
+    code: 0,
+    message: '',
+    courseld: 0,
+    startTime: '',
+    endTime: '',
+    timelimit: 0,
+    allowedAttempts: false,
+    questions: []
+})
 const studentAnswers = ref<Record<number, string | string[]>>({})
 const loading = ref(true)
 const error = ref('')
@@ -242,18 +254,17 @@ try {
 }
 
 // 题目类型映射
-const questionTypeMap = {
-    'singlechoice': '单选题',
-    'multiplechoice': '多选题',
-    'judge': '判断题',
-    'program': '简答题',
-    'fillblank': '填空题'
+const questionTypeMap: Record<string, string> = {
+    singlechoice: '单选题',
+    multiplechoice: '多选题',
+    judge: '判断题',
+    program: '简答题',
+    fillblank: '填空题'
 }
 
 // 计算总分
 const totalScore = computed(() => {
-    if (!practiceData.value) return 0
-    return practiceData.value.questions.reduce((sum, q) => sum + q.score, 0)
+    return practiceData.value.questions.reduce((sum, q) => sum + (q.score ?? 0), 0)
 })
 
 // 判断是否客观题
@@ -280,7 +291,7 @@ const toggleFavorite = async (question: Question) => {
             ? ExerciseApi.favouriteQuestions
             : ExerciseApi.enFavouriteQuestions;
 
-        const response = await apiMethod(question.id);
+        const response: any = await apiMethod(question.id.toString());
 
         if (response.code !== 200) {
             // 请求失败时回滚状态
@@ -297,10 +308,12 @@ const toggleFavorite = async (question: Question) => {
 // 添加到错题集
 const addToWrongSet = async (question: Question) => {
     try {
-        const res = await QuestionApi.addWrongQuestion(
+        const res: any = await QuestionApi.addWrongQuestion(
             question.id,
             {
-                wrongAnswer: studentAnswers.value[question.id] || ''
+                wrongAnswer: Array.isArray(studentAnswers.value[question.id])
+                    ? (studentAnswers.value[question.id] as string[]).join(', ')
+                    : (studentAnswers.value[question.id] as string || '')
             }
         )
         console.log(res)
@@ -322,16 +335,23 @@ const fetchPracticeDetail = async () => {
         console.log(response.data)
         practiceData.value = response.data
         // 初始化学生答案（假设从API获取）
-        practiceData.value.questions.forEach((q: Question, idx: number) => {
+        practiceData.value.questions.forEach((q: Question) => {
             // 优先用 answerList 覆盖 studentAnswer
-            if (answerList && answerList[idx] !== undefined) {
-                q.studentAnswer = answerList[idx]
-                studentAnswers.value[q.id] = answerList[idx]
+            if (answerList && answerList.length) {
+                const answer = answerList.shift()
+                if (answer !== undefined) {
+                    q.studentAnswer = answer
+                    studentAnswers.value[q.id] = answer
+                }
             } else {
                 studentAnswers.value[q.id] = q.studentAnswer || ''
             }
             if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
                 q.type = 'multiplechoice'
+            }
+            // 兼容旧接口：如果返回的是 points 字段，则同步到 score
+            if (q.score === undefined && (q as any).points !== undefined) {
+                q.score = (q as any).points
             }
         })
         console.log("final数据", practiceData.value)
@@ -367,13 +387,13 @@ const handleDownloadReport = async () => {
             return
         }
         const response = await StudyRecordsApi.exportSubmissionReport(submissionId)
-        if (!response || !(response instanceof Blob) || response.size === 0) {
+        if (!response || !(response.data instanceof Blob) || response.data.size === 0) {
             downloadStatus.value.error = '服务器返回的数据为空'
             return
         }
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
         const filename = `提交报告_${submissionId}_${timestamp}.pdf`
-        const url = window.URL.createObjectURL(response)
+        const url = window.URL.createObjectURL(response.data)
         const link = document.createElement('a')
         link.href = url
         link.setAttribute('download', filename)
@@ -408,7 +428,7 @@ const handleViewRecord = async () => {
             }
             if (!reportData) throw new Error('API返回的数据为空')
             submissionReportModal.value.data = reportData
-            submissionReportModal.value.data.questions.forEach((q: Question, idx: number) => {
+            submissionReportModal.value.data.questions.forEach((q: Question) => {
                 if (q.type === 'singlechoice' && typeof q.correctAnswer === 'string' && q.correctAnswer.length > 1) {
                     q.type = 'multiplechoice'
                 }
@@ -497,7 +517,7 @@ const closeSubmissionReportModal = () => {
 .question-type2 {
     color: #666;
     font-size: 0.9rem;
-    //max-width: 10px;
+    /* max-width: 10px; */
 }
 
 .question-points {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {ref, onMounted, watch} from 'vue'
+import {ref, onMounted} from 'vue'
 import QuestionApi from '../../api/question.ts'
-import {useAuthStore} from "../../stores/auth.ts";
-import ExerciseApi from "../../api/exercise.ts";
+//import {useAuthStore} from "../../stores/auth.ts";
+//import ExerciseApi from "../../api/exercise.ts";
 
-const authStore = useAuthStore()
+//const authStore = useAuthStore()
 const questions = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -15,7 +15,7 @@ const fetchQuestions = async () => {
     error.value = ''
 
     try {
-        const response = await QuestionApi.getWrongQuestionList()
+        const response: any = await QuestionApi.getWrongQuestionList()
         console.log('错题列表响应:', response)
 
         if (response.code === 200 && response.data) {
@@ -64,7 +64,7 @@ const deleteQuestion = async (questionId: string) => {
             return
         }
         console.log('删除错题，ID:', questionId)
-        const response = await QuestionApi.removeWrongQuestion(questionId)
+        const response: any = await QuestionApi.removeWrongQuestion(questionId)
         console.log('删除错题响应:', response)
 
         if (response.code === 200) {
@@ -87,7 +87,7 @@ const formatAnswer = (question: any) => {
     }
     return question.correct_answer || '-'
 }
-
+/*未使用
 // 格式化选项 (修复：实际使用此函数)
 const formatOptions = (options: string) => {
     try {
@@ -98,8 +98,8 @@ const formatOptions = (options: string) => {
         return []
     }
 }
-
-// ���似题目弹窗相关状态
+*/
+// 类似题目弹窗相关状态
 const showSimilarDialog = ref(false)
 const similarApiKey = ref('')
 const similarLoading = ref(false)

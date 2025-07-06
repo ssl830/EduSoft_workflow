@@ -72,7 +72,20 @@ import Background from '../components/layout/Background.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const courses = ref([])
+
+// 定义 Course 接口，并在 courses ref 中使用，以提供正确的类型推断
+interface Course {
+  id: number
+  name: string
+  code: string
+  teacherName: string
+  studentCount: number
+  practiceCount: number
+  homeworkCount: number
+}
+
+// 将 courses 显式声明为 Course[]，避免推断为 never[]
+const courses = ref<Course[]>([])
 const loading = ref(true)
 const error = ref('')
 
@@ -86,11 +99,14 @@ onMounted(async () => {
   if (authStore.isAuthenticated && authStore.user?.id) {
     try {
       console.log('获取用户课程列表，用户ID:', authStore.user.id)
-      const response = await CourseApi.getUserCourses(authStore.user.id.toString())
+      // 统一 axios 响应格式（response.data）并避免缺失 code/message 报错
+      const response: any = await CourseApi.getUserCourses(authStore.user.id.toString())
       console.log('课程列表响应:', response)
 
       if (response.code === 200 && response.data) {
-        courses.value = Array.isArray(response.data) ? response.data : []
+        courses.value = Array.isArray(response.data)
+          ? (response.data as Course[])
+          : []
         console.log('课程列表数据:', courses.value)
       } else {
         error.value = response.message || '获取课程列表失败'

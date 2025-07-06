@@ -588,23 +588,23 @@ const exportCourseRecords = async (courseId: number) => {
     }
 
     // 确保response是Blob类型
-    if (!(response instanceof Blob)) {
+    if (!(response.data instanceof Blob)) {
       console.error('响应数据不是Blob类型:', response);
       throw new Error('服务器返回的数据格式不正确');
     }
 
-    console.log('Blob数据:', response);
-    console.log('Blob类型:', response.type);
-    console.log('Blob大小:', response.size);
+    console.log('Blob数据:', response.data);
+    console.log('Blob类型:', response.data.type);
+    console.log('Blob大小:', response.data.size);
     
-    if (response.size > 0) {
+    if (response.data.size > 0) {
       console.log('开始创建下载链接');
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       const courseName = coursesList.value.find(c => c.id === courseId)?.name || '课程';
       const filename = `${courseName}_学习记录_${timestamp}.xlsx`;
       
       // 创建下载链接
-      const url = window.URL.createObjectURL(response);
+      const url = window.URL.createObjectURL(response.data);
       console.log('创建的对象URL:', url);
       
       const link = document.createElement('a');
@@ -622,9 +622,9 @@ const exportCourseRecords = async (courseId: number) => {
     } else {
       console.error('Blob数据检查失败:', {
         hasBlob: !!response,
-        isBlob: response instanceof Blob,
-        size: response.size,
-        type: response.type
+        isBlob: response.data instanceof Blob,
+        size: response.data.size,
+        type: response.data.type
       });
       throw new Error('服务器返回的数据为空');
     }
@@ -810,7 +810,7 @@ const getDistributionClass = (scoreRange: string) => {
     return 'fail';
   }
 };
-
+/*未使用
 // 处理文件下载 - 支持从响应头或参数获取文件名
 const handleFileDownload = async (blob: Blob, filename?: string, response?: any) => {
   try {
@@ -894,7 +894,7 @@ const handleFileDownload = async (blob: Blob, filename?: string, response?: any)
     downloadStatus.value.error = '文件下载失败，请稍后再试';
   }
 };
-
+*/
 // 下载报告（PDF 格式）- 使用提交ID导出
 const downloadReport = async (recordIdOrSubmissionId: string) => {
   try {
@@ -926,22 +926,22 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
     }
 
     // 确保response是Blob类型
-    if (!(response instanceof Blob)) {
-      console.error('响应数据不是Blob类型:', response);
+    if (!(response.data instanceof Blob)) {
+      console.error('响应数据不是Blob类型:', response.data);
       throw new Error('服务器返回的数据格式不正确');
     }
 
-    console.log('Blob数据:', response);
-    console.log('Blob类型:', response.type);
-    console.log('Blob大小:', response.size);
+    console.log('Blob数据:', response.data);
+    console.log('Blob类型:', response.data.type);
+    console.log('Blob大小:', response.data.size);
     
-    if (response.size > 0) {
+    if (response.data.size > 0) {
       console.log('开始创建下载链接');
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       const filename = `提交报告_${submissionId}_${timestamp}.pdf`;
       
       // 创建下载链接
-      const url = window.URL.createObjectURL(response);
+      const url = window.URL.createObjectURL(response.data);
       console.log('创建的对象URL:', url);
       
       const link = document.createElement('a');
@@ -959,9 +959,9 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
     } else {
       console.error('Blob数据检查失败:', {
         hasBlob: !!response,
-        isBlob: response instanceof Blob,
-        size: response.size,
-        type: response.type
+        isBlob: response.data instanceof Blob,
+        size: response.data.size,
+        type: response.data.type
       });
       throw new Error('服务器返回的数据为空');
     }
@@ -1237,7 +1237,7 @@ onMounted(async () => {
   // 然后获取学习记录
   await loadCoursesList()
 })
-
+/*未使用
 const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay) => {
   try {
     submissionReportModal.value.loading = true;
@@ -1272,7 +1272,7 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
     submissionReportModal.value.loading = false;
   }
 };
-
+*/
 </script>
 
 <style scoped>

@@ -3,7 +3,7 @@ import { onMounted, ref, computed, nextTick, watch } from 'vue'
 import { fetchDashboardOverview } from '@/api/dashboard'
 import { getCourseOptimization } from '@/api/optimization'
 import * as echarts from 'echarts'
-import { useQuasar, Loading, Dialog, Notify, QBtn, QTooltip } from 'quasar'
+import {  Loading, Dialog, Notify, QBtn, QTooltip } from 'quasar'
 
 interface Stats {
   uploadResources: number
@@ -133,12 +133,12 @@ const initialOverviewState: Overview = {
   }
 };
 
-const $q = useQuasar()
+//const $q = useQuasar()
 const loading = ref(true)
 const overview = ref<Overview>(initialOverviewState)
 const viewMode = ref<'day' | 'week'>('day')
 const displayMode = ref<'card' | 'chart'>('card')
-const chartRef = ref<HTMLElement | null>(null)
+//const chartRef = ref<HTMLElement | null>(null)
 const teacherStudentBarRef = ref<HTMLElement | null>(null)
 const teacherPieRef = ref<HTMLElement | null>(null)
 const studentPieRef = ref<HTMLElement | null>(null)
@@ -179,13 +179,13 @@ const getAdviceLines = (value: any) => {
   }
   return [];
 };
-
+/*
 // 额外映射：教学效率中的课程/班级名称
 const todayEfficiencyCourseSections = computed<Record<string, string>>(() => ((todayStats.value.efficiency as any)?.courseSectionNames) || {});
 const weekEfficiencyCourseSections = computed<Record<string, string>>(() => ((weekStats.value.efficiency as any)?.courseSectionNames) || {});
 const todayClassNames = computed<Record<string, string>>(() => ((todayStats.value.efficiency as any)?.classNames) || {});
 const weekClassNames = computed<Record<string, string>>(() => ((weekStats.value.efficiency as any)?.classNames) || {});
-
+*/
 // 监听视图模式 / 展示模式 或数据变化重新渲染图表
 watch([viewMode, displayMode, overview], () => {
   if (displayMode.value === 'chart') {
@@ -359,8 +359,8 @@ const translateKey = (key: string) => {
   return map[key] || key
 }
 
-type EfficiencyKey = 'lessonPrepDuration' | 'lessonPrepCallCount' | 'exerciseDesignDuration' | 'exerciseDesignCallCount' | 'courseOptimizationDirection' | 'courseSectionNames' | 'classNames';
-
+//type EfficiencyKey = 'lessonPrepDuration' | 'lessonPrepCallCount' | 'exerciseDesignDuration' | 'exerciseDesignCallCount' | 'courseOptimizationDirection' | 'courseSectionNames' | 'classNames';
+/*
 const isEfficiencyKey = (key: string): key is EfficiencyKey => {
   return [
     'lessonPrepDuration',
@@ -372,7 +372,7 @@ const isEfficiencyKey = (key: string): key is EfficiencyKey => {
     'classNames'
   ].includes(key)
 }
-
+*/
 const handleOptimize = async (courseId: number, sectionId: number) => {
   try {
     Loading.show({ message: '正在获取优化建议...', backgroundColor: 'grey-2', spinnerColor: 'primary' })
@@ -403,7 +403,7 @@ const handleOptimize = async (courseId: number, sectionId: number) => {
     console.error('获取优化建议失败:', error)
     Notify.create({
       type: 'negative',
-      message: '获取优化建议失败'
+      message: '获取优化建议失败,课程可能没有开展练习测试'
     })
   } finally {
     Loading.hide()
@@ -457,7 +457,7 @@ const loadData = async () => {
 }
 
 onMounted(() => { loadData(); nextTick(renderCharts); });
-
+/*
 // Add type guard for array values
 const isArrayValue = (value: unknown): value is string[] => {
   return Array.isArray(value)
@@ -466,7 +466,7 @@ const isArrayValue = (value: unknown): value is string[] => {
 // Add type guard for number values
 const isNumberValue = (value: unknown): value is number => {
   return typeof value === 'number'
-}
+}*/
 </script>
 
 <template>

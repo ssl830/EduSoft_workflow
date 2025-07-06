@@ -10,9 +10,9 @@ import CourseApi from '../../api/course.ts';
 const router = useRouter()
 const authStore = useAuthStore()
 
-const importQuestionIds = ref([])
-const importQuestionScores = ref([])
-const importQuestions = ref([])
+const importQuestionIds = ref<number[]>([])
+const importQuestionScores = ref<number[]>([])
+const importQuestions = ref<any[]>([])
 
 interface Question {
   type: string;
@@ -37,11 +37,21 @@ const exercise = reactive({
 
 const loading = ref(false)
 const error = ref('')
-const classes = ref([])
+interface ClassItem {
+  id: number;
+  courseId: number;
+  courseName: string;
+  className: string;
+}
+const classes = ref<ClassItem[]>([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
 const currentStep = ref(1) // 1: Basic Info, 2: Questions
-const allowMultipleSubmission = ref([
+interface AllowMultipleSubmissionOption {
+  id: boolean;
+  name: string;
+}
+const allowMultipleSubmission = ref<AllowMultipleSubmissionOption[]>([
     { id: true, name: '是' },
     { id: false, name: '否' }
 ])
@@ -107,9 +117,7 @@ const fetchSections = async (courseId: number) => {
 const fetchClasses = async () => {
     if (authStore.isAuthenticated) {
         try {
-            const response = await ClassApi.getUserClasses(authStore.user?.id)
-            console.log(authStore.user?.id)
-            console.log(response.classes)
+            const response = await ClassApi.getUserClasses(authStore.user?.id ? Number(authStore.user.id) : 0)
             classes.value = response.data
         } catch (err) {
             error.value = '获取班级列表失败，请稍后再试'
@@ -168,7 +176,7 @@ const nextStep = async () => {
                 courseId: exercise.courseId,
                 startTime: exercise.startTime,
                 endTime: exercise.endTime,
-                createdBy: authStore.user?.id,
+                createdBy: authStore.user?.id ? String(authStore.user.id) : undefined,
                 allowMultipleSubmission: exercise.allowMultipleSubmission,
             });
             console.log(response.data)
@@ -196,12 +204,12 @@ const nextStep = async () => {
 }
 
 // Go back to the previous step
-const prevStep = () => {
-  currentStep.value = 1
-  error.value = ''
-}
+// const prevStep = () => {
+//   currentStep.value = 1
+//   error.value = ''
+// }
 
-const typeMap = {
+const typeMap: Record<string, string> = {
     'singlechoice': 'singlechoice',
     'multiplechoice': 'singlechoice',
     'judge': 'judge',
@@ -258,19 +266,9 @@ const addOrUpdateQuestion = async () => {
             creatorId: authStore.user?.id
         };
         console.log(questionData)
-        const createResponse = await QuestionApi.createQuestion(questionData);
-        // const questionId = createResponse.data?.data?.questionId;
-        // // // 将题目添加到当前练习
-        // if (questionId) {
-        //     await ExerciseApi.importQuestionsToPractice({
-        //         practiceId: exercise.practiceId,
-        //         questionIds: [questionId],
-        //         scores: [tempQuestion.score]
-        //     });
-        // }
+        await QuestionApi.createQuestion(questionData);
         await fetchRepoQuestions();
-        const response = await fetchPracticeQuestions();
-        // console.log("当前题目列表", response.data)
+        await fetchPracticeQuestions();
         error.value = '';
         ElMessage.success('题目创建成功');
     } catch (err) {
@@ -319,7 +317,7 @@ const resetQuestionForm = () => {
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
-  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? [] : ''
+  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? '' : ''
   tempQuestion.score = 5
     tempQuestion.explanation = ''
 
@@ -378,7 +376,7 @@ const removeOption = (index: number) => {
 // }
 
 // 添加题目类型变化的watch
-watch(() => tempQuestion.type, (newType) => {
+watch(() => tempQuestion.type, () => {
     tempQuestion.answer = '';
 });
 
@@ -462,7 +460,7 @@ const fetchPracticeQuestions = async () => {
     try {
         const response = await ExerciseApi.getPracticeQuestions(exercise.practiceId);
         exercise.questions = response.data;
-        exercise.questions.forEach(q => {
+        (exercise.questions as any[]).forEach((q: any) => {
             if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
                 q.type = 'multiplechoice'
             }
@@ -507,7 +505,8 @@ const submitExercise = async () => {
 
 // 修改班级选择逻辑，选择班级时同步 courseId 和 classId，并拉取章节
 const handleClassChange = (classId: number) => {
-    const aclass = classes.value.find((c: any) => c.id === classId);
+    // classId is already a number due to v-model.number
+    const aclass = (classes.value as ClassItem[]).find((c) => c.id === classId);
     if (aclass) {
         exercise.classId = aclass.id;
         exercise.courseId = aclass.courseId;
@@ -545,11 +544,11 @@ const handleClassChange = (classId: number) => {
             <select
               id="courseId"
               v-model="exercise.classId"
-              @change="handleClassChange(Number(exercise.classId))"
+              @change="handleClassChange(exercise.classId)"
               required
             >
               <option value="" disabled>选择课程</option>
-              <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
+              <option v-for="aclass in classes" :key="String(aclass.id)" :value="aclass.id">
                 {{ aclass.courseName }} {{ aclass.className }}
               </option>
             </select>
@@ -563,7 +562,7 @@ const handleClassChange = (classId: number) => {
                   required
               >
                   <option value="" disabled>请选择</option>
-                  <option v-for="type in allowMultipleSubmission" :key="type.id" :value="type.id">
+                  <option v-for="type in allowMultipleSubmission" :key="String(type.id)" :value="type.id">
                       {{ type.name }}
                   </option>
               </select>
@@ -774,8 +773,9 @@ const handleClassChange = (classId: number) => {
                           type="checkbox"
                           :checked="tempQuestion.answerArray.includes(option.key)"
                           @change="e => {
+                              const target = e.target as HTMLInputElement | null;
                               let arr = tempQuestion.answerArray.slice();
-                              if(e.target.checked) {
+                              if(target && target.checked) {
                                   if(!arr.includes(option.key)) arr.push(option.key);
                               } else {
                                   arr = arr.filter(k => k !== option.key);

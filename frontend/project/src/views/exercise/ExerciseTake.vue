@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onUnmounted, onMounted} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import ExerciseApi from "../../api/exercise.js";
 const route = useRoute()
@@ -120,51 +120,72 @@ const authStore = useAuthStore()
 const practiceId = computed(() => route.params.id as string)
 
 const router = useRouter()
-const exercise = ref(null)
+const exercise = ref<ExerciseDetail | null>(null)
 const loading = ref(true)
 const error = ref('')
-const answers = ref({})
+const answers = ref<Record<number, string | string[]>>({})
 const isSubmitting = ref(false)
 
-const questionTypeMap = {
-    'singlechoice': '单选题',
-    'multiplechoice': '多选题',
-    'judge': '判断题',
-    'program': '简答题',
-    'fillblank': '填空题'
+// ------------ 类型接口声明 --------------
+interface Question {
+  id: number
+  content: string
+  type: 'singlechoice' | 'multiplechoice' | 'multiple_choice' | 'judge' | 'program' | 'fillblank'
+  options: string[]
+  answer?: string
+  score?: number
+  points?: number
+}
+
+interface ExerciseDetail {
+  id: string
+  title?: string
+  questions: Question[]
+}
+
+// ---------------------------------------
+
+const questionTypeMap: Record<string, string> = {
+  singlechoice: '单选题',
+  multiplechoice: '多选题',
+  judge: '判断题',
+  program: '简答题',
+  fillblank: '填空题'
 }
 
 // 生成选项字母
 const getOptionKey = (idx: number) => String.fromCharCode(65 + idx) // 0->A, 1->B, ...
 
 // 多选题选项是否被选中
-const isChecked = (qid, key) => {
-    return Array.isArray(answers.value[qid]) && answers.value[qid].includes(key)
+const isChecked = (qid: number, key: string): boolean => {
+    const ans = answers.value[qid]
+    return Array.isArray(ans) && ans.includes(key)
 }
 
 // 多选题选项变更
-const onMultiChange = (qid, key, event) => {
+const onMultiChange = (qid: number, key: string, event: Event) => {
+    const target = event.target as HTMLInputElement
     if (!Array.isArray(answers.value[qid])) {
         answers.value[qid] = []
     }
-    if (event.target.checked) {
+    if (target.checked) {
         if (!answers.value[qid].includes(key)) {
-            answers.value[qid].push(key)
+            (answers.value[qid] as string[]).push(key)
         }
     } else {
-        answers.value[qid] = answers.value[qid].filter(k => k !== key)
+        answers.value[qid] = (answers.value[qid] as string[]).filter(k => k !== key)
     }
     // 始终保持从小到大排序
-    answers.value[qid].sort()
+    (answers.value[qid] as string[]).sort()
 }
 
 // 获取练习详情
 const fetchExercise = async () => {
     try {
-        const res = await ExerciseApi.takeExercise(practiceId.value)
-        exercise.value = res.data
+        const res: any = await ExerciseApi.takeExercise(practiceId.value)
+        exercise.value = res.data as ExerciseDetail
         // 类型修正：单选题但答案长度大于1，视为多选题
-        exercise.value.questions.forEach((question, id) => {
+        exercise.value.questions.forEach((question: Question) => {
             if (question.type === 'singlechoice' && typeof question.answer === 'string' && question.answer.length > 1) {
                 question.type = 'multiplechoice'
             }
@@ -189,7 +210,7 @@ const submitAnswers = async () => {
     isSubmitting.value = true
     try {
         // 创建字符串数组格式的答案
-        const answerList = exercise.value.questions.map((question, id) => {
+        const answerList = exercise.value?.questions.map((question: Question) => {
             const ans = answers.value[question.id]
 
             // 单选题直接返回选项字母
@@ -214,13 +235,13 @@ const submitAnswers = async () => {
                 return ans.join('')
             }
             return ''
-        })
+        }) || []
 
         console.log(answerList)
 
         const res = await ExerciseApi.submitExercise({
             practiceId: practiceId.value,
-            studentId: authStore.user?.id,
+            studentId: authStore.user?.id?.toString() ?? '',
             answers: answerList  // 直接提交字符串数组
         })
 
@@ -240,7 +261,7 @@ const submitAnswers = async () => {
 onMounted(() => {
     fetchExercise()
     // 初始化多选题答案为数组
-    exercise.value?.questions.forEach(question => {
+    exercise.value?.questions.forEach((question: Question) => {
         if (question.type === 'multiple_choice' || question.type === 'multiplechoice') {
             answers.value[question.id] = []
         }

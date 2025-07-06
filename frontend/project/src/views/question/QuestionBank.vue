@@ -40,6 +40,7 @@ const tempQuestion = ref({
         { key: 'D', text: '' }
     ],
     explanation: '',
+    analysis: '',
     courseId: null as number | null,
     sectionId: null as number | null,
     creatorId: authStore.user?.id,
@@ -114,11 +115,11 @@ const fetchQuestions = async () => {
             params = { courseId }
         }
 
-        const response = await QuestionApi.getQuestionList(params)
+        const response: any = await QuestionApi.getQuestionList(params)
         console.log('获取题目列表响应:', response)
 
         // 兼容所有课程和单课程的响应结构
-        let questionsData = []
+        let questionsData: any[] = []
         if (response?.code === 200) {
             if (response.data?.questions) {
                 questionsData = response.data.questions
@@ -129,7 +130,7 @@ const fetchQuestions = async () => {
                 })
             } else if (Array.isArray(response.data)) {
                 questionsData = response.data
-                questionsData.forEach(q => {
+                (questionsData as any[]).forEach((q: any) => {
                     if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
                         q.type = 'multiplechoice'
                     }
@@ -178,7 +179,7 @@ const sections = ref<Section[]>([])
 const fetchCourses = async () => {
   try {
     loading.value = true
-    const response = await CourseApi.getAllCourses()
+    const response: any = await CourseApi.getAllCourses()
     if (response?.code === 200) {
       // 添加"所有课程"选项
       const courseList = [
@@ -209,7 +210,7 @@ watch(selectedCourse, (newCourse) => {
 watch(() => tempQuestion.value.courseId, async (newCourseId) => {
     if (newCourseId) {
         try {
-            const response = await CourseApi.getCourseById(String(newCourseId))
+            const response: any = await CourseApi.getCourseById(String(newCourseId))
             if (response?.code === 200 && response.data?.sections) {
                 sections.value = response.data.sections
             } else {
@@ -227,7 +228,7 @@ watch(() => tempQuestion.value.courseId, async (newCourseId) => {
 watch(() => generateForm.value.course_id, async (newCourseId) => {
     if (newCourseId) {
         try {
-            const response = await CourseApi.getCourseById(String(newCourseId))
+            const response: any = await CourseApi.getCourseById(String(newCourseId))
             if (response?.code === 200 && response.data?.sections) {
                 sections.value = response.data.sections
             } else {
@@ -313,6 +314,7 @@ const addQuestion = async () => {
         courseId: tempQuestion.value.courseId,
         sectionId: tempQuestion.value.sectionId,
         analysis: tempQuestion.value.explanation,
+        explanation: tempQuestion.value.explanation,
         creatorId: tempQuestion.value.creatorId
     }
     console.log(questionData)
@@ -321,7 +323,7 @@ const addQuestion = async () => {
 
     try {
         console.warn('开始发送请求')
-        const res = await QuestionApi.createQuestion(questionData)
+        const res: any = await QuestionApi.createQuestion(questionData)
         console.warn('后端返回数据:', JSON.stringify(res, null, 2))
 
         // Reset form and refresh list
@@ -350,6 +352,7 @@ const resetUploadForm = () => {
         courseId: 0,
         sectionId: 0,
         analysis: '',
+        explanation: '',
         creatorId: authStore.user?.id,
         get answerArray(): string[] {
             return this.type === 'multiplechoice' && this.answer
@@ -379,14 +382,6 @@ const showQuestionDetail = (question: any) => {
     showDetailDialog.value = true;
 }
 
-// 新增答案格式化方法
-const formatAnswer = (question: any) => {
-    if (question.type === 'multiplechoice') {
-        return question.answer.split(',').join(', ')
-    }
-    return question.answer
-}
-
 // Filter questions when criteria change
 watch([selectedChapter, selectedCourse], () => {
     fetchQuestions()
@@ -396,57 +391,7 @@ onMounted(() => {
     fetchQuestions()
 })
 
-// 获取课程相关的题目列表
-const fetchCourseQuestions = async () => {
-  try {
-    loading.value = true
-    const response = await QuestionApi.getQuestionList({
-      courseId: selectedCourse.value
-    })
-    console.log('获取到的题目列表:', response)
-    if (response.data.code === 200 && response.data.data) {
-      // 直接使用返回的questions数组
-      questions.value = response.data.data.questions.map((q: any) => {
-        // 解析选项JSON字符串
-        let optionsArray = []
-        try {
-          if (q.options && q.options[0] && q.options[0].text) {
-            optionsArray = JSON.parse(q.options[0].text)
-          }
-        } catch (e) {
-          console.error('解析选项失败:', e)
-        }
-
-        return {
-          id: q.id,
-          type: q.type,
-          content: q.name, // 使用name作为content
-          options: optionsArray.map((text: string, index: number) => ({
-            key: String.fromCharCode(65 + index), // A, B, C, D...
-            text: text
-          })),
-          answer: q.answer,
-          courseId: q.courseId,
-          courseName: q.courseName,
-          sectionId: q.sectionId,
-          sectionName: q.sectionName,
-          teacherId: q.teacherId
-        }
-      })
-      console.log('处理后的题目列表:', questions.value)
-    } else {
-      console.error('获取题目列表失败:', response.data.message)
-      error.value = response.data.message || '获取题目列表失败'
-    }
-  } catch (err: any) {
-    console.error('获取题目列表出错:', err)
-    error.value = err.message || '获取题目列表失败'
-  } finally {
-    loading.value = false
-  }
-}
-
-// 更新计算属性：将单选题和多选题统一为“选择题”
+// 更新计算属性：将单选题和多选题统一为"选择题"
 const filteredQuestions = computed(() => {
   if (!selectedType.value) return questions.value // 如果未选择类型，显示所有题目
   return questions.value.filter(question => {
@@ -506,12 +451,12 @@ const generateQuestions = async () => {
     try {
         // 只传递纯对象，避免循环引用
         const reqData = JSON.parse(JSON.stringify(generateForm.value));
-        const response = await QuestionApi.generateExercise(reqData);
+        const response: any = await QuestionApi.generateExercise(reqData);
         console.log('生成题目响应:', response);
-        console.log(Array.isArray(response.exercises))
+        console.log(Array.isArray(response.data?.exercises))
 
-        if (response && Array.isArray(response.exercises)) {
-            for (const question of response.exercises) {
+        if (response?.data && Array.isArray(response.data.exercises)) {
+            for (const question of response.data.exercises) {
                 const questionData = {
                     type: question.type,
                     content: question.question,
@@ -520,6 +465,7 @@ const generateQuestions = async () => {
                     courseId: generateForm.value.course_id,
                     sectionId: generateForm.value.section_id,
                     analysis: question.explanation,
+                    explanation: question.explanation,
                     creatorId: authStore.user?.id
                 };
                 await QuestionApi.createQuestion(questionData);
@@ -549,6 +495,20 @@ const updateSectionSelection = (sectionId: number) => {
     generateForm.value.section_id = sectionId;
     const selectedSection = sections.value.find(section => section.id === sectionId);
     generateForm.value.lesson_content = selectedSection ? selectedSection.title : '';
+};
+
+// 处理多选答案更改，解决模板中 e.target 类型问题
+const onMultiChoiceChange = (optionKey: string, e: Event) => {
+  const target = e.target as HTMLInputElement | null;
+  if (!target) return;
+  let arr = tempQuestion.value.answerArray.slice();
+  if (target.checked) {
+    if (!arr.includes(optionKey)) arr.push(optionKey);
+  } else {
+    arr = arr.filter(k => k !== optionKey);
+  }
+  arr.sort();
+  tempQuestion.value.answer = arr.join('|');
 };
 </script>
 
@@ -705,16 +665,7 @@ const updateSectionSelection = (sectionId: number) => {
                                 :id="`answer-${option.key}`"
                                 type="checkbox"
                                 :checked="tempQuestion.answerArray.includes(option.key)"
-                                @change="e => {
-                              let arr = tempQuestion.answerArray.slice();
-                              if(e.target.checked) {
-                                  if(!arr.includes(option.key)) arr.push(option.key);
-                              } else {
-                                  arr = arr.filter(k => k !== option.key);
-                              }
-                              arr.sort();
-                              tempQuestion.answer = arr.join('|');
-                          }"
+                                @change="onMultiChoiceChange(option.key, $event)"
                             />
                             <label :for="`answer-${option.key}`">{{ option.key }}</label>
                         </div>
@@ -983,10 +934,10 @@ const updateSectionSelection = (sectionId: number) => {
                 </div>
                 <div class="form-group">
                     <label>自定义题型</label>
-                    <div v-for="(value, key) in generateForm.custom_types" :key="key" class="custom-type-row">
+                    <div v-for="(_value, key) in generateForm.custom_types" :key="key" class="custom-type-row">
                         <input
                             :value="key"
-                            @blur="updateCustomTypeKey(key, $event.target.value)"
+                            @blur="updateCustomTypeKey(key, ($event.target as HTMLInputElement).value)"
                             type="text"
                             placeholder="题型名称"
                         />
