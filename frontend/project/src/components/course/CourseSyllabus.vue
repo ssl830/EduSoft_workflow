@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import CourseApi from "../../api/course.ts";
 import {useRoute} from "vue-router";
 import CourseEditDialog from './CourseEditDialog.vue'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/message-box/style/css'
 import jsPDF from 'jspdf'
@@ -24,6 +24,8 @@ const uploadForm = ref({
         { sectionId: -1, title: '' }
     ]
 })
+
+const constraintInput = ref<string>('')
 
 // Remove an option
 const removeSection = (index: number) => {
@@ -140,12 +142,13 @@ const handleGenerateTeachingPlan = async () => {
         return
     }
     teachingPlanLoading.value = true
-    openPlanDialog('正在生成教案') // 只需传入任意“正在生成教案”开头的字符串即可
+    openPlanDialog('正在生成教案') // 只需传入任意"正在生成教案"开头的字符串即可
     try {
         const res : any = await CourseApi.generateTeachingContent({
             course_name: props.course.name,
             course_outline: props.course.outline || '',
-            expected_hours: expectedHours.value
+            expected_hours: expectedHours.value,
+            constraints: constraintInput.value
         })
         if (res.data) {
             teachingPlanResult.value = res.data
@@ -298,16 +301,24 @@ const lessonDetails = ref<Record<number, any>>({}) // key: lesson idx
 const handleLessonDetail = async (idx: number, lesson: any, type: 'detail' | 'regenerate') => {
     const loading = ElLoading.service({ text: '正在生成...', background: 'rgba(255,255,255,0.7)' })
     try {
-        // 构造请求参数
+        const { value: userConstraint, action } = await ElMessageBox.prompt('如有额外要求，请输入；否则留空', type==='detail' ? '生成细节要求' : '重新生成要求', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPlaceholder: '示例：突出案例分析，减少理论描述',
+          inputType: 'textarea'
+        }).catch(()=>({action:'cancel'} as any))
+        if(action==='cancel') { loading.close(); return }
         const params = {
             title: lesson.title || '',
             knowledgePoints: lesson.knowledgePoints || [],
             practiceContent: lesson.practiceContent || '',
             teachingGuidance: lesson.teachingGuidance || '',
-            timePlan: lesson.timePlan || []
+            timePlan: lesson.timePlan || [],
+            constraints: userConstraint
         }
+        let res
         if( type === 'detail' ){
-            const res = await CourseApi.generateTeachingContentDetail(params)
+            res = await CourseApi.generateTeachingContentDetail(params)
             console.log(res)
             if (res.data) {
                 // 修正：直接操作 teachingPlanResult.value.lessons
@@ -321,7 +332,7 @@ const handleLessonDetail = async (idx: number, lesson: any, type: 'detail' | 're
             }
             ElMessage.success('生成成功');
         }else{
-            const res = await CourseApi.regenerateTeachingContent(params)
+            res = await CourseApi.regenerateTeachingContent(params)
             console.log(res)
             if (res.data) {
                 if (teachingPlanResult.value && teachingPlanResult.value.lessons) {
@@ -357,6 +368,199 @@ const planDialogMsgs = [
 ]
 let planDialogInterval: number | null = null
 const planDialogMsgIndex = ref(0)
+
+const stepDetailCache = ref<Record<string, any>>({})
+
+const handleStepDetail = async (lessonIdx: number, lesson: any, step: any) => {
+  const key = `${lessonIdx}-${step.step}`
+  if (stepDetailCache.value[key]) {
+    // already generated, toggle display via marking maybe
+    step.detail = stepDetailCache.value[key]
+    return
+  }
+  const loading = ElLoading.service({ text: '正在生成环节细节...', background: 'rgba(255,255,255,0.7)' })
+  try {
+    const res:any = await CourseApi.generateStepDetail({
+      lessonTitle: lesson.title,
+      stepName: step.step,
+      currentContent: step.content || '',
+      knowledgePoints: lesson.knowledgePoints || []
+    })
+    const detail = res.data || res
+    step.detail = detail
+    stepDetailCache.value[key] = detail
+    ElMessage.success('生成成功')
+  } catch (e:any) {
+    ElMessage.error('生成失败，请稍后再试')
+  } finally {
+    loading.close()
+  }
+}
+
+const sectionDialogVisible = ref(false)
+const selectedSection = ref<any>(null)
+const sectionExpectedHours = ref<number|null>(null)
+const sectionConstraints = ref<string>('')
+const sectionFile = ref<File|null>(null)
+const sectionLoading = ref(false)
+const sectionPlanResult = ref<any>(null)
+const sectionPlanLoading = ref(false)
+
+const handleSectionPlanClick = (section: any) => {
+  selectedSection.value = section
+  sectionExpectedHours.value = null
+  sectionConstraints.value = ''
+  sectionFile.value = null
+  sectionDialogVisible.value = true
+}
+
+const handleSectionFileChange = (e: Event) => {
+  const files = (e.target as HTMLInputElement).files
+  if (files && files.length) {
+    sectionFile.value = files[0]
+  }
+}
+
+const handleGenerateSectionPlan = async () => {
+  if (!sectionFile.value) {
+    ElMessage.error('请上传章节大纲文件')
+    return
+  }
+  if (!sectionExpectedHours.value || sectionExpectedHours.value <= 0) {
+    ElMessage.error('请输入有效的课时数')
+    return
+  }
+  sectionPlanLoading.value = true
+  openPlanDialog('正在生成章节教案')
+  try {
+    const formData = new FormData()
+    formData.append('file', sectionFile.value as Blob)
+    formData.append('course_name', props.course.name)
+    formData.append('section_title', selectedSection.value.title)
+    formData.append('expected_hours', String(sectionExpectedHours.value))
+    if (sectionConstraints.value) {
+      formData.append('constraints', sectionConstraints.value)
+    }
+    const res:any = await CourseApi.generateSectionTeachingContent(formData)
+    const body = res.data ? res.data : res
+    if (body && body.status === 'fail') {
+      throw new Error(body.message || '生成失败')
+    }
+    sectionPlanResult.value = body
+    closePlanDialog()
+    planDialogMsg.value = '章节教案生成成功(๑˃̵ᴗ˂̵)و✧'
+    showPlanDialog.value = true
+    setTimeout(()=>{ closePlanDialog() },1500)
+  } catch (e:any){
+    closePlanDialog()
+    planDialogMsg.value = '章节教案生成失败(´；д；)`'
+    showPlanDialog.value = true
+    setTimeout(()=>{ closePlanDialog() },1500)
+    ElMessage.error('生成失败，请稍后再试')
+  } finally {
+    sectionPlanLoading.value = false
+  }
+}
+
+const renderSectionPlan = computed(()=>{
+  if (!sectionPlanResult.value) return null
+  const data:any = sectionPlanResult.value
+  return {
+    lessons: Array.isArray(data.lessons)? data.lessons:[],
+    totalHours: data.totalHours,
+    teachingAdvice: data.teachingAdvice || {}
+  }
+})
+
+const exportSectionPlanAsPDF = async ()=>{
+  if (!renderSectionPlan.value){
+    ElMessage.error('无教案内容，无法导出')
+    return
+  }
+  exportLoading.value = true
+  try{
+    const doc = new jsPDF('p','mm','a4')
+    const marginLeft =15
+    const marginTop=20
+    const lineHeight=8
+    const pageWidth=doc.internal.pageSize.getWidth()
+    const pageHeight=doc.internal.pageSize.getHeight()
+    let cursorY=marginTop
+    const fontName='SourceHanSerifSC'
+    const fontUrl='/src/assets/fonts/SourceHanSerifSC-VF.ttf'
+    if(!doc.getFontList()[fontName]){
+      const fontData = await fetch(fontUrl).then(r=>r.arrayBuffer())
+      doc.addFileToVFS(`${fontName}.ttf`, arrayBufferToBase64(fontData))
+      doc.addFont(`${fontName}.ttf`,fontName,'normal')
+    }
+    doc.setFont(fontName,'normal')
+    doc.setFontSize(12)
+    const maxTextWidth=pageWidth-2*marginLeft
+    const addText=(text:string)=>{
+      const lines=doc.splitTextToSize(text,maxTextWidth)
+      lines.forEach((l:string)=>{
+        if(cursorY>pageHeight-marginTop){ doc.addPage(); cursorY=marginTop }
+        doc.text(l,marginLeft,cursorY)
+        cursorY+=lineHeight
+      })
+    }
+    const textContent=[
+      `章节教案 - ${selectedSection.value.title}`,
+      '',
+      `总课时数：${renderSectionPlan.value.totalHours}`,
+      '',
+      '课时安排：',
+      ...renderSectionPlan.value.lessons.flatMap((lesson:any,idx:number)=>[
+        `${idx+1}. ${lesson.title}`,
+        ...lesson.timePlan.map((tp:any)=>`  【${tp.step}】${tp.minutes}分钟：${tp.content}`),
+        ...(lesson.knowledgePoints?.length?[`  知识点：${lesson.knowledgePoints.join('，')}`]:[]),
+        ...(lesson.practiceContent?[`  实践内容：${lesson.practiceContent}`]:[]),
+        ...(lesson.teachingGuidance?[`  教学提示：${lesson.teachingGuidance}`]:[]),
+        ''
+      ]),
+      `整体教学建议：${renderSectionPlan.value.teachingAdvice}`
+    ]
+    textContent.forEach(line=>{
+      if(line.trim()===''){cursorY+=lineHeight}else{addText(line)}
+    })
+    doc.save(`${selectedSection.value.title}-教案.pdf`)
+    ElMessage.success('导出成功')
+  }catch(err){ElMessage.error('导出失败');console.error(err)}
+  finally{exportLoading.value=false}
+}
+
+const handleSectionLessonDetail = async (idx:number, lesson:any, type:'detail'|'regenerate')=>{
+  const loading = ElLoading.service({text:'正在生成...',background:'rgba(255,255,255,0.7)'})
+  try{
+    const { value: userConstraint, action } = await ElMessageBox.prompt('如有额外要求，请输入；否则留空', type==='detail'?'生成细节要求':'重新生成要求', {confirmButtonText:'确定',cancelButtonText:'取消',inputType:'textarea'}).catch(()=>({action:'cancel'} as any))
+    if(action==='cancel'){loading.close();return}
+    const params={
+      title:lesson.title||'',
+      knowledgePoints:lesson.knowledgePoints||[],
+      practiceContent:lesson.practiceContent||'',
+      teachingGuidance:lesson.teachingGuidance||'',
+      timePlan:lesson.timePlan||[],
+      constraints:userConstraint
+    }
+    let res
+    if(type==='detail') res = await CourseApi.generateTeachingContentDetail(params)
+    else res = await CourseApi.regenerateTeachingContent(params)
+    if(res.data){
+      if(sectionPlanResult.value && sectionPlanResult.value.lessons){ sectionPlanResult.value.lessons[idx]=res.data }
+    }else{
+      if(sectionPlanResult.value && sectionPlanResult.value.lessons){ sectionPlanResult.value.lessons[idx]=res }
+    }
+    ElMessage.success('生成成功')
+  }catch(e){ElMessage.error('请求失败，请稍后再试')}
+  finally{loading.close()}
+}
+
+const allSectionLessonIndexes = ref<number[]>([])
+watch(renderSectionPlan,(val)=>{
+  if(val && val.lessons){
+    allSectionLessonIndexes.value = val.lessons.map((_:any,idx:number)=>idx)
+  }
+})
 </script>
 
 <template>
@@ -465,8 +669,16 @@ const planDialogMsgIndex = ref(0)
                                 <button
                                     v-if="isTeacher"
                                     class="btn-action preview"
+                                    @click="handleSectionPlanClick(section)"
+                                    title="生成教案"
+                                >
+                                    生成教案
+                                </button>
+                                <button
+                                    v-if="isTeacher"
+                                    class="btn-action preview"
                                     @click="deleteSection(section.id)"
-                                    title="编辑"
+                                    title="删除"
                                 >
                                     删除
                                 </button>
@@ -546,6 +758,11 @@ const planDialogMsgIndex = ref(0)
                                                     </template>
                                                 </el-table-column>
                                                 <el-table-column prop="content" label="内容"/>
+                                                <el-table-column label="操作" width="90">
+                                                    <template #default="scope">
+                                                        <el-button size="small" type="primary" @click="handleStepDetail(idx, lesson, scope.row)">生成细节</el-button>
+                                                    </template>
+                                                </el-table-column>
                                             </el-table>
                                         </div>
                                     </div>
@@ -588,6 +805,8 @@ const planDialogMsgIndex = ref(0)
                 <!-- 隐藏的原始JSON，复制用 -->
                 <textarea v-show="false" :value="JSON.stringify(teachingPlanResult, null, 2)" readonly></textarea>
             </div>
+            <label style="margin-top:12px; display:block;">可选：额外要求/约束</label>
+            <el-input v-model="constraintInput" type="textarea" rows="3" placeholder="如：加强案例分析；突出实践环节"></el-input>
         </el-dialog>
 
         <!-- 教案生成状态弹窗 -->
@@ -601,6 +820,64 @@ const planDialogMsgIndex = ref(0)
             </div>
           </div>
         </div>
+
+        <!-- 章节教案生成弹窗 -->
+        <el-dialog
+            v-model="sectionDialogVisible"
+            title="生成章节教案"
+            width="600px"
+            :close-on-click-modal="false"
+        >
+            <div>
+                <p>章节：{{ selectedSection?.title || '' }}</p>
+                <el-input v-model.number="sectionExpectedHours" type="number" min="1" placeholder="请输入预期课时数" style="width: 200px; margin-bottom: 16px;" />
+                <div style="margin-bottom: 12px;">
+                    <input type="file" accept=".doc,.docx,.pdf" @change="handleSectionFileChange" />
+                </div>
+                <el-input v-model="sectionConstraints" type="textarea" rows="3" placeholder="可选：额外要求/约束"></el-input>
+
+                <!-- 生成后展示教案 -->
+                <div v-if="renderSectionPlan" style="margin-top:24px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-weight:bold;">章节教案内容</span>
+                      <el-button size="small" :loading="exportLoading" @click="exportSectionPlanAsPDF" :disabled="exportLoading">导出 PDF</el-button>
+                  </div>
+                  <el-collapse v-model="allSectionLessonIndexes" accordion>
+                      <el-collapse-item v-for="(lesson,idx) in renderSectionPlan.lessons" :key="idx" :name="idx">
+                          <template #title>{{ idx+1 }}. {{ lesson.title }}</template>
+
+                          <div style="margin-bottom:8px;">
+                              <el-button size="small" @click="handleSectionLessonDetail(idx, lesson, 'detail')">生成细节</el-button>
+                              <el-button size="small" type="warning" @click="handleSectionLessonDetail(idx, lesson, 'regenerate')">重新生成</el-button>
+                          </div>
+                          <div style="margin-bottom:8px;">
+                              <span style="font-weight:500;">时间分配：</span>
+                          </div>
+                          <el-table :data="lesson.timePlan" border size="small" style="margin-bottom:8px;">
+                              <el-table-column prop="step" label="教学环节" width="90" />
+                              <el-table-column prop="minutes" label="时长" width="60">
+                                  <template #default="scope">{{ formatMinutes(scope.row.minutes) }}</template>
+                              </el-table-column>
+                              <el-table-column prop="content" label="内容" />
+                          </el-table>
+                          <div v-if="lesson.knowledgePoints && lesson.knowledgePoints.length" style="margin-bottom:6px;">
+                              <span style="font-weight:500;">知识点：</span>
+                              <ol class="knowledge-list"><li v-for="(kp,kidx) in lesson.knowledgePoints" :key="kidx">{{ kp }}</li></ol>
+                          </div>
+                          <div v-if="lesson.practiceContent" style="margin-bottom:6px;"><span style="font-weight:500;">实践内容：</span>{{ lesson.practiceContent }}</div>
+                          <div v-if="lesson.teachingGuidance" style="margin-bottom:6px;"><span style="font-weight:500;">教学提示：</span>{{ lesson.teachingGuidance }}</div>
+                      </el-collapse-item>
+                  </el-collapse>
+                  <el-divider content-position="left">整体教学建议</el-divider>
+                  <div v-if="renderSectionPlan.teachingAdvice">{{ renderSectionPlan.teachingAdvice }}</div>
+                </div>
+
+                <div style="margin-top: 16px; text-align:right;">
+                    <el-button @click="sectionDialogVisible = false">关闭</el-button>
+                    <el-button type="primary" :loading="sectionLoading" @click="handleGenerateSectionPlan">重新生成</el-button>
+                </div>
+            </div>
+        </el-dialog>
 
         <CourseEditDialog
             v-if="course"

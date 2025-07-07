@@ -38,6 +38,7 @@ class TeachingContentRequest(BaseModel):
     course_name: str
     course_outline: str
     expected_hours: int
+    constraints: Optional[str] = None
 
 class TimePlanItem(BaseModel):
     content: str
@@ -50,6 +51,7 @@ class TeachingContentDetail(BaseModel):
     practiceContent: str        # string
     teachingGuidance: str       # string
     timePlan: List[TimePlanItem]  # Array(object)
+    constraints: Optional[str] = None
 
 class ExerciseGenerationRequest(BaseModel):
     course_name: str
@@ -97,6 +99,16 @@ class CourseOptimizationRequest(BaseModel):
     averageScore: float
     errorRate: float
     studentCount: int
+
+class TeachingContentFeedbackRequest(BaseModel):
+    originalPlan: Dict[str, Any]
+    feedback: str
+
+class StepDetailRequest(BaseModel):
+    lessonTitle: str
+    stepName: str
+    currentContent: Optional[str] = ""
+    knowledgePoints: Optional[List[str]] = None
 
 @app.post("/embedding/upload")
 async def upload_file(
@@ -151,7 +163,8 @@ async def generate_teaching_content(request: TeachingContentRequest):
         result = rag_service.generate_teaching_content(
             course_outline=request.course_outline,
             course_name=request.course_name,
-            expected_hours=request.expected_hours
+            expected_hours=request.expected_hours,
+            constraints=request.constraints
         )
         logger.info(f"Successfully generated teaching content for {request.course_name}")
         return result
@@ -171,6 +184,7 @@ async def generate_teaching_content_detail(request: TeachingContentDetail):
             practiceContent=request.practiceContent,
             teachingGuidance=request.teachingGuidance,
             timePlan=request.timePlan,
+            constraints=request.constraints,
         )
         logger.info(f"Successfully generated teaching content detail for {request.title}")
         return result
@@ -190,6 +204,7 @@ async def regenerate_teaching_content_detail(request: TeachingContentDetail):
             practiceContent=request.practiceContent,
             teachingGuidance=request.teachingGuidance,
             timePlan=request.timePlan,
+            constraints=request.constraints,
         )
         logger.info(f"Successfully regenerated teaching content for {request.title}")
         return result
@@ -307,6 +322,83 @@ async def optimize_course(request: CourseOptimizationRequest):
         return result
     except Exception as e:
         logger.error(f"Error generating optimization suggestions: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/feedback")
+async def revise_teaching_content(request: TeachingContentFeedbackRequest):
+    """根据教师反馈修改教学大纲"""
+    try:
+        result = rag_service.revise_teaching_content(
+            original_plan=request.originalPlan,
+            feedback=request.feedback
+        )
+        logger.info("Successfully revised teaching content via feedback")
+        return result
+    except Exception as e:
+        logger.error(f"Error revising teaching content: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/step_detail")
+async def generate_step_detail(request: StepDetailRequest):
+    """生成课时中某一环节的详细内容"""
+    try:
+        result = rag_service.generate_step_detail(
+            lesson_title=request.lessonTitle,
+            step_name=request.stepName,
+            current_content=request.currentContent or "",
+            knowledge_points=request.knowledgePoints or []
+        )
+        logger.info("Successfully generated step detail for %s-%s", request.lessonTitle, request.stepName)
+        return result
+    except Exception as e:
+        logger.error(f"Error generating step detail: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag/generate_section")
+async def generate_section_teaching_content(
+    file: UploadFile = File(...),
+    course_name: str = Form(...),
+    section_title: str = Form(...),
+    expected_hours: int = Form(...),
+    constraints: Optional[str] = Form(None)
+):
+    """上传章节大纲文件并生成该章节教案"""
+    try:
+        # 保存文件到临时
+        temp_path = os.path.join(storage_service.get_temp_dir(), file.filename)
+        content_bytes = await file.read()
+        with open(temp_path, "wb") as f:
+            f.write(content_bytes)
+
+        # 校验文件扩展名，仅支持 pdf/docx
+        _, ext = os.path.splitext(file.filename.lower())
+        if ext not in [".pdf", ".docx"]:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}. 仅支持 PDF 与 DOCX 文件")
+
+        try:
+            # 解析文本块
+            chunks = doc_parser.parse_file(temp_path)
+            outline_text = "\n".join([c["content"] for c in chunks])
+            if not outline_text.strip():
+                raise ValueError("解析失败，文件内容为空或无法读取")
+            # 调用生成
+            result = rag_service.generate_teaching_content(
+                course_outline=outline_text,
+                course_name=f"{course_name}-{section_title}",
+                expected_hours=expected_hours,
+                constraints=constraints
+            )
+            return result
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+    except HTTPException:
+        # 已经抛出的 HTTPException 直接向上抛
+        raise
+    except Exception as e:
+        logger.error(f"Error generating section teaching content: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

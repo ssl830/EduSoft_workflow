@@ -339,6 +339,100 @@ public class AiAssistantService {
         return evaluateSubjectiveAnswer(question, studentAnswer, referenceAnswer, maxScore);
     }
 
+    public Map<String, Object> reviseTeachingContent(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/feedback";
+        Long userId = null;
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
+            return response.getBody();
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
+            return Map.of(
+                "status", "fail",
+                "message", "AI教案反馈修改服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
+    public Map<String, Object> generateStepDetail(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/step_detail";
+        Long userId = null;
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            String url = aiServiceUrl + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
+            return response.getBody();
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
+            return Map.of(
+                "status", "fail",
+                "message", "AI课时环节细节生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
+    public Map<String, Object> generateSectionTeachingContent(MultipartFile file, String courseName, String sectionTitle, Integer expectedHours, String constraints) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/generate_section";
+        Long userId = null;
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            // 临时保存
+            Path tempFile = Files.createTempFile("section-outline-", "-" + file.getOriginalFilename());
+            file.transferTo(tempFile.toFile());
+
+            String url = aiServiceUrl + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(tempFile.toFile()));
+            body.add("course_name", courseName);
+            body.add("section_title", sectionTitle);
+            body.add("expected_hours", expectedHours.toString());
+            if (constraints != null) {
+                body.add("constraints", constraints);
+            }
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            Files.deleteIfExists(tempFile);
+
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
+            return response.getBody();
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
+            return Map.of("status", "fail", "message", "章节教案生成失败: " + e.getMessage());
+        }
+    }
 
 }
 

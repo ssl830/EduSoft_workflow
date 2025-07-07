@@ -30,9 +30,11 @@ class PromptTemplates:
         course_name: str,
         course_outline: str,
         expected_hours: int,
-        knowledge_base: Dict[str, List[Dict[str, str]]]
+        knowledge_base: Dict[str, List[Dict[str, str]]],
+        constraints: Optional[str] = None
     ) -> str:
-        """生成教学内容的提示词"""
+        """生成教学内容的提示词，可选 constraints 补充教师要求"""
+        constraints_part = f"\n教师额外要求：\n{constraints}\n" if constraints else ""
         return f"""
         作为一名资深教育专家，请根据以下信息生成详细的教学方案：
 
@@ -40,7 +42,7 @@ class PromptTemplates:
         预期课时：{expected_hours}
         课程大纲：
         {course_outline}
-
+{constraints_part}
         参考资料：
         {PromptTemplates._format_knowledge_base(knowledge_base)}
 
@@ -92,7 +94,6 @@ class PromptTemplates:
         4. 教学指导要具体实用，便于教师参考
         5. 确保总课时数与预期课时相符
         6. teachingAdvice 字段必须是字符串格式
-
 
         请只返回标准 JSON 格式，不要 Markdown、不要注释、不要多余内容。
         """
@@ -384,18 +385,19 @@ class PromptTemplates:
         }}
         """
 
-
-
+    @staticmethod
     def get_teaching_content_detail_prompt(
         title: str,
         knowledgePoints: list,
         practiceContent: str,
         teachingGuidance: str,
-        timePlan: list
+        timePlan: list,
+        constraints: str | None = None
     ) -> str:
         """
         根据已有教案生成更详细的教案（内容更丰富，但仅基于传入参数）
         """
+        constraints_part = f"\n教师额外要求：\n{constraints}\n" if constraints else ""
         return f"""
         你是一名资深教育专家，请基于以下教案信息，生成内容更详细、丰富的教案。请注意，生成内容只能基于下述参数，不得引入任何外部知识或假设。
 
@@ -421,7 +423,8 @@ class PromptTemplates:
         5. 生成的详细教案结构与原教案一致，但每个字段内容更丰富、具体，便于教师直接使用。
         6. 只允许使用传入参数中的内容进行扩展和细化，不得引入任何未给出的知识点或内容。
         7. practiceContent, teachingGuidance, title 字段必须是字符串格式，knowledgePoints 字段必须是字符串数组
-        8. 返回内容必须为标准JSON格式，结构如下：
+        8. 如果教师提出额外要求，请充分考虑并体现：{constraints_part}
+        9. 返回内容必须为标准JSON格式，结构如下：
 
         {{
             "title": "课时标题",
@@ -448,11 +451,13 @@ class PromptTemplates:
         knowledgePoints: list,
         practiceContent: str,
         teachingGuidance: str,
-        timePlan: list
+        timePlan: list,
+        constraints: str | None = None
     ) -> str:
         """
         根据已有教案生成一版全新的教案（内容充实度保持一致，无需更丰富）
         """
+        constraints_part = f"\n教师额外要求：\n{constraints}\n" if constraints else ""
         return f"""
         你是一名资深教育专家，请基于以下教案信息，生成一版全新的教案。要求内容结构、充实度与原教案一致，但表达方式、内容细节等需有明显不同，避免与原教案重复。不得引入任何外部知识或假设，仅可基于下述参数。
 
@@ -477,7 +482,8 @@ class PromptTemplates:
         4. 教学指导部分用不同表述方式给出建议，内容充实度与原教案一致。
         5. 生成的教案结构与原教案一致，便于教师直接使用。
         6. 只允许使用传入参数中的内容进行改写和重组，不得引入任何未给出的知识点或内容。
-        7. 返回内容必须为标准JSON格式，结构如下：
+        7. 如果教师提出额外要求，请充分考虑并体现：{constraints_part}
+        8. 返回内容必须为标准JSON格式，结构如下：
 
         {{
             "title": "课时标题",
@@ -545,3 +551,22 @@ class PromptTemplates:
         3. 推荐的行动要有针对性，并说明预期效果
         4. 返回必须是合法JSON，不要包含Markdown、注释或多余文字
         """
+
+    @staticmethod
+    def get_teaching_content_feedback_prompt(original_plan: dict, feedback: str) -> str:
+        """根据教师反馈修改教学大纲的提示词"""
+        import json
+        return f"""
+        你是一名资深的课程设计专家，下面是已经生成的教学大纲(JSON)：\n\n{json.dumps(original_plan, ensure_ascii=False, indent=2)}\n\n教师对该大纲提出了如下修改意见，请基于这些反馈对教学大纲进行相应的调整：\n\n{feedback}\n\n请注意：\n1. 保留原有结构(lessons 数组及 teachingAdvice 等字段)，仅修改必要的部分以满足反馈。\n2. 对 lessons 中受影响的课时进行调整，例如修改标题、时间分配、知识点或补充/删除环节。\n3. 若教师未指明修改某部分，则保持原样。\n4. 必须返回完整的教学大纲，格式与原始 JSON 一致。\n5. 仅返回合法 JSON，不要包含 Markdown 或额外说明。"""
+
+    @staticmethod
+    def get_step_detail_prompt(
+        lesson_title: str,
+        step_name: str,
+        current_content: str,
+        knowledge_points: list
+    ) -> str:
+        """生成课时中某一教学环节的更详细内容"""
+        import json
+        return f"""
+        你是一位教学设计专家，正在完善课时 \"{lesson_title}\" 的教学环节。\n\n当前环节：{step_name}\n\n该环节已有内容：{current_content if current_content else '（无）'}\n\n该课时涉及的知识点：{json.dumps(knowledge_points, ensure_ascii=False, indent=2)}\n\n请基于以上信息，为 {step_name} 环节生成更详细的教学设计，包括：\n1. 教学目标\n2. 活动流程(可分多步)\n3. 师生活动要点\n4. 评估方式\n5. 所需教具/资源\n\n返回格式要求(JSON)：\n{{\n  \"step\": \"{step_name}\",\n  \"objectives\": [string],\n  \"activities\": [string],\n  \"teacherGuidance\": string,\n  \"studentTasks\": [string],\n  \"assessment\": string,\n  \"resources\": [string]\n}}\n\n仅返回合法 JSON，不要包含 Markdown、注释或多余文字。"""

@@ -140,6 +140,14 @@ const getMimeType = (fileName: string) => {
     return PREVIEW_MIME_TYPES[ext] || 'application/octet-stream'
 }
 
+const getSectionTitle = (sectionId: any) => {
+    if (sectionId === -1 || sectionId === null || sectionId === undefined || sectionId === '') {
+        return '-'
+    }
+    const section = props.course?.sections?.find(sec => sec.id.toString() === sectionId.toString())
+    return section ? section.title : sectionId
+}
+
 // Fetch resources
 const fetchResources = async () => {
   loading.value = true
@@ -435,7 +443,7 @@ onMounted(() => {
         <tr v-for="resource in resourcesVer" :key="resource.id">
           <td v-if="role == 'tutor'">{{ resource.id }}</td>
           <td>{{ resource.title }}</td>
-          <td>{{ resource.sectionId || '-' }}</td>
+          <td>{{ getSectionTitle(resource.sectionId) }}</td>
           <td>{{ resource.type || '-' }}</td>
           <td>{{ resource.createdAt || '-' }}</td>
           <td v-if="role == 'tutor'">{{ resource.version }}</td>
@@ -707,7 +715,7 @@ onMounted(() => {
           <tr v-for="resource in resources" :key="resource.id">
             <td v-if="role == 'tutor'">{{ resource.id }}</td>
             <td>{{ resource.title }}</td>
-            <td>{{ resource.sectionId || '-' }}</td>
+            <td>{{ getSectionTitle(resource.sectionId) }}</td>
             <td>{{ resource.type || '-' }}</td>
             <td>{{ resource.createdAt || '-' }}</td>
             <td v-if="role == 'tutor'">{{ resource.version+1 }}</td>

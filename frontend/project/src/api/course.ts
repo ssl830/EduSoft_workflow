@@ -125,16 +125,30 @@ const CourseApi = {
   },
 
   // 生成教案
-  generateTeachingContent(params: { course_name: string; course_outline: string; expected_hours: number }) {
+  generateTeachingContent(params: { course_name: string; course_outline: string; expected_hours: number; constraints?: string }) {
     return axios.post('/api/ai/rag/generate', params)
   },
 
-  generateTeachingContentDetail(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[] }) {
+  generateTeachingContentDetail(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[]; constraints?: string }) {
     return axios.post('/api/ai/rag/detail', params)
   },
 
-  regenerateTeachingContent(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[] }) {
+  regenerateTeachingContent(params: { title: string; knowledgePoints: string[]; practiceContent: string; teachingGuidance: string; timePlan: any[]; constraints?: string }) {
     return axios.post('/api/ai/rag/regenerate', params)
+  },
+
+  generateStepDetail(params: { lessonTitle: string; stepName: string; currentContent?: string; knowledgePoints?: string[] }) {
+    return axios.post('/api/ai/rag/step_detail', params)
+  },
+
+  reviseTeachingContent(params: { originalPlan: any; feedback: string }) {
+    return axios.post('/api/ai/rag/feedback', params)
+  },
+
+  generateSectionTeachingContent(formData: FormData) {
+    return axios.post('/api/ai/rag/generate_section', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   },
 }
 

@@ -2,8 +2,12 @@ import { createApp } from 'vue'
 import { Quasar, QBtn, QTooltip, Loading, Dialog, Notify } from 'quasar'
 import { createPinia } from 'pinia'
 import router from './router'
+
 import 'quasar/src/css/index.sass'
+
 import './styles/index.scss'
+
+
 import App from './App.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'

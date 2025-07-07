@@ -86,8 +86,8 @@ class RAGService:
                 pass
             raise ValueError(f"JSON解析失败，原始内容：{text[:200]}... 错误信息: {e1}")
 
-    def generate_teaching_content(self, course_outline: str, course_name: str, expected_hours: int) -> Dict:
-        """根据课程大纲生成教学内容"""
+    def generate_teaching_content(self, course_outline: str, course_name: str, expected_hours: int, constraints: Optional[str] = None) -> Dict:
+        """根据课程大纲生成教学内容 (支持 constraints)"""
         try:
             # 1. 调用大模型从大纲中提取关键知识点
             prompt = PromptTemplates.get_knowledge_points_extraction_prompt(
@@ -121,7 +121,8 @@ class RAGService:
                 course_name=course_name,
                 course_outline=course_outline,
                 expected_hours=expected_hours,
-                knowledge_base=knowledge_base
+                knowledge_base=knowledge_base,
+                constraints=constraints
             )
             logger.info("test1\n");
             response = self.client.chat.completions.create(
@@ -154,7 +155,7 @@ class RAGService:
             logger.error(f"Error generating teaching content: {str(e)}")
             raise
 
-    def generate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem]) -> Dict:
+    def generate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem], constraints: str | None = None) -> Dict:
         """根据已有教案生成详细教案（内容更丰富，但仅基于传入参数）"""
         try:
             # 构造详细教案生成的提示词
@@ -163,7 +164,8 @@ class RAGService:
                 knowledgePoints=knowledgePoints,
                 practiceContent=practiceContent,
                 teachingGuidance=teachingGuidance,
-                timePlan=timePlan
+                timePlan=timePlan,
+                constraints=constraints
             )
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
@@ -178,7 +180,7 @@ class RAGService:
             logger.error(f"Error generating teaching content detail: {str(e)}")
             raise
 
-    def regenerate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem]) -> Dict:
+    def regenerate_teaching_content_detail(self, title: str, knowledgePoints: List[str], practiceContent: str, teachingGuidance: str, timePlan: List[TimePlanItem], constraints: str | None = None) -> Dict:
         """根据已有教案生成一版全新的教案（内容充实度保持一致，无需更丰富）"""
         try:
             prompt = PromptTemplates.get_regenerate_teaching_content_prompt(
@@ -186,7 +188,8 @@ class RAGService:
                 knowledgePoints=knowledgePoints,
                 practiceContent=practiceContent,
                 teachingGuidance=teachingGuidance,
-                timePlan=timePlan
+                timePlan=timePlan,
+                constraints=constraints
             )
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
@@ -431,6 +434,45 @@ class RAGService:
 
         except Exception as e:
             logger.error(f"Error generating course optimization suggestions: {str(e)}")
+            raise
+
+    def revise_teaching_content(self, original_plan: Dict, feedback: str) -> Dict:
+        """根据教师反馈修改教学大纲"""
+        try:
+            prompt = PromptTemplates.get_teaching_content_feedback_prompt(original_plan, feedback)
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info("教学大纲反馈 LLM 返回内容: %s", content)
+            result = self.safe_json_loads(content)
+            logger.info("Successfully revised teaching content according to feedback")
+            return result
+        except Exception as e:
+            logger.error(f"Error revising teaching content: {str(e)}")
+            raise
+
+    def generate_step_detail(self, lesson_title: str, step_name: str, current_content: str, knowledge_points: List[str]) -> Dict:
+        """生成课时中某个环节的详细内容"""
+        try:
+            prompt = PromptTemplates.get_step_detail_prompt(
+                lesson_title=lesson_title,
+                step_name=step_name,
+                current_content=current_content,
+                knowledge_points=knowledge_points
+            )
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info("课时环节细节 LLM 返回内容: %s", content)
+            result = self.safe_json_loads(content)
+            logger.info("Successfully generated step detail")
+            return result
+        except Exception as e:
+            logger.error(f"Error generating step detail: {str(e)}")
             raise
 
  

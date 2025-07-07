@@ -85,6 +85,17 @@ public class AiAssistantController {
         return body;
     }
 
+    @PostMapping("/rag/feedback")
+    public Map<String, Object> reviseTeachingContent(@RequestBody Map<String, Object> req) {
+        logger.info("收到教案反馈修改请求: {}", req);
+        return aiAssistantService.reviseTeachingContent(req);
+    }
+
+    @PostMapping("/rag/step_detail")
+    public Map<String, Object> generateStepDetail(@RequestBody Map<String, Object> req) {
+        logger.info("收到课时环节细节生成请求: {}", req);
+        return aiAssistantService.generateStepDetail(req);
+    }
 
     /**
      * 练习学情分析：统计每题得分率，调用AI微服务分析
@@ -100,6 +111,18 @@ public class AiAssistantController {
         // 统计并写入得分率，组装题目内容
         Map<String, Object> result = aiAssistantService.analyzeExercise(practiceId);
         return result;
+    }
+
+    @PostMapping(value = "/rag/generate_section", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Map<String, Object> generateSectionTeachingContent(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("course_name") String courseName,
+            @RequestParam("section_title") String sectionTitle,
+            @RequestParam("expected_hours") Integer expectedHours,
+            @RequestParam(value = "constraints", required = false) String constraints
+    ) {
+        logger.info("收到章节教案生成请求: course={}, section={}", courseName, sectionTitle);
+        return aiAssistantService.generateSectionTeachingContent(file, courseName, sectionTitle, expectedHours, constraints);
     }
 
 }
