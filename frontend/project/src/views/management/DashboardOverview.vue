@@ -772,6 +772,18 @@ const isNumberValue = (value: unknown): value is number => {
       opacity: 1;
     }
   }
+
+  .q-btn {
+    /* Override Quasar default min-width/height to keep the small tag icon button */
+    min-width: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+  }
+
+  .q-btn__content {
+    padding: 0;
+  }
 }
 
 .optimization-dialog {
