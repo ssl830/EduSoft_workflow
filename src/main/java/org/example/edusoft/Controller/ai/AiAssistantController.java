@@ -125,4 +125,23 @@ public class AiAssistantController {
         return aiAssistantService.generateSectionTeachingContent(file, courseName, sectionTitle, expectedHours, constraints);
     }
 
+    /**
+     * 根据学生选择的题目生成自测练习
+     */
+    @PostMapping("/rag/generate_selected_student_exercise")
+    public Map<String, Object> generateSelectedStudentExercise(@RequestBody Map<String, Object> req) {
+        logger.info("收到学生选题自测练习生成请求: {}", req);
+        Map<String, Object> body = aiAssistantService.generateSelectedStudentExercise(req);
+        if (StpUtil.isLogin()) {
+            try {
+                Long studentId = StpUtil.getLoginIdAsLong();
+                Long pid = selfPracticeService.saveGeneratedPractice(studentId, body);
+                body.put("practiceId", pid);
+            } catch (Exception e) {
+                logger.error("保存自测练习失败", e);
+            }
+        }
+        return body;
+    }
+
 }

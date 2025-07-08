@@ -1,4 +1,3 @@
-
 import  http  from './axios'
 
 export interface AiAskRequest {
@@ -51,6 +50,12 @@ export interface StudentExerciseRequest {
   requirements: string
   knowledge_preferences: string
   wrongQuestions?: any[]
+}
+
+export interface SelectedStudentExerciseRequest {
+  questionIds: number[]
+  requirements?: string
+  knowledge_preferences?: string
 }
 
 export interface ExerciseItem {
@@ -116,6 +121,11 @@ export function evaluateSubjectiveAnswer(data: EvaluateSubjectiveRequest) {
 // 生成学生自测练习
 export function generateStudentExercise(data: StudentExerciseRequest) {
   return http.post<StudentExerciseResponse>('/api/ai/rag/generate_student_exercise', data)
+}
+
+// 根据学生选择题目生成自测练习
+export function generateSelectedStudentExercise(data: SelectedStudentExerciseRequest) {
+  return http.post<StudentExerciseResponse>('/api/ai/rag/generate_selected_student_exercise', data)
 }
 
 export function saveSelfPracticeProgress(data: SelfPracticeProgressRequest) {

@@ -43,7 +43,11 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
         sp.setCreatedAt(LocalDateTime.now());
         this.save(sp);
 
+        // 兼容两种结构：直接包含 exercises，或包在 data.exercises
         List<Map<String, Object>> exercises = (List<Map<String, Object>>) aiResult.get("exercises");
+        if (exercises == null && aiResult.get("data") instanceof Map) {
+            exercises = (List<Map<String, Object>>) ((Map<?, ?>) aiResult.get("data")).get("exercises");
+        }
         if (exercises == null) return sp.getId();
         int order = 1;
         for (Map<String, Object> ex : exercises) {

@@ -343,7 +343,6 @@ class PromptTemplates:
         """
 
     @staticmethod
-
     def get_student_exercise_generation_prompt(
         requirements: str,
         knowledge_preferences: str,
@@ -364,11 +363,10 @@ class PromptTemplates:
         {wrong_questions_json}
 
         任务要求：
-        1. 如果提供了历史错题，请保持题目内容、答案、解析等信息不变，直接放入返回结果的最前面。
-        2. 在满足学生练习需求的基础上，补充生成新的题目，使总题目数量、题型、难度等符合 "学生练习需求" 的描述。
-        3. 题型命名仅可使用 'singlechoice'（代表所有选择，无论单选多选）, 'fillblank'（代表填空题）, 'judge'（代表判断题）, 'program'（代表剩余的所有题目类型） 四种；
-        4. 每道题目请包含以下字段：type、question、options、answer、explanation、knowledge_points。
-        5. 请严格返回合法 JSON，结构如下所示；不要包含 Markdown、注释或多余文本。
+        1. 在满足学生练习需求的基础上，补充生成新的题目，使总题目数量、题型、难度等符合 "学生练习需求" 的描述。
+        2. 题型命名仅可使用 'singlechoice'（代表所有选择，无论单选多选）, 'fillblank'（代表填空题）, 'judge'（代表判断题）, 'program'（代表剩余的所有题目类型） 四种；
+        3. 每道题目请包含以下字段：type、question、options、answer、explanation、knowledge_points。
+        4. 请严格返回合法 JSON，结构如下所示；不要包含 Markdown、注释或多余文本。
 
         返回 JSON 结构示例：
         {{
@@ -384,6 +382,42 @@ class PromptTemplates:
             ]
         }}
         """
+
+    @staticmethod
+    def get_selected_questions_generation_prompt(selected_questions: list, requirements: str = "", knowledge_preferences: str = "") -> str:
+        """根据学生明确选定的题目，生成风格/知识点相近的新题目"""
+        import json
+        selected_json = json.dumps(selected_questions, ensure_ascii=False, indent=2)
+        req_part = f"\n补充练习需求：{requirements}\n" if requirements else ""
+        pref_part = f"\n知识点偏好：{knowledge_preferences}\n" if knowledge_preferences else ""
+        return f"""
+        你是一名专业的教学测评专家，学生选择了以下题目作为练习参考：
+
+        已选题目列表（JSON）：
+        {selected_json}
+
+        {req_part}{pref_part}
+
+        任务：
+        1. 在满足学生练习需求的基础上，补充生成新的题目，使总题目数量、题型、难度等符合 "学生练习需求" 的描述。
+        2. 所生成的新题目的知识点需与已选题目保持紧密相关，切勿引入无关领域的内容。
+        3. 题型命名仅可使用 'singlechoice'（代表所有选择，无论单选多选）, 'fillblank'（代表填空题）, 'judge'（代表判断题）, 'program'（代表剩余的所有题目类型） 四种；
+
+        返回 JSON 结构示例：
+        {{
+            "exercises": [
+                {{
+                    "type": "singlechoice",
+                    "question": "题目描述",
+                    "options": ["选项1", "选项2", "选项3", "选项4"],
+                    "answer": "A",
+                    "explanation": "解题思路",
+                    "knowledge_points": ["相关知识点1", "相关知识点2"]
+                }}
+            ]
+        }}
+
+        请严格输出合法 JSON，不要包含 Markdown 或多余说明。"""
 
     @staticmethod
     def get_teaching_content_detail_prompt(
