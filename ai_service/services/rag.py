@@ -22,10 +22,21 @@ class TimePlanItem(BaseModel):
     step: str
 
 class RAGService:
-    """RAG服务类"""
+    """RAG 服务类（接受可变 StorageService 以支持知识库本地化）"""
 
-    def __init__(self):
-        """初始化服务"""
+    def __init__(self, storage_service: 'StorageService'):
+        """初始化服务
+
+        Args:
+            storage_service: 提供存储路径、向量数据库目录等信息
+        """
+        # 延迟导入，避免循环引用
+        from .storage import StorageService  # type: ignore
+
+        if not isinstance(storage_service, StorageService):
+            raise TypeError("storage_service must be instance of StorageService")
+
+        self.storage_service = storage_service
         self.embedding_service = EmbeddingService()
         self.vector_db = FAISSDatabase()
         self.client = OpenAI(
@@ -34,20 +45,27 @@ class RAGService:
         )
 
         # 加载已有的知识库
-        if os.path.exists('data/vector_db'):
+        vector_db_path = self.storage_service.get_vector_db_path()
+        index_file = os.path.join(vector_db_path, "index.faiss")
+        if os.path.exists(index_file):
             try:
-                self.vector_db.load('data/vector_db')
-                logger.info("Successfully loaded existing vector database")
+                self.vector_db.load(vector_db_path)
+                logger.info(f"Successfully loaded existing vector database from {vector_db_path}")
             except Exception as e:
-                logger.error(f"Error loading vector database: {str(e)}")
-                raise
+                logger.warning(f"Vector DB load failed, start with empty DB. Details: {e}")
+                # 重建空数据库，避免启动中断
+                self.vector_db = FAISSDatabase()
+        else:
+            # 创建目录以备后续写入
+            os.makedirs(vector_db_path, exist_ok=True)
+            logger.info("Vector DB not found, initializing empty database")
 
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
         """将文档添加到知识库"""
         try:
             embeddings, contents, sources = self.embedding_service.get_chunks_embeddings(chunks)
             self.vector_db.add_embeddings(embeddings, contents, sources)
-            self.vector_db.save('data/vector_db')
+            self.vector_db.save(self.storage_service.get_vector_db_path())
             logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
         except Exception as e:
             logger.error(f"Error adding chunks to knowledge base: {str(e)}")
@@ -473,6 +491,26 @@ class RAGService:
             return result
         except Exception as e:
             logger.error(f"Error generating step detail: {str(e)}")
+            raise
+
+    # -------------------- 动态更新存储路径 --------------------
+    def reload_vector_db(self):
+        """在 StorageService 路径变更后调用，重新加载向量数据库。"""
+        try:
+            vector_db_path = self.storage_service.get_vector_db_path()
+            index_file = os.path.join(vector_db_path, "index.faiss")
+            if os.path.exists(index_file):
+                try:
+                    self.vector_db.load(vector_db_path)
+                    logger.info(f"Vector DB reloaded from {vector_db_path}")
+                except Exception as e:
+                    logger.warning(f"Reload vector DB failed, reset empty. Details: {e}")
+                    self.vector_db = FAISSDatabase()
+            else:
+                self.vector_db = FAISSDatabase()
+                logger.info("No existing vector DB, initialized new empty DB")
+        except Exception as e:
+            logger.error(f"Failed to reload vector DB: {e}")
             raise
 
  

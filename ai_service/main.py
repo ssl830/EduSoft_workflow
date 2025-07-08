@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from services.doc_parser import DocumentParser
 from services.embedding import EmbeddingService
-from services.faiss_db import FAISSDatabase
 from services.rag import RAGService
 from services.storage import StorageService
 from utils.logger import api_logger as logger
@@ -29,10 +28,9 @@ app.add_middleware(
 storage_service = StorageService()
 doc_parser = DocumentParser()
 embedding_service = EmbeddingService()
-vector_db = FAISSDatabase(dim=1536)
-# 如果需要加载已有数据库，可加如下代码：
-# vector_db.load(storage_service.get_vector_db_path())
-rag_service = RAGService()
+
+# RAGService 需要注入 StorageService，内部向量数据库路径随之变化
+rag_service = RAGService(storage_service)
 
 class TeachingContentRequest(BaseModel):
     course_name: str
@@ -110,6 +108,55 @@ class StepDetailRequest(BaseModel):
     currentContent: Optional[str] = ""
     knowledgePoints: Optional[List[str]] = None
 
+# ---------------------- 存储路径动态配置 ----------------------
+
+class BasePathRequest(BaseModel):
+    base_path: str
+
+@app.post("/storage/base_path")
+async def set_storage_base_path(request: BasePathRequest):
+    """设置知识库等文件的本地存储根目录"""
+    try:
+        storage_service.set_base_path(request.base_path)
+        # 路径切换后，重新加载向量数据库
+        rag_service.reload_vector_db()
+        return {"status": "success", "message": "Base path updated"}
+    except Exception as e:
+        logger.error(f"Error setting base path: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 兼容路径：/embedding/base_path (供 API 网关转发)
+@app.post("/embedding/base_path")
+async def set_storage_base_path_alt(request: BasePathRequest):
+    return await set_storage_base_path(request)
+
+@app.post("/storage/base_path/reset")
+async def reset_storage_base_path():
+    """恢复默认的 storage 目录路径"""
+    try:
+        default_path = os.path.abspath(".")
+        storage_service.set_base_path(default_path)
+        rag_service.reload_vector_db()
+        return {"status": "success", "message": "Base path reset to default", "base_path": default_path}
+    except Exception as e:
+        logger.error(f"Error resetting base path: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 兼容路径：/embedding/base_path/reset
+@app.post("/embedding/base_path/reset")
+async def reset_storage_base_path_alt():
+    return await reset_storage_base_path()
+
+@app.get("/storage/document_exists")
+async def check_document_exists(filename: str, course_id: Optional[str] = None):
+    """前端查询文档是否已经上传过"""
+    try:
+        exists = storage_service.document_exists(filename, course_id)
+        return {"exists": exists}
+    except Exception as e:
+        logger.error(f"Error checking document exists: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/embedding/upload")
 async def upload_file(
     file: UploadFile = File(...),
@@ -119,6 +166,10 @@ async def upload_file(
     上传文件并处理入库
     """
     try:
+        # 重名检查（避免重复上传浪费 Token）
+        if storage_service.document_exists(file.filename, course_id):
+            raise HTTPException(status_code=400, detail="文件已存在于知识库中")
+
         # 保存到临时目录
         temp_path = os.path.join(storage_service.get_temp_dir(), file.filename)
         content = await file.read()

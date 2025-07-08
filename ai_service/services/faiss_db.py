@@ -54,8 +54,19 @@ class FAISSDatabase:
         """
         os.makedirs(directory, exist_ok=True)
         
-        # 保存FAISS索引
-        faiss.write_index(self.index, os.path.join(directory, 'index.faiss'))
+        # 保存FAISS索引（Windows + 非 ASCII 路径可能失败，添加降级方案）
+        index_path = os.path.join(directory, 'index.faiss')
+        try:
+            faiss.write_index(self.index, index_path)
+        except Exception as e:
+            import tempfile, shutil, logging
+            logger = logging.getLogger('faiss_db')
+            logger.warning(f"write_index failed at {index_path}: {e}. Using temp fallback.")
+            tmp_dir = tempfile.mkdtemp()
+            tmp_index = os.path.join(tmp_dir, 'index.faiss')
+            faiss.write_index(self.index, tmp_index)
+            os.makedirs(directory, exist_ok=True)
+            shutil.move(tmp_index, index_path)
         
         # 保存文本内容和来源
         metadata = {

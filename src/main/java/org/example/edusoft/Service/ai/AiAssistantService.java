@@ -434,5 +434,41 @@ public class AiAssistantService {
         }
     }
 
+    /**
+     * 切换 AI 微服务工作目录
+     */
+    public Map<String, Object> setBasePath(String basePath) {
+        String endpoint = "/embedding/base_path";
+        long start = System.currentTimeMillis();
+        try {
+            String url = aiServiceUrl + endpoint;
+            Map<String, Object> body = Map.of("base_path", basePath);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.class);
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "success", null);
+            return resp.getBody();
+        } catch (Exception e) {
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "fail", e.getMessage());
+            return Map.of("code", 500, "message", "AI base path 设置失败: " + e.getMessage());
+        }
+    }
+
+    /** 恢复默认工作目录 */
+    public Map<String, Object> resetBasePath() {
+        String endpoint = "/embedding/base_path/reset";
+        long start = System.currentTimeMillis();
+        try {
+            String url = aiServiceUrl + endpoint;
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, null, Map.class);
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "success", null);
+            return resp.getBody();
+        } catch (Exception e) {
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "fail", e.getMessage());
+            return Map.of("code", 500, "message", "AI base path 重置失败: " + e.getMessage());
+        }
+    }
+
 }
 

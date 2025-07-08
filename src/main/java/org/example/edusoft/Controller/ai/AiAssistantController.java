@@ -125,4 +125,15 @@ public class AiAssistantController {
         return aiAssistantService.generateSectionTeachingContent(file, courseName, sectionTitle, expectedHours, constraints);
     }
 
+    // -------------------- 私密知识库目录 --------------------
+    @PostMapping("/embedding/base_path")
+    public Map<String, Object> setBasePath(@RequestBody Map<String, Object> body) {
+        String basePath = (String) body.get("base_path");
+        return aiAssistantService.setBasePath(basePath);
+    }
+
+    @PostMapping("/embedding/base_path/reset")
+    public Map<String, Object> resetBasePath() {
+        return aiAssistantService.resetBasePath();
+    }
 }

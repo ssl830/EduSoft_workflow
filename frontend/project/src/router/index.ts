@@ -406,6 +406,17 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/settings/knowledge-base',
+    name: 'KnowledgeBaseSettings',
+    component: () => import('../views/management/KnowledgeBaseSettings.vue'),
+    meta: {
+      title: '私密知识库设置',
+      requiresAuth: true,
+      roles: ['teacher', 'tutor', 'admin'],
+      showSidebar: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
