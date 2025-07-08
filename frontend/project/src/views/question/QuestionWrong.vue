@@ -218,14 +218,14 @@ const generateSimilarQuestion = async () => {
               删除
             </button>
             <!-- 新增类似题目按钮 -->
-            <button
-                class="btn-action"
-                style="background:#e8f5e9;color:#2e7d32;"
-                @click="openSimilarDialog(question)"
-                title="生成类似题目"
-            >
-              类似题目
-            </button>
+<!--            <button-->
+<!--                class="btn-action"-->
+<!--                style="background:#e8f5e9;color:#2e7d32;"-->
+<!--                @click="openSimilarDialog(question)"-->
+<!--                title="生成类似题目"-->
+<!--            >-->
+<!--              类似题目-->
+<!--            </button>-->
           </td>
         </tr>
         </tbody>
