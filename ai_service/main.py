@@ -29,10 +29,8 @@ app.add_middleware(
 storage_service = StorageService()
 doc_parser = DocumentParser()
 embedding_service = EmbeddingService()
-vector_db = FAISSDatabase(dim=1536)
-# 如果需要加载已有数据库，可加如下代码：
-# vector_db.load(storage_service.get_vector_db_path())
-rag_service = RAGService()
+vector_db = FAISSDatabase(dim=embedding_service.dimensions)
+rag_service = RAGService(embedding_service=embedding_service, vector_db=vector_db)
 
 class TeachingContentRequest(BaseModel):
     course_name: str

@@ -20,7 +20,30 @@ class EmbeddingService:
         self.api_key = os.getenv("DASHSCOPE_API_KEY")
         self.base_url = os.getenv("QWEN_EMBEDDING_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
         self.model = os.getenv("QWEN_EMBEDDING_MODEL", "text-embedding-v4")
-        self.dimensions = int(os.getenv("QWEN_EMBEDDING_DIM", "1536"))  # v4支持1024/1536/2048等
+
+        # 根据模型自动适配合法的dimension
+        v3_dims = [64, 128, 256, 512, 768, 1024]
+        v4_dims = [1024, 1536, 2048, 3072, 4096]
+        if self.model == "text-embedding-v3":
+            valid_dims = v3_dims
+            default_dim = 1024
+        else:
+            valid_dims = v4_dims
+            default_dim = 1536
+        env_dim = os.getenv("QWEN_EMBEDDING_DIM")
+        if env_dim is not None:
+            try:
+                dim = int(env_dim)
+                if dim not in valid_dims:
+                    logger.warning(f"QWEN_EMBEDDING_DIM={dim} 非法，{self.model}支持: {valid_dims}，将使用默认: {default_dim}")
+                    dim = default_dim
+            except Exception:
+                logger.warning(f"QWEN_EMBEDDING_DIM={env_dim} 解析失败，将使用默认: {default_dim}")
+                dim = default_dim
+        else:
+            dim = default_dim
+        self.dimensions = dim
+
         if not self.api_key:
             logger.error("DASHSCOPE_API_KEY 未设置！")
             raise ValueError("DASHSCOPE_API_KEY 未设置！")
@@ -46,7 +69,9 @@ class EmbeddingService:
             )
             return response.data[0].embedding
         except Exception as e:
-            logger.error(f"调用 Qwen embedding API 失败: {e}")
+            # 增强日志，输出完整异常内容
+            import traceback
+            logger.error(f"调用 Qwen embedding API 失败: {e}\n{traceback.format_exc()}")
             raise
 
     def get_embeddings(self, texts: List[str]) -> np.ndarray:
