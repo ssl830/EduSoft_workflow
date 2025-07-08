@@ -12,11 +12,51 @@
       <textarea v-model="form.knowledge_preferences" placeholder="例如：进程调度、同步机制" />
     </div>
 
-    <!-- 预留错题列表输入，可选 -->
-    <!-- <div class="form-section">
-      <label>错题（JSON 数组，可选）</label>
-      <textarea v-model="form.wrongQuestionsJson" placeholder="[{\"type\":\"singlechoice\", ...}]" />
-    </div> -->
+    <!-- 模式选择 -->
+    <div class="form-section">
+      <label class="form-label-lg">生成模式</label>
+      <select v-model="mode" class="mode-select">
+        <option value="auto">智能生成（根据需求/偏好）</option>
+        <option value="selected">按选定题目生成</option>
+      </select>
+    </div>
+
+    <!-- 选题 JSON 输入，仅在 selected 模式显示 -->
+    <div v-if="mode === 'selected'" class="form-section">
+      <label class="form-label-lg">选择题目</label>
+      <div class="tabs">
+        <button :class="tab==='wrong'?'active':''" @click="tab='wrong'">错题库</button>
+        <button :class="tab==='favorite'?'active':''" @click="tab='favorite'">收藏题库</button>
+      </div>
+      <div class="question-list">
+        <p v-if="loadingQuestions">加载中...</p>
+        <p v-else-if="currentList.length===0">暂无数据</p>
+        <ul v-else>
+          <li v-for="q in currentList" :key="q.question_id || q.id">
+            <span>{{ q.content?.slice(0,50) }}</span>
+            <button
+              class="add-btn"
+              :disabled="selectedIds.includes(getRealId(q))"
+              @click="addQuestion(getRealId(q))"
+            >{{ selectedIds.includes(getRealId(q)) ? '已添加' : '添加' }}</button>
+          </li>
+        </ul>
+      </div>
+      <div class="selected-info" v-if="selectedIds.length">
+        已选择 {{ selectedIds.length }} 题
+      </div>
+
+      <!-- 已选择题目列表 -->
+      <div v-if="selectedIds.length" class="selected-list">
+        <h4>已选择题目</h4>
+        <ul>
+          <li v-for="id in selectedIds" :key="id">
+            <span>{{ findQuestionContent(id)?.slice(0,50) || '题目 ' + id }}</span>
+            <button class="remove-btn" @click="removeQuestion(id)">移除</button>
+          </li>
+        </ul>
+      </div>
+    </div>
 
     <div class="button-group">
       <button class="btn primary" :disabled="loading" @click="generate">
@@ -79,8 +119,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { generateStudentExercise, StudentExerciseRequest, StudentExerciseResponse, ExerciseItem, submitSelfPractice } from '@/api/ai'
+import { reactive, ref, computed, watch } from 'vue'
+import { generateStudentExercise, generateSelectedStudentExercise, StudentExerciseRequest, StudentExerciseResponse, ExerciseItem, submitSelfPractice } from '@/api/ai'
+import QuestionApi from '@/api/question'
 import { ElMessage } from 'element-plus'
 
 const pageTop = ref<HTMLElement | null>(null)
@@ -91,7 +132,60 @@ const form = reactive<StudentExerciseRequest>({
   wrongQuestions: []
 })
 
-// const wrongQuestionsJson = ref('')
+// 生成模式：auto | selected
+const mode = ref<'auto' | 'selected'>('auto')
+
+// 选题模式相关状态
+const tab = ref<'wrong' | 'favorite'>('wrong')
+const wrongList = ref<any[]>([])
+const favoriteList = ref<any[]>([])
+const loadingQuestions = ref(false)
+const selectedIds = ref<number[]>([])
+
+const currentList = computed(() => (tab.value === 'wrong' ? wrongList.value : favoriteList.value))
+
+async function loadQuestionLists() {
+  loadingQuestions.value = true
+  try {
+    const [wrongRes, favorRes] = await Promise.all([
+      QuestionApi.getWrongQuestionList(),
+      QuestionApi.getFavorQuestionList()
+    ])
+    wrongList.value = wrongRes.data.data || wrongRes.data || []
+    favoriteList.value = favorRes.data.data || favorRes.data || []
+  } catch (e) {
+    ElMessage.error('加载题库失败')
+  } finally {
+    loadingQuestions.value = false
+  }
+}
+
+watch(mode, (val) => {
+  if (val === 'selected' && (wrongList.value.length === 0 && favoriteList.value.length === 0)) {
+    loadQuestionLists()
+  }
+})
+
+function getRealId(q: any): number {
+  return q.question_id ?? q.id
+}
+
+function addQuestion(id: number) {
+  if (selectedIds.value.includes(id)) {
+    ElMessage.warning('该题目已被添加')
+    return
+  }
+  selectedIds.value.push(id)
+  ElMessage.success('已添加')
+}
+
+function removeQuestion(id: number) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) {
+    selectedIds.value.splice(idx, 1)
+    ElMessage.success('已移除')
+  }
+}
 
 const loading = ref(false)
 const error = ref('')
@@ -114,11 +208,22 @@ async function generate() {
   }
   loading.value = true
   try {
-    // 如果用户手动输入错题 JSON，可在此解析
-    // if (wrongQuestionsJson.value.trim()) {
-    //   form.wrongQuestions = JSON.parse(wrongQuestionsJson.value)
-    // }
-    const res = await generateStudentExercise(form) as unknown as StudentExerciseResponse & { practiceId?: number }
+    let res: StudentExerciseResponse & { practiceId?: number }
+    if (mode.value === 'selected') {
+      if (selectedIds.value.length === 0) {
+        error.value = '请先选择题目'
+        loading.value = false
+        return
+      }
+      const payload = {
+        questionIds: selectedIds.value,
+        requirements: form.requirements,
+        knowledge_preferences: form.knowledge_preferences
+      }
+      res = await generateSelectedStudentExercise(payload) as unknown as StudentExerciseResponse & { practiceId?: number }
+    } else {
+      res = await generateStudentExercise(form) as unknown as StudentExerciseResponse & { practiceId?: number }
+    }
     exercises.value = res.data.exercises || []
     // 初始化答案结构
     answers.value = exercises.value.map(q => ({ questionId: q.id || 0, answer: '', type: q.type, correctAnswer: q.answer }))
@@ -190,12 +295,18 @@ function scrollToTop() {
 function inputPlaceholder(type: string) {
   switch ((type || '').toLowerCase()) {
     case 'judge':
-      return "填写‘正确’或‘错误’"
+      return "填写'正确'或'错误'"
     case 'singlechoice':
       return "例：A"
     default:
       return "请输入答案"
   }
+}
+
+function findQuestionContent(id: number) {
+  const all = [...wrongList.value, ...favoriteList.value]
+  const q = all.find((item: any) => (item.question_id ?? item.id) === id)
+  return q?.content || ''
 }
 </script>
 
@@ -399,5 +510,82 @@ textarea:focus {
   color: #888;
   font-size: 0.9rem;
   margin-top: 0.25rem;
+}
+.mode-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+.tabs button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  background: #fafafa;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tabs .active {
+  background: #1976d2;
+  color: #fff;
+}
+.question-list ul {
+  list-style: none;
+  padding: 0;
+}
+.question-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.add-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.add-btn[disabled] {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.selected-info {
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.selected-list {
+  margin-top: 1rem;
+}
+.selected-list h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.selected-list ul {
+  list-style: none;
+  padding: 0;
+}
+.selected-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+.remove-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>

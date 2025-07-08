@@ -373,7 +373,6 @@ class RAGService:
             logger.error(f"Error answering student question: {str(e)}")
             raise
 
-
     def generate_student_exercise(self, requirements: str, knowledge_preferences: str, wrong_questions: Optional[List[Dict[str, Any]]] = None) -> Dict:
         """根据学生需求、知识点偏好以及历史错题生成练习题"""
         try:
@@ -473,6 +472,29 @@ class RAGService:
             return result
         except Exception as e:
             logger.error(f"Error generating step detail: {str(e)}")
+            raise
+
+    # ---------------- 新增：根据已选题目生成相似练习 -----------------
+    def generate_exercise_from_selected(self, selected_questions: List[Dict[str, Any]], requirements: str = "", knowledge_preferences: str = "") -> Dict:
+        """基于学生选定题目生成相关练习题"""
+        try:
+            prompt = PromptTemplates.get_selected_questions_generation_prompt(
+                selected_questions=selected_questions,
+                requirements=requirements,
+                knowledge_preferences=knowledge_preferences
+            )
+
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+            logger.info(f"LLM raw output for selected-question exercise:\n{content}")
+            result = self.safe_json_loads(content)
+            logger.info("Successfully generated selected-based student exercise")
+            return result
+        except Exception as e:
+            logger.error(f"Error generating selected-based exercise: {str(e)}")
             raise
 
  

@@ -93,6 +93,18 @@ class StudentExerciseGenerationRequest(BaseModel):
     knowledge_preferences: str  # 知识点偏好
     wrong_questions: Optional[List[Dict[str, Any]]] = None  # 历史错题列表，可为空
 
+# ---------------- 新增：按学生选题生成自测练习 -----------------
+# 该模式下，学生会在前端选择错题库/收藏题库中的特定题目用于练习。
+# 与随机历史错题模式不同，此处的 selected_questions 表示"固定题目列表"，
+# rag_service 将把这些题目直接放入返回结果的开头。
+
+class SelectedStudentExerciseRequest(BaseModel):
+    """根据学生选定题目生成练习的请求模型"""
+    selected_questions: List[Dict[str, Any]]  # 学生明确选择的题目列表（题目结构同 wrong_questions）
+    # 其余字段可选，用于补充生成新的题目
+    requirements: Optional[str] = ""  # 题目设置要求，可为空
+    knowledge_preferences: Optional[str] = ""  # 知识点偏好，可为空
+
 class CourseOptimizationRequest(BaseModel):
     courseName: str
     sectionName: str
@@ -399,6 +411,23 @@ async def generate_section_teaching_content(
         raise
     except Exception as e:
         logger.error(f"Error generating section teaching content: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------- 新增接口：根据学生选题生成自测练习 -----------------
+
+@app.post("/rag/generate_selected_student_exercise")
+async def generate_selected_student_exercise(request: SelectedStudentExerciseRequest):
+    """根据学生选定的题目列表生成自测练习"""
+    try:
+        result = rag_service.generate_exercise_from_selected(
+            selected_questions=request.selected_questions,
+            requirements=request.requirements or "",
+            knowledge_preferences=request.knowledge_preferences or ""
+        )
+        logger.info("Successfully generated student exercise based on selected questions")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating selected student exercise: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

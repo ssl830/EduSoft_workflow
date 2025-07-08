@@ -19,10 +19,10 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.example.edusoft.mapper.practice.PracticeQuestionStatMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.HashMap;
 import cn.dev33.satoken.stp.StpUtil;
+import org.example.edusoft.service.practice.QuestionService;
 
 
 @Service
@@ -32,8 +32,10 @@ public class AiAssistantService {
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
 
     @Autowired
-
     private PracticeQuestionStatMapper practiceQuestionStatMapper;
+
+    @Autowired
+    private QuestionService questionService;
 
     /**
      * 统计练习每题得分率并调用AI微服务分析
@@ -298,6 +300,79 @@ public class AiAssistantService {
             );
         }
     }
+
+    /**
+     * 根据学生自主选择的题目生成自测练习（错题/收藏）
+     * 调用 Python 微服务 /rag/generate_selected_student_exercise
+     */
+    public Map<String, Object> generateSelectedStudentExercise(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/generate_selected_student_exercise";
+        Long userId = null;
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+
+            Map<String, Object> payload = new java.util.HashMap<>();
+
+            // 1. 如果前端直接传 selected_questions，则直接使用
+            if (req.containsKey("selected_questions")) {
+                payload.put("selected_questions", req.get("selected_questions"));
+            } else {
+                // 否则根据 questionIds 查询题目内容
+                List<Integer> idInts = (List<Integer>) req.get("questionIds");
+                List<Long> questionIds = new java.util.ArrayList<>();
+                if (idInts != null) {
+                    for (Integer i : idInts) {
+                        questionIds.add(i.longValue());
+                    }
+                }
+
+                // 将题目实体转换为 Python 微服务需要的 JSON 结构
+                List<Map<String, Object>> selectedQuestions = new java.util.ArrayList<>();
+                for (Long qid : questionIds) {
+                    org.example.edusoft.entity.practice.Question q = questionService.getQuestionDetail(qid);
+                    if (q == null) continue;
+                    Map<String, Object> qMap = new java.util.HashMap<>();
+                    qMap.put("id", qid);
+                    qMap.put("type", q.getType().name());
+                    qMap.put("question", q.getContent());
+                    qMap.put("options", q.getOptionsList());
+                    qMap.put("answer", q.getAnswer());
+                    qMap.put("explanation", q.getAnalysis());
+                    qMap.put("knowledge_points", java.util.Collections.emptyList());
+                    selectedQuestions.add(qMap);
+                }
+                payload.put("selected_questions", selectedQuestions);
+            }
+
+            // 2. 其他字段
+            if (req.containsKey("requirements")) {
+                payload.put("requirements", req.get("requirements"));
+            }
+            if (req.containsKey("knowledge_preferences")) {
+                payload.put("knowledge_preferences", req.get("knowledge_preferences"));
+            }
+
+            String url = aiServiceUrl + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
+            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(url, requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
+            return response.getBody();
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
+            return Map.of(
+                "status", "fail",
+                "message", "AI学生选题自测练习生成服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
     public Map<String, Object> evaluateSubjectiveAnswer(String question, String studentAnswer, String referenceAnswer, Double maxScore) {
         long startTime = System.currentTimeMillis();
         String endpoint = "/rag/evaluate_subjective";
