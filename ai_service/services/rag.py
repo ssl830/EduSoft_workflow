@@ -14,6 +14,7 @@ from utils.logger import rag_logger as logger
 from pydantic import BaseModel
 import numpy as np
 import re
+import shutil
 
 load_dotenv()
 class TimePlanItem(BaseModel):
@@ -24,23 +25,49 @@ class TimePlanItem(BaseModel):
 class RAGService:
     """RAG服务类"""
 
-    def __init__(self):
+    def __init__(self, embedding_service=None, vector_db=None):
         """初始化服务"""
-        self.embedding_service = EmbeddingService()
-        self.vector_db = FAISSDatabase()
+        self.embedding_service = embedding_service or EmbeddingService()
+        self.vector_db = vector_db or FAISSDatabase(dim=self.embedding_service.dimensions)
         self.client = OpenAI(
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com/v1"
         )
 
-        # 加载已有的知识库
-        if os.path.exists('data/vector_db'):
+        # 加载已有的知识库（自动检测维度是否一致）
+        vector_db_path = 'data/vector_db'
+        if os.path.exists(vector_db_path):
             try:
-                self.vector_db.load('data/vector_db')
+                self.vector_db.load(vector_db_path)
+                # 检查索引维度
+                if hasattr(self.vector_db, "index") and hasattr(self.vector_db.index, "d"):
+                    index_dim = self.vector_db.index.d
+                    if index_dim != self.embedding_service.dimensions:
+                        logger.warning(
+                            f"FAISS索引维度({index_dim})与当前embedding维度({self.embedding_service.dimensions})不一致，"
+                            f"将自动重建索引并清空原有向量库。"
+                        )
+                        # 删除旧索引文件夹或文件
+                        if os.path.isdir(vector_db_path):
+                            shutil.rmtree(vector_db_path)
+                        else:
+                            os.remove(vector_db_path)
+                        # 重新初始化空索引
+                        self.vector_db = FAISSDatabase(dim=self.embedding_service.dimensions)
+                        # 清空内容缓存，防止内容与索引不一致
+                        if hasattr(self.vector_db, "contents"):
+                            self.vector_db.contents.clear()
+                        if hasattr(self.vector_db, "sources"):
+                            self.vector_db.sources.clear()
                 logger.info("Successfully loaded existing vector database")
             except Exception as e:
                 logger.error(f"Error loading vector database: {str(e)}")
-                raise
+                # 若加载失败也初始化空索引并清空内容缓存
+                self.vector_db = FAISSDatabase(dim=self.embedding_service.dimensions)
+                if hasattr(self.vector_db, "contents"):
+                    self.vector_db.contents.clear()
+                if hasattr(self.vector_db, "sources"):
+                    self.vector_db.sources.clear()
 
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
         """将文档添加到知识库"""
@@ -50,21 +77,28 @@ class RAGService:
             self.vector_db.save('data/vector_db')
             logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
         except Exception as e:
-            logger.error(f"Error adding chunks to knowledge base: {str(e)}")
+            import traceback
+            logger.error(f"Error adding chunks to knowledge base: {str(e)}\n{traceback.format_exc()}")
             raise
 
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, str]]:
         """搜索知识库，将query编码，查询最相关的top_k个文本块"""
         try:
+            # 若知识库为空，直接返回空列表
+            if not hasattr(self.vector_db, "contents") or not self.vector_db.contents:
+                logger.warning("知识库为空，search_knowledge_base直接返回空列表")
+                return []
             query_embedding = self.embedding_service.get_embedding(query)
             # 如果返回的是 list，转为 np.ndarray
             if isinstance(query_embedding, list):
+                import numpy as np
                 query_embedding = np.array(query_embedding, dtype=np.float32)
             results = self.vector_db.search(query_embedding, top_k)
             logger.info(f"Successfully searched knowledge base for query: {query}")
             return results
         except Exception as e:
-            logger.error(f"Error searching knowledge base: {str(e)}")
+            import traceback
+            logger.error(f"Error searching knowledge base: {str(e)}\n{traceback.format_exc()}")
             raise
 
     def safe_json_loads(self, text):
@@ -497,5 +531,5 @@ class RAGService:
             logger.error(f"Error generating selected-based exercise: {str(e)}")
             raise
 
- 
+
 
