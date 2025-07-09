@@ -505,3 +505,12 @@ CREATE TABLE AiServiceCallLog (
     error_message TEXT,             -- 错误信息
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 );
+
+-- 教师私密 / 联合知识库配置
+CREATE TABLE IF NOT EXISTS TeacherKnowledgeBase (
+    teacher_id BIGINT PRIMARY KEY,          -- 教师用户 ID
+    paths_json JSON NOT NULL,               -- ["", "D:/KB1", ...]  "" 代表服务器公共库
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                     ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES User(id) ON DELETE CASCADE
+);

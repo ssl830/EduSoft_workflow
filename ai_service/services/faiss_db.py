@@ -40,11 +40,15 @@ class FAISSDatabase:
         distances, indices = self.index.search(query_embedding, top_k)
         
         results = []
-        for idx in indices[0]:  # 取第一个查询的结果
+        for rank, idx in enumerate(indices[0]):  # 取第一个查询的结果
+            dist = distances[0][rank]
+            if idx < 0:
+                continue
             if idx < len(self.contents):
                 results.append({
                     'content': self.contents[idx],
-                    'source': self.sources[idx]
+                    'source': self.sources[idx],
+                    'distance': float(dist)
                 })
         return results
     
@@ -80,8 +84,19 @@ class FAISSDatabase:
         """
         从文件加载数据库
         """
-        # 加载FAISS索引
-        self.index = faiss.read_index(os.path.join(directory, 'index.faiss'))
+        index_path = os.path.join(directory, 'index.faiss')
+        try:
+            # 加载FAISS索引
+            self.index = faiss.read_index(index_path)
+        except Exception as e:
+            # Windows + 非 ASCII 路径读取失败时尝试使用临时英文路径
+            import tempfile, shutil, logging, os as _os
+            logger = logging.getLogger('faiss_db')
+            logger.warning(f'read_index failed at {index_path}: {e}. Using temp fallback.')
+            tmp_dir = tempfile.mkdtemp()
+            tmp_index = _os.path.join(tmp_dir, 'index.faiss')
+            shutil.copyfile(index_path, tmp_index)
+            self.index = faiss.read_index(tmp_index)
         
         # 加载文本内容和来源
         with open(os.path.join(directory, 'metadata.json'), 'r', encoding='utf-8') as f:

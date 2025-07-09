@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,5 +136,23 @@ public class AiAssistantController {
     @PostMapping("/embedding/base_path/reset")
     public Map<String, Object> resetBasePath() {
         return aiAssistantService.resetBasePath();
+    }
+
+    // -------------------- 联合知识库 --------------------
+
+    @GetMapping("/storage/list")
+    public List<String> listKnowledgeBases() {
+        return aiAssistantService.listKnowledgeBases();
+    }
+
+    @PostMapping("/storage/selected")
+    public Map<String,Object> setSelectedKnowledgeBases(@RequestBody List<String> paths){
+        return aiAssistantService.setSelectedKBs(paths);
+    }
+
+    @GetMapping("/storage/document_exists")
+    public Map<String,Object> checkDocumentExists(@RequestParam("filename") String filename,
+                                                  @RequestParam(value="course_id", required=false) String courseId){
+        return aiAssistantService.documentExists(filename, courseId);
     }
 }

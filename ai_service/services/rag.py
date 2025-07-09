@@ -38,51 +38,76 @@ class RAGService:
 
         self.storage_service = storage_service
         self.embedding_service = EmbeddingService()
-        self.vector_db = FAISSDatabase()
         self.client = OpenAI(
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com/v1"
         )
 
-        # 加载已有的知识库
-        vector_db_path = self.storage_service.get_vector_db_path()
-        index_file = os.path.join(vector_db_path, "index.faiss")
-        if os.path.exists(index_file):
-            try:
-                self.vector_db.load(vector_db_path)
-                logger.info(f"Successfully loaded existing vector database from {vector_db_path}")
-            except Exception as e:
-                logger.warning(f"Vector DB load failed, start with empty DB. Details: {e}")
-                # 重建空数据库，避免启动中断
-                self.vector_db = FAISSDatabase()
-        else:
-            # 创建目录以备后续写入
-            os.makedirs(vector_db_path, exist_ok=True)
-            logger.info("Vector DB not found, initializing empty database")
+        # ---------------- 多知识库支持 ----------------
+        self.vector_dbs: dict[str, FAISSDatabase] = {}
+
+        for path in self.storage_service.get_vector_db_paths():
+            db = FAISSDatabase()
+            index_file = os.path.join(path, "index.faiss")
+            if os.path.exists(index_file):
+                try:
+                    db.load(path)
+                    logger.info(f"Loaded vector DB from {path}")
+                except Exception as e:
+                    logger.warning(f"Load failed for {path}: {e}. Using empty DB.")
+            else:
+                os.makedirs(path, exist_ok=True)
+                logger.info(f"Vector DB not found in {path}, initialized empty.")
+
+            self.vector_dbs[path] = db
+
+        # 兼容旧接口：保留 self.vector_db 指向第一个库
+        first_path = self.storage_service.get_vector_db_path()
+        self.vector_db = self.vector_dbs[first_path]
 
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
-        """将文档添加到知识库"""
+        """将文档添加到所有激活知识库"""
         try:
             embeddings, contents, sources = self.embedding_service.get_chunks_embeddings(chunks)
-            self.vector_db.add_embeddings(embeddings, contents, sources)
-            self.vector_db.save(self.storage_service.get_vector_db_path())
-            logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
+
+            for path, db in self.vector_dbs.items():
+                db.add_embeddings(embeddings, contents, sources)
+                db.save(path)
+                logger.info(f"Added {len(chunks)} chunks to KB at {path}")
         except Exception as e:
-            logger.error(f"Error adding chunks to knowledge base: {str(e)}")
+            logger.error(f"Error adding chunks to knowledge bases: {str(e)}")
             raise
 
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, str]]:
-        """搜索知识库，将query编码，查询最相关的top_k个文本块"""
+        """在所有知识库中搜索，合并结果"""
         try:
             query_embedding = self.embedding_service.get_embedding(query)
-            # 如果返回的是 list，转为 np.ndarray
             if isinstance(query_embedding, list):
                 query_embedding = np.array(query_embedding, dtype=np.float32)
-            results = self.vector_db.search(query_embedding, top_k)
-            logger.info(f"Successfully searched knowledge base for query: {query}")
-            return results
+
+            aggregated: List[Dict[str, str]] = []
+            for db in self.vector_dbs.values():
+                aggregated.extend(db.search(query_embedding, top_k))
+
+            # 距离越小越相关
+            aggregated_sorted = sorted(aggregated, key=lambda x: x.get('distance', 1e9))
+
+            # 去重并限制数量
+            seen = set()
+            unique_results = []
+            for item in aggregated_sorted:
+                key = (item['content'], item['source'])
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique_results.append(item)
+                if len(unique_results) >= top_k:
+                    break
+
+            logger.info(f"Search across {len(self.vector_dbs)} KBs, returned {len(unique_results)} results for query: {query}")
+            return unique_results
         except Exception as e:
-            logger.error(f"Error searching knowledge base: {str(e)}")
+            logger.error(f"Error searching knowledge bases: {str(e)}")
             raise
 
     def safe_json_loads(self, text):
@@ -495,23 +520,21 @@ class RAGService:
 
     # -------------------- 动态更新存储路径 --------------------
     def reload_vector_db(self):
-        """在 StorageService 路径变更后调用，重新加载向量数据库。"""
-        try:
-            vector_db_path = self.storage_service.get_vector_db_path()
-            index_file = os.path.join(vector_db_path, "index.faiss")
+        """重新加载所有向量数据库（在路径列表变更后调用）"""
+        self.vector_dbs.clear()
+        for path in self.storage_service.get_vector_db_paths():
+            db = FAISSDatabase()
+            index_file = os.path.join(path, "index.faiss")
             if os.path.exists(index_file):
                 try:
-                    self.vector_db.load(vector_db_path)
-                    logger.info(f"Vector DB reloaded from {vector_db_path}")
+                    db.load(path)
+                    logger.info(f"Reloaded vector DB from {path}")
                 except Exception as e:
-                    logger.warning(f"Reload vector DB failed, reset empty. Details: {e}")
-                    self.vector_db = FAISSDatabase()
-            else:
-                self.vector_db = FAISSDatabase()
-                logger.info("No existing vector DB, initialized new empty DB")
-        except Exception as e:
-            logger.error(f"Failed to reload vector DB: {e}")
-            raise
+                    logger.warning(f"Reload failed for {path}: {e}. Using empty DB.")
+            self.vector_dbs[path] = db
+
+        first_path = self.storage_service.get_vector_db_path()
+        self.vector_db = self.vector_dbs[first_path]
 
  
 
