@@ -281,9 +281,14 @@ const uploadResource = async () => {
       kbUploadProgress.value = 0
       openKbDialog('知识库上传中(๑•̀ㅂ•́)و✧')
       try {
-        await ResourceApi.uploadToKnowledgeBase(kbForm, (progress: number) => {
-          kbUploadProgress.value = progress
-        })
+        await ResourceApi.uploadToKnowledgeBase(
+          uploadForm.value.file,
+          kbForm,
+          props.courseId,
+          (progress: number) => {
+            kbUploadProgress.value = progress
+          }
+        )
         // 上传成功
         kbUploadProgress.value = 100
         kbUploading.value = false

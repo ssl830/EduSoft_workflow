@@ -9,10 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 from services.doc_parser import DocumentParser
 from services.embedding import EmbeddingService
-from services.faiss_db import FAISSDatabase
 from services.rag import RAGService
 from services.storage import StorageService
 from utils.logger import api_logger as logger
+from functools import lru_cache
+from services.faiss_db import FAISSDatabase
 
 app = FastAPI(title="教学内容生成服务")
 
@@ -29,8 +30,25 @@ app.add_middleware(
 storage_service = StorageService()
 doc_parser = DocumentParser()
 embedding_service = EmbeddingService()
-vector_db = FAISSDatabase(dim=embedding_service.dimensions)
-rag_service = RAGService(embedding_service=embedding_service, vector_db=vector_db)
+
+# 创建一个FAISSDatabase实例并传递给RAGService
+rag_service = RAGService(storage_service)
+
+# -------- 按教师隔离的服务映射 --------
+
+# 全局缓存 {user_id: (StorageService, RAGService)}
+user_kb_services: dict[str, tuple[StorageService, RAGService]] = {}
+
+def get_services(user_id: str | None):
+    """根据 user_id 返回对应 (storage_service, rag_service)
+    None 或空串 表示公共服务器库 (全局默认)"""
+    if not user_id:
+        return storage_service, rag_service
+    if user_id not in user_kb_services:
+        ss = StorageService()
+        rs = RAGService(ss)
+        user_kb_services[user_id] = (ss, rs)
+    return user_kb_services[user_id]
 
 class TeachingContentRequest(BaseModel):
     course_name: str
@@ -120,24 +138,81 @@ class StepDetailRequest(BaseModel):
     currentContent: Optional[str] = ""
     knowledgePoints: Optional[List[str]] = None
 
+# ---------------------- 存储路径动态配置 ----------------------
+
+class BasePathRequest(BaseModel):
+    base_path: str
+
+@app.post("/storage/base_path")
+async def set_storage_base_path(request: BasePathRequest):
+    """设置知识库等文件的本地存储根目录"""
+    try:
+        storage_service.set_base_path(request.base_path)
+        # 路径切换后，重新加载向量数据库
+        rag_service.reload_vector_db()
+        return {"status": "success", "message": "Base path updated"}
+    except Exception as e:
+        logger.error(f"Error setting base path: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 兼容路径：/embedding/base_path (供 API 网关转发)
+@app.post("/embedding/base_path")
+async def set_storage_base_path_alt(request: BasePathRequest):
+    return await set_storage_base_path(request)
+
+@app.post("/storage/base_path/reset")
+async def reset_storage_base_path():
+    """恢复默认的 storage 目录路径"""
+    try:
+        default_path = os.path.abspath(".")
+        storage_service.set_base_path(default_path)
+        rag_service.reload_vector_db()
+        return {"status": "success", "message": "Base path reset to default", "base_path": default_path}
+    except Exception as e:
+        logger.error(f"Error resetting base path: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 兼容路径：/embedding/base_path/reset
+@app.post("/embedding/base_path/reset")
+async def reset_storage_base_path_alt():
+    return await reset_storage_base_path()
+
+@app.get("/storage/document_exists")
+async def check_document_exists(filename: str, request: Request, course_id: Optional[str] = None):
+    user_id = request.query_params.get("user_id")
+    ss, _ = get_services(user_id)
+    try:
+        exists = ss.document_exists(filename, course_id)
+        return {"exists": exists}
+    except Exception as e:
+        logger.error(f"Error checking document exists ({user_id}): {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/embedding/upload")
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     course_id: Optional[str] = Form(None)
 ):
     """
     上传文件并处理入库
     """
+    user_id = request.query_params.get("user_id")
+    ss, rs = get_services(user_id)
     try:
+        # 重名检查（避免重复上传浪费 Token）
+        if ss.document_exists(file.filename, course_id):
+            raise HTTPException(status_code=400, detail="文件已存在于知识库中")
+
         # 保存到临时目录
-        temp_path = os.path.join(storage_service.get_temp_dir(), file.filename)
+        temp_path = os.path.join(ss.get_temp_dir(), file.filename)
         content = await file.read()
         with open(temp_path, "wb") as f:
             f.write(content)
 
         try:
             # 保存文档
-            doc_path = storage_service.save_document(temp_path, course_id)
+            doc_path = ss.save_document(temp_path, course_id)
             logger.info(f"Saved document to {doc_path}")
 
             # 解析文件为文本块（chunks)
@@ -145,7 +220,7 @@ async def upload_file(
             logger.info(f"Successfully parsed file {file.filename} into {len(chunks)} chunks")
 
             # 添加到RAG知识库
-            rag_service.add_to_knowledge_base(chunks)
+            rs.add_to_knowledge_base(chunks)
             logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
 
             return {
@@ -275,15 +350,17 @@ async def analyze_exercise(request: ExerciseAnalysisRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/rag/assistant")
-async def online_learning_assistant(request: StudentAssistantRequest):
+async def online_learning_assistant(request: Request, body: StudentAssistantRequest):
     """
     在线学习助手 - 回答学生问题
     """
     try:
-        result = rag_service.answer_student_question(
-            question=request.question,
-            course_name=request.course_name,
-            chat_history=request.chat_history
+        user_id = request.query_params.get("user_id")
+        _, rs = get_services(user_id)
+        result = rs.answer_student_question(
+            question=body.question,
+            course_name=body.course_name,
+            chat_history=body.chat_history
         )
         logger.info("Successfully answered student question")
         return result
@@ -426,6 +503,28 @@ async def generate_selected_student_exercise(request: SelectedStudentExerciseReq
         return result
     except Exception as e:
         logger.error(f"Error generating selected student exercise: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 联合知识库：获取当前激活列表
+
+@app.get("/storage/list")
+async def get_storage_base_paths(request: Request):
+    user_id = request.query_params.get("user_id")
+    ss, _ = get_services(user_id)
+    return ss.get_base_paths()
+
+# 设置激活的知识库列表（数组）
+
+@app.post("/storage/selected")
+async def set_storage_selected_paths(paths: List[str] = Body(...), request: Request = None):
+    user_id = request.query_params.get("user_id") if request else None
+    ss, rs = get_services(user_id)
+    try:
+        ss.set_base_paths(paths)
+        rs.reload_vector_db()
+        return {"status": "success", "paths": ss.get_base_paths()}
+    except Exception as e:
+        logger.error(f"Error setting selected KB paths for {user_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

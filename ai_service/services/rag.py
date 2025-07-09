@@ -23,82 +23,116 @@ class TimePlanItem(BaseModel):
     step: str
 
 class RAGService:
-    """RAG服务类"""
+    """RAG 服务类（接受可变 StorageService 以支持知识库本地化）"""
 
-    def __init__(self, embedding_service=None, vector_db=None):
-        """初始化服务"""
-        self.embedding_service = embedding_service or EmbeddingService()
-        self.vector_db = vector_db or FAISSDatabase(dim=self.embedding_service.dimensions)
+    def __init__(self, storage_service: 'StorageService'):
+        """初始化服务
+
+        Args:
+            storage_service: 提供存储路径、向量数据库目录等信息
+        """
+        # 延迟导入，避免循环引用
+        from .storage import StorageService  # type: ignore
+
+        if not isinstance(storage_service, StorageService):
+            raise TypeError("storage_service must be instance of StorageService")
+
+        self.storage_service = storage_service
+        self.embedding_service = EmbeddingService()
         self.client = OpenAI(
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com/v1"
         )
 
-        # 加载已有的知识库（自动检测维度是否一致）
-        vector_db_path = 'data/vector_db'
-        if os.path.exists(vector_db_path):
-            try:
-                self.vector_db.load(vector_db_path)
-                # 检查索引维度
-                if hasattr(self.vector_db, "index") and hasattr(self.vector_db.index, "d"):
-                    index_dim = self.vector_db.index.d
-                    if index_dim != self.embedding_service.dimensions:
-                        logger.warning(
-                            f"FAISS索引维度({index_dim})与当前embedding维度({self.embedding_service.dimensions})不一致，"
-                            f"将自动重建索引并清空原有向量库。"
-                        )
-                        # 删除旧索引文件夹或文件
-                        if os.path.isdir(vector_db_path):
-                            shutil.rmtree(vector_db_path)
-                        else:
-                            os.remove(vector_db_path)
-                        # 重新初始化空索引
-                        self.vector_db = FAISSDatabase(dim=self.embedding_service.dimensions)
-                        # 清空内容缓存，防止内容与索引不一致
-                        if hasattr(self.vector_db, "contents"):
-                            self.vector_db.contents.clear()
-                        if hasattr(self.vector_db, "sources"):
-                            self.vector_db.sources.clear()
-                logger.info("Successfully loaded existing vector database")
-            except Exception as e:
-                logger.error(f"Error loading vector database: {str(e)}")
-                # 若加载失败也初始化空索引并清空内容缓存
-                self.vector_db = FAISSDatabase(dim=self.embedding_service.dimensions)
-                if hasattr(self.vector_db, "contents"):
-                    self.vector_db.contents.clear()
-                if hasattr(self.vector_db, "sources"):
-                    self.vector_db.sources.clear()
+        # ---------------- 多知识库支持 ----------------
+        self.vector_dbs: dict[str, FAISSDatabase] = {}
+
+        for path in self.storage_service.get_vector_db_paths():
+            db = FAISSDatabase(dim=self.embedding_service.dimensions)
+            index_file = os.path.join(path, "index.faiss")
+            if os.path.exists(index_file):
+                try:
+                    db.load(path)
+                    # 检查索引维度
+                    if hasattr(db, "index") and hasattr(db.index, "d"):
+                        index_dim = db.index.d
+                        if index_dim != self.embedding_service.dimensions:
+                            logger.warning(
+                                f"FAISS索引维度({index_dim})与当前embedding维度({self.embedding_service.dimensions})不一致，"
+                                f"将自动重建索引并清空原有向量库。"
+                            )
+                            # 删除旧索引文件夹或文件
+                            if os.path.isdir(path):
+                                shutil.rmtree(path)
+                                os.makedirs(path, exist_ok=True)
+                            # 重新初始化空索引
+                            db = FAISSDatabase(dim=self.embedding_service.dimensions)
+                            # 清空内容缓存，防止内容与索引不一致
+                            if hasattr(db, "contents"):
+                                db.contents.clear()
+                            if hasattr(db, "sources"):
+                                db.sources.clear()
+                    logger.info(f"Loaded vector DB from {path}")
+                except Exception as e:
+                    logger.warning(f"Load failed for {path}: {e}. Using empty DB.")
+            else:
+                os.makedirs(path, exist_ok=True)
+                logger.info(f"Vector DB not found in {path}, initialized empty.")
+
+            self.vector_dbs[path] = db
+
+        # 兼容旧接口：保留 self.vector_db 指向第一个库
+        first_path = self.storage_service.get_vector_db_path()
+        self.vector_db = self.vector_dbs[first_path]
 
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
-        """将文档添加到知识库"""
+        """将文档添加到所有激活知识库"""
         try:
             embeddings, contents, sources = self.embedding_service.get_chunks_embeddings(chunks)
-            self.vector_db.add_embeddings(embeddings, contents, sources)
-            self.vector_db.save('data/vector_db')
-            logger.info(f"Successfully added {len(chunks)} chunks to knowledge base")
+
+            for path, db in self.vector_dbs.items():
+                db.add_embeddings(embeddings, contents, sources)
+                db.save(path)
+                logger.info(f"Added {len(chunks)} chunks to KB at {path}")
         except Exception as e:
-            import traceback
-            logger.error(f"Error adding chunks to knowledge base: {str(e)}\n{traceback.format_exc()}")
+            logger.error(f"Error adding chunks to knowledge base: {str(e)}")
             raise
 
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, str]]:
-        """搜索知识库，将query编码，查询最相关的top_k个文本块"""
+        """在所有知识库中搜索，合并结果"""
         try:
             # 若知识库为空，直接返回空列表
             if not hasattr(self.vector_db, "contents") or not self.vector_db.contents:
                 logger.warning("知识库为空，search_knowledge_base直接返回空列表")
                 return []
             query_embedding = self.embedding_service.get_embedding(query)
-            # 如果返回的是 list，转为 np.ndarray
             if isinstance(query_embedding, list):
                 import numpy as np
                 query_embedding = np.array(query_embedding, dtype=np.float32)
-            results = self.vector_db.search(query_embedding, top_k)
-            logger.info(f"Successfully searched knowledge base for query: {query}")
-            return results
+
+            aggregated: List[Dict[str, str]] = []
+            for db in self.vector_dbs.values():
+                aggregated.extend(db.search(query_embedding, top_k))
+
+            # 距离越小越相关
+            aggregated_sorted = sorted(aggregated, key=lambda x: x.get('distance', 1e9))
+
+            # 去重并限制数量
+            seen = set()
+            unique_results = []
+            for item in aggregated_sorted:
+                key = (item['content'], item['source'])
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique_results.append(item)
+                if len(unique_results) >= top_k:
+                    break
+
+            logger.info(f"Search across {len(self.vector_dbs)} KBs, returned {len(unique_results)} results for query: {query}")
+            return unique_results
         except Exception as e:
-            import traceback
-            logger.error(f"Error searching knowledge base: {str(e)}\n{traceback.format_exc()}")
+            logger.error(f"Error searching knowledge bases: {str(e)}")
             raise
 
     def safe_json_loads(self, text):
@@ -531,5 +565,21 @@ class RAGService:
             logger.error(f"Error generating selected-based exercise: {str(e)}")
             raise
 
+    # -------------------- 动态更新存储路径 --------------------
+    def reload_vector_db(self):
+        """重新加载所有向量数据库（在路径列表变更后调用）"""
+        self.vector_dbs.clear()
+        for path in self.storage_service.get_vector_db_paths():
+            db = FAISSDatabase(dim=self.embedding_service.dimensions)
+            index_file = os.path.join(path, "index.faiss")
+            if os.path.exists(index_file):
+                try:
+                    db.load(path)
+                    logger.info(f"Reloaded vector DB from {path}")
+                except Exception as e:
+                    logger.warning(f"Reload failed for {path}: {e}. Using empty DB.")
+            self.vector_dbs[path] = db
 
+        first_path = self.storage_service.get_vector_db_path()
+        self.vector_db = self.vector_dbs[first_path]
 

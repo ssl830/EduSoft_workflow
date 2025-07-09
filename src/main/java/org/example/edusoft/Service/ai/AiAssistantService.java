@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.HashMap;
 import cn.dev33.satoken.stp.StpUtil;
 import org.example.edusoft.service.practice.QuestionService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 
 @Service
@@ -30,6 +33,7 @@ public class AiAssistantService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private PracticeQuestionStatMapper practiceQuestionStatMapper;
@@ -72,7 +76,7 @@ public class AiAssistantService {
 
         // 3. 调用微服务分析
         try {
-            String url = aiServiceUrl + "/rag/analyze_exercise";
+            String url = buildUrl("/rag/analyze_exercise");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
@@ -109,7 +113,7 @@ public class AiAssistantService {
             Path tempFile = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
             file.transferTo(tempFile.toFile());
 
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -144,7 +148,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -172,7 +176,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -200,7 +204,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -228,7 +232,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -256,7 +260,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -283,7 +287,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
@@ -381,7 +385,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             Map<String, Object> body = Map.of(
@@ -422,7 +426,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -450,7 +454,7 @@ public class AiAssistantService {
             if (StpUtil.isLogin()) {
                 userId = StpUtil.getLoginIdAsLong();
             }
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -482,7 +486,7 @@ public class AiAssistantService {
             Path tempFile = Files.createTempFile("section-outline-", "-" + file.getOriginalFilename());
             file.transferTo(tempFile.toFile());
 
-            String url = aiServiceUrl + endpoint;
+            String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -507,6 +511,101 @@ public class AiAssistantService {
             logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of("status", "fail", "message", "章节教案生成失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 切换 AI 微服务工作目录
+     */
+    public Map<String, Object> setBasePath(String basePath) {
+        String endpoint = "/embedding/base_path";
+        long start = System.currentTimeMillis();
+        try {
+            String url = buildUrl(endpoint);
+            Map<String, Object> body = Map.of("base_path", basePath);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.class);
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "success", null);
+            return resp.getBody();
+        } catch (Exception e) {
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "fail", e.getMessage());
+            return Map.of("code", 500, "message", "AI base path 设置失败: " + e.getMessage());
+        }
+    }
+
+    /** 恢复默认工作目录 */
+    public Map<String, Object> resetBasePath() {
+        String endpoint = "/embedding/base_path/reset";
+        long start = System.currentTimeMillis();
+        try {
+            String url = buildUrl(endpoint);
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, null, Map.class);
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "success", null);
+            return resp.getBody();
+        } catch (Exception e) {
+            logAiServiceCall(null, endpoint, System.currentTimeMillis() - start, "fail", e.getMessage());
+            return Map.of("code", 500, "message", "AI base path 重置失败: " + e.getMessage());
+        }
+    }
+
+    /** 获取当前激活的知识库路径列表 */
+    public List<String> listKnowledgeBases() {
+        try {
+            String url = buildUrl("/storage/list");
+            ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody()!=null) {
+                return objectMapper.readValue(resp.getBody(), new TypeReference<List<String>>(){});
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return java.util.Collections.emptyList();
+    }
+
+    /** 设置联合知识库 */
+    public Map<String,Object> setSelectedKBs(List<String> paths) {
+        try {
+            String url = buildUrl("/storage/selected");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<List<String>> req = new HttpEntity<>(paths, headers);
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, req, Map.class);
+            return resp.getBody();
+        } catch (Exception e) {
+            return Map.of("status","fail","message","AI服务调用失败:"+ e.getMessage());
+        }
+    }
+
+    /** 检查文件是否已存在于知识库 */
+    public Map<String,Object> documentExists(String filename, String courseId){
+        try{
+            String url = buildUrl("/storage/document_exists?filename=" + java.net.URLEncoder.encode(filename, java.nio.charset.StandardCharsets.UTF_8));
+            if(courseId!=null && !courseId.isBlank()){
+                url += "&course_id=" + java.net.URLEncoder.encode(courseId, java.nio.charset.StandardCharsets.UTF_8);
+            }
+            ResponseEntity<Map> resp = restTemplate.getForEntity(url, Map.class);
+            return resp.getBody();
+        }catch(Exception e){
+            return Map.of("status","fail","message","AI服务调用失败:"+e.getMessage());
+        }
+    }
+
+    /** 根据当前登录用户角色构建 AI 服务 URL（教师携带 user_id） */
+    private String buildUrl(String endpoint) {
+        Long uid = null;
+        try {
+            if (StpUtil.isLogin()) {
+                uid = StpUtil.getLoginIdAsLong();
+                // 若角色非 teacher 则不附加
+                String role = StpUtil.getRoleList().stream().findFirst().orElse("");
+                if (!"teacher".equals(role)) {
+                    uid = null;
+                }
+            }
+        } catch (Exception ignored) {}
+        String suffix = uid != null ? (endpoint.contains("?") ? "&" : "?") + "user_id=" + uid : "";
+        return aiServiceUrl + endpoint + suffix;
     }
 
 }

@@ -154,6 +154,11 @@ export default {
             <span class="icon">👤</span> 个人信息
           </router-link>
         </li>
+        <li v-if="isTeacher || isTutor">
+          <router-link to="/settings/knowledge-base" class="sidebar-link">
+            <span class="icon">🔒</span> 私密知识库设置
+          </router-link>
+        </li>
         <li>
           <button @click="authStore.logout()" class="sidebar-link logout">
             <span class="icon">🚪</span> 退出登录

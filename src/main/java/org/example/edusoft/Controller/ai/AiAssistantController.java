@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,6 +126,7 @@ public class AiAssistantController {
         return aiAssistantService.generateSectionTeachingContent(file, courseName, sectionTitle, expectedHours, constraints);
     }
 
+<<<<<<< HEAD
     /**
      * 根据学生选择的题目生成自测练习
      */
@@ -144,4 +146,35 @@ public class AiAssistantController {
         return body;
     }
 
+=======
+    // -------------------- 私密知识库目录 --------------------
+    @PostMapping("/embedding/base_path")
+    public Map<String, Object> setBasePath(@RequestBody Map<String, Object> body) {
+        String basePath = (String) body.get("base_path");
+        return aiAssistantService.setBasePath(basePath);
+    }
+
+    @PostMapping("/embedding/base_path/reset")
+    public Map<String, Object> resetBasePath() {
+        return aiAssistantService.resetBasePath();
+    }
+
+    // -------------------- 联合知识库 --------------------
+
+    @GetMapping("/storage/list")
+    public List<String> listKnowledgeBases() {
+        return aiAssistantService.listKnowledgeBases();
+    }
+
+    @PostMapping("/storage/selected")
+    public Map<String,Object> setSelectedKnowledgeBases(@RequestBody List<String> paths){
+        return aiAssistantService.setSelectedKBs(paths);
+    }
+
+    @GetMapping("/storage/document_exists")
+    public Map<String,Object> checkDocumentExists(@RequestParam("filename") String filename,
+                                                  @RequestParam(value="course_id", required=false) String courseId){
+        return aiAssistantService.documentExists(filename, courseId);
+    }
+>>>>>>> new-origin/psq_10
 }

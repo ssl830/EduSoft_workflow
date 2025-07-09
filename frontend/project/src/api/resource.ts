@@ -139,8 +139,23 @@ const ResourceApi = {
     }>(`/api/resources/progress/${resourceId}/${studentId}`)
   },
 
-  // 修正：上传到知识库
-  uploadToKnowledgeBase(formData: FormData, onUploadProgress?: (progress: number) => void) {
+  // 修正：上传到知识库（增加重复文件检测）
+  async uploadToKnowledgeBase(
+    file: File,
+    formData: FormData,
+    courseId?: string,
+    onUploadProgress?: (progress: number) => void
+  ) {
+    // 动态导入避免循环依赖
+    const StorageApi = (await import('./storage')).default
+
+    // 检查重复文件
+    const { data } = await StorageApi.documentExists(file.name, courseId)
+    if (data.exists) {
+      // 抛出错误供调用方捕获
+      throw new Error('文件已存在于知识库中')
+    }
+
     return axios.post('/api/ai/embedding/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
