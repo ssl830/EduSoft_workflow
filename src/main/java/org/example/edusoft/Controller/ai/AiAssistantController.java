@@ -49,10 +49,10 @@ public class AiAssistantController {
     }
 
     @PostMapping("/rag/regenerate")
-        public Map<String, Object> regenerateTeachingContent(@RequestBody Map<String, Object> req) {
-            logger.info("收到重新生成教案请求: {}", req);
-            return aiAssistantService.regenerateTeachingContent(req);
-        }
+    public Map<String, Object> regenerateTeachingContent(@RequestBody Map<String, Object> req) {
+        logger.info("收到重新生成教案请求: {}", req);
+        return aiAssistantService.regenerateTeachingContent(req);
+    }
 
     @PostMapping("/rag/generate_exercise")
     public Map<String, Object> generateExercises(@RequestBody Map<String, Object> req) {
@@ -65,11 +65,13 @@ public class AiAssistantController {
         logger.info("收到在线学习助手请求: {}", req);
         return aiAssistantService.onlineAssistant(req);
     }
+    
     @PostMapping("/evaluate-subjective")
     public Map<String, Object> evaluateSubjective(@RequestBody Map<String, Object> req) {
         logger.info("收到主观题AI评估请求: {}", req);
         return aiAssistantService.evaluateSubjective(req);
     }
+    
     @PostMapping("/rag/generate_student_exercise")
     public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req) {
         logger.info("收到学生自测练习生成请求: {}", req);
@@ -126,7 +128,6 @@ public class AiAssistantController {
         return aiAssistantService.generateSectionTeachingContent(file, courseName, sectionTitle, expectedHours, constraints);
     }
 
-<<<<<<< HEAD
     /**
      * 根据学生选择的题目生成自测练习
      */
@@ -146,7 +147,6 @@ public class AiAssistantController {
         return body;
     }
 
-=======
     // -------------------- 私密知识库目录 --------------------
     @PostMapping("/embedding/base_path")
     public Map<String, Object> setBasePath(@RequestBody Map<String, Object> body) {
@@ -160,7 +160,6 @@ public class AiAssistantController {
     }
 
     // -------------------- 联合知识库 --------------------
-
     @GetMapping("/storage/list")
     public List<String> listKnowledgeBases() {
         return aiAssistantService.listKnowledgeBases();
@@ -176,5 +175,4 @@ public class AiAssistantController {
                                                   @RequestParam(value="course_id", required=false) String courseId){
         return aiAssistantService.documentExists(filename, courseId);
     }
->>>>>>> new-origin/psq_10
 }
