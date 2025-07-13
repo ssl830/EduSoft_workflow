@@ -78,6 +78,20 @@ public class SelfPracticeController {
         Long studentId = StpUtil.getLoginIdAsLong();
 
         Long practiceId = ((Number) req.getOrDefault("practiceId", 0)).longValue();
+        logger.info("学生自测练习提交 - 学生ID: {}, 练习ID: {}", studentId, practiceId);
+        
+        // 检查 practiceId 是否存在于 SelfPractice 表
+        try {
+            boolean exists = selfPracticeService.checkPracticeExists(practiceId);
+            if (!exists) {
+                logger.error("学生自测练习提交失败 - 练习ID不存在: {}", practiceId);
+                return Result.error("提交失败：练习ID不存在");
+            }
+            logger.info("学生自测练习提交 - 练习ID校验通过");
+        } catch (Exception e) {
+            logger.error("学生自测练习提交 - 检查练习ID是否存在时发生异常: {}", e.getMessage(), e);
+        }
+        
         java.util.List<Map<String, Object>> answers = (java.util.List<Map<String, Object>>) req.get("answers");
         if (answers == null || answers.isEmpty()) {
             return Result.error("答案列表不能为空");
@@ -188,11 +202,22 @@ public class SelfPracticeController {
         submission.setSubmittedAt(java.time.LocalDateTime.now());
         submission.setScore((int) Math.round(totalScore));
         submission.setIsJudged(true);
-        submissionMapper.insert(submission);
-        Long submissionId = submission.getId();
-        for (SelfAnswer a : tempAnswers) {
-            a.setSubmissionId(submissionId);
-            answerMapper.insert(a);
+        
+        try {
+            logger.info("准备插入学生自测提交记录 - 学生ID: {}, 练习ID: {}, 得分: {}", 
+                studentId, practiceId, (int) Math.round(totalScore));
+            submissionMapper.insert(submission);
+            logger.info("学生自测提交记录插入成功, 生成的提交ID: {}", submission.getId());
+            
+            Long submissionId = submission.getId();
+            for (SelfAnswer a : tempAnswers) {
+                a.setSubmissionId(submissionId);
+                answerMapper.insert(a);
+            }
+            logger.info("成功插入 {} 条学生答案记录", tempAnswers.size());
+        } catch (Exception e) {
+            logger.error("插入学生自测提交记录失败: {}", e.getMessage(), e);
+            return Result.error("提交失败：" + e.getMessage());
         }
 
         return Result.success(result, "评分完成");

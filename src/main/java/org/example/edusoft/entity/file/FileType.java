@@ -5,6 +5,7 @@ package org.example.edusoft.entity.file;
 public enum FileType {
     VIDEO,
     PPT,
+    WORD,
     CODE,
     PDF,
     OTHER;

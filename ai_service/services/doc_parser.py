@@ -20,7 +20,7 @@ pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract-OCR\tesseract.exe"
 class DocumentParser:
     """文档解析器，支持多种文档格式的内容提取"""
     
-    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.json', '.csv', '.xlsx', '.html', '.mp4', '.avi', '.mov', '.mkv', '.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc', '.txt', '.md', '.json', '.csv', '.xlsx', '.html', '.mp4', '.avi', '.mov', '.mkv', '.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
     
     @staticmethod
     def parse_pdf(file_path: str) -> List[Dict[str, str]]:
@@ -91,7 +91,27 @@ class DocumentParser:
             logger.info(f"Successfully parsed DOCX file: {file_path}")
             return chunks
         except Exception as e:
-            logger.error(f"Error parsing DOCX file {file_path}: {str(e)}")
+            # 尝试使用 docx2txt 作为降级解析方案，解决部分损坏或非 OOXML 格式导致的解析失败
+            logger.warning(f"Primary DOCX parser failed for {file_path}: {e}. Trying fallback parser docx2txt …")
+            try:
+                import docx2txt  # 轻量纯 Python 依赖
+                text = docx2txt.process(file_path)
+                paragraphs = text.split('\n\n')
+                chunks = [
+                    {
+                        'content': para.strip(),
+                        'source': f"{os.path.basename(file_path)} Fallback"
+                    }
+                    for para in paragraphs if para.strip()
+                ]
+                if chunks:
+                    logger.info(f"Successfully parsed DOCX with fallback parser: {file_path} -> {len(chunks)} chunks")
+                    return chunks
+                else:
+                    logger.error(f"Fallback parser produced no chunks for {file_path}")
+            except Exception as e2:
+                logger.error(f"Error parsing DOCX file {file_path} with fallback parser: {str(e2)}")
+            # 若仍失败，抛出原始异常
             raise
 
     @staticmethod

@@ -141,7 +141,7 @@
 import { reactive, ref, computed, watch, nextTick } from 'vue'
 import { generateStudentExercise, generateSelectedStudentExercise, StudentExerciseRequest, StudentExerciseResponse, ExerciseItem, submitSelfPractice } from '@/api/ai'
 import QuestionApi from '@/api/question'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const pageTop = ref<HTMLElement | null>(null)
 const buttonGroup = ref<HTMLElement | null>(null)
@@ -269,18 +269,71 @@ async function saveProgress() {
     }
 }
 
+const submitting = ref(false)
+const scoreData = ref<any>({})
+const showResults = ref(false)
+
 async function submitPractice() {
-    submitLoading.value = true
+    if (submitting.value) return
+    submitting.value = true
     try {
-        const res = await submitSelfPractice({ practiceId: practiceId.value || 0, answers: answers.value }) as unknown as any
-        result.totalScore = res.data.totalScore
-        result.totalPossible = res.data.totalPossible
-        resultDetails.value = res.data.details || []
+        // Check if we have a valid practiceId
+        if (!practiceId.value) {
+            ElMessageBox.confirm(
+                '检测到您正在提交没有保存的练习。这可能导致无法记录历史记录。是否继续提交？',
+                '提交确认',
+                {
+                    confirmButtonText: '继续提交',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }
+            ).then(async () => {
+                // Continue with submission despite no practiceId
+                await doSubmitAnswers()
+            }).catch(() => {
+                submitting.value = false
+            })
+        } else {
+            // Normal submission with valid practiceId
+            await doSubmitAnswers()
+        }
+    } catch (e: any) {
+        ElMessage.error(e?.message || '提交失败')
+        submitting.value = false
+    }
+}
+
+// Extract actual submission logic to separate function
+async function doSubmitAnswers() {
+    const payload = {
+        practiceId: practiceId.value || 0, // Use 0 as fallback for invalid practiceId
+        answers: answers.value.map(a => ({
+            ...a,
+            type: a.type || 'singlechoice'
+        }))
+    }
+    
+    try {
+        const res = await submitSelfPractice(payload)
         ElMessage.success('提交成功')
-    } catch (e) {
-        ElMessage.error('提交失败')
+        
+        // Update the results with the response data
+        const data = res.data as any
+        if (data) {
+            scoreData.value = {
+                totalScore: data.totalScore || 0,
+                totalPossible: data.totalPossible || 0,
+                details: data.details || []
+            }
+            showResults.value = true
+        }
+        
+        // Clear localStorage progress
+        localStorage.removeItem('aiSelfTestProgress')
+    } catch (e: any) {
+        ElMessage.error(e?.message || '提交失败')
     } finally {
-        submitLoading.value = false
+        submitting.value = false
     }
 }
 

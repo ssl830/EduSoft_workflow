@@ -19,9 +19,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, SelfPractice> implements SelfPracticeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SelfPracticeServiceImpl.class);
 
     @Autowired
     private SelfPracticeQuestionMapper spqMapper;
@@ -42,13 +46,20 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
         sp.setTitle("AI自测 " + LocalDateTime.now());
         sp.setCreatedAt(LocalDateTime.now());
         this.save(sp);
+        
+        logger.info("成功创建学生自测练习记录 - ID: {}, 学生ID: {}", sp.getId(), studentId);
 
         // 兼容两种结构：直接包含 exercises，或包在 data.exercises
         List<Map<String, Object>> exercises = (List<Map<String, Object>>) aiResult.get("exercises");
         if (exercises == null && aiResult.get("data") instanceof Map) {
             exercises = (List<Map<String, Object>>) ((Map<?, ?>) aiResult.get("data")).get("exercises");
         }
-        if (exercises == null) return sp.getId();
+        if (exercises == null) {
+            logger.warn("AI自测练习创建警告 - 未找到练习题数据, 练习ID: {}", sp.getId());
+            return sp.getId();
+        }
+        
+        logger.info("开始保存AI自测练习题目 - 练习ID: {}, 题目数量: {}", sp.getId(), exercises.size());
         int order = 1;
         for (Map<String, Object> ex : exercises) {
             Question q = new Question();
@@ -67,6 +78,7 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
             q.setCourseId(-1L);
             q.setSectionId(1L);
             questionMapper.createQuestion(q);
+            logger.debug("AI自测练习 - 保存题目 - 题目ID: {}, 练习ID: {}", q.getId(), sp.getId());
 
             // 将新题目的ID写回原始列表，便于前端提交作答时使用
             ex.put("id", q.getId());
@@ -79,7 +91,22 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
             spq.setScore(10);
             spqMapper.insert(spq);
         }
+        
+        logger.info("AI自测练习创建完成 - ID: {}, 总题目数: {}", sp.getId(), exercises.size());
         return sp.getId();
+    }
+
+    @Override
+    public boolean checkPracticeExists(Long practiceId) {
+        if (practiceId == null || practiceId <= 0) {
+            logger.warn("检查练习是否存在 - 无效的练习ID: {}", practiceId);
+            return false;
+        }
+        
+        SelfPractice practice = this.getById(practiceId);
+        boolean exists = practice != null;
+        logger.info("检查练习是否存在 - 练习ID: {}, 结果: {}", practiceId, exists);
+        return exists;
     }
 
     @Override

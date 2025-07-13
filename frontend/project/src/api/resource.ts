@@ -139,7 +139,7 @@ const ResourceApi = {
     }>(`/api/resources/progress/${resourceId}/${studentId}`)
   },
 
-  // 修正：上传到知识库（增加重复文件检测）
+  // 修正：上传到知识库（增加重复文件检测，适配联合知识库）
   async uploadToKnowledgeBase(
     file: File,
     formData: FormData,
@@ -154,6 +154,17 @@ const ResourceApi = {
     if (data.exists) {
       // 抛出错误供调用方捕获
       throw new Error('文件已存在于知识库中')
+    }
+
+    // 获取当前激活的知识库列表，确保在多知识库环境下正确上传
+    try {
+      const kbResponse = await StorageApi.listKnowledgeBases()
+      if (kbResponse.data && kbResponse.data.length > 0) {
+        // 无需额外操作，后端已经处理多知识库环境
+        console.log(`正在向${kbResponse.data.length}个激活知识库上传文件`)
+      }
+    } catch (e) {
+      console.warn('获取知识库列表失败，将使用默认知识库', e)
     }
 
     return axios.post('/api/ai/embedding/upload', formData, {

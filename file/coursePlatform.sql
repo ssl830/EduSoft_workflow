@@ -514,3 +514,6 @@ CREATE TABLE IF NOT EXISTS TeacherKnowledgeBase (
                      ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES User(id) ON DELETE CASCADE
 );
+
+--- 如果自测练习出现问题，请运行：
+ALTER TABLE question DROP FOREIGN KEY question_ibfk_2;

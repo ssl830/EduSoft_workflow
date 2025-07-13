@@ -1,8 +1,8 @@
 package org.example.edusoft.ai;
 
 import org.example.edusoft.config.AiServiceProperties;
+import org.example.edusoft.ai.MultipartInputStreamFileResource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -26,14 +26,33 @@ public class AIServiceClient {
 
     /**
      * 上传资料并入库（调用/embedding/upload）
+     * @param file 要上传的文件
+     * @return 上传结果
+     * @throws IOException 如果文件读取失败
      */
     public String uploadMaterial(MultipartFile file) throws IOException {
+        return uploadMaterial(file, null);
+    }
+
+    /**
+     * 上传资料并入库（调用/embedding/upload）
+     * @param file 要上传的文件
+     * @param courseId 关联的课程ID，用于支持联合知识库
+     * @return 上传结果
+     * @throws IOException 如果文件读取失败
+     */
+    public String uploadMaterial(MultipartFile file, String courseId) throws IOException {
         String url = aiServiceProperties.getBaseUrl() + "/embedding/upload";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), file.getOriginalFilename()));
+        
+        // 如果提供了课程ID，一并传递给AI服务
+        if (courseId != null && !courseId.isEmpty()) {
+            body.add("course_id", courseId);
+        }
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);

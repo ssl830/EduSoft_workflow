@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { defineProps, withDefaults } from 'vue'
 import ResourceApi from '../../api/resource'
 import { useAuthStore } from "../../stores/auth.ts";
+import { useQuasar } from 'quasar'
 
 interface Resource {
     id: number;
@@ -49,6 +50,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
     course: undefined
 })
+
+const $q = useQuasar()
 
 const resources = ref<Resource[]>([])
 const resourcesVer = ref<Resource[]>([])
@@ -103,6 +106,7 @@ function closeKbDialog() {
 const typeOptions = ref([
     { value: 'PPT', label: 'PPT' },
     { value: 'PDF', label: 'PDF' },
+    { value: 'WORD', label: 'WORD' },
     { value: 'VIDEO', label: 'VIDEO' },
     { value: 'CODE', label: 'CODE' },
     { value: 'OTHER', label: 'OTHER' },
@@ -263,59 +267,39 @@ const uploadResource = async () => {
   if (uploadForm.value.visibility === 'CLASS_ONLY' && selectedClass.value) {
       formData.append('classId', selectedClass.value)
   }
+  
+  // 添加知识库上传标志
+  formData.append('uploadToKnowledgeBase', uploadToKnowledgeBase.value.toString())
 
   try {
     await ResourceApi.uploadResource(props.courseId, formData, (progress) => {
       uploadProgress.value = progress
     })
 
-
-    // 新增：如果勾选了上传到知识库，则调用知识库上传接口
-    if (uploadToKnowledgeBase.value && uploadForm.value.file) {
-      const kbForm = new FormData()
-      kbForm.append('file', uploadForm.value.file)
-      if (props.courseId) {
-        kbForm.append('course_id', props.courseId)
-      }
-      kbUploading.value = true
-      kbUploadProgress.value = 0
-      openKbDialog('知识库上传中(๑•̀ㅂ•́)و✧')
-      try {
-        await ResourceApi.uploadToKnowledgeBase(
-          uploadForm.value.file,
-          kbForm,
-          props.courseId,
-          (progress: number) => {
-            kbUploadProgress.value = progress
-          }
-        )
-        // 上传成功
-        kbUploadProgress.value = 100
-        kbUploading.value = false
-        kbDialogMsg.value = '上传到知识库成功(๑˃̵ᴗ˂̵)و✧'
-        setTimeout(() => {
-          closeKbDialog()
-          kbUploadProgress.value = 0
-        }, 1500)
-      } catch (e) {
-        kbUploading.value = false
-        kbDialogMsg.value = '上传到知识库失败(´；д；)`'
-        setTimeout(() => {
-          closeKbDialog()
-        }, 1500)
-        console.error('上传到知识库失败', e)
-      }
-    }
-
+    // 直接使用后端集成的知识库上传功能，不再需要单独调用
+    // 如果后端已经处理了上传到知识库的逻辑，前端就不需要再单独调用
+    
     // Reset form and refresh list
     showUploadForm.value = false
     isRenew.value = false
     resetUploadForm()
     fetchResources()
 
-  } catch (err) {
+    // 通知提示
+    if ($q) {
+      if (uploadToKnowledgeBase.value) {
+        $q.notify({ type: 'positive', message: '资源已上传并同步至知识库' })
+      } else {
+        $q.notify({ type: 'positive', message: '资源上传成功' })
+      }
+    }
+
+  } catch (err: any) {
     uploadError.value = '上传资源失败，请稍后再试'
     console.error(err)
+    if ($q) {
+      $q.notify({ type: 'negative', message: '上传失败: ' + (err?.message || '未知错误') })
+    }
   }
 }
 

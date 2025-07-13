@@ -103,7 +103,8 @@ public class FileController {
         @RequestParam(name = "sectionId", required = false) Long sectionId,
         @RequestParam(name = "uploaderId", required = false) Long uploaderId,
         @RequestParam(name = "visibility", required = false, defaultValue = "CLASS_ONLY") String visibility,
-        @RequestParam(name = "type", required = false) String type
+        @RequestParam(name = "type", required = false) String type,
+        @RequestParam(name = "uploadToKnowledgeBase", required = false, defaultValue = "false") Boolean uploadToKnowledgeBase
     ) {
         // 参数校验
         if (file == null || file.isEmpty()) {
@@ -119,7 +120,7 @@ public class FileController {
         }
 
         // 调用 FileUploadService 进行文件上传逻辑处理
-        return fileUploadService.uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type);
+        return fileUploadService.uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type, uploadToKnowledgeBase);
     }
 
 

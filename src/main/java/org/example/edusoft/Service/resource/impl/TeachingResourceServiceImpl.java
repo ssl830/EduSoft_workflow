@@ -325,8 +325,16 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
     @Override
     public void syncToAIKnowledgeBase(MultipartFile file, Long resourceId) {
         try {
-            // 调用AI微服务，将课件文件上传并入库
-            String result = aiServiceClient.uploadMaterial(file);
+            // 获取课件关联的课程ID
+            TeachingResource resource = resourceMapper.selectById(resourceId);
+            if (resource == null) {
+                log.error("同步AI知识库失败: 资源ID {} 不存在", resourceId);
+                return;
+            }
+            
+            // 调用AI微服务，将课件文件上传并入库（传递课程ID以支持联合知识库）
+            String courseIdStr = resource.getCourseId() != null ? String.valueOf(resource.getCourseId()) : null;
+            String result = aiServiceClient.uploadMaterial(file, courseIdStr);
             log.info("AI知识库同步结果: {}", result);
         } catch (Exception e) {
             log.error("同步AI知识库失败: {}", e.getMessage());

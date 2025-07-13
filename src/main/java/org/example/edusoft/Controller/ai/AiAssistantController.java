@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.web.context.ContextLoader;
 import org.example.edusoft.service.selfpractice.SelfPracticeService;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -76,14 +77,32 @@ public class AiAssistantController {
     public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req) {
         logger.info("收到学生自测练习生成请求: {}", req);
         Map<String,Object> body = aiAssistantService.generateStudentExercise(req);
+        
+        // Check if the response has valid structure
+        if (body == null || (!body.containsKey("exercises") && !body.containsKey("data"))) {
+            logger.error("AI微服务返回的学生自测练习数据格式无效: {}", body);
+            body = new HashMap<>();
+            body.put("status", "error");
+            body.put("message", "生成练习题失败，返回数据格式无效");
+            return body;
+        }
+        
         if (StpUtil.isLogin()) {
             try {
                 Long studentId = StpUtil.getLoginIdAsLong();
+                logger.info("尝试保存生成的自测练习 - 学生ID: {}", studentId);
                 Long pid = selfPracticeService.saveGeneratedPractice(studentId, body);
+                logger.info("成功保存生成的自测练习 - 练习ID: {}, 学生ID: {}", pid, studentId);
                 body.put("practiceId", pid);
             } catch (Exception e) {
-                logger.error("保存自测练习失败", e);
+                logger.error("保存自测练习失败 - 详细错误: {}", e.getMessage(), e);
+                // Still return generated questions but with error flag
+                body.put("saveError", true);
+                body.put("errorMessage", "练习题已生成，但保存失败：" + e.getMessage());
             }
+        } else {
+            logger.warn("用户未登录，无法保存自测练习");
+            body.put("loginRequired", true);
         }
         return body;
     }
@@ -135,14 +154,32 @@ public class AiAssistantController {
     public Map<String, Object> generateSelectedStudentExercise(@RequestBody Map<String, Object> req) {
         logger.info("收到学生选题自测练习生成请求: {}", req);
         Map<String, Object> body = aiAssistantService.generateSelectedStudentExercise(req);
+        
+        // Check if the response has valid structure
+        if (body == null || (!body.containsKey("exercises") && !body.containsKey("data"))) {
+            logger.error("AI微服务返回的学生选题自测练习数据格式无效: {}", body);
+            body = new HashMap<>();
+            body.put("status", "error");
+            body.put("message", "生成练习题失败，返回数据格式无效");
+            return body;
+        }
+        
         if (StpUtil.isLogin()) {
             try {
                 Long studentId = StpUtil.getLoginIdAsLong();
+                logger.info("尝试保存生成的选题自测练习 - 学生ID: {}", studentId);
                 Long pid = selfPracticeService.saveGeneratedPractice(studentId, body);
+                logger.info("成功保存生成的选题自测练习 - 练习ID: {}, 学生ID: {}", pid, studentId);
                 body.put("practiceId", pid);
             } catch (Exception e) {
-                logger.error("保存自测练习失败", e);
+                logger.error("保存选题自测练习失败 - 详细错误: {}", e.getMessage(), e);
+                // Still return generated questions but with error flag
+                body.put("saveError", true);
+                body.put("errorMessage", "练习题已生成，但保存失败：" + e.getMessage());
             }
+        } else {
+            logger.warn("用户未登录，无法保存选题自测练习");
+            body.put("loginRequired", true);
         }
         return body;
     }

@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
+import org.example.edusoft.ai.AIServiceClient;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +26,20 @@ public class FileUploadImpl implements FileUpload {
     private final FileMapper fileMapper;
     private final IFileStorageProvider storageProvider;
     private final FolderService folderService;
+    
+    @Autowired
+    private AIServiceClient aiServiceClient;
 
     @Override
     public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type) {
+        return uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type, false);
+    }
+    
+    @Override
+    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type, boolean uploadToKnowledgeBase) {
         // 转换前端传来的type为枚举类，便于之后进行筛选 
         FileType filetype = FileType.getByName(type);
+        Result<?> result = null;
 
         if("PUBLIC".equals(visibility)){
             // Step 1: 获取该课程下的所有班级 ID
@@ -69,44 +80,54 @@ public class FileUploadImpl implements FileUpload {
                     targetParentId = sectionFolder.getId();
                 }
                 System.out.println("uploaderId: " + uploaderId);
-                // 这个upload方法需要哪些参数？？还需要查看逻辑再确定
-                Result<?> result = upload(file, title, targetParentId, courseId, classId, visibility, sectionId, filetype, uploaderId);
-                if (result.getCode() != 200) {
-                    failedClasses.append("班级 ").append(classId).append(" 上传失败: ").append(result.getMsg()).append("；");
+                Result<?> uploadResult = upload(file, title, targetParentId, courseId, classId, visibility, sectionId, filetype, uploaderId);
+                if (uploadResult.getCode() != 200) {
+                    failedClasses.append("班级 ").append(classId).append(" 上传失败: ").append(uploadResult.getMsg()).append("；");
                     allSuccess = false;
                 }
             }
 
-            if (allSuccess) {
-                return Result.ok("文件已成功上传至所有班级");
-            } else {
-                return Result.error("部分班级上传失败：" + failedClasses.toString());
+            if (!allSuccess) {
+                return Result.error("部分班级上传失败: " + failedClasses);
+            }
+            
+            result = Result.ok("上传成功");
+
+        } else if("CLASS_ONLY".equals(visibility)) {
+            // 从请求参数中获取 classId，必须传递
+            Long classId = null;
+            try {
+                // 这里使用根据课程ID和用户ID获取班级ID的方法，确保用户在该班级中
+                classId = fileMapper.getClassIdByUserandCourse(uploaderId, courseId);
+                if (classId == null) {
+                    // 尝试获取课程的默认班级
+                    List<Long> classIds = fileMapper.getAllClassIdsByCourseId(courseId);
+                    if (!CollectionUtils.isEmpty(classIds)) {
+                        classId = classIds.get(0);
+                    }
+                }
+            } catch (Exception e) {
+                return Result.error("获取班级失败: " + e.getMessage());
             }
 
-        }else if("CLASS_ONLY".equals(visibility)){
-            // Step 1: 获取用户所在课程的班级 ID
-            Long userId = uploaderId; // 假设 uploaderId 等同于 userId
-            Long classId = fileMapper.getClassIdByUserandCourse(userId, courseId);
             if (classId == null) {
-                return Result.error("未找到对应班级");
+                return Result.error("未指定班级");
             }
 
-            // Step 2: 获取该班级的根文件夹
+            // 获取班级的根文件夹
             FileInfo rootFolder = fileMapper.getRootFolderByClassId(classId);
             if (rootFolder == null) {
                 // 如果根文件夹不存在，则创建一个新的根文件夹
-                System.out.println("uploaderId: " + uploaderId);
                 rootFolder = createClassFolder(courseId, classId, uploaderId);
                 if (rootFolder == null) {
                     return Result.error("班级根文件夹创建失败");
                 }
             }
 
-            // Step 3: 查找对应 section 的文件夹
             if(sectionId == -1){
                 // 如果 sectionId 为 -1，表示上传到根目录
                 System.out.println("uploaderId: " + uploaderId);
-                return upload(
+                result = upload(
                     file,
                     title,
                     rootFolder.getId(), // parent_id
@@ -125,7 +146,7 @@ public class FileUploadImpl implements FileUpload {
                         return Result.error("章节文件夹创建失败");
                     }
                 }
-                return upload(
+                result = upload(
                     file,
                     title,
                     sectionFolder.getId(), // parent_id
@@ -137,11 +158,19 @@ public class FileUploadImpl implements FileUpload {
                     uploaderId
                 );
             }
-        }else{
+        } else {
             return Result.error("无效的可见性设置");
         }
         
+        // 如果请求指定了上传到知识库，则执行同步
+        if (result != null && result.getCode() == 200 && uploadToKnowledgeBase) {
+            syncToKnowledgeBaseIfRequired(file, courseId, uploadToKnowledgeBase);
+        }
+        
+        return result != null ? result : Result.error("上传失败");
     }
+
+    /*  移除重复的重载方法，避免编译冲突  */
 
     
 
@@ -272,6 +301,19 @@ public class FileUploadImpl implements FileUpload {
         }
         //return flag > 0 ? originalName + "(" + flag + ")" : originalName;
         return new NameResult(name, flag);
+    }
+
+    // 在上传文件成功后，如有需要，同步到知识库
+    private void syncToKnowledgeBaseIfRequired(MultipartFile file, Long courseId, boolean uploadToKnowledgeBase) {
+        if (uploadToKnowledgeBase && courseId != null) {
+            try {
+                String courseIdStr = String.valueOf(courseId);
+                aiServiceClient.uploadMaterial(file, courseIdStr);
+            } catch (Exception e) {
+                // 记录错误但不影响主流程
+                System.err.println("同步到知识库失败: " + e.getMessage());
+            }
+        }
     }
 
 }
