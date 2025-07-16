@@ -196,17 +196,30 @@ class PromptTemplates:
 
     @staticmethod
     def get_subjective_answer_evaluation_prompt(question: str, student_answer: str, reference_answer: str, max_score: float) -> str:
-        return f"""你是一个专业的教育评估专家。请根据以下信息评估学生的答案：
+        return f"""你将以严谨的教学评估专家身份，对学生的主观题答案进行打分。请严格遵守以下要求：
 
+        ================= 题目信息 =================
         题目：{question}
 
-        参考答案：{reference_answer}
+        【参考答案】（不可泄露给学生，用于对照评分）：
+        {reference_answer}
 
-        学生答案：{student_answer}
+        【学生答案】（仅依据此内容评分，请勿使用参考答案填充学生答案缺失的部分，学生答案为空或无关不得分）：
+        {student_answer}
 
         满分：{max_score}分
+        
+         ================= 评分说明 =================
+        1. 先根据参考答案列出 3~5 个关键要点（KeyPoints）。
+        2. 检查学生答案中覆盖的要点数量与正确性。
+        3. 计算得分：
+           • 覆盖 ≥80% 要点且基本正确 → 90%~100% * 满分
+           • 覆盖 50%~79% 要点 → 60%~89% * 满分
+           • 覆盖 20%~49% 要点 → 30%~59% * 满分
+           • 覆盖 <20% 要点或答案明显偏离 → ≤29% * 满分
+        4. 如学生答案为空或者过于简陋，直接判 0 分，并指出“答案过于简略，无法评估”。
 
-        请按照以下JSON格式返回评估结果：
+        请仅返回下面 JSON，禁止额外文本：
         {{
             "score": float,  // 得分，不超过满分
             "analysis": {{

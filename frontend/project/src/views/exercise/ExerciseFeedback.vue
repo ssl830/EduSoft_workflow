@@ -57,6 +57,31 @@
                             解析：{{ question.analysis || '-' }}
                         </div>
                     </div>
+                    <div v-if="['program'].includes(question.type)">
+                        <div v-if="question.aiResult === undefined || question.aiResult === null" class="ai-card ai-score ai-loading">AI 分析中...</div>
+                        <div v-else-if="question.aiResult && question.aiResult.error" class="ai-card ai-score">AI 分析失败：{{ question.aiResult.error }}</div>
+                        <div v-else class="ai-card ai-score">
+                            <span class="ai-label">AI 评分</span>
+                            <span class="ai-score-value">{{ question.aiResult.score }} 分</span>
+                            <button class="ai-detail-btn" @click="showAiDetail[question.id] = !showAiDetail[question.id]">
+                                {{ showAiDetail[question.id] ? '收起详情' : '查看详情' }}
+                            </button>
+                            <div v-if="showAiDetail[question.id]">
+                                <div class="ai-feedback-text">{{ question.aiResult.feedback }}</div>
+                                <div v-if="question.aiResult.analysis">
+                                    <p><strong>正确点:</strong> {{ question.aiResult.analysis.correct_points?.join(', ') }}</p>
+                                    <p><strong>错误点:</strong> {{ question.aiResult.analysis.incorrect_points?.join(', ') }}</p>
+                                    <p><strong>涉及知识点:</strong> {{ question.aiResult.analysis.knowledge_points?.join(', ') }}</p>
+                                </div>
+                                <div v-if="question.aiResult.improvement_suggestions && question.aiResult.improvement_suggestions.length">
+                                    <p><strong>改进建议:</strong></p>
+                                    <ul>
+                                        <li v-for="(sug, idx) in question.aiResult.improvement_suggestions" :key="idx">{{ sug }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button
@@ -182,6 +207,7 @@ import ExerciseApi from "../../api/exercise.ts";
 import QuestionApi from '../../api/question'
 // 新增
 import StudyRecordsApi from '../../api/studyRecords'
+import { evaluateSubjectiveAnswer } from '@/api/ai'
 
 const router = useRouter()
 
@@ -215,6 +241,7 @@ export interface Question {
     isFavorited?: boolean;
     studentAnswer?: string | string[];
     isadded?: boolean;
+    aiResult?: any; // 新增 AI 评测结果
 }
 
 interface Option {
@@ -325,6 +352,8 @@ const addToWrongSet = async (question: Question) => {
     }
 }
 
+const showAiDetail = ref<Record<number, boolean>>({})
+
 // 获取练习详情
 const fetchPracticeDetail = async () => {
     try {
@@ -349,6 +378,27 @@ const fetchPracticeDetail = async () => {
             // 兼容旧接口：如果返回的是 points 字段，则同步到 score
             if (q.score === undefined && (q as any).points !== undefined) {
                 q.score = (q as any).points
+            }
+            // 如果是主观题（简答/编程等），调用 AI 评测接口
+            if (['program'].includes(q.type)) {
+                // 初始化占位，便于模板显示加载中
+                //@ts-ignore
+                q.aiResult = null
+                showAiDetail.value[q.id] = false
+                evaluateSubjectiveAnswer({
+                    question: q.content || '',
+                    student_answer: typeof studentAnswers.value[q.id] === 'string' ? studentAnswers.value[q.id] as string : JSON.stringify(studentAnswers.value[q.id]),
+                    reference_answer: q.answer || '',
+                    max_score: q.score ?? 5
+                })
+                .then((resp: any) => {
+                    //@ts-ignore
+                    q.aiResult = resp.data || resp
+                })
+                .catch((err) => {
+                    //@ts-ignore
+                    q.aiResult = { error: err?.message || 'AI 评估失败' }
+                })
             }
         })
         console.log("final数据", practiceData.value)
@@ -857,5 +907,67 @@ const closeSubmissionReportModal = () => {
 }
 .explanation-wrong {
     background: #ffebee !important;
+}
+
+/* AI 评测结果样式 */
+.ai-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ai-score {
+    background: #e1f5fe;
+    border-color: #2c6ecf;
+}
+.ai-score.ai-loading {
+    justify-content: center;
+    color: #666;
+}
+.ai-score.ai-loading .ai-label {
+    display: none;
+}
+.ai-score.ai-loading .ai-score-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c6ecf;
+}
+.ai-score.ai-loading .ai-detail-btn {
+    display: none;
+}
+.ai-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+.ai-score-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c6ecf;
+}
+.ai-detail-btn {
+    background: none;
+    border: none;
+    color: #2c6ecf;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #2c6ecf;
+    transition: background-color 0.2s, color 0.2s;
+}
+.ai-detail-btn:hover {
+    background-color: #2c6ecf;
+    color: white;
+}
+.ai-feedback-text {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
 }
 </style>
