@@ -2,7 +2,7 @@
 :: 模型基准测试运行脚本 (Windows版)
 
 :: 默认参数
-set MODELS=deepseek-v3 qwen-7b-chat chatglm3-6b baichuan2-13b-chat yi-6b-chat
+set MODELS=deepseek-v3 qwen-max glm-4 baichuan2-13b-chat yi-34b-chat
 set DATASET=ai_service\data\eval_questions.json
 set OUTPUT_DIR=ai_service\benchmark\results
 set LIMIT=10

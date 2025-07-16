@@ -5,7 +5,7 @@
 
 用于对比不同LLM模型在本地知识库问答场景下的表现
 运行方式：
-    python -m ai_service.benchmark.compare_models --models deepseek-v3 qwen-7b-chat chatglm3-6b baichuan2-13b-chat yi-6b-chat --dataset data/eval_questions.json --out results.json
+    python -m ai_service.benchmark.compare_models --models deepseek-v3 qwen-max glm-4 baichuan2-13b-chat yi-34b-chat --dataset data/eval_questions.json --out results.json
 """
 
 import json
@@ -32,7 +32,7 @@ class LLMClient:
         """初始化指定模型的客户端
         
         Args:
-            model_name: 模型名称，支持 'deepseek-v3', 'qwen-7b-chat', 'chatglm3-6b', 'baichuan2-13b-chat', 'yi-6b-chat'
+            model_name: 模型名称，支持 'deepseek-v3', 'qwen-max', 'glm-4', 'baichuan2-13b-chat', 'yi-34b-chat'
         """
         self.model_name = model_name
         self.last_usage = {"completion_tokens": 0, "prompt_tokens": 0}
@@ -307,7 +307,7 @@ def main():
     """主函数"""
     parser = argparse.ArgumentParser(description="比较不同模型在RAG问答中的表现")
     parser.add_argument("--models", nargs="+", required=True, 
-                        help="要测试的模型列表，如 'deepseek-v3 qwen-7b-chat'")
+                        help="要测试的模型列表，如 'deepseek-v3 qwen-max'")
     parser.add_argument("--dataset", default="ai_service/data/eval_questions.json",
                         help="测试数据集路径")
     parser.add_argument("--out", default="ai_service/benchmark/results.json",

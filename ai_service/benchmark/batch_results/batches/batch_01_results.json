@@ -601,7 +601,7 @@
   },
   {
     "id": "q1",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 主要面向哪三类设备进行模型部署？",
     "answer": "TensorFlow Lite 主要面向三类设备进行模型部署：移动设备（如智能手机）、嵌入式设备以及物联网(IoT)设备。",
     "retrieve_time": 0.27989745140075684,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q2",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "全球约有多少台设备部署了 TensorFlow Lite？",
     "answer": "全球超过40亿的设备上部署了TensorFlow Lite。",
     "retrieve_time": 0.33075666427612305,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q3",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例花卉分类项目优化并部署的核心模型是什么？",
     "answer": "核心模型是MobileNet V2。此项目基于该模型通过迁移学习实现花卉识别，并进一步使用TensorFlow Lite对该模型进行优化，以便能够在Android手机上部署。",
     "retrieve_time": 0.1665184497833252,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q4",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 的两大核心组件是什么？",
     "answer": "根据提供的参考资料，虽然提到“TensorFlow Lite 包括两个主要组件”，但具体的两大核心组件名称未被直接列出。因此，基于当前给定的信息，我无法准确指出 TensorFlow Lite 的两大核心组件是什么。如果您可以提供更多相关信息或允许我参考其他资料，我会很乐意提供更详细的答案。",
     "retrieve_time": 0.1873762607574463,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q5",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 使用哪种序列化格式存储模型文件？",
     "answer": "TensorFlow Lite 使用 FlatBuffers 作为其模型文件的序列化格式。这种格式特别适合于需要高效内存使用和快速访问数据的应用场景，比如在移动设备上运行机器学习模型。",
     "retrieve_time": 0.1433713436126709,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q6",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Google 在 2017 年底发布了哪款专为移动端设计的深度学习工具？",
     "answer": "Google 在 2017 年底发布了 TensorFlow Lite，这是一个轻量、快速、兼容度高的专门针对移动式应用场景的深度学习工具。",
     "retrieve_time": 0.21873688697814941,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q7",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为多少？",
     "answer": "TensorFlow Lite 典型 ARM 32 位构建的二进制文件大小约为 1 MB。如果仅包含支持特定模型（如 InceptionV3 和 MobileNet）所需的运算符，则其大小可以减少到不到 300 KB。",
     "retrieve_time": 0.1739504337310791,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q8",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 可以利用 Android 系统提供的哪项 API 进行硬件加速？",
     "answer": "TensorFlow Lite 可以利用 Android 神经网络 API（Android NN API）进行硬件加速。这项API让硬件厂商能够扩展支持，从而更好地利用手机上的加速器，如GPU或DSP等。",
     "retrieve_time": 0.2725088596343994,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q9",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 模型转换的命令行工具名称是什么？",
     "answer": "TensorFlow Lite 模型转换的命令行工具名称是 `tflite_convert`。",
     "retrieve_time": 0.15047883987426758,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q10",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用哪个类？",
     "answer": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用 `tf.lite.TFLiteConverter` 类。具体来说，可以通过调用 `TFLiteConverter.from_saved_model()` 方法，并传入包含SavedModel的目录路径来创建转换器实例。例如：\n\n```python\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\n```\n\n这里的 `saved_model_dir` 是指向你的SavedModel所在目录的路径。",
     "retrieve_time": 0.22139286994934082,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q11",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 的 GPU 委托在 Java 侧创建时使用的类名是什么？",
     "answer": "在 Java 侧创建 TensorFlow Lite 的 GPU 委托时使用的类名是 `GpuDelegate`。",
     "retrieve_time": 0.27930164337158203,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q12",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 量化（quantization）主要带来哪两方面的好处？",
     "answer": "根据提供的参考资料，TensorFlow Lite 量化主要带来的两方面好处是：减少模型大小（通过降低权重的精确表示来实现）以及提高计算效率（包括可选地减少存储和计算激活值）。这些优化有助于在资源受限的设备上更高效地运行模型。",
     "retrieve_time": 0.1819934844970703,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q13",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例中使用 ImageDataGenerator 加载数据时将 validation_split 设置为多少？",
     "answer": "根据提供的参考资料，没有明确提到`validation_split`的具体数值。因此，基于现有信息无法确定`ImageDataGenerator`加载数据时`validation_split`被设置为了多少。如果需要使用`validation_split`参数来自动生成验证集的话，通常这个值会根据具体需求来设定，比如设为0.2意味着将20%的数据用于验证。但请注意，在您的情况下，看起来训练集和验证集是通过手动划分目录来区分的，而不是通过`validation_split`自动完成的。",
     "retrieve_time": 0.27186155319213867,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q14",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在花卉识别示例中输入图像被缩放到的尺寸是多少？",
     "answer": "根据提供的参考资料，没有具体提到花卉识别示例中输入图像被缩放到的具体尺寸。因此，我无法直接从给定的信息中给出准确的答案。如果您有更详细的资料或上下文信息，请提供，这样或许能够帮助找到答案。对于使用MobileNet V2这样的模型来说，通常会有一个推荐的输入尺寸（比如224x224像素），但这并不意味着您的案例一定遵循了这个标准，除非在您提供的额外材料中有明确指出。",
     "retrieve_time": 0.2666659355163574,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q15",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "该花卉识别应用最终需要识别多少种花？",
     "answer": "根据提供的参考资料，没有具体提到该花卉识别应用最终需要识别多少种花。因此，我无法给出具体的答案。如果您有更多相关信息或资料，请提供给我，这样或许能帮助更准确地回答您的问题。",
     "retrieve_time": 0.28566479682922363,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q16",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Keras ImageDataGenerator 中用于按文件夹加载图像的函数是什么？",
     "answer": "Keras 的 `ImageDataGenerator` 类本身并不直接提供一个特定的函数来按文件夹加载图像，但你可以结合使用 `flow_from_directory` 方法来从指定的目录结构中加载图片。这个方法能够自动根据文件夹的名字来分类图片，并生成批次的数据供给训练或验证模型使用。因此，如果你想要按照文件夹组织结构来加载图像数据的话，应该使用的是 `flow_from_directory()` 方法。",
     "retrieve_time": 0.19366455078125,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q17",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例中训练时的 batch_size 被设置为多少？",
     "answer": "根据提供的资料，训练时的`batch_size`被设置为了64。这是从内容1中直接获得的信息：“该值设置为64”。",
     "retrieve_time": 0.17928171157836914,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q18",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 模型文件的默认扩展名是什么？",
     "answer": "TensorFlow Lite 模型文件的默认扩展名是 `.tflite`。",
     "retrieve_time": 0.14692401885986328,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q19",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Python 示例中使用哪行代码将量化优化应用于转换器？",
     "answer": "在提供的参考资料中，用于将量化优化应用于转换器的代码是：\n\n```python\nconverter.optimizations = [tf.lite.Optimize.DEFAULT]\n```\n\n或者，如果目的是更具体地优化模型大小，则可以使用：\n\n```python\nconverter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]\n```\n\n这两行代码都展示了如何设置`converter.optimizations`属性来启用特定类型的量化。第一种方式使用默认优化策略，而第二种则特别针对减少模型尺寸进行优化。",
     "retrieve_time": 0.16840195655822754,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q20",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "描述 TensorFlow Lite 模型格式的 schema 文件名是什么？",
     "answer": "根据提供的参考资料，TensorFlow Lite 模型格式的 schema 文件名为 `schema.fbs`。这个文件使用 FlatBuffers 来定义 TFLite 模型文件的具体格式。",
     "retrieve_time": 0.22599315643310547,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q1",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 主要面向哪三类设备进行模型部署？",
     "answer": "TensorFlow Lite 主要面向移动设备、嵌入式设备和物联网（IoT）设备进行模型部署。",
     "retrieve_time": 0.2595031261444092,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q2",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "全球约有多少台设备部署了 TensorFlow Lite？",
     "answer": "全球超过40亿台设备部署了TensorFlow Lite。",
     "retrieve_time": 0.17098569869995117,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q3",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例花卉分类项目优化并部署的核心模型是什么？",
     "answer": "核心模型是MobileNet V2。在迁移学习的基础上，该模型被优化并在Android手机上部署，用于识别四种花卉种类。",
     "retrieve_time": 0.17384743690490723,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q4",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 的两大核心组件是什么？",
     "answer": "TensorFlow Lite 的两大核心组件在提供的资料中并未直接列出。根据资料的内容编排，相关信息可能包含在“8.2 TensorFlow Lite体系结构”及“8.2.1 TensorFlow Lite整体架构”中。但是，由于具体内容没有给出，我无法准确提供这两个核心组件的名称。建议查阅完整的TensorFlow Lite官方文档或相关资料以获取这一信息。目前我无法提供答案，请谅解。",
     "retrieve_time": 0.15670990943908691,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q5",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 使用哪种序列化格式存储模型文件？",
     "answer": "TensorFlow Lite 使用 FlatBuffers 序列化格式存储模型文件。",
     "retrieve_time": 0.14986777305603027,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q6",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Google 在 2017 年底发布了哪款专为移动端设计的深度学习工具？",
     "answer": "Google 在 2017 年底发布了 TensorFlow Lite，这是一个专为移动端设计的轻量、快速、兼容度高的深度学习工具。",
     "retrieve_time": 0.17595410346984863,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q7",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为多少？",
     "answer": "TensorFlow Lite 在典型 ARM 32 位构建下的二进制大小约为 1 MB。如果仅使用支持常见图像分类模型（如InceptionV3和MobileNet）所需的运算符，其大小可不到 300 KB。",
     "retrieve_time": 0.15620875358581543,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q8",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 可以利用 Android 系统提供的哪项 API 进行硬件加速？",
     "answer": "TensorFlow Lite 可以利用 Android 系统提供的 Android 神经网络 API（Android NN API）进行硬件加速。",
     "retrieve_time": 0.168670654296875,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q9",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 模型转换的命令行工具名称是什么？",
     "answer": "tflite_convert。",
     "retrieve_time": 0.14618206024169922,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q10",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用哪个类？",
     "answer": "应使用 `tf.lite.TFLiteConverter` 类，并通过调用其 `from_saved_model()` 方法来进行转换。",
     "retrieve_time": 0.16807293891906738,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q11",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 的 GPU 委托在 Java 侧创建时使用的类名是什么？",
     "answer": "GpuDelegate",
     "retrieve_time": 0.15817904472351074,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q12",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 量化（quantization）主要带来哪两方面的好处？",
     "answer": "TensorFlow Lite 量化主要带来的两方面好处是：降低权重的精确表示和减少存储及计算的激活值。这些好处有助于优化模型的大小和提升推理速度，同时尽可能保持模型的准确性。",
     "retrieve_time": 0.19931626319885254,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q13",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例中使用 ImageDataGenerator 加载数据时将 validation_split 设置为多少？",
     "answer": "不知道。参考资料中没有提供设置 validation_split 的信息。",
     "retrieve_time": 0.16727685928344727,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q14",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在花卉识别示例中输入图像被缩放到的尺寸是多少？",
     "answer": "不知道。参考资料中没有提供输入图像被缩放到的尺寸信息。",
     "retrieve_time": 0.18708586692810059,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q15",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "该花卉识别应用最终需要识别多少种花？",
     "answer": "不知道。参考资料中没有提供该花卉识别应用最终需要识别的花的种类数量。",
     "retrieve_time": 0.550382137298584,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q16",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Keras ImageDataGenerator 中用于按文件夹加载图像的函数是什么？",
     "answer": "不知道。参考资料中没有提供关于 Keras ImageDataGenerator 中用于按文件夹加载图像的具体函数信息。",
     "retrieve_time": 0.15318655967712402,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q17",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例中训练时的 batch_size 被设置为多少？",
     "answer": "示例中训练时的 `batch_size` 被设置为64。",
     "retrieve_time": 0.1628856658935547,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q18",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 模型文件的默认扩展名是什么？",
     "answer": "默认扩展名是 .tflite。",
     "retrieve_time": 0.16692399978637695,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q19",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Python 示例中使用哪行代码将量化优化应用于转换器？",
     "answer": "在提供的参考资料中，应用于转换器的量化优化是通过以下代码行实现的：\n\n```python\nconverter.optimizations = [tf.lite.Optimize.DEFAULT]\n```\n\n这行代码将量化优化应用于转换器，以进行模型转换。",
     "retrieve_time": 0.19124889373779297,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q20",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "描述 TensorFlow Lite 模型格式的 schema 文件名是什么？",
     "answer": "schema.fbs",
     "retrieve_time": 0.1576366424560547,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q1",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 主要面向哪三类设备进行模型部署？",
     "answer": "TensorFlow Lite 主要面向移动设备（mobile）、嵌入式设备（embedded）和物联网设备（IoT）进行模型部署。",
     "retrieve_time": 0.3072373867034912,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q2",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "全球约有多少台设备部署了 TensorFlow Lite？",
     "answer": "全球有超过40亿台设备部署了 TensorFlow Lite。",
     "retrieve_time": 0.16660022735595703,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q3",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例花卉分类项目优化并部署的核心模型是什么？",
     "answer": "示例花卉分类项目优化并部署的核心模型是MobileNet V2。",
     "retrieve_time": 0.24846124649047852,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q4",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 的两大核心组件是什么？",
     "answer": "TensorFlow Lite 的两大核心组件是：\n\n1. TensorFlow Lite 解释器\n2. TensorFlow Lite 转换器\n\n这些组件共同支持在移动设备和嵌入式设备上运行机器学习模型。",
     "retrieve_time": 0.18504619598388672,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q5",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 使用哪种序列化格式存储模型文件？",
     "answer": "TensorFlow Lite 使用 FlatBuffers 序列化格式存储模型文件。",
     "retrieve_time": 0.4016439914703369,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q6",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Google 在 2017 年底发布了哪款专为移动端设计的深度学习工具？",
     "answer": "Google 在 2017 年底发布了 TensorFlow Lite，这是一款专为移动端设计的深度学习工具。",
     "retrieve_time": 0.5203840732574463,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q7",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为多少？",
     "answer": "根据提供的参考资料，TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为 1 MB。如果仅使用支持常见图像分类模型所需的运算符，大小则不到 300 KB。\n\n回答: 约为 1 MB，特定情况下不到 300 KB。",
     "retrieve_time": 0.1674821376800537,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q8",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 可以利用 Android 系统提供的哪项 API 进行硬件加速？",
     "answer": "TensorFlow Lite 可以利用 Android 系统提供的 Android 神经网络 API（Android NN API）进行硬件加速。",
     "retrieve_time": 0.16765975952148438,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q9",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 模型转换的命令行工具名称是什么？",
     "answer": "TensorFlow Lite 模型转换的命令行工具名称是 **tflite_convert**。",
     "retrieve_time": 0.18008041381835938,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q10",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用哪个类？",
     "answer": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用 `tf.lite.TFLiteConverter` 类，并调用其 `from_saved_model()` 方法。\n\n示例代码：\n```python\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\n```\n\n其中 `saved_model_dir` 是 SavedModel 文件目录的路径。",
     "retrieve_time": 0.17165040969848633,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q11",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 的 GPU 委托在 Java 侧创建时使用的类名是什么？",
     "answer": "GpuDelegate",
     "retrieve_time": 0.18283700942993164,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q12",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 量化（quantization）主要带来哪两方面的好处？",
     "answer": "TensorFlow Lite 量化主要带来以下两方面的好处：\n\n1. **降低存储**：量化通过减少权重和激活值的精确表示，从而降低模型的大小。\n2. **减少计算量**：量化可以减少计算量，从而提高模型的执行效率，尤其是在资源受限的设备上。\n\n这些好处使得量化模型更适合在移动设备和嵌入式设备上运行。",
     "retrieve_time": 0.16086244583129883,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q13",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例中使用 ImageDataGenerator 加载数据时将 validation_split 设置为多少？",
     "answer": "根据提供的参考资料，没有明确提到示例中将 `validation_subset` 设置为多少。资料中讨论了使用 `ImageDataGenerator` 和 `flow_from_directory()` 函数加载数据，并提到了验证集的相关内容，但没有具体说明 `validation_subset` 的数值设置。因此，无法从资料中确定 `validation_subset` 的具体值。\n\n回答: 不知道。",
     "retrieve_time": 0.16623282432556152,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q14",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在花卉识别示例中输入图像被缩放到的尺寸是多少？",
     "answer": "参考提供的资料中并没有提及输入图像被缩放的具体尺寸。因此，我不知道输入图像被缩放到的具体尺寸。",
     "retrieve_time": 0.17168784141540527,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q15",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "该花卉识别应用最终需要识别多少种花？",
     "answer": "根据提供的资料，并没有具体说明该花卉识别应用最终需要识别多少种花。因此，我无法确定需要识别的花卉种类数量。",
     "retrieve_time": 0.17819786071777344,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q16",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Keras ImageDataGenerator 中用于按文件夹加载图像的函数是什么？",
     "answer": "Keras **ImageDataGenerator** 中用于按文件夹加载图像的函数是 **flow_from_directory**。\n\n```python\ndatagen = tf.keras.preprocessing.image.ImageDataGenerator()\ngenerator = datagen.flow_from_directory(directory, target_size, ...)\n```\n\n该函数会从指定目录中加载图像，并自动将其分为不同的类（基于子文件夹的名称）。",
     "retrieve_time": 0.17434263229370117,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q17",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例中训练时的 batch_size 被设置为多少？",
     "answer": "示例中训练时的 batch_size 被设置为 64。",
     "retrieve_time": 0.15625977516174316,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q18",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 模型文件的默认扩展名是什么？",
     "answer": "TensorFlow Lite 模型文件的默认扩展名是 .tflite。",
     "retrieve_time": 0.14049720764160156,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q19",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Python 示例中使用哪行代码将量化优化应用于转换器？",
     "answer": "根据提供的资料，量化优化通过以下代码行应用于转换器：\n\n```python\nconverter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]\n```\n\n这行代码设置了优化选项以减小模型大小，从而实现量化。",
     "retrieve_time": 0.1658947467803955,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q20",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "描述 TensorFlow Lite 模型格式的 schema 文件名是什么？",
     "answer": "TensorFlow Lite 模型格式的 schema 文件名是 **schema.fbs**。",
     "retrieve_time": 0.16457009315490723,

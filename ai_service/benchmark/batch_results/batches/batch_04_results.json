@@ -601,7 +601,7 @@
   },
   {
     "id": "q61",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "MobileNet V2 微调前冻结了多少层？",
     "answer": "根据提供的资料，当微调MobileNet V2时，前100层被设置为不可训练（即被冻结），而总共有155层。这意味着在开始微调过程之初，有55层是可训练的状态。因此，答案是：MobileNet V2微调前冻结了100层。",
     "retrieve_time": 0.29506802558898926,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q62",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "微调 MobileNet V2 后，验证准确率约提升到多少？",
     "answer": "根据提供的资料，经过微调后，MobileNet V2模型的精度几乎达到了98%。这意味着验证准确率大约提升到了98%左右。不过，请注意实际结果可能会因具体应用场景、数据集特性等因素有所不同。",
     "retrieve_time": 0.28065943717956543,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q63",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Android build.gradle 中添加 TensorFlow Lite 依赖时常用的版本占位符是什么？",
     "answer": "在 Android 的 `build.gradle` 文件中添加 TensorFlow Lite 依赖时，常用的版本占位符是 `+`。这表示使用最新版本的库。例如，您可以这样写：\n\n```gradle\ndependencies {\n    implementation 'org.tensorflow:tensorflow-lite:+'\n}\n```\n\n但是，请注意，虽然使用 `+` 可以方便地获取最新版本，但为了确保项目的稳定性和兼容性，建议明确指定一个具体的版本号。",
     "retrieve_time": 0.15363311767578125,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q64",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "ImageProcessor 预处理流水线中用于裁剪或填充至方形的操作类名是什么？",
     "answer": "在ImageProcessor预处理流水线中，用于裁剪或填充至方形的操作类名是`ResizeWithCropOrPadOp`。",
     "retrieve_time": 0.46949005126953125,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q65",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 推理结果常通过哪种数据结构（键值映射）保存标签概率？",
     "answer": "TensorFlow Lite 推理结果常通过`Map<String, Float>`这种键值映射的数据结构来保存标签及其对应的概率。这里，`String`作为键表示类别标签，而`Float`则代表该类别的预测概率。这样的数据结构允许用户轻松地将每个预测出的类别与它所对应的可能性关联起来。在实际应用中，通常会使用TensorFlow Lite支持库中的工具或方法（如`getTopKProbability`）来处理这些概率数据，从而获取最有可能的几个标签。",
     "retrieve_time": 0.22111296653747559,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q66",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例应用中使用 GPU 推理时，需要将 GpuDelegate 添加到哪个对象？",
     "answer": "根据提供的参考资料，`GpuDelegate` 需要被添加到 `tfliteOptions` 对象中。具体来说，是通过调用 `tfliteOptions.addDelegate(gpuDelegate);` 方法实现的。这表明，在准备使用TensorFlow Lite进行GPU加速推理前，你需要创建一个`GpuDelegate`实例，并将其添加至你的`tfliteOptions`配置对象里。",
     "retrieve_time": 0.2828652858734131,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q67",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 TFLite 推理过程中，哪个类代表了输入/输出张量的包装？",
     "answer": "根据提供的参考资料，没有直接提到哪个类专门用来代表TFLite推理过程中输入/输出张量的包装。在TensorFlow Lite的实际应用中，通常会使用`Interpreter`类来加载模型并处理输入/输出张量的操作，但具体的“包装”类如`Tensor`等，并未在给定资料中明确指出。因此，基于现有资料无法给出确切答案。对于更详细的API用法或特定类的功能，建议查阅TensorFlow Lite官方文档获取最准确的信息。",
     "retrieve_time": 0.3265693187713623,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q68",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "为了在 build.gradle 中使用国内镜像，需要替换哪两个 Maven 仓库？",
     "answer": "为了在 `build.gradle` 中使用国内镜像，您需要将 Maven 仓库 `google()` 和 `jcenter()` 替换为相应的国内镜像。根据提供的资料，至少提到了一个替换方案，即用阿里云的 jcenter 镜像来替换 `jcenter()`：\n\n```gradle\nmaven { url 'https://maven.aliyun.com/repository/jcenter' }\n```\n\n对于 `google()` 的替换，虽然直接信息没有给出具体的国内镜像地址，但通常做法是也找一个可靠的国内镜像源进行替换。不过基于给定的信息，我们仅能确定 `jcenter()` 应被上述阿里云链接所替代。关于 `google()` 的具体国内镜像地址未在参考资料中明确指出。",
     "retrieve_time": 0.23349714279174805,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q69",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 提供的 Android 示例项目中，花卉识别代码所在的 Git 路径是什么？",
     "answer": "根据提供的参考资料，花卉识别代码所在的目录是 `examples/lite/codelabs/flower_classification/android/`。但是，具体的Git仓库URL或路径没有在给定的信息中提到。因此，对于完整的Git路径，我无法从当前的资料中给出确切的答案。如果你需要这个信息，建议查看项目的文档或联系项目管理员获取更详细的指引。",
     "retrieve_time": 0.275362491607666,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q70",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "ImageDataGenerator 在示例中进行了哪两种主要功能？",
     "answer": "根据提供的参考资料，`ImageDataGenerator` 主要执行了两个功能：\n1. **数据增强**：通过应用一系列随机变换（如旋转、平移等）来增加训练集的多样性，从而帮助提高模型的泛化能力。\n2. **批量生成图像数据**：以生成器的形式为模型提供一个批次接一个批次的图片，这样可以更有效地利用内存资源，尤其是在处理大量或大型图像时。\n\n这两个功能使得`ImageDataGenerator`成为处理图像数据集时非常有用的工具。",
     "retrieve_time": 0.24119329452514648,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q71",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在训练花卉模型时，使用了多少个 epoch？",
     "answer": "根据提供的参考资料，没有明确提到在训练花卉识别模型时使用了多少个epoch。因此，对于您的问题，我无法给出具体的答案。如果您有更多关于训练设置的信息或者需要建议一个合适的epoch数量，请提供或询问进一步的细节。",
     "retrieve_time": 0.26008081436157227,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q72",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "微调阶段额外训练的 epoch 数被设置为多少？",
     "answer": "根据提供的参考资料，微调阶段额外训练的 epoch 数被设置为 5。",
     "retrieve_time": 0.399200439453125,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q73",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "MobileNet V2 微调前的非可训练参数主要来源于什么？",
     "answer": "MobileNet V2 微调前的非可训练参数主要来源于预训练模型。这些参数是通过在大规模数据集上预先训练得到的，当设置 `model.trainable = False` 时，意味着这些预训练权重在后续特定任务（如添加新的分类层）的训练过程中将保持不变，即不会被更新。这样做可以利用预训练模型已经学到的特征表示能力来加速新任务的学习过程或提高其性能，同时减少对大量标记数据的需求。",
     "retrieve_time": 0.15838122367858887,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q74",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Android 应用中，若要使用 GPU 加速，需要声明哪种权限或设置？",
     "answer": "根据提供的参考资料，并没有直接提到在Android应用中使用GPU加速需要声明的具体权限。但是，为了能够有效地开发和测试利用了GPU加速的应用程序，资料指出需要在手机上启用“开发者模式”和“USB 调试”。这一步骤主要是为了让开发者能够更方便地将应用程序从Android Studio加载到手机上进行测试，并不直接关联于应用内部的权限设置。\n\n对于实际开发过程中，是否需要在`AndroidManifest.xml`文件或其他地方明确声明特殊权限来启用GPU加速功能，给定的信息里并没有给出答案。一般而言，基本的OpenGL ES或Vulkan API调用来实现GPU渲染并不需要额外的权限声明，但具体需求可能依赖于所使用的库或者框架的要求。若要确保正确性，建议查阅相关API文档或是你计划集成的具体库/SDK的官方指南。",
     "retrieve_time": 0.2763099670410156,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q75",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "PoseNet Android 示例仓库的完整 GitHub URL 是什么？",
     "answer": "PoseNet Android 示例仓库的完整 GitHub URL 是: https://github.com/tensorflow/examples/tree/master/lite/examples/posenet/android",
     "retrieve_time": 1.4731886386871338,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q76",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 提供哪两大 API 层以构建模型？",
     "answer": "TensorFlow.js 提供了Kore API与Layer API两大API层以构建模型。不过，这里似乎有一个小的拼写错误，“Kore API”应该是指“Core API”。因此，正确的答案是TensorFlow.js提供了Core API与Layer API两大API层来构建模型。",
     "retrieve_time": 0.22765517234802246,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q77",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在浏览器环境中，TensorFlow.js 主要依赖哪项技术进行 GPU 加速？",
     "answer": "在浏览器环境中，TensorFlow.js 主要依赖WebGL技术进行GPU加速。不过，请注意给定的参考资料中并没有直接提到这一点；根据资料内容2，我们知道TensorFlow.js支持GPU硬件加速，但具体的技术细节（即WebGL）未在提供的资料中明确指出。通常情况下，对于基于浏览器的应用来说，WebGL是实现这种加速的常见方式。",
     "retrieve_time": 0.26995277404785156,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q78",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Node.js 环境中，若安装 CUDA，TensorFlow.js 可使用哪种后端进行加速？",
     "answer": "在 Node.js 环境中，如果安装了 CUDA，TensorFlow.js 可以使用 GPU 作为后端进行加速。这意味着它能够利用硬件（具体来说是支持CUDA的NVIDIA GPU）来提升计算性能。",
     "retrieve_time": 0.1713705062866211,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q79",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "若要在 HTML 中直接加载 TensorFlow.js，应使用哪个标签引入脚本？",
     "answer": "要在 HTML 中直接加载 TensorFlow.js，应该使用 `<script>` 标签来引入脚本。根据提供的资料，虽然没有明确写出具体的 URL 或方法，但通常的做法是这样的：\n\n```html\n<script src=\"https://cdn.jsdelivr.net/npm/@tensorflow/tfjs\"></script>\n```\n\n这里用到了CDN（内容分发网络）链接来加载 TensorFlow.js 库。如果你有特定版本的需求，可以将上述URL中的`@latest`替换为你需要的具体版本号。\n\n注意：参考资料中提到的“Tenzeflow.js”可能是对“TensorFlow.js”的拼写错误。确保在实际操作时使用正确的库名。",
     "retrieve_time": 0.18792271614074707,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q80",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 张量的两个核心属性分别是什么？",
     "answer": "根据提供的参考资料，没有直接提到TensorFlow.js中张量的两个核心属性。因此，基于现有资料我无法给出准确答案。对于这个问题的具体内容，建议参考TensorFlow.js官方文档或相关学习材料获取更详细的信息。",
     "retrieve_time": 0.22588586807250977,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q61",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "MobileNet V2 微调前冻结了多少层？",
     "answer": "MobileNet V2微调前冻结了前100层，共计155层。",
     "retrieve_time": 0.27168965339660645,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q62",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "微调 MobileNet V2 后，验证准确率约提升到多少？",
     "answer": "微调MobileNet V2后，验证准确率几乎达到98%。",
     "retrieve_time": 0.14722943305969238,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q63",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Android build.gradle 中添加 TensorFlow Lite 依赖时常用的版本占位符是什么？",
     "answer": "在 Android build.gradle 中添加 TensorFlow Lite 依赖时常用的版本占位符是 `+` ，它表示使用最新的可用版本。例如：\n\n```gradle\ndependencies {\n    implementation 'org.tensorflow:tensorflow-lite:+'\n}\n```",
     "retrieve_time": 0.17780709266662598,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q64",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "ImageProcessor 预处理流水线中用于裁剪或填充至方形的操作类名是什么？",
     "answer": "操作类名是 `ResizeWithCropOrPadOp`。",
     "retrieve_time": 0.182358980178833,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q65",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 推理结果常通过哪种数据结构（键值映射）保存标签概率？",
     "answer": "TensorFlow Lite 推理结果通常通过`Map<String, Float>`这种数据结构保存标签概率，其中字符串表示类别标签，浮点数表示相应类别的概率。",
     "retrieve_time": 0.24740314483642578,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q66",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例应用中使用 GPU 推理时，需要将 GpuDelegate 添加到哪个对象？",
     "answer": "需要将 GpuDelegate 添加到 `tfliteOptions` 对象中。如参考资料中所示，通过 `tfliteOptions.addDelegate(gpuDelegate)` 这行代码来完成这个操作。",
     "retrieve_time": 0.2008070945739746,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q67",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 TFLite 推理过程中，哪个类代表了输入/输出张量的包装？",
     "answer": "不知道。参考资料中没有提供关于TFLite推理过程中代表输入/输出张量包装的类信息。",
     "retrieve_time": 0.1527860164642334,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q68",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "为了在 build.gradle 中使用国内镜像，需要替换哪两个 Maven 仓库？",
     "answer": "需要替换的Maven仓库是 google() 和 jcenter()。可以将它们分别替换为国内的镜像源。参考资料中提供了一个例子，即替换为阿里云的jcenter镜像：maven { url 'https://maven.aliyun.com/repository/jcenter' }。但没有提供google()的具体替换源，通常也可以选择国内其他可靠的镜像服务。",
     "retrieve_time": 0.15273404121398926,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q69",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 提供的 Android 示例项目中，花卉识别代码所在的 Git 路径是什么？",
     "answer": "`examples/lite/codelabs/flower_classification/android/`",
     "retrieve_time": 0.15446758270263672,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q70",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "ImageDataGenerator 在示例中进行了哪两种主要功能？",
     "answer": "根据提供的参考资料，ImageDataGenerator进行了以下两种主要功能：\n\n1. 像素缩放：调整图像数据的像素值，可能包括标准化等操作。\n2. 数据增强：在训练过程中对图像数据进行增强变换，如旋转、翻转等，以扩充数据集并提高模型泛化能力。",
     "retrieve_time": 0.15929365158081055,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q71",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在训练花卉模型时，使用了多少个 epoch？",
     "answer": "不知道。参考资料中没有提供关于训练花卉模型时使用了多少个epoch的信息。",
     "retrieve_time": 0.15968108177185059,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q72",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "微调阶段额外训练的 epoch 数被设置为多少？",
     "answer": "微调阶段额外训练的 epoch 数被设置为5。",
     "retrieve_time": 0.1951737403869629,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q73",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "MobileNet V2 微调前的非可训练参数主要来源于什么？",
     "answer": "MobileNet V2微调前的非可训练参数主要来源于预训练网络的权重，即在设置`model.trainable = False`时，冻结了预训练模型的大部分层，通常是为了保持模型已学习到的特征提取能力。根据资料4，这里指的是前100层。这些层在微调前保持不可训练状态，以便在新的任务上仅训练少数几层或顶层。",
     "retrieve_time": 0.18104124069213867,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q74",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Android 应用中，若要使用 GPU 加速，需要声明哪种权限或设置？",
     "answer": "在Android应用中，若要使用GPU加速，通常不需要声明特殊的权限。但是，需要确保开启了“开发者模式”和“USB调试”设置，这有助于从Android Studio将应用加载到手机上并进行相关的硬件加速测试。具体到GPU加速，Android系统通常会自动管理硬件资源的分配，应用可以通过OpenGL ES或Vulkan等API来请求使用GPU。但不需要特别声明权限来启用GPU加速功能。然而，如果应用直接涉及到硬件访问或者特定系统级别的操作，可能需要声明相关的权限，但这并非GPU加速所必需的。\n\n简而言之，对于一般的GPU加速使用，不需要额外声明权限，但需要确保手机的“开发者模式”和“USB调试”选项已开启。",
     "retrieve_time": 0.19712567329406738,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q75",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "PoseNet Android 示例仓库的完整 GitHub URL 是什么？",
     "answer": "https://github.com/tensorflow/examples/tree/master/lite/examples/posenet/android。",
     "retrieve_time": 0.14127564430236816,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q76",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 提供哪两大 API 层以构建模型？",
     "answer": "TensorFlow.js 提供了 Kore API 与 Layer API 两大层以构建模型。",
     "retrieve_time": 0.17083978652954102,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q77",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在浏览器环境中，TensorFlow.js 主要依赖哪项技术进行 GPU 加速？",
     "answer": "TensorFlow.js 在浏览器环境中主要依赖 WebGL 技术进行 GPU 加速。资料中提到的 Tenzeflow.js 可能是 TensorFlow.js 的误写。根据资料内容 2，Tenzeflow.js（即 TensorFlow.js）支持 GPU 硬件加速。而 WebGL 正是 TensorFlow.js 在浏览器中实现硬件加速（尤其是 GPU 加速）的关键技术。",
     "retrieve_time": 0.16932892799377441,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q78",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Node.js 环境中，若安装 CUDA，TensorFlow.js 可使用哪种后端进行加速？",
     "answer": "在 Node.js 环境中，如果安装了 CUDA，TensorFlow.js 可以使用 `tf-node-gpu` 后端进行加速。这是因为在有 CUDA 环境支持的情况下，Tenzeflow.js 能够利用 GPU 硬件加速。参考资料中提到 Tenzeflow.js 支持GPU硬件加速，而在 Node.js 环境下，对应的 GPU 加速后端就是 `tf-node-gpu`。",
     "retrieve_time": 0.23673534393310547,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q79",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "若要在 HTML 中直接加载 TensorFlow.js，应使用哪个标签引入脚本？",
     "answer": "应该使用 `<script>` 标签引入 TensorFlow.js。",
     "retrieve_time": 0.22081875801086426,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q80",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 张量的两个核心属性分别是什么？",
     "answer": "不知道。参考资料中没有提供关于TensorFlow.js 张量的两个核心属性的信息。",
     "retrieve_time": 0.18337321281433105,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q61",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "MobileNet V2 微调前冻结了多少层？",
     "answer": "根据提供的资料，在微调MobileNet V2时，前100层被设置为无法训练。这意味着在取消冻结之前，这些层是冻结的。\n\n回答: 在微调前，MobileNet V2冻结了100层。",
     "retrieve_time": 0.44557785987854004,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q62",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "微调 MobileNet V2 后，验证准确率约提升到多少？",
     "answer": "根据提供的资料，微调MobileNet V2后，模型精度几乎达到98%。因此，微调后验证准确率大约提升到98%。\n\n回答: 微调后验证准确率大约提升到98%。",
     "retrieve_time": 0.19125795364379883,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q63",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Android build.gradle 中添加 TensorFlow Lite 依赖时常用的版本占位符是什么？",
     "answer": "在 Android 的 `build.gradle` 中添加 TensorFlow Lite 依赖时，常用的版本占位符是 `'+'`，这将自动获取 TensorFlow Lite 库的最新版本。\n\n```gradle\ndependencies {\n    implementation 'org.tensorflow:tensorflow-lite:+'\n}\n```\n\n这个占位符 `'+'` 可以在构建时获取最新的可用版本。",
     "retrieve_time": 0.19367122650146484,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q64",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "ImageProcessor 预处理流水线中用于裁剪或填充至方形的操作类名是什么？",
     "answer": "用于裁剪或填充至方形的操作类名是 **ResizeWithCropOrPadOp**。\n\n回答: ResizeWithCropOrPadOp",
     "retrieve_time": 0.14565539360046387,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q65",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 推理结果常通过哪种数据结构（键值映射）保存标签概率？",
     "answer": "TensorFlow Lite 推理结果常通过键值映射的数据结构保存标签概率，具体使用的是 `Map<String, Float>` 类型的 `labeledProbability` 对象。该对象将每个类别标签映射到其对应的概率。",
     "retrieve_time": 0.15322375297546387,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q66",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例应用中使用 GPU 推理时，需要将 GpuDelegate 添加到哪个对象？",
     "answer": "根据提供的参考资料，示例应用中使用 GPU 推理时，需要将 **GpuDelegate** 添加到 **tfliteOptions** 对象。\n\n回答: 需要将 GpuDelegate 添加到 **tfliteOptions** 对象。",
     "retrieve_time": 0.14526891708374023,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q67",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 TFLite 推理过程中，哪个类代表了输入/输出张量的包装？",
     "answer": "在 TensorFlow Lite 推理过程中，代表输入/输出张量的包装的类是 `Tensor` 类。该类用于处理与解释器交互的输入和输出数据。\n\n回答完毕。",
     "retrieve_time": 0.17835521697998047,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q68",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "为了在 build.gradle 中使用国内镜像，需要替换哪两个 Maven 仓库？",
     "answer": "为了在 build.gradle 中使用国内镜像，需要将 Maven 仓库 google() 和 jcenter() 分别替换为国内镜像源。根据提供的资料，可以将它们替换为阿里云的镜像源，例如：\n\n```gradle\nmaven { url 'https://maven.aliyun.com/repository/google' }\nmaven { url 'https://maven.aliyun.com/repository/jcenter' }\n```\n\n这将帮助解决获取SDK和Gradle编译环境资源的问题。",
     "retrieve_time": 0.6168322563171387,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q69",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 提供的 Android 示例项目中，花卉识别代码所在的 Git 路径是什么？",
     "answer": "花卉识别代码所在的 Git 路径是：\n\n```\nexamples/lite/codelabs/flower_classification/android/\n```",
     "retrieve_time": 0.15556931495666504,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q70",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "ImageDataGenerator 在示例中进行了哪两种主要功能？",
     "answer": "ImageDataGenerator 在示例中主要进行了以下两种功能：\n\n1. 像素缩放和图像数据操作。\n2. 数据增强，生成一个批次一个批次的图片用于模型训练。\n\n这些功能通过构造函数的参数进行配置，用于加载和预处理图像数据。",
     "retrieve_time": 0.14295697212219238,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q71",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在训练花卉模型时，使用了多少个 epoch？",
     "answer": "参考资料中未提及训练花卉模型时使用的 epoch 数量。因此，无法从提供的资料中确定使用了多少个 epoch。\n\n回答: 不知道",
     "retrieve_time": 0.1656351089477539,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q72",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "微调阶段额外训练的 epoch 数被设置为多少？",
     "answer": "根据提供的参考资料，微调阶段额外训练的 epoch 数被设置为 5。\n\n参考资料内容 4 明确指出：epochs=5。",
     "retrieve_time": 0.15087366104125977,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q73",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "MobileNet V2 微调前的非可训练参数主要来源于什么？",
     "answer": "回答: MobileNet V2 微调前的非可训练参数主要来源于预训练模型的基础层（base_model）权重。在设置 `model.trainable = False` 时，这些基础层的权重被冻结，不参与训练更新。这些层通常是模型中从预训练任务中学习到的特征提取层。",
     "retrieve_time": 0.16343069076538086,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q74",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Android 应用中，若要使用 GPU 加速，需要声明哪种权限或设置？",
     "answer": "根据提供的资料，要在Android应用中使用GPU加速，不需要声明特定权限，但需要确保设备启用了“开发者模式”和“USB调试”设置。这些设置是为了能够将应用从Android Studio加载到手机上，从而利用GPU加速。\n\n因此，回答如下：\n\n**回答:** 需要设置设备启用“开发者模式”和“USB调试”，无需声明额外权限。",
     "retrieve_time": 0.1605696678161621,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q75",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "PoseNet Android 示例仓库的完整 GitHub URL 是什么？",
     "answer": "PoseNet Android 示例仓库的完整 GitHub URL 是:\n\n```\nhttps://github.com/tensorflow/examples/tree/master/lite/examples/posenet/android\n```",
     "retrieve_time": 0.15756607055664062,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q76",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 提供哪两大 API 层以构建模型？",
     "answer": "TensorFlow.js 提供 Kore API 和 Layer API 两大 API 层以构建模型。",
     "retrieve_time": 0.1559298038482666,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q77",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在浏览器环境中，TensorFlow.js 主要依赖哪项技术进行 GPU 加速？",
     "answer": "在浏览器环境中，TensorFlow.js 主要依赖 GPU 硬件加速技术进行加速。具体来说，它是通过 WebGL 技术来利用 GPU 进行加速计算的。WebGL 允许在浏览器中执行高性能的图形运算，TensorFlow.js 利用这一能力来进行高效的机器学习模型推理。\n\n因此，答案是 TensorFlow.js 在浏览器中主要依赖 WebGL 进行 GPU 加速。",
     "retrieve_time": 0.14156317710876465,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q78",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Node.js 环境中，若安装 CUDA，TensorFlow.js 可使用哪种后端进行加速？",
     "answer": "在 Node.js 环境中，如果安装了 CUDA，TensorFlow.js 可以使用 CUDA 后端进行硬件加速。",
     "retrieve_time": 0.16114544868469238,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q79",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "若要在 HTML 中直接加载 TensorFlow.js，应使用哪个标签引入脚本？",
     "answer": "要在 HTML 中直接加载 TensorFlow.js，应使用 `<script>` 标签引入脚本。具体代码示例如下：\n\n```html\n<script src=\"https://cdn.jsdelivr.net/npm/@tensorflow/tfjs\"></script>\n```\n\n这将从 CDN 加载 TensorFlow.js 库，方便在浏览器中使用。",
     "retrieve_time": 0.18187594413757324,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q80",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 张量的两个核心属性分别是什么？",
     "answer": "根据提供的资料，没有明确列出TensorFlow.js张量的核心属性。因此，基于标准TensorFlow.js的知识，TensorFlow.js张量的两个核心属性通常是：\n\n1. **数据类型（dtype）**：表示张量中元素的数据类型，例如float32、int32、bool等。\n2. **形状（shape）**：表示张量的维度大小，即张量在每个维度上包含的元素数量。\n\n这些属性帮助定义和操作张量。如果需要更详细的信息，建议参考TensorFlow.js的官方文档。",
     "retrieve_time": 0.1774446964263916,

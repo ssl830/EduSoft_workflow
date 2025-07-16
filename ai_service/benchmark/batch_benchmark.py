@@ -170,7 +170,7 @@ def main():
     """主函数"""
     parser = argparse.ArgumentParser(description="批量运行模型评估")
     parser.add_argument("--models", nargs="+", 
-                        default=["deepseek-v3", "qwen-7b-chat", "chatglm3-6b", "yi-6b-chat"],
+                        default=["deepseek-v3", "qwen-max", "glm-4", "yi-34b-chat"],
                         help="要评估的模型列表")
     parser.add_argument("--questions", default="ai_service/data/eval_questions.json",
                         help="问题数据集路径")

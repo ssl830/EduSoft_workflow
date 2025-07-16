@@ -24,7 +24,7 @@ if not "%DEEPSEEK_KEY%"=="" (
     setx DEEPSEEK_API_KEY "%DEEPSEEK_KEY%"
 )
 
-sk-12eb81a6dcfa496baf8693c73235bd51
+
 :: Qwen API Key (DashScope)
 set /p DASHSCOPE_KEY="DashScope API Key (Qwen): "
 if not "%DASHSCOPE_KEY%"=="" (
@@ -77,7 +77,7 @@ echo 1. 请确保已安装所需依赖:
 echo    pip install -r benchmark\requirements.txt
 echo.
 echo 2. 运行模型评估:
-echo    python -m ai_service.benchmark.compare_models --models deepseek-v3 qwen-7b-chat --dataset ai_service/data/eval_questions.json --out results.json --limit 10
+echo    python -m ai_service.benchmark.compare_models --models deepseek-v3 qwen-max --dataset ai_service/data/eval_questions.json --out results.json --limit 10
 echo.
 echo 3. 生成评估报告:
 echo    python -m ai_service.benchmark.report --input results.json --output model_report.md

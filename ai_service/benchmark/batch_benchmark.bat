@@ -39,7 +39,7 @@ echo          批量模型评估脚本
 echo ===================================================
 echo 本脚本将:
 echo  - 将200个问题分成10批次(每批20个)进行评估
-echo  - 评估所有配置的模型（包括 deepseek-v3, qwen-7b-chat, chatglm3-6b 等）
+echo  - 评估所有配置的模型（包括 deepseek-v3, qwen-max, glm-4 等）
 echo  - 将10批结果合并生成最终报告
 echo ===================================================
 echo 注意: 完整评估可能需要较长时间（取决于API响应速度）
@@ -54,7 +54,7 @@ if /i "%CONFIRM%" neq "y" (
 
 :: 运行批量评估脚本
 echo 开始批量评估...
-python -m ai_service.benchmark.batch_benchmark --models deepseek-v3 qwen-7b-chat chatglm3-6b yi-6b-chat
+python -m ai_service.benchmark.batch_benchmark --models deepseek-v3 qwen-max glm-4 yi-34b-chat
 
 if %errorlevel% neq 0 (
     echo 批量评估失败!

@@ -601,7 +601,7 @@
   },
   {
     "id": "q21",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 项目的技能目标中提到需要熟练使用哪款 IDE？",
     "answer": "根据提供的参考资料，没有提到TensorFlow Lite项目中具体需要熟练使用的IDE。因此，对于这个问题，我没有足够的信息来给出答案。",
     "retrieve_time": 0.25449490547180176,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q22",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow 生态中用于高性能服务器端部署的平台叫什么？",
     "answer": "TensorFlow 生态中用于高性能服务器端部署的平台叫做 TensorFlow Serving。",
     "retrieve_time": 0.1756293773651123,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q23",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "哪家公司被提及使用 TensorFlow Lite 进行 OCR 处理？",
     "answer": "根据提供的资料，网易被提及使用 TensorFlow Lite 进行OCR处理。",
     "retrieve_time": 0.18102550506591797,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q24",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 32 位安卓平台，仅核心运行时代码大小约为多少 KB？",
     "answer": "在32位安卓平台下，仅核心运行时的代码大小约为100 KB。",
     "retrieve_time": 0.19641923904418945,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q25",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 工作流程的第四步强调了哪项操作？",
     "answer": "根据提供的参考资料，没有具体列出TensorFlow Lite工作流程的各个步骤。因此，我无法直接指出第四步强调了哪项操作。如果您能提供更多关于这些步骤的信息，我会很乐意帮助您进一步解答。",
     "retrieve_time": 0.1466212272644043,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q26",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "训练集包含多少张花卉图片？",
     "answer": "根据提供的资料，我们知道数据集里每种类别的花平均有734张图片。但是，资料中并没有直接说明总共有多少种类别的花。因此，基于现有信息，我无法给出训练集中总共包含多少张花卉图片的确切数字。如果你能提供更多关于花种类数量的信息，我可以帮助计算总数。",
     "retrieve_time": 0.19949078559875488,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q27",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "验证集包含多少张花卉图片？",
     "answer": "根据提供的参考资料，没有具体提到验证集中包含多少张花卉图片。资料中仅说明了平均每一种花有734张图片，但并未提及这些图片如何被划分为训练集、测试集或验证集。因此，关于验证集具体包含多少张图片的信息无法直接得出。如果需要更准确的数据划分信息，可能需要查阅更多关于数据集使用的细节或者默认的数据集分割规则。",
     "retrieve_time": 1.265110969543457,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q28",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例代码中保存类别标签的文件名是什么？",
     "answer": "根据提供的参考资料，保存类别标签的文件名是`labels.txt`。这可以从内容1和内容2中推断出来，其中提到了对名为`labels.txt`的文件进行写操作，并且返回了同样的文件名字符串。",
     "retrieve_time": 0.25180816650390625,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q29",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "MobileNet V2 基础模型的输入形状 IMG_SHAPE 被设置为多少？",
     "answer": "参考资料中并没有直接给出`IMG_SHAPE`的具体数值。通常，对于MobileNet V2模型，默认的输入形状是(224, 224, 3)，这意味着图片的高度和宽度都是224像素，并且图像是RGB格式（即3个颜色通道）。但是，根据您的具体应用场景或需求，`IMG_SHAPE`可以被设置为其他值。若要获取确切的`IMG_SHAPE`值，请参考您所使用的代码或文档中的具体设定。",
     "retrieve_time": 0.16957330703735352,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q30",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "为何在实例化 MobileNet V2 时将 include_top 参数设为 False？",
     "answer": "在实例化MobileNet V2时将`include_top`参数设为`False`，是因为默认情况下该模型是设计来分类图片到1000个类别（基于ImageNet数据集）。当你的任务只需要将图片分类到较少的类别（例如这里的5类）时，设置`include_top=False`可以移除模型最后用于1000分类的全连接层。这样做的好处是可以让你根据特定需求自定义模型的最后一部分，比如添加适合自己任务的新输出层，从而使得模型能够更好地适应具体的应用场景。",
     "retrieve_time": 0.2508268356323242,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q31",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "将 base_model.trainable 设为 False 的目的是什么？",
     "answer": "将 `base_model.trainable` 设为 `False` 的目的是在进行迁移学习时，保持基础模型（如预训练的网络）原有的参数不变。这样做可以保留该模型通过大规模数据集训练获得的优势与特征提取能力，同时允许我们在其基础上（通常是顶部）添加新的层，并仅针对这些新层以及可能的部分顶层进行训练和微调。这有助于更高效地利用现有资源来改进特定任务的表现，而无需从头开始训练整个模型。",
     "retrieve_time": 0.2357015609741211,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q32",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "自定义网络最后一层使用的激活函数是什么？",
     "answer": "根据提供的参考资料，没有明确提到自定义网络最后一层具体使用了哪种激活函数。因此，对于您的问题“自定义网络最后一层使用的激活函数是什么？”我无法直接给出答案，因为资料中缺少关于最后一层激活函数的具体信息。在实际应用中，这通常取决于问题的性质（比如分类任务可能会使用softmax作为输出层的激活函数），但是基于给定的信息，我们不能确定这里的情况。如果您有更多上下文或特定要求，请提供进一步的信息。",
     "retrieve_time": 0.24581336975097656,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q33",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "初始训练阶段采用的优化器是哪一个？",
     "answer": "初始训练阶段采用的优化器是`tf.keras.optimizers.Adam`，其学习率设定为1e-5。",
     "retrieve_time": 0.2218787670135498,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q34",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "模型中不可训练参数（Non-trainable params）的数量是多少？",
     "answer": "模型中不可训练参数（Non-trainable params）的数量是2,257,984。",
     "retrieve_time": 0.17612695693969727,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q35",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "微调 (fine-tuning) 时从第几层开始解冻？",
     "answer": "根据提供的资料，没有明确指出微调(fine-tuning)时具体从哪一层开始解冻。资料中提到“# Fine tune from this layer onwards”和“# Freeze all the layers before the `fine_tune_at` layer”，这表明存在一个特定的层（用`fine_tune_at`表示），从这个层开始之后的所有层将被设置为可训练状态以进行微调，而该层之前的所有层则保持冻结状态。但是具体的层数或`fine_tune_at`的确切值没有给出。因此，无法直接回答微调应该从第几层开始解冻的问题。实际操作中，`fine_tune_at`的具体值需要根据所使用的模型及应用场景来确定。",
     "retrieve_time": 0.17021441459655762,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q36",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "MobileNet V2 基础模型总层数是多少？",
     "answer": "根据提供的参考资料，没有直接提到MobileNet V2基础模型的具体层数信息。因此，对于您问的“MobileNet V2 基础模型总层数是多少？”这个问题，基于给定的信息我无法给出确切答案。如果您需要这个具体数字，可能需要查阅更详细的MobileNet V2架构文档或相关研究论文。",
     "retrieve_time": 0.25746631622314453,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q37",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "微调阶段使用的学习率被设置为多少？",
     "answer": "参考资料中没有提到微调阶段具体使用的学习率是多少。因此，根据提供的信息，我无法给出确切的答案。如果您有更具体的上下文或额外的信息来源，可能会有助于找到答案。",
     "retrieve_time": 0.1675126552581787,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q38",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "微调后模型的验证精度大约达到多少？",
     "answer": "根据提供的参考资料，微调后模型的精度几乎达到了98%。但请注意，这个数值是针对特定情况下的结果，实际应用中可能会有所不同。",
     "retrieve_time": 0.17942404747009277,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q39",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "SavedModel 被保存到哪个目录？",
     "answer": "SavedModel 会被保存到通过 `tf.saved_model.save` 函数中指定的目录，该目录由参数 `saved_model_dir` 来定义。这个参数需要是一个字符串，指定了含有 TensorFlow 1.x 或者 2.0 使用 SavedModel 生成文件的绝对路径目录。因此，具体是哪个目录取决于您在调用 `tf.saved_model.save` 函数时为 `saved_model_dir` 参数提供的值。",
     "retrieve_time": 0.1701369285583496,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q40",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Android 项目中应将 model.tflite 放置到哪个 assets 路径？",
     "answer": "在Android项目中，应将`model.tflite`文件放置到`/android/start/app/src/main/assets/`路径下。这是根据提供的参考资料内容1直接指出的存放位置。",
     "retrieve_time": 0.25397801399230957,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q21",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 项目的技能目标中提到需要熟练使用哪款 IDE？",
     "answer": "不知道。参考资料中没有提到 TensorFlow Lite 项目的技能目标中需要熟练使用哪款 IDE。",
     "retrieve_time": 0.2814030647277832,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q22",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow 生态中用于高性能服务器端部署的平台叫什么？",
     "answer": "TensorFlow Serving。",
     "retrieve_time": 0.1616361141204834,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q23",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "哪家公司被提及使用 TensorFlow Lite 进行 OCR 处理？",
     "answer": "网易。",
     "retrieve_time": 0.19206571578979492,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q24",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 32 位安卓平台，仅核心运行时代码大小约为多少 KB？",
     "answer": "在32位安卓平台，仅核心运行时代码大小约为100 KB左右。",
     "retrieve_time": 0.16783690452575684,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q25",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 工作流程的第四步强调了哪项操作？",
     "answer": "不知道\n\n由于提供的参考资料没有具体说明 TensorFlow Lite 工作流程的各步骤内容，无法确定第四步强调的是哪项操作。",
     "retrieve_time": 0.1782238483428955,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q26",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "训练集包含多少张花卉图片？",
     "answer": "根据提供的参考资料，每种花平均有734张图片，但是资料中没有提供具体有多少种花。因此，无法准确计算训练集中包含多少张花卉图片。如果假设有n种花，则总共大约有734n张图片。如果需要确切数字，请提供具体花的种类数。",
     "retrieve_time": 0.15605974197387695,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q27",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "验证集包含多少张花卉图片？",
     "answer": "不知道。参考资料中没有提供关于验证集具体包含多少张花卉图片的信息。",
     "retrieve_time": 0.15435028076171875,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q28",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例代码中保存类别标签的文件名是什么？",
     "answer": "根据提供的参考资料，示例代码中保存类别标签的文件名是 'labels.txt'。",
     "retrieve_time": 0.22248363494873047,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q29",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "MobileNet V2 基础模型的输入形状 IMG_SHAPE 被设置为多少？",
     "answer": "不知道。参考资料中未提供关于 `IMG_SHAPE` 的具体数值。",
     "retrieve_time": 0.15261220932006836,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q30",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "为何在实例化 MobileNet V2 时将 include_top 参数设为 False？",
     "answer": "在实例化 MobileNet V2 时将 `include_top` 参数设为 False 是因为需要修改模型的结构以适应特定的分类任务。这样做可以去除模型原有的顶层神经网络层（即全连接层），这样用户可以添加自己的输出层，适应只有5类的分类任务，而不是默认的1000类。这有助于定制模型以适应不同的数据集和任务需求。",
     "retrieve_time": 0.1665647029876709,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q31",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "将 base_model.trainable 设为 False 的目的是什么？",
     "answer": "将 base_model.trainable 设为 False 的目的是为了在迁移学习中保留原始预训练模型的学习成果，防止在新的训练过程中基础模型的参数被修改，保持其在大规模数据集上训练获得的优势。这样可以只训练添加到基础模型上的新层或者分类器，而不改变原有模型的结构和参数。",
     "retrieve_time": 0.1506175994873047,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q32",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "自定义网络最后一层使用的激活函数是什么？",
     "answer": "不知道\n\n根据提供的参考资料，没有明确说明自定义网络最后一层使用的激活函数是什么。通常情况下，输出层的激活函数会根据具体任务选择，例如分类任务可能会使用softmax激活函数，但此处未提供足够信息来确定所使用的激活函数。",
     "retrieve_time": 0.2363436222076416,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q33",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "初始训练阶段采用的优化器是哪一个？",
     "answer": "初始训练阶段采用的优化器是 tf.keras.optimizers.Adam，其学习率设置为 1e-5。",
     "retrieve_time": 0.16775155067443848,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q34",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "模型中不可训练参数（Non-trainable params）的数量是多少？",
     "answer": "模型中不可训练参数（Non-trainable params）的数量是2,257,984。",
     "retrieve_time": 0.2101750373840332,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q35",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "微调 (fine-tuning) 时从第几层开始解冻？",
     "answer": "微调时从标记为 `fine_tune_at` 的层开始解冻。参考资料中没有提供具体的层数，但指出了“首先取消冻结模型的顶层”，这通常意味着从某个指定的层（在代码中通常由变量 `fine_tune_at` 表示）开始解冻。参考资料3也提到了“冻结所有在 `fine_tune_at` 层之前的层”。",
     "retrieve_time": 0.18607473373413086,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q36",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "MobileNet V2 基础模型总层数是多少？",
     "answer": "不知道。参考资料中没有提供MobileNet V2基础模型的总层数信息。",
     "retrieve_time": 0.15993475914001465,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q37",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "微调阶段使用的学习率被设置为多少？",
     "answer": "不知道。参考资料中没有提供关于微调阶段使用的学习率的信息。",
     "retrieve_time": 0.18302488327026367,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q38",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "微调后模型的验证精度大约达到多少？",
     "answer": "根据提供的资料，微调后模型的验证精度几乎达到98%。",
     "retrieve_time": 0.1849195957183838,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q39",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "SavedModel 被保存到哪个目录？",
     "answer": "SavedModel 被保存到 `saved_model_dir` 指定的目录中。该目录是用户通过参数传递给 `tf.saved_model.save()` 函数的绝对路径。",
     "retrieve_time": 0.19029927253723145,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q40",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Android 项目中应将 model.tflite 放置到哪个 assets 路径？",
     "answer": "Android 项目中应将 model.tflite 文件放置到 `/android/start/app/src/main/assets/` 路径下。",
     "retrieve_time": 0.19758963584899902,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q21",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 项目的技能目标中提到需要熟练使用哪款 IDE？",
     "answer": "根据提供的资料，没有具体提到需要熟练使用哪款 IDE 来开发 TensorFlow Lite 项目。因此，无法从资料中确定特定的 IDE。建议参考项目的其他文档或说明，可能会有更详细的开发环境要求。\n\n简要回答：不知道。资料中未提及具体的 IDE。",
     "retrieve_time": 0.2521815299987793,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q22",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow 生态中用于高性能服务器端部署的平台叫什么？",
     "answer": "TensorFlow 生态中用于高性能服务器端部署的平台叫 TensorFlow Serving。",
     "retrieve_time": 0.21046829223632812,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q23",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "哪家公司被提及使用 TensorFlow Lite 进行 OCR 处理？",
     "answer": "根据提供的资料，网易被提及使用 TensorFlow Lite 进行 OCR 处理。",
     "retrieve_time": 0.16713476181030273,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q24",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 32 位安卓平台，仅核心运行时代码大小约为多少 KB？",
     "answer": "在 32 位安卓平台，仅核心运行时代码大小约为 100 KB。",
     "retrieve_time": 0.20302104949951172,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q25",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 工作流程的第四步强调了哪项操作？",
     "answer": "根据提供的资料，并没有详细列出TensorFlow Lite工作流程的具体每个步骤的内容，包括第四步的详细操作。因此，基于现有资料，无法确定第四步强调的操作。\n\n**回答: 不知道**",
     "retrieve_time": 0.22408366203308105,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q26",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "训练集包含多少张花卉图片？",
     "answer": "根据参考资料，花会数据集每个类别的花平均有734张图片。假设数据集包含多个类别，我们需要知道具体有多少种类别的花。不过，参考资料并未明确提供具体类别数量。\n\n但是，如果我们假设数据集包含5种类别的花（这是常见的假设，基于一些公开使用的情况），那么总图片数量大约是：\n\n734张/类别 × 5类别 = 3670张图片。\n\n因此，**训练集大约包含3670张花卉图片**。如果实际类别数量不同，这个数字会有所变化。",
     "retrieve_time": 0.20406532287597656,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q27",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "验证集包含多少张花卉图片？",
     "answer": "根据提供的资料，没有具体提到验证集包含多少张花卉图片。资料主要描述了数据集的下载来源和内容，但没有说明验证集的详细信息。因此，**不知道**验证集具体包含多少张花卉图片。",
     "retrieve_time": 0.18758773803710938,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q28",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例代码中保存类别标签的文件名是什么？",
     "answer": "示例代码中保存类别标签的文件名是 'labels.txt'。",
     "retrieve_time": 0.16812682151794434,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q29",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "MobileNet V2 基础模型的输入形状 IMG_SHAPE 被设置为多少？",
     "answer": "根据提供的资料，并没有具体说明IMG_SHAPE的值。资料中仅提到`base_model`使用了`MobileNetV2`并设置了`input_shape=IMG_SHAPE`，但未给出IMG_SHAPE的具体数值。\n\n回答: 不知道IMG_SHAPE的具体值，因为资料中未提供。",
     "retrieve_time": 0.1827549934387207,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q30",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "为何在实例化 MobileNet V2 时将 include_top 参数设为 False？",
     "answer": "在实例化 MobileNet V2 时将 include_top 参数设为 False，是为了移除模型顶部的最终分类层（即分类到1000类的那一层）。这样做是为了能够根据具体任务自定义输出层。例如，在只有5类分类任务的情况下，需要在基础模型上添加一个新的输出层来适应新的分类数目。设置 include_top=False 允许用户根据自己的需求重新定义模型的顶层结构。",
     "retrieve_time": 0.19520926475524902,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q31",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "将 base_model.trainable 设为 False 的目的是什么？",
     "answer": "将 base_model.trainable 设为 False 的目的是在训练过程中不更新预训练基础模型的权重，从而保留其在大规模数据上预训练的优势。这样仅训练新增的分类器或其他层，避免对基础模型的参数进行修改。",
     "retrieve_time": 0.20454907417297363,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q32",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "自定义网络最后一层使用的激活函数是什么？",
     "answer": "根据提供的资料，没有明确提到自定义网络最后一层使用的激活函数是什么。资料中只说明最后是一个五个节点的输出层，但没有指定激活函数的类型。\n\n回答: 不知道。",
     "retrieve_time": 0.17517590522766113,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q33",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "初始训练阶段采用的优化器是哪一个？",
     "answer": "根据提供的资料，初始训练阶段采用的优化器是 **Adam**，其学习率设置为 **1e-5**。这是通过以下代码实现的：\n\n```python\noptimizer = tf.keras.optimizers.Adam(1e-5)\n```\n\n因此，优化器是 Adam (学习率为 1e-5)。",
     "retrieve_time": 0.18487119674682617,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q34",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "模型中不可训练参数（Non-trainable params）的数量是多少？",
     "answer": "模型中不可训练参数（Non-trainable params）的数量是 2,257,984。",
     "retrieve_time": 0.22586417198181152,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q35",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "微调 (fine-tuning) 时从第几层开始解冻？",
     "answer": "根据提供的资料，微调（fine-tuning）时从指定的一层开始解冻，具体是从标记为 `fine_tune_at` 的层开始解冻。资料提到“Freeze all the layers before the `fine_tune_at` layer”，这意味着从 `fine_tune_at` 这一层开始及其之后的层将取消冻结，进行微调。\n\n回答: 微调时从标记为 `fine_tune_at` 的层开始解冻。",
     "retrieve_time": 0.17909789085388184,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q36",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "MobileNet V2 基础模型总层数是多少？",
     "answer": "根据提供的资料，没有具体信息说明MobileNet V2基础模型的总层数。资料主要描述了模型的使用和修改方法，但没有提及模型的具体层数。因此，无法从资料中确定MobileNet V2的基础模型总层数。\n\n回答: 不知道",
     "retrieve_time": 0.28591394424438477,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q37",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "微调阶段使用的学习率被设置为多少？",
     "answer": "不知道。参考资料中未提及微调阶段具体使用的学习率。",
     "retrieve_time": 0.2187485694885254,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q38",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "微调后模型的验证精度大约达到多少？",
     "answer": "根据提供的资料，微调后模型的精度几乎达到98%。因此，可以推测微调后模型的验证精度大约为98%。\n\n回答: 大约达到98%。",
     "retrieve_time": 0.23184800148010254,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q39",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "SavedModel 被保存到哪个目录？",
     "answer": "SavedModel 被保存到由 `saved_model_dir` 指定的目录，该目录是一个绝对路径的字符串。例如：`tf.saved_model.save(model, saved_model_dir)` 中，`saved_model_dir` 是你指定的目录路径。\n\n回答: SavedModel 被保存到由 `saved_model_dir` 指定的目录。",
     "retrieve_time": 0.18221521377563477,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q40",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Android 项目中应将 model.tflite 放置到哪个 assets 路径？",
     "answer": "根据提供的资料，在Android项目中应将`model.tflite`文件放置到以下路径：\n\n`/android/start/app/src/main/assets/`\n\n这是资料内容1中明确指出的路径。",
     "retrieve_time": 0.19449281692504883,

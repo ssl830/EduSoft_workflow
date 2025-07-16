@@ -2,7 +2,7 @@
 # 模型基准测试运行脚本
 
 # 默认参数
-MODELS="deepseek-v3 qwen-7b-chat"
+MODELS="deepseek-v3 qwen-max"
 DATASET="ai_service/data/eval_questions.json"
 OUTPUT_DIR="ai_service/benchmark/results"
 LIMIT=10

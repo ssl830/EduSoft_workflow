@@ -4,7 +4,7 @@
 
 ## 功能概述
 
-- 支持评估多种模型（DeepSeek-V3、Qwen-7B-Chat、ChatGLM3-6B、Baichuan2-13B-Chat、Yi-6B-Chat等）
+- 支持评估多种模型（DeepSeek-V3、Qwen-7B-Chat、glm-4、Baichuan2-13B-Chat、yi-34b-chat等）
 - 使用统一的RAG检索方案（基于FAISS向量检索）
 - 自动计算多种指标（BERTScore-F1、Source Recall、Rouge-L、延迟、Token数等）
 - 生成可视化报告（Markdown格式，包含图表）
@@ -24,10 +24,10 @@ pip install -e .
 在使用前，请确保设置了相应模型的API密钥环境变量：
 
 - DeepSeek-V3: `DEEPSEEK_API_KEY`
-- Qwen-7B-Chat: `DASHSCOPE_API_KEY`
-- ChatGLM3-6B: `ZHIPUAI_API_KEY`
-- Baichuan2-13B-Chat: `BAICHUAN_API_KEY`
-- Yi-6B-Chat: `YI_API_KEY`
+- Qwen-7B-Chat: `DASHSCOPE_API_KEY`(阿里千问)
+- glm-4: `ZHIPUAI_API_KEY`（清华智谱）
+- Baichuan2-13B-Chat: `BAICHUAN_API_KEY`（
+- yi-34b-chat: `YI_API_KEY`
 
 您可以在 `~/.config/edusoft/` 目录下创建环境变量文件，或直接在命令行中设置。
 
@@ -37,7 +37,7 @@ pip install -e .
 
 ```bash
 python -m ai_service.benchmark.compare_models \
-       --models deepseek-v3 qwen-7b-chat chatglm3-6b \
+       --models deepseek-v3 qwen-max glm-4 \
        --dataset ai_service/data/eval_questions.json \
        --out ai_service/benchmark/results.json \
        --top_k 4 \

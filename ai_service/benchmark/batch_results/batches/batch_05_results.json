@@ -601,7 +601,7 @@
   },
   {
     "id": "q81",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 中释放 GPU 内存常用的辅助函数是哪一个？",
     "answer": "在TensorFlow.js中，用于释放不再需要的张量从而帮助管理GPU内存的常用辅助函数是`tf.dispose()`。此外，在执行一系列操作时，可以使用`tf.tidy`来自动清理中间张量，这也有助于有效管理内存。请注意，虽然资料中提到了“TF.dispose”和“Dispose方法”，正确的API调用应该是`tf.dispose(tensor)`或通过`tf.tidy(func)`的形式。这些方法有助于确保不再使用的张量能够被及时清除，从而释放GPU上的内存资源。",
     "retrieve_time": 0.23726963996887207,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q82",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 的前身 DeepLearn.js 于哪一年并入 TensorFlow.js？",
     "answer": "根据提供的参考资料，没有提到关于DeepLearn.js并入TensorFlow.js的具体年份信息。因此，对于您的问题，我无法从给定的资料中找到确切答案。如果您有更多关于这方面的资料需求或者其他问题，欢迎继续提问！",
     "retrieve_time": 0.2269577980041504,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q83",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "浏览器端机器学习的三大优势之一是无需安装软件或驱动，请再列举其中任意一个优势。",
     "answer": "浏览器端机器学习的另一个优势是支持多种平台，包括安卓和iOS设备。这意味着用户可以在不同的操作系统上直接通过浏览器访问并使用机器学习应用，而不需要担心兼容性问题。",
     "retrieve_time": 0.19916558265686035,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q84",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 可以在桌面端原生应用中运行，常用的两种框架分别是？",
     "answer": "根据提供的参考资料，没有直接提到支持桌面端原生应用运行TensorFlow.js的特定框架。因此，基于给定的信息，我无法准确回答您的问题关于哪两种框架是常用的来在桌面端原生应用中运行TensorFlow.js。建议查阅更多关于TensorFlow.js官方文档或相关技术社区以获取更详细的信息。",
     "retrieve_time": 0.140916109085083,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q85",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "通过按下浏览器快捷键 F12 可以打开什么工具来调试 TensorFlow.js 代码？",
     "answer": "通过按下浏览器快捷键 F12 可以打开开发人员工具来调试 TensorFlow.js 代码。这将帮助你方便地进行代码的调试工作。",
     "retrieve_time": 0.43407201766967773,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q86",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js官方推荐的 CDN 服务之一用于加载脚本文件是哪个？",
     "answer": "根据提供的参考资料，没有直接提到TensorFlow.js官方推荐的具体CDN服务名称。资料中仅说明了可以通过从TensorFlow官网获取的CDN文件地址来下载TensorFlow.js文件，并且可以在HTML中直接引用这些文件。因此，对于您所询问的具体CDN服务提供商名称，依据现有信息我无法给出确切答案。建议访问TensorFlow官方网站以获得最新和最准确的信息。",
     "retrieve_time": 0.1599564552307129,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q87",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "使用 tf.sequential 创建的模型属于哪种网络结构特点？",
     "answer": "使用 `tf.sequential` 创建的模型属于线性堆叠层（Layer）的网络结构。这意味着每一层都直接连接到其下一层，形成一个从输入到输出的连续链条。这种结构非常适合构建简单的前馈神经网络，其中信息仅在一个方向上流动：从输入层经过隐藏层到达输出层。",
     "retrieve_time": 0.2710421085357666,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q88",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "相比 tf.sequential，tf.model API 最大的灵活性优势是什么？",
     "answer": "相比于 `tf.sequential`，`tf.model` API 的最大灵活性优势在于它能够定义更加复杂、非线性的网络结构。`tf.sequential` 适用于层与层之间是线性堆叠的情况，而 `tf.model` 则允许用户自定义层之间的连接方式，支持创建任何非线性的计算图，比如跳过某些层、共享层权重等操作。这使得 `tf.model` 在构建复杂的神经网络模型时提供了更大的自由度和灵活性。",
     "retrieve_time": 0.21498966217041016,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q89",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 中若需手动释放单个张量的内存，可调用哪两个方法之一？",
     "answer": "在TensorFlow.js中，若需手动释放单个张量的内存，可以调用`dispose`方法。另外，也可以利用`tf.tidy`来帮助管理内存，但直接针对单个张量的手动释放更常用的是`dispose`方法。根据提供的资料，并没有明确指出除了`dispose`外另一个具体的方法名用于单个张量的内存释放（如资料中提到的`TF.dispose`可能是对`dispose`方法的一种误写）。因此，主要推荐使用`dispose`方法。对于提到的`TF.tidy`或`tf.tidy`，它更适合用来自动清理在一个函数作用域内创建的所有临时张量，而不是专门针对单个张量的操作。",
     "retrieve_time": 0.25911831855773926,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q90",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "tf.tidy 回调函数结束后会保留什么？",
     "answer": "根据提供的参考资料，tf.tidy 执行完毕后会清除所有创建的中间张量。这意味着，除了最终结果或明确保留下来的张量外，其他在 tf.tidy 回调函数内部创建的临时张量都会被清理掉。但请注意，资料中并没有具体说明哪些是“最终结果”或者如何“明确保留”某些张量，因此对于您的问题，可以理解为：tf.tidy 结束后主要保留的是那些没有被标记为需要清理的、或是用户特别指定保留的张量。如果需要更详细的指导，建议查阅TensorFlow.js官方文档或相关API文档以获得更多信息。",
     "retrieve_time": 0.45595216751098633,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q91",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在浏览器控制台中输入 tf.version 主要用于检查什么？",
     "answer": "在浏览器控制台中输入 `tf.version` 主要用于检查当前使用的TensorFlow.js的版本信息。不过，根据提供的参考资料，更准确的说法是应该使用 `tf.__version__` 来获取版本信息，并且通过断言 `assert tf.__version__.startswith('2')` 来确保安装的是TensorFlow.js 2.x版本。这表明用户可能想要验证他们正在使用的TensorFlow.js是否为特定版本（例如2.x系列）。因此，输入类似命令主要用于确认库的版本符合预期要求。但请注意，直接调用 `tf.version` 并非参考资料中提到的确切方法。正确的方法应该是 `tf.__version__`。",
     "retrieve_time": 1.322483777999878,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q92",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 的 Core API 提供哪三方面底层功能？",
     "answer": "根据提供的参考资料，没有具体提到TensorFlow.js的Core API提供了哪三方面的底层功能。因此，我无法基于给定的信息直接回答您的问题。对于更详细的解答，可能需要查阅TensorFlow.js官方文档或其他相关资料。",
     "retrieve_time": 1.1407408714294434,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q93",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用哪个 API 层？",
     "answer": "根据提供的参考资料，当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用底层的Kore API。这是因为Kore API提供了更直接地控制模型构建过程的能力，适合于那些需要高度定制化或具有复杂、非标准架构的模型开发场景。相比之下，Layer API虽然使用起来更加方便快捷，但可能在灵活性方面不如Kore API。不过，请注意资料中提到的是“Kore API”，这可能是对“Core API”的误写，在TensorFlow.js文档和其他相关资料中通常被称为“Core API”。",
     "retrieve_time": 0.2272968292236328,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q94",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 可运行于 IoT 设备如 Raspberry Pi，这依赖于其对哪一平台的支持？",
     "answer": "根据提供的参考资料，TensorFlow.js 主要是支持使用JavaScript在浏览器端部署模型。而对于IoT设备如Raspberry Pi的支持，并没有直接提到是通过TensorFlow.js实现的。实际上，资料中指出的是TensorFlow Lite解释器可以部署在Raspberry Pi这样的嵌入式Linux系统上，且TFLite被明确说明为可在基于Linux的IoT设备上运行TensorFlow模型的官方框架。因此，对于Raspberry Pi这样的IoT设备来说，它们更可能是依赖于TensorFlow Lite而非TensorFlow.js来运行模型。如果您的问题是基于某个特定上下文或有其他相关资料，请提供更多信息以便给出更准确的回答。",
     "retrieve_time": 0.2796151638031006,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q95",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 的 tf.dispose 与 tf.tidy 主要解决了什么问题？",
     "answer": "TensorFlow.js 的 `tf.dispose` 与 `tf.tidy` 主要解决了张量操作过程中产生的内存管理问题。在进行大量的张量计算时，如果不及时释放不再使用的张量所占用的内存，可能会导致内存消耗过大。`tf.dispose` 允许手动释放特定张量占用的资源；而 `tf.tidy` 提供了一种更自动化的解决方案，它可以自动清理在一个函数作用域内创建的所有临时张量（除了那些被明确返回或需要保持引用的），从而简化了内存管理过程，避免了手动频繁调用 `dispose` 方法的麻烦。这有助于提高程序运行效率和稳定性。",
     "retrieve_time": 1.6067461967468262,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q96",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "DeepLearn.js 主要基于哪项浏览器技术实现 GPU 运算？",
     "answer": "根据提供的参考资料，没有直接提到DeepLearn.js及其基于哪项浏览器技术实现GPU运算的具体信息。因此，对于您的问题，我无法从给定的资料中找到答案。请注意，您询问的是关于DeepLearn.js的信息，而资料中主要讨论的是TensorFlow.js的相关内容。如果您有关于TensorFlow.js或其他相关主题的问题，我很乐意尝试根据已有资料提供帮助。",
     "retrieve_time": 0.2586634159088135,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q97",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 可通过哪个命令行工具（打包器）与 React、Vue 等项目集成？",
     "answer": "根据提供的参考资料，没有提到具体的命令行工具或打包器来将TensorFlow.js与React、Vue等项目集成的信息。因此，对于您的问题，我无法直接从给定的资料中提供答案。在实际操作中，通常可以通过npm（Node Package Manager）安装tensorflow/tfjs以及相应的react或vue绑定包来实现集成，但这部分内容并未出现在您给出的参考资料内。",
     "retrieve_time": 0.27014756202697754,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q98",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 TensorFlow.js 中，张量运算是可变还是不可变？",
     "answer": "根据提供的参考资料，并没有直接提到TensorFlow.js中张量运算是可变还是不可变的信息。因此，基于现有资料我无法给出准确答案。对于这个问题，建议查阅更详细的TensorFlow.js官方文档或相关技术资料以获得确切信息。",
     "retrieve_time": 0.17670321464538574,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q99",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 数据集示例中，汽车油耗 (MPG) 与哪四个特征相关？",
     "answer": "根据提供的参考资料，汽车油耗 (MPG) 与以下四个特征相关：汽缸数、加速度、马力、排量。需要注意的是，资料中还提到了重量作为影响因素之一，但根据您的问题要求指出四个特征，因此我选择了前四个列出的特征。如果有其他特定需求或更多的上下文信息，请告诉我！",
     "retrieve_time": 0.1395409107208252,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q100",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow.js 支持在浏览器调用手机哪些硬件传感器？请列举至少一个。",
     "answer": "根据提供的资料，没有具体提到TensorFlow.js可以直接调用手机的哪些硬件传感器。因此，对于您的问题，我没有足够的信息来列举TensorFlow.js可以在浏览器中直接调用的手机硬件传感器。不过，一般而言，通过JavaScript和Web API，可以访问到某些传感器的数据（如加速度计、陀螺仪等），但这些功能并非直接由TensorFlow.js提供支持。若要实现与传感器数据相关的机器学习应用，可能需要结合使用Web API获取传感器数据以及TensorFlow.js进行模型推理。",
     "retrieve_time": 0.16882967948913574,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q81",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 中释放 GPU 内存常用的辅助函数是哪一个？",
     "answer": "在TensorFlow.js中，释放GPU内存常用的辅助函数是`tf.dispose()`。这个函数可以用来释放单个Tensor或变量的内存。另外，根据参考资料3，当使用WebGL后端时，需要显式管理内存，这也暗示了使用`tf.dispose()`来释放内存的重要性。而资料1提到的`Dispose`方法和`TF.dispose`实际上是指的同一方法，只是写法略有不同。所以，`tf.dispose()`是在TensorFlow.js中释放GPU内存时常用的辅助函数。",
     "retrieve_time": 0.4730842113494873,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q82",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 的前身 DeepLearn.js 于哪一年并入 TensorFlow.js？",
     "answer": "不知道。提供的参考资料中没有提及DeepLearn.js并入TensorFlow.js的具体年份。",
     "retrieve_time": 0.4961879253387451,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q83",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "浏览器端机器学习的三大优势之一是无需安装软件或驱动，请再列举其中任意一个优势。",
     "answer": "浏览器端机器学习的另一个优势是支持多种平台，涵盖安卓和LOS设备。这意味着用户可以在不同操作系统的设备上，无需安装额外软件或驱动，直接通过浏览器进行机器学习运算。",
     "retrieve_time": 1.3408596515655518,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q84",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 可以在桌面端原生应用中运行，常用的两种框架分别是？",
     "answer": "不知道。参考资料中并未提及 TensorFlow.js 在桌面端原生应用中运行时常用的两种框架。",
     "retrieve_time": 0.19616293907165527,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q85",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "通过按下浏览器快捷键 F12 可以打开什么工具来调试 TensorFlow.js 代码？",
     "answer": "通过按下浏览器快捷键 F12 可以打开开发人员工具，用于调试 TensorFlow.js 代码。",
     "retrieve_time": 0.2212071418762207,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q86",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js官方推荐的 CDN 服务之一用于加载脚本文件是哪个？",
     "answer": "不知道。参考资料中没有提供有关TensorFlow.js官方推荐的 CDN 服务的信息。",
     "retrieve_time": 0.17190313339233398,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q87",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "使用 tf.sequential 创建的模型属于哪种网络结构特点？",
     "answer": "使用 `tf.sequential` 创建的模型属于一种线性堆叠的网络结构特点，其中神经网络层是按顺序添加的，每一层之间的关系比较固定。这种结构简单、直观，适用于层与层之间没有复杂连接的模型。",
     "retrieve_time": 0.15795254707336426,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q88",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "相比 tf.sequential，tf.model API 最大的灵活性优势是什么？",
     "answer": "tf.model API相比于tf.sequential的最大灵活性优势在于可以定义神经网络层之间更为复杂和随意的关系，不仅限于线性堆叠Layer的结构。这使得使用TF.model可以创建任何非必须线性的计算图，从而允许构建更加复杂和定制的模型结构。",
     "retrieve_time": 0.16997838020324707,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q89",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 中若需手动释放单个张量的内存，可调用哪两个方法之一？",
     "answer": "可以调用 `Dispose` 方法或 `tf.dispose` 方法之一。",
     "retrieve_time": 0.16222691535949707,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q90",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "tf.tidy 回调函数结束后会保留什么？",
     "answer": "根据提供的参考资料，`tf.tidy` 回调函数结束后不会保留任何中间张量。它会执行一个操作并清除所有在这个回调中创建的中间张量，以帮助管理内存使用。所以，回调结束后，通过`tf.tidy`创建的中间张量都会被清除。",
     "retrieve_time": 0.1502244472503662,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q91",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在浏览器控制台中输入 tf.version 主要用于检查什么？",
     "answer": "在浏览器控制台中输入 `tf.version` 主要用于检查是否正确加载了TensorFlow.js（即Tenzeflow.js）的版本信息，确保所使用的TensorFlow.js库版本与预期一致。这有助于诊断和确认开发环境中的库版本问题。不过，根据提供的参考资料，更准确的命令应该是 `tf.version` 而不是 `Tef.warshen`，这里可能是输入错误。参考资料中没有直接提到 `tf.version` 命令，但根据 `tf.__version__.startswith('2')` 可以推断出相似的用途。",
     "retrieve_time": 0.179243803024292,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q92",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 的 Core API 提供哪三方面底层功能？",
     "answer": "不知道。参考资料中没有提供关于TensorFlow.js的Core API所提供的三方面底层功能的信息。用户的问题似乎与参考资料中提到的Tenzeflow.js相关，但资料并未具体说明Core API的细节。",
     "retrieve_time": 0.17832517623901367,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q93",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用哪个 API 层？",
     "answer": "当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用底层 Kore API。",
     "retrieve_time": 0.15010643005371094,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q94",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 可运行于 IoT 设备如 Raspberry Pi，这依赖于其对哪一平台的支持？",
     "answer": "TensorFlow.js 可运行于 IoT 设备如 Raspberry Pi，这依赖于其对基于Linux的平台的支持。具体来说，TensorFlow Lite 解释器可以部署在嵌入式 Linux 系统上，如 Raspberry Pi。因此，TensorFlow.js 能够在支持 Linux 的 IoT 设备上运行。",
     "retrieve_time": 0.15301942825317383,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q95",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 的 tf.dispose 与 tf.tidy 主要解决了什么问题？",
     "answer": "tf.dispose 和 tf.tidy 主要解决了在 TensorFlow.js 中进行大量张量操作时产生的内存管理问题。它们帮助开发者释放不再使用的张量所占用的内存，以避免内存泄漏和提升性能。使用 tf.dispose 可以手动释放单个张量的内存，而 tf.tidy 可以自动管理一组操作所创建的张量内存，并在操作完成后释放这些内存。这对于避免因大量操作导致的内存管理麻烦尤为有用。",
     "retrieve_time": 0.17702245712280273,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q96",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "DeepLearn.js 主要基于哪项浏览器技术实现 GPU 运算？",
     "answer": "不知道。参考资料中并没有提到 DeepLearn.js 及其相关技术实现细节。提供的资料主要涉及 Tenzeflow.js 及其与硬件加速相关的信息。",
     "retrieve_time": 0.1632838249206543,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q97",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 可通过哪个命令行工具（打包器）与 React、Vue 等项目集成？",
     "answer": "不知道。参考资料中并未提供关于通过命令行工具或打包器将TensorFlow.js与React、Vue等项目集成的方法。",
     "retrieve_time": 0.2123584747314453,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q98",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 TensorFlow.js 中，张量运算是可变还是不可变？",
     "answer": "在 TensorFlow.js 中，张量运算通常是不可变的。这意味着一旦张量被创建，它的值不能被改变。为了管理内存和避免内存泄漏，建议使用 `TF.tidy` 或 `Dispose` 方法来释放不再需要的张量所占用的内存。从提供的参考资料中，内容 3 和 4 提到了使用 `Dispose` 方法或 `TF.tidy` 来处理张量操作。这些信息间接表明了张量在 TensorFlow.js 中是不可变的。",
     "retrieve_time": 0.19569897651672363,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q99",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 数据集示例中，汽车油耗 (MPG) 与哪四个特征相关？",
     "answer": "根据提供的参考资料，汽车油耗（MPG）的数据建模受到以下四个特征的影响：汽光数（可能是发动机气缸数）、加速度、马力、排量。因此，可以推断在TensorFlow.js数据集示例中，汽车油耗（MPG）与这四个特征相关。",
     "retrieve_time": 0.19582462310791016,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q100",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow.js 支持在浏览器调用手机哪些硬件传感器？请列举至少一个。",
     "answer": "根据提供的资料，TensorFlow.js 可以调用手机硬件的传感器。但是具体支持哪些硬件传感器，资料中并没有明确列出。因此，我不能准确地列举出至少一个支持的硬件传感器。不知道。",
     "retrieve_time": 0.16501903533935547,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q81",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 中释放 GPU 内存常用的辅助函数是哪一个？",
     "answer": "在 TensorFlow.js 中，释放 GPU 内存常用的辅助函数是 **TF.dispose** 或 **TF.tidy**。\n\n根据参考资料，内容 1 和内容 4 提到了使用 **Dispose** 方法或 **TF.tidy** 来管理张量内存，尤其是在使用 GPU 加速时需要显式管理内存（内容 3 指出在使用 WebGL 后端时必须显式管理内存）。\n\n因此，答案是 **TF.dispose** 或 **TF.tidy**。",
     "retrieve_time": 0.28465795516967773,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q82",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 的前身 DeepLearn.js 于哪一年并入 TensorFlow.js？",
     "answer": "DeepLearn.js 于2018年并入 TensorFlow.js。",
     "retrieve_time": 0.1617417335510254,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q83",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "浏览器端机器学习的三大优势之一是无需安装软件或驱动，请再列举其中任意一个优势。",
     "answer": "根据提供的资料，浏览器端机器学习的另一个优势是支持多种平台，涵盖安卓和LOS设备。",
     "retrieve_time": 0.2172703742980957,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q84",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 可以在桌面端原生应用中运行，常用的两种框架分别是？",
     "answer": "根据提供的资料，TensorFlow.js 主要用于浏览器端部署，未直接提及在桌面端原生应用中运行的常用框架。因此，**不知道**TensorFlow.js 在桌面端原生应用中常用的两种框架是什么。",
     "retrieve_time": 0.2891194820404053,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q85",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "通过按下浏览器快捷键 F12 可以打开什么工具来调试 TensorFlow.js 代码？",
     "answer": "按下浏览器快捷键 F12 可以打开开发人员工具（DevTools），利用该工具可以方便地调试你的 TensorFlow.js 代码。",
     "retrieve_time": 0.16986799240112305,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q86",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js官方推荐的 CDN 服务之一用于加载脚本文件是哪个？",
     "answer": "根据提供的资料，TensorFlow.js官方推荐的CDN服务并没有具体名称或地址被明确提到。然而，资料中提到CDN文件地址是由TensorFlow官网公布的，这意味着官方可能提供了一个CDN链接供用户加载脚本文件。要获取具体的CDN地址，建议访问TensorFlow.js的官方网站查阅相关文档或资源。\n\n因此，基于现有资料，无法提供具体的CDN服务名称，但可以指引用户查阅TensorFlow官网以找到官方推荐的CDN文件地址。\n\n回答: 资料中未具体说明，建议查阅TensorFlow.js官方网站以获取官方推荐的CDN服务地址。",
     "retrieve_time": 0.16529393196105957,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q87",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "使用 tf.sequential 创建的模型属于哪种网络结构特点？",
     "answer": "根据提供的资料，使用 `tf.sequential` 创建的模型属于**线性堆叠层**的网络结构特点。这意味着各层按顺序线性堆叠，每一层只与下一层相关。\n\n回答: 线性堆叠层结构。",
     "retrieve_time": 0.15516328811645508,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q88",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "相比 tf.sequential，tf.model API 最大的灵活性优势是什么？",
     "answer": "相比 tf.sequential，tf.model API 最大的灵活性优势在于它可以定义神经网络层与层之间更随意、更复杂的连接关系，而不仅仅是以线性堆叠的方式构建模型。这意味着 tf.model 可以用来创建任何非线性的计算图，适合构建具有复杂拓扑结构的模型。",
     "retrieve_time": 0.1740727424621582,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q89",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 中若需手动释放单个张量的内存，可调用哪两个方法之一？",
     "answer": "在 TensorFlow.js 中，若需手动释放单个张量的内存，可以调用 **Dispose** 方法或 **TF.dispose** 方法。\n\n回答: Dispose 或 TF.dispose。",
     "retrieve_time": 0.16957592964172363,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q90",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "tf.tidy 回调函数结束后会保留什么？",
     "answer": "根据提供的资料，`tf.tidy` 会执行一个回调函数并清理所有创建的中间张量。这意味着在 `tf.tidy` 回调函数结束时，所有在回调函数内部创建的中间张量都会被清除，以避免内存泄漏。因此，回调函数结束后不会保留任何中间张量。\n\n回答: 在 `tf.tidy` 回调函数结束后，所有创建的中间张量会被清理，不会被保留。",
     "retrieve_time": 0.22757411003112793,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q91",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在浏览器控制台中输入 tf.version 主要用于检查什么？",
     "answer": "在浏览器控制台中输入 `tf.version` 主要用于检查当前加载的 TensorFlow.js 库的版本信息。这可以帮助确认是否正在使用预期版本的 TensorFlow.js，特别是当某些功能或函数在不同版本中有变化时。\n\n不过，根据提供的参考资料，正确的检查方法应该是使用 `assert tf.__version__.startswith('2')` 来验证版本号是否以 '2' 开头。这表明你应该期望使用 TensorFlow.js 2.x 系列的版本。因此，`tf.version` 可能不是准确的属性名称，正确的属性应为 `tf.__version__`。\n\n总结：在浏览器控制台中输入 `tf.version` 用于检查 TensorFlow.js 的版本信息，但更准确的属性是 `tf.__version__`。",
     "retrieve_time": 0.2691631317138672,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q92",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 的 Core API 提供哪三方面底层功能？",
     "answer": "根据提供的参考资料，没有具体列出 TensorFlow.js 的 Core API 提供的三个底层功能。因此，基于现有资料，无法准确回答 Core API 的三方面底层功能。\n\n回答: 不知道。",
     "retrieve_time": 0.3243143558502197,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q93",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用哪个 API 层？",
     "answer": "根据提供的资料，当需要更多灵活性或无序模型结构时，TensorFlow.js 建议使用 **Kore API**。",
     "retrieve_time": 0.29679203033447266,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q94",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 可运行于 IoT 设备如 Raspberry Pi，这依赖于其对哪一平台的支持？",
     "answer": "TensorFlow.js 可运行于 IoT 设备如 Raspberry Pi，这依赖于其对 **JavaScript** 和 **Node.js** 的支持。在 Raspberry Pi 等设备上，可以通过 Node.js 运行 TensorFlow.js 来进行模型推理。",
     "retrieve_time": 1.0088996887207031,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q95",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 的 tf.dispose 与 tf.tidy 主要解决了什么问题？",
     "answer": "TensorFlow.js 中的 **tf.dispose** 和 **tf.tidy** 主要用于解决张量操作中的内存管理问题。具体来说：\n\n- **tf.dispose**: 用于手动释放不再需要的张量，以避免内存泄漏。\n- **tf.tidy**: 用于自动清理在某个函数作用域内创建的中间张量，从而简化内存管理，避免手动调用 dispose，特别是在进行大量张量操作时可以减少麻烦。\n\n这两个方法帮助开发者有效管理内存，防止因过多未释放的张量导致的内存消耗过高问题。",
     "retrieve_time": 0.2527122497558594,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q96",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "DeepLearn.js 主要基于哪项浏览器技术实现 GPU 运算？",
     "answer": "DeepLearn.js 主要基于 WebGL 技术实现 GPU 运算。WebGL 允许在浏览器中利用 GPU 进行高性能的图形和计算操作，从而加速深度学习模型的运行。\n\n回答完毕。",
     "retrieve_time": 0.23640108108520508,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q97",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 可通过哪个命令行工具（打包器）与 React、Vue 等项目集成？",
     "answer": "根据提供的资料，没有具体提到可通过哪个命令行工具（打包器）将 TensorFlow.js 与 React、Vue 等项目集成。因此，基于一般的开发实践（而非提供的资料），常用的方法是通过 npm（Node Package Manager）安装 TensorFlow.js，并使用打包工具如 Webpack 或 Parcel 来与 React 或 Vue 项目集成。\n\n不过，根据资料中未包含此具体信息，**不知道**参考资料中能否直接回答该问题。但在实际开发中，通常使用以下命令来安装 TensorFlow.js：\n\n```bash\nnpm install @tensorflow/tfjs\n```\n\n然后配置打包工具（如 Webpack 或 Parcel）来处理集成。\n\n回答: **不知道**（根据资料），但在实际开发中，通常使用 npm 安装并结合 Webpack 或 Parcel 等打包器进行集成。",
     "retrieve_time": 0.22672271728515625,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q98",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 TensorFlow.js 中，张量运算是可变还是不可变？",
     "answer": "在 TensorFlow.js 中，张量运算是不可变的。要管理内存和处理中间结果，可以使用 `dispose` 方法或 `TF.tidy` 方法。\n\n回答完毕。",
     "retrieve_time": 0.28704380989074707,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q99",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 数据集示例中，汽车油耗 (MPG) 与哪四个特征相关？",
     "answer": "根据提供的资料，汽车油耗 (MPG) 与以下四个特征相关：汽缸数、加速度、马力、和排量。\n\n回答: 汽缸数、加速度、马力、排量。",
     "retrieve_time": 0.18794512748718262,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q100",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow.js 支持在浏览器调用手机哪些硬件传感器？请列举至少一个。",
     "answer": "根据提供的资料，TensorFlow.js 可以在浏览器中调用手机硬件进行加速，但并没有详细列举具体支持的传感器类型。不过，结合已知信息和实际应用情况，TensorFlow.js 可以通过浏览器访问和利用手机的运动传感器，例如**加速度计**。\n\n因此，答案为：\nTensorFlow.js 支持在浏览器中调用手机的加速度计传感器。",
     "retrieve_time": 0.35388636589050293,

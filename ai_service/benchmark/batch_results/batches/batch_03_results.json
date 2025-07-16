@@ -601,7 +601,7 @@
   },
   {
     "id": "q41",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "为防止构建时压缩 .tflite 文件，需要在 build.gradle 的 aaptOptions 中设置什么？",
     "answer": "为防止构建时压缩 `.tflite` 文件，需要在 `build.gradle` 的 `aaptOptions` 中设置 `noCompress \"tflite\"`。这样可以确保TensorFlow Lite模型文件不会被Android的构建工具自动压缩，从而保证模型能够正常加载和运行。",
     "retrieve_time": 0.3065617084503174,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q42",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "GPU 推理支持需添加的依赖坐标是哪一个？",
     "answer": "根据提供的参考资料，没有直接提到GPU推理支持所需的特定依赖坐标。因此，对于您的问题，我无法从给定的资料中找到答案。如果您需要关于如何添加GPU支持的具体信息，可能需要查阅更详细的TensorFlow Lite官方文档或相关资源。",
     "retrieve_time": 0.17459940910339355,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q43",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "创建 TFLite 解释器时通过哪一方法设置线程数量？",
     "answer": "创建 TFLite 解释器时，可以通过`TFLiteOptions.setNumThreads(numThreads);`方法来设置线程数量。这里的`numThreads`是指你希望使用的线程数。但请注意，此设置需在解释器初始化之前完成，并且通过`TfLiteInterpreterOptions`对象进行配置。根据提供的资料，虽然直接提到了设置线程数的方法，但没有给出具体的上下文或步骤说明如何将其应用于解释器的创建过程。因此，建议查阅TensorFlow Lite的相关文档以获取更详细的指导。",
     "retrieve_time": 0.1789560317993164,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q44",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 推理流程通常包含哪三大步骤？",
     "answer": "根据提供的参考资料，没有直接提到TensorFlow Lite推理流程的三大步骤。不过，基于一般对TensorFlow Lite工作流程的理解，其主要步骤通常包括：\n\n1. **模型转换**：将训练好的TensorFlow模型通过TensorFlow Lite转换器转化为适用于移动和嵌入式设备的格式。\n2. **模型加载**：在目标设备上使用TensorFlow Lite解释器加载转换后的模型。\n3. **执行推理**：给定输入数据后，利用加载的模型进行预测或分类等任务。\n\n请注意，这些信息是基于TensorFlow Lite的一般工作流程给出的，并非直接从您提供的资料中提取。如果需要更精确的信息，请参考具体的官方文档或其他相关资料。",
     "retrieve_time": 0.21540188789367676,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q45",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "图像预处理管道是通过哪个类构建的？",
     "answer": "根据提供的参考资料，没有明确提到构建图像预处理管道的具体类名。但是提到了`ImageDataGenerator`可以用来指定如何操作加载后的图像数据（如像素缩放和数据增强），这表明`ImageDataGenerator`可能用于构建图像预处理管道。如果这是指的构建图像预处理管道的方式，请进一步确认是否符合您的需求或提供更多信息以便更准确地回答您的问题。若非如此，基于现有资料无法确切指出是哪个类负责构建整个图像预处理管道。",
     "retrieve_time": 0.2364962100982666,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q46",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite Support Library 中用于将概率映射到标签的工具类叫什么？",
     "answer": "TensorFlow Lite Support Library 中用于将概率映射到标签的工具类称为 `TensorLabel`。通过使用 `TensorLabel`，可以方便地把模型输出的概率与具体的类别标签关联起来。根据提供的参考资料，可以看到有提到利用 `Map<String, Float> labeledProbability =` 来存储标签及其对应的概率值，这正是 `TensorLabel` 类的一个应用场景。",
     "retrieve_time": 0.232757568359375,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q47",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 ImageProcessor 中用于旋转图像的操作类名是什么？",
     "answer": "在 ImageProcessor 中用于旋转图像的操作类名是 `Rot90Op`。",
     "retrieve_time": 0.2523655891418457,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q48",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例延伸项目建议使用哪个模型来进行人体姿态估计？",
     "answer": "根据提供的参考资料，建议使用PoseNet模型来进行人体姿态估计。此模型能够通过检测关键身体部位的位置来估计图像或视频中的人体姿势。",
     "retrieve_time": 0.16124844551086426,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q49",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "克隆 TensorFlow 示例仓库的 Git 命令是什么？",
     "answer": "克隆 TensorFlow 示例仓库的 Git 命令是 `git clone https://github.com/tensorflow/examples.git`。",
     "retrieve_time": 0.2446887493133545,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q50",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 build.gradle 中禁止压缩的文件扩展名是什么？",
     "answer": "为了防止Android在生成应用程序二进制文件时压缩特定类型的文件（例如TensorFlow Lite模型文件），可以在 `build.gradle` 文件的 `android` 块中增加 `aaptOptions` 配置项。但是，根据提供的参考资料，并没有直接提到具体的禁止压缩的文件扩展名列表。通常情况下，对于TensorFlow Lite模型文件，会设置不压缩的文件扩展名为 `.tflite`。你需要在 `aaptOptions` 中明确指定不想被压缩的文件扩展名。示例配置如下：\n\n```gradle\nandroid {\n    ...\n    aaptOptions {\n        noCompress 'tflite'\n    }\n}\n```\n\n请注意，如果你的目标是防止其他类型的文件被压缩，请相应地调整 `'tflite'` 为你的目标文件扩展名。如果需要更详细的配置或遇到具体问题，可能需要查阅更多关于你的项目需求的文档。",
     "retrieve_time": 0.1597309112548828,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q51",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "PoseNet 示例中，关键点置信度默认阈值被设置为多少？",
     "answer": "PoseNet 示例中，关键点置信度的默认阈值被设置为 0.2。",
     "retrieve_time": 0.3080556392669678,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q52",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "调用 PoseNet 进行姿态估计时常用的函数名是什么？",
     "answer": "根据提供的参考资料，调用 PoseNet 进行姿态估计时常用的函数名是 `estimateSinglePose()`。这个函数用于从图像中获取表示人体姿势的Person对象。",
     "retrieve_time": 0.18677449226379395,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q53",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 标准工作流包含哪四大步骤？",
     "answer": "根据提供的参考资料，没有明确列出TensorFlow Lite标准工作流程的具体四大步骤。因此，我无法直接提供这四大步骤的信息。建议查阅更详细的文档或图8-3以获得具体的工作流程步骤。如果可以访问图8-3的内容或其他相关资料，请提供更多细节，这样我可以帮助您更好地理解TensorFlow Lite的工作流程。",
     "retrieve_time": 0.25961732864379883,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q54",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Google 提供预训练模型下载与复用的平台名称是什么？",
     "answer": "Google 提供预训练模型下载与复用的平台名称是 TensorFlow Hub。",
     "retrieve_time": 0.24377679824829102,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q55",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TFLite Converter 输出文件一般使用什么扩展名保存？",
     "answer": "TFLite Converter 输出文件通常使用 `.tflite` 作为文件扩展名保存。",
     "retrieve_time": 0.1680746078491211,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q56",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在设备端推理时，TensorFlow Lite API 通常避免什么以提升性能？",
     "answer": "根据提供的资料，没有直接提到TensorFlow Lite API在设备端推理时具体避免了什么来提升性能。资料主要强调了TensorFlow Lite支持设备端机器学习推理、具有较低延迟以及较小的二进制文件大小等特性。因此，对于您的问题中提到的具体内容，我无法直接给出答案。不过，通常来说，为了提高性能，轻量级解决方案如TensorFlow Lite会尽量减少计算开销、内存使用，并优化模型结构以适应资源受限的环境。如果需要更准确的答案，可能需要查阅更多关于TensorFlow Lite性能优化的详细文档或指南。",
     "retrieve_time": 0.19099044799804688,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q57",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 支持在 Android 上通过哪两种语言 API 运行推理？",
     "answer": "根据提供的参考资料，TensorFlow Lite 支持在 Android 上通过 Java 和 C++ 两种语言的 API 来运行推理。",
     "retrieve_time": 0.24163532257080078,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q58",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "为了在 iOS 上使用 TFLite，可以通过哪个包管理工具集成？",
     "answer": "为了在 iOS 上使用 TFLite，可以通过 CocoaPods 这个包管理工具来集成。CocoaPods 支持 Swift 和 Objective-C 项目。",
     "retrieve_time": 0.15423893928527832,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q59",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "量化感知训练（QAT）属于 TensorFlow Lite 提供的哪类优化？",
     "answer": "根据提供的参考资料，没有直接提到量化感知训练（QAT, Quantization Aware Training）属于 TensorFlow Lite 的哪一类优化。资料中主要讨论了后训练量化（post-training quantization）以及模型转换过程中使用量化的简便性。因此，基于给定的信息，我无法准确指出QAT归类于TensorFlow Lite提供的具体哪一类优化服务或支持级别。不过，可以知道的是，TensorFlow Lite确实提供了对模型进行量化以优化其大小和性能的支持，但具体的QAT相关细节未在上述资料中给出。",
     "retrieve_time": 0.18828558921813965,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q60",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在模型大小与性能之间做权衡时，主要考虑哪三个维度？",
     "answer": "在模型大小与性能之间做权衡时，主要考虑的三个维度是：**性能**、**模型大小**以及**准确性**。这三个方面共同决定了模型在特定设备上的适用性和效率。通过调整这些因素之间的平衡点，可以为不同的应用场景找到最优解。",
     "retrieve_time": 0.24004697799682617,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q41",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "为防止构建时压缩 .tflite 文件，需要在 build.gradle 的 aaptOptions 中设置什么？",
     "answer": "需要在 `build.gradle` 文件的 `aaptOptions` 中添加 `noCompress \"tflite\"`，以防止构建时压缩 `.tflite` 文件。",
     "retrieve_time": 0.2797062397003174,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q42",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "GPU 推理支持需添加的依赖坐标是哪一个？",
     "answer": "不知道。参考资料中没有提供关于GPU推理支持所需添加的具体依赖坐标。",
     "retrieve_time": 0.1604616641998291,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q43",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "创建 TFLite 解释器时通过哪一方法设置线程数量？",
     "answer": "在创建TensorFlow Lite解释器时，通过`setNumThreads`方法设置线程数量。如资料1所示：`tfliteOptions.setNumThreads(numThreads);`。这里的`tfliteOptions`是配置解释器选项的对象，其中包含了设置线程数量的方法。",
     "retrieve_time": 0.1522204875946045,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q44",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 推理流程通常包含哪三大步骤？",
     "answer": "根据提供的参考资料，TensorFlow Lite 推理流程通常包含以下三大步骤：\n\n1. 模型转换：将原始的TensorFlow模型转换为TensorFlow Lite格式。\n2. 推理执行：在移动设备或边缘设备上使用TensorFlow Lite解释器执行转换后的模型。\n3. 结果处理：处理模型推理的结果，用于后续的应用逻辑或其他操作。\n\n具体的步骤细节未在资料中详细说明，但上述为一般性的TensorFlow Lite工作流程中的主要步骤。",
     "retrieve_time": 0.18976354598999023,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q45",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "图像预处理管道是通过哪个类构建的？",
     "answer": "图像预处理管道是通过 `ImageDataGenerator` 类构建的。",
     "retrieve_time": 0.13836407661437988,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q46",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite Support Library 中用于将概率映射到标签的工具类叫什么？",
     "answer": "TensorLabel",
     "retrieve_time": 0.1588747501373291,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q47",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 ImageProcessor 中用于旋转图像的操作类名是什么？",
     "answer": "在 ImageProcessor 中用于旋转图像的操作类名是 `Rot90Op`。",
     "retrieve_time": 0.14429903030395508,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q48",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "示例延伸项目建议使用哪个模型来进行人体姿态估计？",
     "answer": "示例延伸项目建议使用PoseNet模型来进行人体姿态估计。",
     "retrieve_time": 0.21146631240844727,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q49",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "克隆 TensorFlow 示例仓库的 Git 命令是什么？",
     "answer": "`git clone https://github.com/tensorflow/examples.git`",
     "retrieve_time": 0.17429304122924805,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q50",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 build.gradle 中禁止压缩的文件扩展名是什么？",
     "answer": "在 build.gradle 中，禁止压缩特定文件扩展名可以通过配置 `aaptOptions` 实现。但是，提供的参考资料中没有明确指出具体的禁止压缩的文件扩展名。如果是要禁止压缩TensorFlow Lite模型文件，通常这些文件的扩展名可能是 `.tflite`。然而，具体哪些扩展名需要禁止压缩，在资料中并未给出，所以我无法提供确切的答案。\n\n通常，禁止压缩的配置可能看起来像这样：\n\n```groovy\nandroid {\n    aaptOptions {\n        noCompress 'tflite'\n    }\n}\n```\n\n如果需要针对特定文件扩展名，只需将 `'tflite'` 替换为相应的扩展名即可。如果需要具体的多个扩展名列表，可能需要查阅其他文档或实际项目需求。基于所给资料，我不知道完整的禁止压缩的文件扩展名列表。",
     "retrieve_time": 0.17290759086608887,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q51",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "PoseNet 示例中，关键点置信度默认阈值被设置为多少？",
     "answer": "默认值为0.2。",
     "retrieve_time": 0.22321820259094238,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q52",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "调用 PoseNet 进行姿态估计时常用的函数名是什么？",
     "answer": "调用 PoseNet 进行姿态估计时常用的函数名是 `estimateSinglePose()`。",
     "retrieve_time": 0.18073058128356934,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q53",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 标准工作流包含哪四大步骤？",
     "answer": "不知道。虽然参考资料提到了TensorFlow Lite的工作流程和步骤，但并没有具体列出四大步骤。如果需要了解具体的步骤，请提供更详细的资料或参考官方文档。",
     "retrieve_time": 0.14911651611328125,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q54",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Google 提供预训练模型下载与复用的平台名称是什么？",
     "answer": "TensorFlow Hub。",
     "retrieve_time": 0.3013467788696289,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q55",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TFLite Converter 输出文件一般使用什么扩展名保存？",
     "answer": ".tflite扩展名。",
     "retrieve_time": 0.14583802223205566,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q56",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在设备端推理时，TensorFlow Lite API 通常避免什么以提升性能？",
     "answer": "在设备端推理时，TensorFlow Lite API 通常避免使用过多的内存和计算资源以提升性能。它通过优化模型的大小和延迟，减少了对设备资源的占用，例如通过使用量化技术减少内存使用，以及优化算子执行效率来降低计算资源的需求。这样可以使得在移动设备、嵌入式设备和 IoT 设备上的机器学习推断更加高效。",
     "retrieve_time": 0.19144892692565918,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q57",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "TensorFlow Lite 支持在 Android 上通过哪两种语言 API 运行推理？",
     "answer": "TensorFlow Lite 支持在 Android 上通过 Java 和 Swift 两种语言 API 运行推理。不过，根据提供的参考资料，Java 是明确提到的，而 Swift 实际上是为 iOS 开发提供的。对于 Android，应该是使用 Java 和 Kotlin（Android 官方支持的语言）。但由于资料中没有提及 Kotlin，所以按照资料所述，答案是 Java。如果需要考虑 Android 实际开发情况，答案应该是 Java 和 Kotlin。但基于给定资料，答案是 Java。",
     "retrieve_time": 0.14717316627502441,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q58",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "为了在 iOS 上使用 TFLite，可以通过哪个包管理工具集成？",
     "answer": "可以通过 CocoaPods 集成 TFLite 到 iOS 项目中。",
     "retrieve_time": 0.14808964729309082,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q59",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "量化感知训练（QAT）属于 TensorFlow Lite 提供的哪类优化？",
     "answer": "量化感知训练（QAT）属于TensorFlow Lite提供的模型优化的一个方面，它专注于通过在训练后量化权重和激活值来减小模型大小和提高性能。但根据提供的资料，具体分类在资料中并未明确提及，因此不能准确回答属于哪类优化。不过，可以理解为它是内容 2 所述的“多种级别的对量化支持”中的一种实现方式。",
     "retrieve_time": 0.15880417823791504,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q60",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在模型大小与性能之间做权衡时，主要考虑哪三个维度？",
     "answer": "在模型大小与性能之间做权衡时，主要考虑的三个维度是：性能、模型大小和准确性。TensorFlow Lite 提供的工具旨在找到这三者之间的理想平衡。",
     "retrieve_time": 0.16387462615966797,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q41",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "为防止构建时压缩 .tflite 文件，需要在 build.gradle 的 aaptOptions 中设置什么？",
     "answer": "为防止构建时压缩 .tflite 文件，需要在 **build.gradle** 的 **aaptOptions** 中设置 **noCompress \"tflite\"**。\n\n```gradle\naaptOptions {\n    noCompress \"tflite\"\n}\n```\n\n这将确保在生成应用程序二进制文件时，.tflite 模型文件不会被压缩。",
     "retrieve_time": 0.23620128631591797,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q42",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "GPU 推理支持需添加的依赖坐标是哪一个？",
     "answer": "根据提供的资料，没有提到关于添加 GPU 推理支持的具体依赖坐标。资料中仅说明了如何添加 TensorFlow Lite 的基本依赖 ('org.tensorflow:tensorflow-lite:+') 及其对 CPU 平台的支持。因此，**不知道** GPU 推理支持需添加的依赖坐标是什么。",
     "retrieve_time": 0.1808168888092041,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q43",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "创建 TFLite 解释器时通过哪一方法设置线程数量？",
     "answer": "根据提供的资料，创建 TensorFlow Lite 解释器时通过 `tfliteOptions.setNumThreads(numThreads)` 方法设置线程数量。\n\n回答: 通过 `tfliteOptions.setNumThreads(numThreads)` 方法设置线程数量。",
     "retrieve_time": 0.17363381385803223,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q44",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 推理流程通常包含哪三大步骤？",
     "answer": "根据提供的资料，TensorFlow Lite 推理流程通常包含以下三大步骤：\n\n1. 模型转换：将训练好的 TensorFlow 模型转换为 TensorFlow Lite 模型格式（.tflite）。\n2. 模型优化：对 TensorFlow Lite 模型进行优化，以提高推理速度和减少模型大小，例如通过量化（quantization）等技术。\n3. 模型部署：将优化后的 TensorFlow Lite 模型部署到目标设备上，并使用 TensorFlow Lite 解释器进行推理。\n\n这些步骤在图8-3中进行了图示说明。",
     "retrieve_time": 0.13370633125305176,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q45",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "图像预处理管道是通过哪个类构建的？",
     "answer": "根据提供的资料，图像预处理管道是通过 **ImageDataGenerator** 类构建的。该类允许指定加载后如何操作图像数据，包括像素缩放和数据增强。",
     "retrieve_time": 0.149061918258667,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q46",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite Support Library 中用于将概率映射到标签的工具类叫什么？",
     "answer": "TensorFlow Lite Support Library 中用于将概率映射到标签的工具类叫 **TensorLabel**。\n\n回答依据：根据参考资料内容 2 中的注释提示，可以使用 TensorLabel 来关联概率和类别标签。",
     "retrieve_time": 0.15167617797851562,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q47",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 ImageProcessor 中用于旋转图像的操作类名是什么？",
     "answer": "用于旋转图像的操作类名是 **Rot90Op**。\n\n回答依据：内容 2 中提到了 `.add(new Rot90Op(numRoration))`，这表明 `Rot90Op` 是用于旋转图像的操作类。",
     "retrieve_time": 0.1736283302307129,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q48",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "示例延伸项目建议使用哪个模型来进行人体姿态估计？",
     "answer": "根据提供的资料，示例延伸项目建议使用 **PoseNet 模型** 来进行人体姿态估计。",
     "retrieve_time": 0.40666794776916504,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q49",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "克隆 TensorFlow 示例仓库的 Git 命令是什么？",
     "answer": "克隆 TensorFlow 示例仓库的 Git 命令是：\n\n```\ngit clone https://github.com/tensorflow/examples.git\n```",
     "retrieve_time": 0.23635435104370117,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q50",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 build.gradle 中禁止压缩的文件扩展名是什么？",
     "answer": "在 build.gradle 中禁止压缩的文件扩展名可以通过在 `aaptOptions` 中进行配置。具体来说，可以使用 `noCompress` 选项来指定不被压缩的文件扩展名。参考资料中虽然没有直接列出具体的扩展名，但根据典型用法，通常会将模型文件（如 TensorFlow Lite 模型）的扩展名（例如 `.tflite`）添加到 `noCompress` 中。\n\n示例代码如下：\n\n```gradle\nandroid {\n    aaptOptions {\n        noCompress '.tflite'\n    }\n}\n```\n\n因此，禁止压缩的文件扩展名可以根据实际需要指定，例如 `.tflite` 等。",
     "retrieve_time": 0.17627596855163574,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q51",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "PoseNet 示例中，关键点置信度默认阈值被设置为多少？",
     "answer": "回答: PoseNet 示例中，关键点置信度默认阈值被设置为 0.2。",
     "retrieve_time": 0.2444298267364502,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q52",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "调用 PoseNet 进行姿态估计时常用的函数名是什么？",
     "answer": "调用 PoseNet 进行姿态估计时常用的函数名是 **estimateSinglePose()**。",
     "retrieve_time": 0.17555904388427734,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q53",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 标准工作流包含哪四大步骤？",
     "answer": "根据提供的资料，无法直接列出 TensorFlow Lite 标准工作流的具体四大步骤。虽然提到了工作流程，但未详细列出每个步骤。因此，我无法从资料中确定四大步骤。\n\n不过，通常情况下，TensorFlow Lite 的工作流大致包括以下四个常见步骤：\n\n1. 模型创建与训练：使用 TensorFlow 创建并训练模型。\n2. 模型转换：将训练好的 TensorFlow 模型转换为 TensorFlow Lite 格式。\n3. 模型优化（可选）：对 TensorFlow Lite 模型进行量化等优化。\n4. 模型部署：将优化后的模型部署到移动设备或嵌入式设备上运行。\n\n这些步骤是基于一般实践总结的，而非直接从资料中提取。如果你需要基于资料的确切四大步骤描述，我无法确定。",
     "retrieve_time": 0.16971778869628906,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q54",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Google 提供预训练模型下载与复用的平台名称是什么？",
     "answer": "Google 提供预训练模型下载与复用的平台名称是 TensorFlow Hub。",
     "retrieve_time": 0.2470710277557373,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q55",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TFLite Converter 输出文件一般使用什么扩展名保存？",
     "answer": "TFLite Converter 输出文件一般使用 **.tflite** 扩展名保存。",
     "retrieve_time": 0.1552138328552246,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q56",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在设备端推理时，TensorFlow Lite API 通常避免什么以提升性能？",
     "answer": "在设备端推理时，TensorFlow Lite API 通常通过避免**较高的延迟**和**较大的二进制文件**来提升性能。这是通过优化模型结构、减少计算量和压缩模型大小等方法实现的。",
     "retrieve_time": 0.17211604118347168,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q57",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "TensorFlow Lite 支持在 Android 上通过哪两种语言 API 运行推理？",
     "answer": "TensorFlow Lite 支持在 Android 上通过 Java 和 C++ 两种语言的 API 运行推理。",
     "retrieve_time": 0.17813873291015625,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q58",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "为了在 iOS 上使用 TFLite，可以通过哪个包管理工具集成？",
     "answer": "为了在 iOS 上使用 TFLite，可以通过 **CocoaPods** 包管理工具集成。",
     "retrieve_time": 0.16889452934265137,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q59",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "量化感知训练（QAT）属于 TensorFlow Lite 提供的哪类优化？",
     "answer": "量化感知训练（QAT）属于 TensorFlow Lite 提供的**量化**优化类别。QAT 是在训练过程中模拟量化效果的一种方法，通过在训练时对权重和激活值进行伪量化操作，使模型在推理阶段对量化更加鲁棒，从而在保持较高准确率的同时实现性能和模型大小的优化。根据资料，TensorFlow Lite 提供了多种级别的量化支持，包括训练后量化和量化感知训练。QAT 需要在训练过程中进行更改，而训练后量化则可以在模型转换过程中通过简单设置实现。",
     "retrieve_time": 0.15797853469848633,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q60",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在模型大小与性能之间做权衡时，主要考虑哪三个维度？",
     "answer": "在模型大小与性能之间做权衡时，主要考虑的三个维度是：**性能**、**模型大小**和**准确性**。",
     "retrieve_time": 0.1598186492919922,

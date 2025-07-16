@@ -6,6 +6,7 @@ import os
 import json
 from typing import List, Dict, Optional, Any
 from openai import OpenAI
+from .model_selector import ModelSelector
 from dotenv import load_dotenv
 from .embedding import EmbeddingService
 from .faiss_db import FAISSDatabase
@@ -39,10 +40,9 @@ class RAGService:
 
         self.storage_service = storage_service
         self.embedding_service = EmbeddingService()
-        self.client = OpenAI(
-            api_key=os.getenv("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com/v1"
-        )
+
+        # 统一模型访问入口
+        self.model_selector = ModelSelector()
 
         # ---------------- 多知识库支持 ----------------
         self.vector_dbs: dict[str, FAISSDatabase] = {}
@@ -84,6 +84,14 @@ class RAGService:
         # 兼容旧接口：保留 self.vector_db 指向第一个库
         first_path = self.storage_service.get_vector_db_path()
         self.vector_db = self.vector_dbs[first_path]
+
+    # ------------------------------------------------------------------
+    # Internal helper – centralised LLM call with automatic fallback
+    # ------------------------------------------------------------------
+    def _chat_completion(self, messages: list[dict[str, str]], purpose: str | None = None):
+        """Wrapper around ModelSelector.chat_completion returning content str."""
+        response = self.model_selector.chat_completion(messages=messages, purpose=purpose)
+        return response.choices[0].message.content
 
     def add_to_knowledge_base(self, chunks: List[Dict[str, str]]):
         """将文档添加到所有激活知识库"""
@@ -163,11 +171,10 @@ class RAGService:
                 course_outline=course_outline
             )
 
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            knowledge_points = [k.strip() for k in response.choices[0].message.content.strip().split('\n') if k.strip()]
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="knowledge_points_extraction")
+            knowledge_points = [k.strip() for k in content.strip().split('\n') if k.strip()]
             logger.info(f"Extracted {len(knowledge_points)} knowledge points")
 
             # 2. 为每个知识点检索相关内容
@@ -193,12 +200,10 @@ class RAGService:
                 constraints=constraints
             )
             logger.info("test1\n");
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="teaching_content_generation")
             logger.info("test2\n")
-            content = response.choices[0].message.content
             logger.info("大模型原始返回内容: %s", content)
             try:
                 logger.info(f"准备进入 safe_json_loads 解析内容")
@@ -235,11 +240,9 @@ class RAGService:
                 timePlan=timePlan,
                 constraints=constraints
             )
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            content = response.choices[0].message.content
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="teaching_content_detail")
             logger.info("详细教案 LLM 返回内容: %s", content)
             result = self.safe_json_loads(content)
             logger.info("Successfully generated detailed teaching content")
@@ -259,11 +262,9 @@ class RAGService:
                 timePlan=timePlan,
                 constraints=constraints
             )
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            content = response.choices[0].message.content
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="regenerate_teaching_content")
             logger.info("全新教案 LLM 返回内容: %s", content)
             result = self.safe_json_loads(content)
             logger.info("Successfully regenerated teaching content detail")
@@ -284,11 +285,9 @@ class RAGService:
                 question_count=question_count,
                 custom_types=custom_types
             )
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            content = response.choices[0].message.content
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="exercise_generation")
             logger.info(f"LLM raw output:\n{content}")
             result = self.safe_json_loads(content)
             logger.info(f"Successfully generated exercises for {course_name}")
@@ -306,12 +305,10 @@ class RAGService:
                 reference_answer=reference_answer
             )
 
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="answer_evaluation")
 
-            content = response.choices[0].message.content
             result = json.loads(content)
             logger.info("Successfully evaluated student answer")
             return result
@@ -335,13 +332,11 @@ class RAGService:
             )
 
             # 3. 调用大模型进行评估
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            content = self._chat_completion([
+                {"role": "user", "content": prompt}
+            ], purpose="subjective_answer_evaluation")
 
             # 4. 解析结果
-            content = response.choices[0].message.content
             result = self.safe_json_loads(content)
 
             # 5. 添加知识点位置信息
@@ -369,10 +364,7 @@ class RAGService:
             prompt = PromptTemplates.get_exercise_analysis_prompt(exercise_questions_dict)
 
             # 4. 调用大模型进行分析
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="exercise_analysis")
 
             # 5. 解析结果
             content = response.choices[0].message.content
@@ -412,10 +404,7 @@ class RAGService:
             )
 
             # 3. 调用大模型生成回答
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="online_assistant")
             content = response.choices[0].message.content
             logger.info("LLM 返回内容: %s", content)
 
@@ -450,10 +439,7 @@ class RAGService:
                 wrong_questions=wrong_questions or []
             )
 
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="student_exercise_generation")
 
             content = response.choices[0].message.content
             logger.info(f"LLM raw output for student exercise:\n{content}")
@@ -489,10 +475,7 @@ class RAGService:
                 relevant_docs=relevant_docs
             )
 
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="course_optimization")
 
             content = response.choices[0].message.content
             result = self.safe_json_loads(content)
@@ -507,10 +490,7 @@ class RAGService:
         """根据教师反馈修改教学大纲"""
         try:
             prompt = PromptTemplates.get_teaching_content_feedback_prompt(original_plan, feedback)
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="teaching_content_feedback")
             content = response.choices[0].message.content
             logger.info("教学大纲反馈 LLM 返回内容: %s", content)
             result = self.safe_json_loads(content)
@@ -529,10 +509,7 @@ class RAGService:
                 current_content=current_content,
                 knowledge_points=knowledge_points
             )
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="step_detail")
             content = response.choices[0].message.content
             logger.info("课时环节细节 LLM 返回内容: %s", content)
             result = self.safe_json_loads(content)
@@ -552,10 +529,7 @@ class RAGService:
                 knowledge_preferences=knowledge_preferences
             )
 
-            response = self.client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            response = self.model_selector.chat_completion(messages=[{"role": "user", "content": prompt}], purpose="selected_questions_exercise")
             content = response.choices[0].message.content
             logger.info(f"LLM raw output for selected-question exercise:\n{content}")
             result = self.safe_json_loads(content)

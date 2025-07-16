@@ -301,7 +301,7 @@
   },
   {
     "id": "q1",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 主要面向哪三类设备进行模型部署？",
     "answer": "TensorFlow Lite 主要面向以下三类设备进行模型部署：移动设备（如智能手机）、嵌入式设备以及物联网(IoT)设备。",
     "retrieve_time": 0.2993500232696533,
@@ -331,7 +331,7 @@
   },
   {
     "id": "q2",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "全球约有多少台设备部署了 TensorFlow Lite？",
     "answer": "全球超过40亿的设备上部署了TensorFlow Lite。",
     "retrieve_time": 0.1703474521636963,
@@ -361,7 +361,7 @@
   },
   {
     "id": "q3",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "示例花卉分类项目优化并部署的核心模型是什么？",
     "answer": "示例花卉分类项目优化并部署的核心模型是基于MobileNet V2的。这个模型首先通过迁移学习的方式，在一个预训练于ImageNet-1000数据集上的MobileNet V2模型基础上，利用特定的花卉数据集进行微调来实现对花卉种类的识别。之后，为了能在Android手机上运行，该模型进一步被优化并通过TensorFlow Lite工具转换成适合移动设备使用的格式。",
     "retrieve_time": 0.16484522819519043,
@@ -391,7 +391,7 @@
   },
   {
     "id": "q4",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 的两大核心组件是什么？",
     "answer": "根据提供的资料，虽然提到了“TensorFlow Lite 包括两个主要组件”，但具体的两大核心组件名称并未在给出的信息中明确。因此，基于现有资料，我无法直接指出TensorFlow Lite的两大核心组件具体是什么。如果您可以提供更多关于这两个组件的信息或其他相关资料，我很乐意提供进一步的帮助。",
     "retrieve_time": 0.24763822555541992,
@@ -421,7 +421,7 @@
   },
   {
     "id": "q5",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 使用哪种序列化格式存储模型文件？",
     "answer": "TensorFlow Lite 使用FlatBuffers作为其模型文件的序列化格式。这种格式特别适合于内存有限且需要高效处理的移动环境，因为它允许将文件直接映射到内存中进行访问，而无需额外的解析步骤。",
     "retrieve_time": 0.2572135925292969,
@@ -451,7 +451,7 @@
   },
   {
     "id": "q6",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Google 在 2017 年底发布了哪款专为移动端设计的深度学习工具？",
     "answer": "Google 在 2017 年底发布了 TensorFlow Lite，这是一个专为移动端设计的轻量、快速且兼容度高的深度学习工具。",
     "retrieve_time": 0.2506225109100342,
@@ -481,7 +481,7 @@
   },
   {
     "id": "q7",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为多少？",
     "answer": "TensorFlow Lite 典型 ARM 32 位构建的二进制大小约为 1 MB。如果仅包含支持某些常见模型（如 InceptionV3 和 MobileNet）所需的运算符，则其大小可以减少到不到 300 KB。",
     "retrieve_time": 0.26365113258361816,
@@ -511,7 +511,7 @@
   },
   {
     "id": "q8",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 可以利用 Android 系统提供的哪项 API 进行硬件加速？",
     "answer": "TensorFlow Lite 可以利用 Android 神经网络 API（Android NN API）进行硬件加速。这项API让硬件厂商能够扩展支持，从而使得应用能够在兼容的硬件上更高效地运行机器学习模型。",
     "retrieve_time": 0.15797924995422363,
@@ -541,7 +541,7 @@
   },
   {
     "id": "q9",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "TensorFlow Lite 模型转换的命令行工具名称是什么？",
     "answer": "TensorFlow Lite 模型转换的命令行工具名称是 `tflite_convert`。",
     "retrieve_time": 0.15314960479736328,
@@ -571,7 +571,7 @@
   },
   {
     "id": "q10",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用哪个类？",
     "answer": "在 Python 中将 SavedModel 转换为 TFLite 模型应使用 `tf.lite.TFLiteConverter` 类。具体来说，可以通过调用 `TFLiteConverter.from_saved_model()` 方法来实现转换，其中需要提供SavedModel目录的路径作为参数。例如：\n\n```python\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\n```\n\n这里的 `saved_model_dir` 是指向您的 SavedModel 文件夹的路径。",
     "retrieve_time": 0.18920087814331055,

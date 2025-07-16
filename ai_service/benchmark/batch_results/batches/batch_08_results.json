@@ -601,7 +601,7 @@
   },
   {
     "id": "q141",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt Creator 的项目 (.pro) 文件生成通常使用哪一个工具？",
     "answer": "根据提供的参考资料，没有明确提到用于生成Qt Creator的项目(.pro)文件的具体工具。资料中提到了使用QMAC来生成工程文件（内容2），但这个信息并不直接对应于Qt Creator的.pro文件的生成过程。因此，基于现有资料，我无法准确回答您的问题。对于Qt项目的创建，通常可以直接通过Qt Creator软件本身完成，包括生成.pro文件，但这并未在给定的参考资料中得到证实。",
     "retrieve_time": 0.2552640438079834,
@@ -631,7 +631,7 @@
   },
   {
     "id": "q142",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在使用 qmake 后，常用哪条命令编译生成 Makefile 中的目标？",
     "answer": "参考资料中没有直接提到在使用qmake生成Makefile之后，用来编译生成目标的具体命令。通常，在使用qmake生成了Makefile文件后，可以通过`make`命令来编译项目（对于Unix/Linux系统）或使用`nmake`（对于Windows系统），但这并非从给定资料中得出的信息。因此，根据提供的资料，我无法给出确切的答案。如果您需要了解一般情况下如何操作，可以参考上述建议；但请注意这并不是基于您提供的特定文档内容。",
     "retrieve_time": 0.28832530975341797,
@@ -661,7 +661,7 @@
   },
   {
     "id": "q143",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 信号槽机制底层依赖哪一套宏/元对象系统？",
     "answer": "参考资料中没有提供关于Qt信号槽机制底层依赖的具体宏或元对象系统的直接信息。因此，根据给定的资料，我无法准确回答您的问题。对于更详细的解答，建议查阅Qt官方文档或其他相关技术资料。",
     "retrieve_time": 0.27179932594299316,
@@ -691,7 +691,7 @@
   },
   {
     "id": "q144",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "创建 QApplication 对象时通常传入哪两个参数？",
     "answer": "根据提供的参考资料，没有直接提到创建`QApplication`对象时需要传入的具体参数。但是，通常情况下，创建`QApplication`对象时会传入两个参数：命令行参数数组（argc, argv）。这些参数允许Qt应用程序处理来自命令行的输入。由于此信息未在给定资料中明确给出，如果您需要更具体的指导或有其他问题，请参考Qt官方文档或相关编程指南。\n\n若您的问题是基于特定版本的Qt或其他特定上下文，请提供更多详细信息以便获得更准确的帮助。",
     "retrieve_time": 0.1403665542602539,
@@ -721,7 +721,7 @@
   },
   {
     "id": "q145",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Qt 程序中显示窗口部件需要调用哪一个成员函数？",
     "answer": "根据提供的参考资料，没有直接提到在Qt程序中显示窗口部件需要调用的具体成员函数。通常，在Qt中，如果你想要显示一个窗口或者对话框，可以使用`show()`方法。例如，对于QWidget、QMainWindow或QDialog类型的对象，你可以调用它们的`show()`成员函数来显示这些窗口部件。但请注意，这个答案是基于一般的Qt编程知识，并非直接来源于您提供的资料内容。",
     "retrieve_time": 0.2617828845977783,
@@ -751,7 +751,7 @@
   },
   {
     "id": "q146",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt Creator ‘Help’ 模式主要用于什么？",
     "answer": "根据提供的参考资料，没有关于Qt Creator 'Help'模式的具体信息。因此，对于您的问题“Qt Creator ‘Help’ 模式主要用于什么？”我无法直接从给定的资料中给出答案。如果您有关于Qt单元测试、项目设置或基本使用的其他问题，我可以尝试基于现有资料提供帮助。对于更具体的功能说明，建议查阅Qt Creator官方文档或相关指南。",
     "retrieve_time": 0.252596378326416,
@@ -781,7 +781,7 @@
   },
   {
     "id": "q147",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt Creator 运行按钮默认执行目标的哪个构建配置？",
     "answer": "根据提供的参考资料，没有直接提到Qt Creator运行按钮默认执行目标的具体构建配置信息。因此，对于您的问题“Qt Creator运行按钮默认执行目标的哪个构建配置？”我无法从给定的信息中给出准确答案。通常来说，默认情况下Qt Creator会使用当前激活的构建配置来运行项目，但具体到您所指的情况，请参考Qt Creator官方文档或软件内的设置以获取最准确的信息。",
     "retrieve_time": 0.253145694732666,
@@ -811,7 +811,7 @@
   },
   {
     "id": "q148",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Qt 中，slots 关键字用于声明什么？",
     "answer": "在 Qt 中，`slots` 关键字用于声明槽函数。槽函数是可以在响应特定信号时被调用的普通C++成员函数。这一体系结构允许对象之间以一种解耦的方式进行通信，即一个对象发出信号后，连接到该信号的一个或多个槽函数将被自动调用。不过，根据提供的参考资料，并没有直接提到`slots`关键字的具体用途，这是基于Qt框架的一般知识给出的答案。参考资料提到了QT使用了信号和\"朝\"（可能是“槽”的笔误）来进行对象间的通讯，但未详细说明`slots`关键字的作用。",
     "retrieve_time": 0.5056006908416748,
@@ -841,7 +841,7 @@
   },
   {
     "id": "q149",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 的核心模块 ‘QtCore’ 提供哪三类基础功能？",
     "answer": "根据提供的参考资料，没有具体提到QtCore模块提供的确切三类基础功能。资料仅指出“最底下是QT Core,它提供了核心的非GUI功能,所有模块都需要它。” 若要获取QtCore提供的具体三类基础功能的信息，可能需要查阅更详细的Qt官方文档或其他相关资料。因此，基于现有信息，我无法直接回答您的问题。",
     "retrieve_time": 0.5575623512268066,
@@ -871,7 +871,7 @@
   },
   {
     "id": "q150",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "使用 Qt Designer 拖拽一个按钮到表单后，按钮对象的默认基类是什么？",
     "answer": "根据提供的参考资料，没有直接提到使用 Qt Designer 拖拽按钮到表单后，该按钮对象的默认基类是什么。因此，基于现有资料我无法给出准确答案。不过，通常情况下，在Qt中通过Designer拖拽创建的按钮，默认会是QPushButton类的一个实例。但请注意，这信息并非来自您提供的参考资料。",
     "retrieve_time": 0.2709507942199707,
@@ -901,7 +901,7 @@
   },
   {
     "id": "q151",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 信号槽中连接语法 connect(sender, SIGNAL(clicked()), receiver, SLOT(close())) 早期属于哪种连接方式？",
     "answer": "根据提供的参考资料，没有直接提到Qt信号槽连接的具体类型（如自动连接、队列连接等）。因此，关于`connect(sender, SIGNAL(clicked()), receiver, SLOT(close()))`这种早期的连接方式属于哪种类型的详细信息，在给定的资料中无法找到。如果需要了解该连接方式的具体类型，可能需要查阅更多关于Qt信号与槽机制的相关文档或资料。",
     "retrieve_time": 0.2891268730163574,
@@ -931,7 +931,7 @@
   },
   {
     "id": "q152",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt5 引入的推荐信号槽连接语法基于什么特性？",
     "answer": "根据提供的参考资料，没有直接提到Qt5引入的推荐信号槽连接语法基于的具体特性。资料中提到了信号和槽是Qt的一个特点，并且说明了只有派生的类才能使用信号和槽机制。但是这些信息不足以准确回答您的问题关于Qt5特定引入的新语法基于何种特性。因此，对于您提出的问题，基于现有的参考资料，我无法给出具体的答案。如果您有更多相关信息或需要了解其他方面的知识，请告诉我！",
     "retrieve_time": 0.2672874927520752,
@@ -961,7 +961,7 @@
   },
   {
     "id": "q153",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在 Qt Quick 中，QML 文件通常使用什么扩展名？",
     "answer": "在Qt Quick中，QML文件通常使用的扩展名为`.qml`。不过，请注意参考资料中并未直接提到这一点；这是基于Qt Quick和QML标准实践的知识给出的答案。若严格按照给定资料回答，则资料中没有提供具体答案。",
     "retrieve_time": 0.2861666679382324,
@@ -991,7 +991,7 @@
   },
   {
     "id": "q154",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt Creator 中的 ‘Analyze’ 模式默认提供哪两类分析工具？",
     "answer": "根据提供的资料，Qt Creator 中的 'Analyze' 模式默认提供了两类分析工具：QML分析器和内存分析器。",
     "retrieve_time": 0.18032002449035645,
@@ -1021,7 +1021,7 @@
   },
   {
     "id": "q155",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "在交叉编译流程中，安装 Qt 库到目标根文件系统的命令通常是？",
     "answer": "根据提供的参考资料，没有具体提到关于将Qt库安装到目标根文件系统的确切命令。因此，基于现有信息，我无法给出具体的命令。对于这类操作，通常会使用`make install`命令加上适当的参数来指定目标位置，但这需要依赖于具体的构建环境配置和要求。建议查阅相关项目或Qt官方文档以获取更准确的操作指南。",
     "retrieve_time": 0.4456820487976074,
@@ -1051,7 +1051,7 @@
   },
   {
     "id": "q156",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 触摸屏驱动常用库 tslib 的 configure、make、make install 三步属于哪类构建系统流程？",
     "answer": "您提到的使用 `configure`、`make` 和 `make install` 来构建 tslib 库的过程属于典型的基于 Autotools 的构建系统流程。Autotools 是一套用于生成可移植的 configure 脚本的工具集合，它包括 autoconf、automake 和 libtool 等工具。这个过程通常被用来准备软件源代码，使其能够在不同的 Unix-like 操作系统上编译和安装。不过，请注意提供的参考资料中并没有直接提及有关 tslib 或此构建流程的具体信息。我的回答基于对通用软件开发实践的理解。如果您需要更详细的指导或遇到了特定问题，建议查阅 tslib 的官方文档或相关资源。",
     "retrieve_time": 0.23412704467773438,
@@ -1081,7 +1081,7 @@
   },
   {
     "id": "q157",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 默认文档是英文，若要查看中文文档可采取哪种方式？",
     "answer": "根据提供的参考资料，并没有直接提到如何从英文文档转换为中文文档或获取Qt的中文文档的方法。因此，对于您的问题，我这里没有足够的信息来给出具体的解决方案。不过，通常来说，如果您需要查看Qt的中文文档，可以尝试在网络上搜索第三方提供的中文翻译版本或者使用在线翻译工具辅助阅读英文文档。若需更准确的帮助，建议访问Qt官方论坛或相关技术社区寻求支持。",
     "retrieve_time": 0.26288437843322754,
@@ -1111,7 +1111,7 @@
   },
   {
     "id": "q158",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt Creator 中如果界面文件 (.ui) 不见，对应设计模式是否可用？",
     "answer": "根据提供的参考资料，没有直接提到关于Qt Creator中界面文件(.ui)不见时设计模式是否可用的具体信息。但是，.ui文件是Qt Designer用于存储用户界面设计的文件，如果这个文件丢失或找不到，那么在Qt Creator的设计模式下打开该界面设计可能会遇到问题，因为你实际上是在试图加载一个不存在的设计文件。这通常会导致无法正常显示界面设计，或者Qt Creator会提示找不到相应的.ui文件。\n\n解决这种情况下的一种方法是尝试重新创建.ui文件，或者如果之前有备份的话，可以恢复之前的版本。如果你有关于这个特定问题的更多细节需求，可能需要查阅更具体的Qt官方文档或社区支持。",
     "retrieve_time": 0.2937326431274414,
@@ -1141,7 +1141,7 @@
   },
   {
     "id": "q159",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 中用于显示富文本或 HTML 内容的窗口部件是？",
     "answer": "根据提供的参考资料，没有直接提到Qt中用于显示富文本或HTML内容的具体窗口部件名称。不过，基于Qt的常识（但请注意，这部分信息超出了您提供的资料范围），通常用于显示富文本或HTML的是QTextBrowser或QWebView/QWebEngineView等组件。为了严格遵循您的指示，我必须指出，在给定的参考资料里，并没有明确回答这个问题的信息。",
     "retrieve_time": 0.23227405548095703,
@@ -1171,7 +1171,7 @@
   },
   {
     "id": "q160",
-    "model": "qwen-7b-chat",
+    "model": "qwen-max",
     "query": "Qt 的跨平台网络库名称为？",
     "answer": "Qt 的跨平台网络功能由 Qt Network 模块提供。但请注意，这里提到的是模块名称，并非具体的库文件名。在Qt中，我们通常直接引用这个模块来使用其提供的类和函数进行网络编程。",
     "retrieve_time": 0.17811274528503418,
@@ -1201,7 +1201,7 @@
   },
   {
     "id": "q141",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt Creator 的项目 (.pro) 文件生成通常使用哪一个工具？",
     "answer": "Qt Creator 的项目 (.pro) 文件通常使用 QMAKE 工具来生成。但根据提供的资料，具体提到的工具是 QMAC（可能是误写或特定环境下的工具名）和 CPRO，这两个并不是通常用来生成 .pro 文件的工具。然而，从常规来看，答案应该是 QMAKE。不过，由于资料中没有直接提及 QMAKE，根据资料内容，我不知道准确的答案。",
     "retrieve_time": 0.2658708095550537,
@@ -1231,7 +1231,7 @@
   },
   {
     "id": "q142",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在使用 qmake 后，常用哪条命令编译生成 Makefile 中的目标？",
     "answer": "不知道\n\n根据提供的参考资料，没有包含关于使用 qmake 后编译生成 Makefile 中目标的具体命令信息。参考资料主要提到了重新编移QT、使用 QMAC 生成工程文件以及通过工程文件生成 QT 程序的过程，但并未提及编译命令。",
     "retrieve_time": 0.14779305458068848,
@@ -1261,7 +1261,7 @@
   },
   {
     "id": "q143",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 信号槽机制底层依赖哪一套宏/元对象系统？",
     "answer": "Qt的信号槽机制底层依赖的是Qt自己的宏和元对象系统（MOC）。这个系统允许Qt在编译时生成必要的代码以支持信号和槽的机制，实现了对象间的通信。通过MOC，Qt能够在运行时动态地处理对象的信号和槽的连接。",
     "retrieve_time": 0.14605712890625,
@@ -1291,7 +1291,7 @@
   },
   {
     "id": "q144",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "创建 QApplication 对象时通常传入哪两个参数？",
     "answer": "通常在创建 QApplication 对象时，会传入两个参数：argc 和 argv。这两个参数是从 main 函数接收的命令行参数，分别代表参数数量和参数向量。以下是具体的代码示例：\n\n```cpp\nint main(int argc, char *argv[])\n{\n    QApplication app(argc, argv);\n    // ... 其他代码\n    return app.exec();\n}\n```\n\n在这个示例中，argc 和 argv 被传递给 QApplication 构造函数。这些参数通常用于处理命令行参数，尽管在某些情况下 QApplication 可能并不直接使用它们。",
     "retrieve_time": 0.16371512413024902,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "q145",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Qt 程序中显示窗口部件需要调用哪一个成员函数？",
     "answer": "在 Qt 程序中显示窗口部件通常需要调用 `show()` 成员函数。但是，根据提供的参考资料，没有直接提到具体需要调用哪一个成员函数。根据常规的 Qt 使用习惯，我假设应该是 `show()`。如果资料中有特定的要求，请以实际资料为准。",
     "retrieve_time": 0.7084732055664062,
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "q146",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt Creator ‘Help’ 模式主要用于什么？",
     "answer": "不知道。参考资料中没有提供关于Qt Creator 'Help' 模式的信息。",
     "retrieve_time": 0.16389250755310059,
@@ -1381,7 +1381,7 @@
   },
   {
     "id": "q147",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt Creator 运行按钮默认执行目标的哪个构建配置？",
     "answer": "不知道。参考资料中没有提供关于Qt Creator运行按钮默认执行哪个构建配置的信息。",
     "retrieve_time": 0.1816387176513672,
@@ -1411,7 +1411,7 @@
   },
   {
     "id": "q148",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Qt 中，slots 关键字用于声明什么？",
     "answer": "在 Qt 中，slots 关键字用于声明对象间通信的回调函数。这些函数可以在接收到特定信号后被调用，是实现信号和槽机制的一部分。",
     "retrieve_time": 0.17561984062194824,
@@ -1441,7 +1441,7 @@
   },
   {
     "id": "q149",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 的核心模块 ‘QtCore’ 提供哪三类基础功能？",
     "answer": "不知道。参考资料中未提供‘QtCore’具体提供的三类基础功能。参考资料仅说明‘QtCore’是QT的核心，提供了核心的非飞机外功能，并且是所有模块都需要的基础。",
     "retrieve_time": 0.14724087715148926,
@@ -1471,7 +1471,7 @@
   },
   {
     "id": "q150",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "使用 Qt Designer 拖拽一个按钮到表单后，按钮对象的默认基类是什么？",
     "answer": "不知道\n\n（根据提供的参考资料，没有包含有关Qt Designer中按钮对象的默认基类的信息。）",
     "retrieve_time": 0.16624164581298828,
@@ -1501,7 +1501,7 @@
   },
   {
     "id": "q151",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 信号槽中连接语法 connect(sender, SIGNAL(clicked()), receiver, SLOT(close())) 早期属于哪种连接方式？",
     "answer": "早期Qt中使用的连接方式是`Qt::AutoConnection`。在连接语法 `connect(sender, SIGNAL(clicked()), receiver, SLOT(close()))` 中，如果不显式指定连接类型，默认采用的是`Qt::AutoConnection`。这种连接方式会在信号发出时自动决定是直接调用槽函数（即直接连接），还是将其排队到事件循环中（即队列连接）。不过，在较新版本的Qt中，推荐使用`std::function`和`QMetaMethod`进行连接，并且信号槽的语法也有了新的变化。",
     "retrieve_time": 0.1541728973388672,
@@ -1531,7 +1531,7 @@
   },
   {
     "id": "q152",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt5 引入的推荐信号槽连接语法基于什么特性？",
     "answer": "Qt5 引入的推荐信号槽连接语法基于“信号和槽”机制，这是Qt不同于其他开发框架的一个特点。通过这一机制，Qt对象之间可以进行通信。派生的类才能够使用信号和槽机制。简洁地说，这一特性是Qt的核心特性之一，用于对象间的通讯。具体的推荐语法没有在提供的资料中说明，因此我不知道具体语法是怎样的。",
     "retrieve_time": 0.18458199501037598,
@@ -1561,7 +1561,7 @@
   },
   {
     "id": "q153",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在 Qt Quick 中，QML 文件通常使用什么扩展名？",
     "answer": "在 Qt Quick 中，QML 文件通常使用的扩展名是 .qml。",
     "retrieve_time": 0.17564964294433594,
@@ -1591,7 +1591,7 @@
   },
   {
     "id": "q154",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt Creator 中的 ‘Analyze’ 模式默认提供哪两类分析工具？",
     "answer": "Qt Creator 中的‘Analyze’模式默认提供两类分析工具：QML分析器和内存分析器。",
     "retrieve_time": 0.18929696083068848,
@@ -1621,7 +1621,7 @@
   },
   {
     "id": "q155",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "在交叉编译流程中，安装 Qt 库到目标根文件系统的命令通常是？",
     "answer": "不知道。参考资料中没有提供关于将 Qt 库安装到目标根文件系统的具体命令。",
     "retrieve_time": 0.15616607666015625,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "q156",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 触摸屏驱动常用库 tslib 的 configure、make、make install 三步属于哪类构建系统流程？",
     "answer": "这三步（configure、make、make install）属于传统的编译和安装流程，通常用于构建开源软件。具体来说：\n\n1. **configure**: 这个步骤通常用于配置软件的编译环境，包括检测系统环境、可选功能、依赖库等，并生成用于编译的Makefile文件。\n   \n2. **make**: 在configure步骤生成Makefile之后，make命令将根据Makefile中的指令编译源代码，生成可执行文件或库文件。\n\n3. **make install**: 此步骤通常用于将编译好的程序或库文件安装到系统中的指定位置。\n\n对于Qt触摸屏驱动常用库tslib来说，这个过程就是其构建系统的标准流程。在这个上下文中，这些步骤可能用于确保tslib与特定版本的Qt（如参考资料中提到的OPT的QT4）正确集成。",
     "retrieve_time": 0.20310664176940918,
@@ -1681,7 +1681,7 @@
   },
   {
     "id": "q157",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 默认文档是英文，若要查看中文文档可采取哪种方式？",
     "answer": "不知道。参考资料中没有提供关于查看Qt中文文档的方法。",
     "retrieve_time": 0.2825589179992676,
@@ -1711,7 +1711,7 @@
   },
   {
     "id": "q158",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt Creator 中如果界面文件 (.ui) 不见，对应设计模式是否可用？",
     "answer": "不知道。参考资料中没有提供关于Qt Creator中如果界面文件(.ui)不见了，对应设计模式是否可用的信息。",
     "retrieve_time": 0.15995573997497559,
@@ -1741,7 +1741,7 @@
   },
   {
     "id": "q159",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 中用于显示富文本或 HTML 内容的窗口部件是？",
     "answer": "不知道。参考资料中没有提供关于Qt中用于显示富文本或HTML内容的窗口部件的信息。",
     "retrieve_time": 0.1562976837158203,
@@ -1771,7 +1771,7 @@
   },
   {
     "id": "q160",
-    "model": "chatglm3-6b",
+    "model": "glm-4",
     "query": "Qt 的跨平台网络库名称为？",
     "answer": "Qt的跨平台网络库的名称为 QT Network。",
     "retrieve_time": 0.17881369590759277,
@@ -2401,7 +2401,7 @@
   },
   {
     "id": "q141",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt Creator 的项目 (.pro) 文件生成通常使用哪一个工具？",
     "answer": "根据提供的参考资料，生成一个 \".pro\" 工程文件通常使用 **QMAC** 工具。\n\n回答: Qt Creator 的项目 (.pro) 文件生成通常使用 **QMAC** 工具。",
     "retrieve_time": 0.2755141258239746,
@@ -2431,7 +2431,7 @@
   },
   {
     "id": "q142",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在使用 qmake 后，常用哪条命令编译生成 Makefile 中的目标？",
     "answer": "根据提供的参考资料，没有直接提到在使用 qmake 后具体用哪条命令来编译生成 Makefile 中的目标。不过，通常在使用 qmake 生成工程文件后，常用的命令是：\n\n```\nmake\n```\n\n这条命令会根据生成的 Makefile 来编译生成目标文件。\n\n如果需要清理编译生成的文件，可以使用：\n\n```\nmake clean\n```\n\n因此，答案是：**make**。",
     "retrieve_time": 0.2596166133880615,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "q143",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 信号槽机制底层依赖哪一套宏/元对象系统？",
     "answer": "根据提供的资料，Qt 信号槽机制底层依赖元对象系统，具体是通过一系列的宏来实现，如 `Q_OBJECT` 宏。这些宏使得信号和槽机制能够在派生类中使用，并支持自动连接和运行时类型信息。\n\n回答: Qt 信号槽机制底层依赖元对象系统及相关的宏（如 Q_OBJECT）。",
     "retrieve_time": 0.16905951499938965,
@@ -2491,7 +2491,7 @@
   },
   {
     "id": "q144",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "创建 QApplication 对象时通常传入哪两个参数？",
     "answer": "创建 QApplication 对象时通常传入两个参数：`argc` 和 `argv`。这是main函数的参数，分别表示参数的数量和参数的数组。\n\n例如：\n```cpp\nQApplication app(argc, argv);\n```",
     "retrieve_time": 0.16349339485168457,
@@ -2521,7 +2521,7 @@
   },
   {
     "id": "q145",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Qt 程序中显示窗口部件需要调用哪一个成员函数？",
     "answer": "根据提供的资料，没有直接提到显示窗口部件的具体成员函数名称。然而，在 Qt 编程中，通常通过调用窗口部件的 `show()` 函数来显示窗口部件。\n\n回答: 在 Qt 程序中显示窗口部件通常需要调用 `show()` 成员函数。",
     "retrieve_time": 0.1682267189025879,
@@ -2551,7 +2551,7 @@
   },
   {
     "id": "q146",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt Creator ‘Help’ 模式主要用于什么？",
     "answer": "根据提供的资料，没有提到Qt Creator ‘Help’ 模式的用途。因此，我无法从资料中找到相关信息。\n\n**回答: 不知道**。",
     "retrieve_time": 0.172593355178833,
@@ -2581,7 +2581,7 @@
   },
   {
     "id": "q147",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt Creator 运行按钮默认执行目标的哪个构建配置？",
     "answer": "根据提供的资料，无法找到有关 Qt Creator 运行按钮默认执行目标的具体构建配置的明确信息。因此，我无法从资料中确定默认执行目标的构建配置。\n\n**回答:** 不知道。",
     "retrieve_time": 0.12162280082702637,
@@ -2611,7 +2611,7 @@
   },
   {
     "id": "q148",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Qt 中，slots 关键字用于声明什么？",
     "answer": "在 Qt 中，`slots` 关键字用于声明槽函数。槽函数是用来接收信号的，它们是 Qt 信号与槽机制的一部分，用于实现对象之间的通讯。信号与槽机制是 Qt 的一个重要特点。",
     "retrieve_time": 0.15943527221679688,
@@ -2641,7 +2641,7 @@
   },
   {
     "id": "q149",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 的核心模块 ‘QtCore’ 提供哪三类基础功能？",
     "answer": "根据提供的资料，没有详细列出 ‘QtCore’ 模块具体提供的三类基础功能。因此，基于现有资料，我无法准确回答 ‘QtCore’ 提供哪三类基础功能。\n\n不过，根据对 Qt 的广泛了解，‘QtCore’ 模块通常提供以下三类基础功能：\n\n1. **事件和对象模型**：包括事件处理、信号与槽机制、对象树等。\n2. **基本数据结构和算法**：如列表、映射、字符串、线程等。\n3. **输入输出和文件系统操作**：文件读写、流操作、目录管理等。\n\n但请注意，以上信息并非直接来源于给定的资料。若仅依据提供的资料，我无法确定具体的三类基础功能。",
     "retrieve_time": 0.149705171585083,
@@ -2671,7 +2671,7 @@
   },
   {
     "id": "q150",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "使用 Qt Designer 拖拽一个按钮到表单后，按钮对象的默认基类是什么？",
     "answer": "根据提供的参考资料，没有具体提到使用 Qt Designer 拖拽按钮到表单后按钮对象的默认基类。因此，无法从资料中找到确切答案。\n\n不过，根据一般的 Qt 开发知识，当使用 Qt Designer 拖拽一个按钮到表单时，按钮对象的默认基类通常是 **QPushButton**。\n\n所以，答案是：**QPushButton**。",
     "retrieve_time": 0.17269325256347656,
@@ -2701,7 +2701,7 @@
   },
   {
     "id": "q151",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 信号槽中连接语法 connect(sender, SIGNAL(clicked()), receiver, SLOT(close())) 早期属于哪种连接方式？",
     "answer": "早期 Qt 信号槽的连接语法 `connect(sender, SIGNAL(clicked()), receiver, SLOT(close()))` 使用的是**标准连接方式**，具体来说是**默认的自动连接方式**（Auto Connection）。在这种连接方式下，Qt 会根据发送者和接收者的情况自动选择合适的连接类型，例如如果接收者在同一线程中，使用直接连接；如果在不同线程中，使用队列连接。\n\n这种基于 `SIGNAL` 和 `SLOT` 宏的连接语法在 Qt 5 之前是主要用法，Qt 5 引入了新的语法形式，但仍然兼容这种旧的连接方式。\n\n因此，`connect(sender, SIGNAL(clicked()), receiver, SLOT(close()))` 属于**自动连接方式**，这是早期的标准连接方法。\n\n",
     "retrieve_time": 0.1790463924407959,
@@ -2731,7 +2731,7 @@
   },
   {
     "id": "q152",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt5 引入的推荐信号槽连接语法基于什么特性？",
     "answer": "Qt5 引入的推荐信号槽连接语法基于**信号和槽**机制。这种机制是 Qt 不同于其他开发框架的一个特点，允许对象之间进行通讯。新的语法更加简洁，并支持更好的类型安全性。只有派生的类才能够使用信号和槽机制。",
     "retrieve_time": 0.16646337509155273,
@@ -2761,7 +2761,7 @@
   },
   {
     "id": "q153",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在 Qt Quick 中，QML 文件通常使用什么扩展名？",
     "answer": "QML 文件通常使用 **.qml** 作为扩展名。",
     "retrieve_time": 0.1541273593902588,
@@ -2791,7 +2791,7 @@
   },
   {
     "id": "q154",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt Creator 中的 ‘Analyze’ 模式默认提供哪两类分析工具？",
     "answer": "根据提供的资料，Qt Creator 中的 ‘Analyze’ 模式默认提供以下两类分析工具：\n\n1. QML 分析器\n2. 内存分析器\n\n回答: Qt Creator 中的 ‘Analyze’ 模式默认提供 QML 分析器和内存分析器。",
     "retrieve_time": 0.14530062675476074,
@@ -2821,7 +2821,7 @@
   },
   {
     "id": "q155",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "在交叉编译流程中，安装 Qt 库到目标根文件系统的命令通常是？",
     "answer": "在交叉编译流程中，安装 Qt 库到目标根文件系统的命令通常是 `make install`。此命令会将编译好的 Qt 库安装到事先配置好的目标根文件系统目录中。\n\n根据提供的资料，虽然没有直接提及该命令，但基于标准的 Qt 交叉编译流程，这是标准的安装步骤。\n\n",
     "retrieve_time": 0.17239785194396973,
@@ -2851,7 +2851,7 @@
   },
   {
     "id": "q156",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 触摸屏驱动常用库 tslib 的 configure、make、make install 三步属于哪类构建系统流程？",
     "answer": "用户问题: Qt 触摸屏驱动常用库 tslib 的 configure、make、make install 三步属于哪类构建系统流程？\n\n回答: 这三步属于典型的 **Autotools** 构建系统流程。configure 脚本通常由 Autotools 生成，用于平台配置和生成 Makefile，接下来的 make 用于根据生成的 Makefile 编译源码，最后的 make install 用于安装构建好的软件。\n\n依据参考资料中提到的 \"我們先會編譯TSLiber\"，这表明在处理 tslib 时会进行编译，而常见的编译步骤就是 configure、make、make install，进一步确认其使用 Autotools 构建系统。\n\n因此，答案是 Autotools 构建系统流程。",
     "retrieve_time": 0.1859133243560791,
@@ -2881,7 +2881,7 @@
   },
   {
     "id": "q157",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 默认文档是英文，若要查看中文文档可采取哪种方式？",
     "answer": "根据提供的参考资料，没有直接提到如何查看中文文档。不过可以提供以下建议：\n\n回答: 参考资料中提到Qt文档都是英文的。若要查看中文文档，可以采取以下方式：\n1. 访问Qt的官方网站或社区，查找是否有中文版的文档可供下载或在线阅读。\n2. 使用第三方翻译工具或插件对英文文档进行翻译，但需注意翻译质量。\n3. 查找是否有中文Qt用户社区或论坛，他们可能提供了非官方的中文文档或翻译。\n\n资料中未提供直接切换语言的方式，因此默认情况下文档为英文。",
     "retrieve_time": 0.17698121070861816,
@@ -2911,7 +2911,7 @@
   },
   {
     "id": "q158",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt Creator 中如果界面文件 (.ui) 不见，对应设计模式是否可用？",
     "answer": "根据提供的资料，无法直接找到有关界面文件 (.ui) 丢失后设计模式是否可用的信息。因此，**不知道** 设计模式在界面文件丢失后是否仍然可用。不过可以说明的是，Qt 可以不使用图形界面，但这与设计模式是否可用无直接关联。建议检查项目文件结构或重新创建界面文件以确保设计模式正常使用。",
     "retrieve_time": 0.15684795379638672,
@@ -2941,7 +2941,7 @@
   },
   {
     "id": "q159",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 中用于显示富文本或 HTML 内容的窗口部件是？",
     "answer": "在 Qt 中，用于显示富文本或 HTML 内容的窗口部件是 **QTextBrowser**。如果需要一个可编辑的富文本窗口部件，则可以使用 **QTextEdit**。\n\n参考资料中未直接提及此信息，但基于对 Qt 框架的了解，上述部件是用于处理富文本和 HTML 内容的。",
     "retrieve_time": 0.15730929374694824,
@@ -2971,7 +2971,7 @@
   },
   {
     "id": "q160",
-    "model": "yi-6b-chat",
+    "model": "yi-34b-chat",
     "query": "Qt 的跨平台网络库名称为？",
     "answer": "Qt 的跨平台网络库名称为 QT Network。",
     "retrieve_time": 0.21601510047912598,
