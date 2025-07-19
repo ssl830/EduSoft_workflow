@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-// import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores/auth'
+import ClassApi from '../api/class'
+import CourseApi from '../api/course'
 
 import Home from '../views/Home.vue'
 import Login from '../views/auth/Login.vue'
@@ -111,16 +113,6 @@ const routes: RouteRecordRaw[] = [
       showSidebar: true
     }
   },
-  // {
-  //   path: '/exercise/:id',
-  //   name: 'ExerciseDetail',
-  //   component: () => import('../views/exercise/ExerciseDetail.vue'),
-  //   meta: {
-  //     title: '练习详情',
-  //     requiresAuth: true,
-  //     showSidebar: true
-  //   }
-  // },
   {
     path: '/takeExercise/:id',
     name: 'TakeExercise',
@@ -153,16 +145,7 @@ const routes: RouteRecordRaw[] = [
       roles: ['student', 'teacher'], // TODO
       showSidebar: false
     }
-  },  // {
-  //   path: '/exercise/:id/feedback',
-  //   name: 'ExerciseFeedback',
-  //   component: () => import('../views/exercise/ExerciseFeedback.vue'),
-  //   meta: {
-  //     title: '练习反馈',
-  //     requiresAuth: true,
-  //     showSidebar: true
-  //   }
-  // },
+  },
   {
     path: '/questionBank',
     name: 'QuestionBank',
@@ -189,7 +172,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/question/QuestionWrong.vue'),
     meta: {
       title: '错误题库',
-      requiresAuth: true,      showSidebar: true
+      requiresAuth: true,
+      showSidebar: true
     }
   },
   {
@@ -228,7 +212,10 @@ const routes: RouteRecordRaw[] = [
     name: 'CourseDiscussionList',
     component: DiscussionList,
     props: true,
-    meta: { requiresAuth: true }
+    meta: {
+      requiresAuth: true,
+      title: '讨论区',
+    }
   },
   { // +++ 新增的路由规则 +++
     path: '/discussions',
@@ -236,6 +223,7 @@ const routes: RouteRecordRaw[] = [
     component: DiscussionList,
     meta: {
       requiresAuth: true,
+      title: '讨论区',
       showSidebar: true  // 显示侧边栏
     }
   },
@@ -246,6 +234,7 @@ const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props to the component
     meta: {
       requiresAuth: true,
+      title: '讨论区',
       showSidebar: true  // 显示侧边栏
     }
   },
@@ -294,7 +283,10 @@ const routes: RouteRecordRaw[] = [
     path: '/learning-records-analysis',
     name: 'LearningRecordsAnalysis',
     component: LearningRecordsAnalysis,
-  },
+    meta: {
+      title: '练习分析',
+      requiresAuth: true,
+    } },
   {
     path: '/assistant',
     name: 'OnlineAssistant',
@@ -436,26 +428,291 @@ const router = createRouter({
   }
 })
 
-// router.beforeEach((to, from, next) => {
-//   const authStore = useAuthStore()
-//   const { requiresAuth, roles } = to.meta
-//
-//   // Update document title
-//   document.title = `${to.meta.title} | 课程管理平台`
-//
-//   // Check authentication requirements
-//   if (requiresAuth && !authStore.isAuthenticated) {
-//     next({ name: 'Login', query: { redirect: to.fullPath } })
-//     return
-//   }
-//
-//   // Check role requirements if specified
-//   if (roles && !roles.includes(authStore.userRole)) {
-//     next({ name: 'Home' })
-//     return
-//   }
-//
-//   next()
-// })
+// 路由守卫
+router.beforeEach( async (to, _from, next) => {
+  const authStore = useAuthStore()
+  const {requiresAuth} = to.meta
+
+  // 设置页面标题
+  if (to.meta && to.meta.title) {
+    document.title = `${to.meta.title} | 课程管理平台`
+  }
+
+  // 检查登录
+  if (requiresAuth && !authStore.isAuthenticated) {
+    next({name: 'Login', query: {redirect: to.fullPath}})
+    return
+  }
+
+  // 禁止 student 访问部分页面
+  if (authStore.user && authStore.user.role === 'student' && (
+    to.meta.title === '创建班级' || to.meta.title === '创建课程' || to.meta.title === '创建练习' ||
+    to.meta.title === '批改练习' || to.meta.title === '练习列表' || to.meta.title === '教师列表' ||
+    to.meta.title === '学生列表' || to.meta.title === '管理员列表' || to.meta.title === '资源列表' ||
+    to.meta.title === '系统概览' || to.meta.title === '私密知识库设置' || to.meta.title === '编辑练习' ||
+    to.meta.title === '练习分析'
+  )) {
+    next({name: 'Home'})
+    return
+  }
+
+  // 禁止 teacher 访问部分页面
+  if (authStore.user && authStore.user.role === 'teacher' && (
+    to.meta.title === '参与练习' || to.meta.title === '练习反馈' || to.meta.title === '收藏题库' ||
+    to.meta.title === '错误题库' || to.meta.title === '学习记录' || to.meta.title === '自测历史' ||
+    to.meta.title === 'AI自测' || to.meta.title === '自测详情' || to.meta.title === '教师列表' ||
+    to.meta.title === '学生列表' || to.meta.title === '管理员列表' || to.meta.title === '资源列表' ||
+    to.meta.title === '系统概览' || to.meta.title === '私密知识库设置' || to.meta.title === '练习列表' ||
+    to.meta.title === '课表' || to.meta.title === '通知中心'
+  )) {
+    next({name: 'Home'})
+    return
+  }
+
+  // 禁止 tutor 访问部分页面
+  if (authStore.user && authStore.user.role === 'tutor' && (
+    to.meta.title === '班级列表' || to.meta.title === '创建班级' || to.meta.title === '班级详情' ||
+    to.meta.title === '课程详情' || to.meta.title === '创建课程' || to.meta.title === '创建练习' ||
+    to.meta.title === '参与练习' || to.meta.title === '批改练习' || to.meta.title === '练习反馈' ||
+    to.meta.title === '题库' || to.meta.title === '收藏题库' || to.meta.title === '错误题库' ||
+    to.meta.title === '学习记录' || to.meta.title === '通知中心' || to.meta.title === '课表' ||
+    to.meta.title === '在线学习助手' || to.meta.title === '自测历史' || to.meta.title === 'AI自测' ||
+    to.meta.title === '自测详情' || to.meta.title === '练习分析' || to.meta.title === '讨论区' ||
+    to.meta.title === '首页'
+  )) {
+    next({name: 'TeachersList'})
+    return
+  }
+
+  // 校验班级成员权限：仅班级成员（学生或老师）可访问班级详情
+  if (
+    to.meta.title === '班级详情' && authStore.user &&
+    (authStore.user.role === 'student' || authStore.user.role === 'teacher')
+  ) {
+    try {
+      const classId = to.params.id
+      let isMember = false
+      if (authStore.user.role === 'student') {
+        // 查询学生是否属于该班级
+        const res = await ClassApi.getClassStudents(String(classId))
+        console.log("学生" + res.data)
+        console.log(res.data)
+        if (res.data && Array.isArray(res.data)) {
+          isMember = res.data.some((u: any) => u.userId === authStore.user?.id)
+        }
+      } else if (authStore.user.role === 'teacher') {
+        // 查询老师是否为该班级的教师
+        const res = await ClassApi.getClassById(String(classId))
+        if (res.data && res.data.teacherId) {
+          isMember = res.data.teacherId === authStore.user.id
+        }
+      }
+      if (!isMember) {
+        next({name: 'Home'})
+        return
+      }
+    } catch (e) {
+      next({name: 'Home'})
+      return
+    }
+  }
+
+  // 校验课程成员权限：仅课程成员（学生或老师）可访问课程详情
+  if (
+    to.meta.title === '课程详情' && authStore.user &&
+    (authStore.user.role === 'student' || authStore.user.role === 'teacher')
+  ) {
+    try {
+      const courseId = to.params.id
+      let isMember = false
+      if (authStore.user.role === 'student') {
+        // 查询学生是否属于该课程
+        const res = await CourseApi.getUserCourses(authStore.user.id)
+        if (res.data && Array.isArray(res.data)) {
+          isMember = res.data.some((c: any) => String(c.id) === String(courseId))
+        }
+      } else if (authStore.user.role === 'teacher') {
+        // 查询老师是否为该课程的教师
+        const res = await CourseApi.getCourseById(String(courseId))
+        if (res.data && res.data.teacherId) {
+          isMember = res.data.teacherId === authStore.user.id
+        }
+      }
+      if (!isMember) {
+        next({name: 'Home'})
+        return
+      }
+    } catch (e) {
+      next({name: 'Home'})
+      return
+    }
+  }
+
+  // 校验学生参与练习权限：练习必须属于学生所在班级
+  if (
+    to.name === 'TakeExercise' &&
+    authStore.user &&
+    authStore.user.role === 'student'
+  ) {
+    try {
+      const ExerciseApi = (await import('@/api/exercise.ts')).default
+      const practiceId = String(to.params.id)
+      // 获取该练习详情，拿到其班级ID
+      const res = await ExerciseApi.getExerciseDetails(practiceId, {})
+      const classId = res.data?.classId
+      if (!classId) {
+        next({ name: 'Home' })
+        return
+      }
+      // 获取学生所在班级列表
+      const classRes = await ClassApi.getUserClasses(authStore.user.id)
+      const classList = classRes.data || []
+      const inClass = classList.some((cls: any) => String(cls.id) === String(classId))
+      if (!inClass) {
+        next({ name: 'Home' })
+        return
+      }
+    } catch (e) {
+      next({ name: 'Home' })
+      return
+    }
+  }
+
+  // 校验/checkExercise权限：教师只能批改自己班级的练习，且submissionId必须属于该practiceId
+  if (
+    to.name === 'CheckExercise' &&
+    authStore.user &&
+    (authStore.user.role === 'teacher' || authStore.user.role === 'tutor')
+  ) {
+    try {
+      const ExerciseApi = (await import('@/api/exercise.ts')).default
+      const practiceId = String(to.params.practiceId)
+      const submissionId = String(to.params.submissionId)
+
+      // 1. 获取练习详情，检查班级归属
+      const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
+      const classId = exerciseRes.data?.classId
+      if (!classId) {
+        next({ name: 'Home' })
+        return
+      }
+      // 获取教师负责的班级
+      const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
+      const teacherClasses = teacherClassRes.data || []
+      const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
+      if (!isTeacherOfClass) {
+        next({ name: 'Home' })
+        return
+      }
+
+      // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
+      const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
+      const submissions = submissionsRes.data || []
+      const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
+      if (!hasSubmission) {
+        next({ name: 'Home' })
+        return
+      }
+    } catch (e) {
+      next({ name: 'Home' })
+      return
+    }
+  }
+
+  // 校验/exerciseFeedback权限：学生只能查看自己班级的练习反馈，且submissionId必须属于该practiceId
+  if (
+    to.name === 'ExerciseFeedback' &&
+    authStore.user &&
+    authStore.user.role === 'student'
+  ) {
+    try {
+      const ExerciseApi = (await import('@/api/exercise.ts')).default
+      const practiceId = String(to.params.practiceId)
+      const submissionId = String(to.params.submissionId)
+
+      // 1. 获取练习详情，检查班级归属
+      const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
+      const classId = exerciseRes.data?.classId
+      if (!classId) {
+        next({ name: 'Home' })
+        return
+      }
+      // 获取学生所在班级列表
+      const classRes = await ClassApi.getUserClasses(authStore.user.id)
+      const classList = classRes.data || []
+      const inClass = classList.some((cls: any) => String(cls.id) === String(classId))
+      if (!inClass) {
+        next({ name: 'Home' })
+        return
+      }
+
+      // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
+      const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
+      const submissions = submissionsRes.data || []
+      const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
+      if (!hasSubmission) {
+        next({ name: 'Home' })
+        return
+      }
+    } catch (e) {
+      next({ name: 'Home' })
+      return
+    }
+  }
+
+  // 校验/selfpractice/history/:pid权限：学生只能查看自己创建的AI自测历史
+  if (
+    to.name === 'SelfPracticeDetail' &&
+    authStore.user &&
+    authStore.user.role === 'student'
+  ) {
+    try {
+      const pid = String(to.params.pid)
+      const { getSelfPracticeHistory } = await import('@/api/ai')
+      const res = await getSelfPracticeHistory()
+      const historyList = res.data || []
+      const hasPractice = historyList.some((item: any) => String(item.practiceId) === pid)
+      if (!hasPractice) {
+        next({ name: 'Home' })
+        return
+      }
+    } catch (e) {
+      next({ name: 'Home' })
+      return
+    }
+  }
+
+  // 校验/exercise/edit/:id权限：教师只能编辑自己班级的练习
+  if (
+    to.name === 'ExerciseEdit' &&
+    authStore.user &&
+    (authStore.user.role === 'teacher')
+  ) {
+    try {
+      const ExerciseApi = (await import('@/api/exercise.ts')).default
+      const practiceId = String(to.params.id)
+      // 获取练习详情，拿到其班级ID
+      const res = await ExerciseApi.getExerciseDetails(practiceId, {})
+      const classId = res.data?.classId
+      if (!classId) {
+        next({ name: 'Home' })
+        return
+      }
+      // 获取教师负责的班级
+      const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
+      const teacherClasses = teacherClassRes.data || []
+      const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
+      if (!isTeacherOfClass) {
+        next({ name: 'Home' })
+        return
+      }
+    } catch (e) {
+      next({ name: 'Home' })
+      return
+    }
+  }
+
+  next()
+})
 
 export default router
