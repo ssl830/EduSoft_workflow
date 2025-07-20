@@ -20,7 +20,7 @@ const ExerciseApi = {
 
   // 获取待批改练习列表
   getPendingJudgeList(data:{
-    practiceId: number | undefined ,
+    practiceId: number | undefined | string,
     classId: string,
   }){
     console.log("data:", data)

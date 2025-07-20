@@ -93,15 +93,6 @@ const kbUploading = ref(false)
 const showKbDialog = ref(false)
 const kbDialogMsg = ref('')
 
-function openKbDialog(msg: string) {
-  kbDialogMsg.value = msg
-  showKbDialog.value = true
-}
-function closeKbDialog() {
-  showKbDialog.value = false
-  kbDialogMsg.value = ''
-}
-
 // 单选框选项配置
 const typeOptions = ref([
     { value: 'PPT', label: 'PPT' },
@@ -267,7 +258,7 @@ const uploadResource = async () => {
   if (uploadForm.value.visibility === 'CLASS_ONLY' && selectedClass.value) {
       formData.append('classId', selectedClass.value)
   }
-  
+
   // 添加知识库上传标志
   formData.append('uploadToKnowledgeBase', uploadToKnowledgeBase.value.toString())
 
@@ -278,7 +269,7 @@ const uploadResource = async () => {
 
     // 直接使用后端集成的知识库上传功能，不再需要单独调用
     // 如果后端已经处理了上传到知识库的逻辑，前端就不需要再单独调用
-    
+
     // Reset form and refresh list
     showUploadForm.value = false
     isRenew.value = false

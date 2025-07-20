@@ -107,15 +107,6 @@ const similarError = ref('')
 const similarQuestion = ref('')
 const similarSourceQuestion = ref<any>(null)
 
-// 打开类似题目弹窗
-const openSimilarDialog = (question: any) => {
-    similarApiKey.value = ''
-    similarError.value = ''
-    similarQuestion.value = ''
-    similarSourceQuestion.value = question
-    showSimilarDialog.value = true
-}
-
 // 调用DeepSeek接口生成类似题目 (修复：API端点)
 const generateSimilarQuestion = async () => {
     similarError.value = ''
