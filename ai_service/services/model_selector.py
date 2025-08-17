@@ -59,7 +59,7 @@ class ModelSelector:
 
         # Determine default priority order (skip models without creds)
         default_order = [
-            os.getenv("PRIMARY_LLM_MODEL", "deepseek"),  # user-preferred first
+            os.getenv("PRIMARY_LLM_MODEL", "chatglm"),  # user-preferred first
             "chatglm",
             "yi",
             "deepseek",
@@ -81,9 +81,21 @@ class ModelSelector:
     # public helpers
     # ------------------------------------------------------------------
     def chat_completion(self, *, messages: List[dict], temperature: float = 0.7, top_p: float = 0.95, purpose: Optional[str] = None, **extra) -> any:  # noqa: ANN401
-        """Try providers in order until one succeeds. Returns OpenAI response."""
+        """Try providers in a computed order (per-purpose override supported) until one succeeds.
 
-        for key in self.priority:
+        Priority resolution:
+        1) If purpose provided and env LLM_PRIORITY_<PURPOSE> exists, use that order.
+        2) Otherwise fall back to default priority derived at init.
+        """
+
+        order = self._get_priority_for_purpose(purpose)
+        logger.info(
+            "LLM call purpose=%s, provider order=%s",
+            purpose or "<none>",
+            order,
+        )
+
+        for key in order:
             meta = self._clients[key]
             client: OpenAI = meta["client"]
             model_name: str = meta["model_name"]
@@ -101,13 +113,14 @@ class ModelSelector:
                     extra["max_tokens"] = self.default_max_tokens
                 req_kwargs.update(extra)
 
+                logger.debug("Attempting backend=%s model=%s with max_tokens=%s", key, model_name, req_kwargs.get("max_tokens"))
                 response = client.chat.completions.create(**req_kwargs)
                 # Success – log & return
                 logger.info(
                     "LLM success via %s (model=%s, tokens=%s)",
                     key,
                     model_name,
-                    response.usage if hasattr(response, "usage") else "?",
+                    getattr(response, "usage", "?"),
                 )
                 return response
             except Exception as exc:  # noqa: BLE001
@@ -163,3 +176,61 @@ class ModelSelector:
             logger.info("DeepSeek backend enabled (%s)", model_name)
         else:
             logger.info("DeepSeek backend disabled – no DEEPSEEK_API_KEY found") 
+
+    # ------------------------------------------------------------------
+    # Per-purpose priority helpers
+    # ------------------------------------------------------------------
+    def _normalize_backend_id(self, ident: str) -> Optional[str]:
+        ident = (ident or "").strip().lower()
+        if ident in {"glm", "chatglm"}:
+            ident = "chatglm"
+        if ident in {"yi", "01ai", "yi-34b", "yi-34b-chat"}:
+            ident = "yi"
+        if ident in {"deepseek", "deepseek-v3", "deepseek_chat", "deepseek-chat"}:
+            ident = "deepseek"
+        return ident if ident in self._clients else None
+
+    def _parse_priority_env(self, raw: str) -> list[str]:
+        # Accept separators: ',', '>', '->', whitespace
+        if not raw:
+            return []
+        tokens: list[str] = []
+        # Replace arrows with commas, then split
+        cleaned = raw.replace("->", ",").replace(">", ",")
+        for part in cleaned.split(","):
+            norm = self._normalize_backend_id(part)
+            if norm and norm not in tokens:
+                tokens.append(norm)
+        # Keep only available backends
+        return [t for t in tokens if t in self._clients]
+
+    def _purpose_env_key(self, purpose: Optional[str]) -> str:
+        if not purpose:
+            return ""
+        # Uppercase and replace non-alnum with underscore
+        import re as _re  # local alias to avoid top-level import noise
+        key = _re.sub(r"[^A-Za-z0-9]+", "_", purpose).strip("_").upper()
+        return f"LLM_PRIORITY_{key}"
+
+    def _get_priority_for_purpose(self, purpose: Optional[str]) -> list[str]:
+        # 1) Per-purpose override from env
+        env_key = self._purpose_env_key(purpose)
+        if env_key:
+            raw = os.getenv(env_key, "").strip()
+            if raw:
+                order = self._parse_priority_env(raw)
+                if order:
+                    # Log chosen env override
+                    logger.info("Using per-purpose priority from %s = %s", env_key, order)
+                    return order
+
+        # 2) Optional global default override
+        raw_default = os.getenv("LLM_PRIORITY_DEFAULT", "").strip()
+        if raw_default:
+            order = self._parse_priority_env(raw_default)
+            if order:
+                logger.info("Using global priority from LLM_PRIORITY_DEFAULT = %s", order)
+                return order
+
+        # 3) Fallback to initialised default order (respects PRIMARY_LLM_MODEL)
+        return list(self.priority)

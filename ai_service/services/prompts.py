@@ -166,7 +166,7 @@ class PromptTemplates:
     ) -> str:
         """评估学生答案的提示词"""
         return f"""
-        作为一名经验丰富的教育评估专家，请评估学生的答案：
+        作为一名经验丰富的教育评估专家，请评估学生的答案，分析部分用中文：
 
         题目：
         {question}
@@ -234,7 +234,7 @@ class PromptTemplates:
         评分标准：
         1. 根据答案的完整性、准确性和表达的清晰度进行评分
         2. 正确点和错误点要具体明确
-        3. 反馈要有建设性，并指出具体的改进方向
+        3. 反馈要有建设性，并指出具体的改进方向，用中文
         4. 知识点要标明具体的章节位置
 
         请确保返回的是合法的JSON格式。"""
@@ -242,7 +242,7 @@ class PromptTemplates:
     @staticmethod
     def get_exercise_analysis_prompt(exercise_questions: list) -> str:
         questions_str = json.dumps(exercise_questions, ensure_ascii=False, indent=2)
-        return f"""你是一个专业的教育分析专家。请分析以下练习题的完成情况：
+        return f"""你是一个专业的教育分析专家。请分析以下练习题的完成情况,分析部分请用中文
 
         练习题信息：
         {questions_str}
