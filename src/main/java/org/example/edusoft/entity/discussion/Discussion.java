@@ -23,11 +23,9 @@ public class Discussion {
     @TableId(type = IdType.AUTO)
     private Long id;
     
-    @NotNull(message = "课程ID不能为空")
     @TableField("course_id")
     private Long courseId;
     
-    @NotNull(message = "班级ID不能为空")
     @TableField("class_id")
     private Long classId;
     

@@ -51,9 +51,15 @@ class ModelSelector:
         self._clients: Dict[str, dict] = {}
         self._init_clients()
 
+        # Default max tokens to avoid provider-side truncation (can be overridden per call)
+        try:
+            self.default_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", "4096"))
+        except Exception:
+            self.default_max_tokens = 4090
+
         # Determine default priority order (skip models without creds)
         default_order = [
-            os.getenv("PRIMARY_LLM_MODEL", "chatglm"),  # user-preferred first
+            os.getenv("PRIMARY_LLM_MODEL", "deepseek"),  # user-preferred first
             "chatglm",
             "yi",
             "deepseek",
@@ -83,13 +89,19 @@ class ModelSelector:
             model_name: str = meta["model_name"]
 
             try:
-                response = client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    temperature=temperature,
-                    top_p=top_p,
-                    **extra,
-                )
+                # Build arguments with sane defaults to avoid truncation
+                req_kwargs = {
+                    "model": model_name,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "top_p": top_p,
+                }
+                # Allow callers to override; ensure max_tokens is always present unless explicitly set
+                if "max_tokens" not in extra:
+                    extra["max_tokens"] = self.default_max_tokens
+                req_kwargs.update(extra)
+
+                response = client.chat.completions.create(**req_kwargs)
                 # Success – log & return
                 logger.info(
                     "LLM success via %s (model=%s, tokens=%s)",

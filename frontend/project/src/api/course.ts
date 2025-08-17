@@ -119,9 +119,9 @@ const CourseApi = {
     return axios.get('/api/practices/teacher');
   },
 
-  // 获取课程信息
+  // 获取课程信息（修正路径：/api/courses/{id}）
   getCourseInfo: (courseId: number) => {
-    return axios.get<Course>(`/api/course/${courseId}`);
+    return axios.get<Course>(`/api/courses/${courseId}`);
   },
 
   // 生成教案

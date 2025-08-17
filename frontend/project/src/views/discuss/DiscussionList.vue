@@ -12,7 +12,13 @@
             </h1>
           </div>
           <div class="toolbar-right">
-            <!-- 删除了发起讨论和刷新按钮，保留右侧导航栏的功能 -->
+            <!-- 课程选择器（新增） -->
+            <div class="course-select-wrapper">
+              <select v-model="selectedCourseId" @change="onCourseChange" class="course-select">
+                <option :value="null">选择课程</option>
+                <option v-for="c in courses" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -178,9 +184,9 @@
             <!-- 操作按钮区域 -->
             <div class="discussion-footer">
               <div class="discussion-tags">
-                <span class="course-tag">
+                <span v-if="thread.courseName" class="course-tag">
                   <i class="fa fa-book"></i>
-                  {{ thread.courseName || '课程讨论' }}
+                  {{ thread.courseName }}
                 </span>
               </div>
 
@@ -695,7 +701,11 @@ const legacyDiscussionApi = {
         console.log('getAllThreads response 是否为数组:', Array.isArray(response));
 
         // 由于axios拦截器已经返回了response.data，所以这里response就是数据本身
-        const discussionList = Array.isArray(response) ? response : [];
+        const discussionList = Array.isArray(response)
+          ? response
+          : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+            ? (response as any).data
+            : [];
         console.log('getAllThreads 讨论列表长度:', discussionList.length);
 
         if (discussionList.length > 0) {
@@ -746,7 +756,12 @@ const legacyDiscussionApi = {
       console.log('getThreadsByCourse response 类型:', typeof response);
       console.log('getThreadsByCourse response 是否为数组:', Array.isArray(response));
 
-      const discussionList = Array.isArray(response) ? response : [];
+      // 兼容两种返回：数组 或 {code,message,data}
+      const discussionList = Array.isArray(response)
+        ? response
+        : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+          ? (response as any).data
+          : [];
       console.log('getThreadsByCourse 讨论列表长度:', discussionList.length);
 
       if (discussionList.length > 0) {
@@ -788,26 +803,27 @@ const legacyDiscussionApi = {
   createThread: async (data: CreateThreadData) => {
     try {
       // 需要courseId和classId，这里假设classId为1（实际项目中需要从路由或上下文获取）
-      const classId = 1; // 临时硬编码，实际需要动态获取
+      const classId = 1; // TODO: 从上下文或路由获取真实classId
       const response:any = await discussionApi.createDiscussion(Number(data.courseId), classId, {
         title: data.title,
         content: data.content
       });
+      const created = (response && typeof response === 'object' && 'data' in response) ? (response as any).data : response;
       return {
         data: {
-          id: String(response.id),
-          title: response.title,
-          content: response.content,
-          authorId: String(response.creatorId),
-          author: response.creatorNum,
-          createdAt: response.createdAt,
-          courseId: String(response.courseId),
-          courseName: `课程 ${response.courseId}`,
-          isPinned: response.isPinned,
-          isClosed: response.isClosed,
+          id: String(created.id),
+          title: created.title,
+          content: created.content,
+          authorId: String(created.creatorId),
+          author: created.creatorNum,
+          createdAt: created.createdAt,
+          courseId: String(created.courseId),
+          courseName: `课程 ${created.courseId}`,
+          isPinned: created.isPinned,
+          isClosed: created.isClosed,
           likes: 0,
-          replyCount: response.replyCount,
-          viewCount: response.viewCount
+          replyCount: created.replyCount,
+          viewCount: created.viewCount
         }
       };
     } catch (error) {
@@ -850,7 +866,12 @@ const legacyDiscussionApi = {
       }
       const response = await discussionApi.getDiscussionListByCourse(Number(courseId.value));
       // 在前端进行简单的关键词过滤
-      const filteredData = (response.data || []).filter((item: Discussion) =>
+      const list: Discussion[] = Array.isArray(response)
+        ? response
+        : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+          ? (response as any).data
+          : [];
+      const filteredData = list.filter((item: Discussion) =>
         item.title.toLowerCase().includes(keyword.toLowerCase()) ||
         item.content.toLowerCase().includes(keyword.toLowerCase())
       );
@@ -901,8 +922,10 @@ const router = useRouter();
 const userRole = ref<'student' | 'assistant' | 'teacher'>('student'); // 默认为学生
 const currentUserId = ref<string>('user123'); // 模拟当前用户ID，实际项目中应从认证状态获取
 
-const courseId = ref<string | null>('1'); // 设置默认courseId为1，用于测试
+const courseId = ref<string | null>(null);
+const selectedCourseId = ref<string | null>(null);
 const courseName = ref<string>('');
+const courses = ref<{id: number; name: string}[]>([]);
 const threads = ref<Thread[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -1096,10 +1119,12 @@ const progressText = computed(() => {
 
 // 检查表单是否完全有效
 const isFormValid = computed(() => {
+  const hasCourse = !!(newThread.courseId || courseId.value);
   return !titleError.value &&
          !contentError.value &&
          newThread.title.length >= 3 &&
-         getContentLength() >= 10;
+         getContentLength() >= 10 &&
+         hasCourse;
 });
 
 // 焦点到内容编辑器
@@ -1317,10 +1342,10 @@ const fetchThreads = async () => {
     let response;
     if (courseId.value) {
       response = await legacyDiscussionApi.getThreadsByCourse(courseId.value);
-      courseName.value = `课程 ${courseId.value}`;
+      // 课程名在 getThreadsByCourse 内部已解析，这里不强制覆盖
     } else {
       response = await legacyDiscussionApi.getAllThreads();
-      courseName.value = '所有讨论';
+      courseName.value = '';
     }
 
     if (response && response.data) {
@@ -1609,13 +1634,23 @@ const markNotificationAsRead = async (notificationId: string) => {
 };
 
 onMounted(async () => {
-  // 从路由参数获取courseId，如果没有则设置默认值用于测试
-  courseId.value = route.params.courseId as string || '1'; // 设置默认courseId为1
-  if (newThread) {
-    newThread.courseId = courseId.value || '1';
+  // 从路由参数获取courseId（如果有）
+  courseId.value = (route.params.courseId as string) || null;
+  selectedCourseId.value = courseId.value;
+  if (newThread && courseId.value) {
+    newThread.courseId = courseId.value;
   }
 
-  // 获取真实的讨论数据
+  // 加载课程列表用于下拉选择
+  try {
+    const courseResp: any = await courseApi.getAllCourses();
+    const list = (courseResp && typeof courseResp === 'object' && 'data' in courseResp) ? courseResp.data : courseResp;
+    courses.value = Array.isArray(list) ? list.map((c: any) => ({ id: c.id, name: c.name })) : [];
+  } catch (e) {
+    courses.value = [];
+  }
+
+  // 获取讨论数据
   await fetchThreads();
 
   // 初始化未读通知计数（实际项目中应从API获取）
@@ -1634,6 +1669,16 @@ watch(showNotificationsModal, (newVal) => {
     fetchNotifications();
   }
 });
+
+// 选择课程切换
+const onCourseChange = async () => {
+  courseId.value = selectedCourseId.value;
+  // 写入新帖默认 courseId
+  if (newThread) {
+    newThread.courseId = courseId.value || '';
+  }
+  await fetchThreads();
+};
 
 // 监听内联显示面板，加载相应数据
 watch(showUserRecordPane, (newVal) => {
@@ -1657,7 +1702,11 @@ const loadReplies = async (threadId: string) => {
 
   try {
     const response = await discussionApi.getAllReplies(Number(threadId));
-    threadReplies[threadId] = Array.isArray(response) ? response : [];
+    threadReplies[threadId] = Array.isArray(response)
+      ? response
+      : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+        ? (response as any).data
+        : [];
   } catch (err: any) {
     console.error('加载回复失败:', err);
     repliesError.value = '加载回复失败，请重试';
@@ -3981,5 +4030,53 @@ const getCourseInfo = async (courseId: number) => {
   pointer-events: auto !important;
   opacity: 1 !important;
   z-index: 10 !important;
+}
+.course-select-wrapper {
+  display: inline-block;
+  position: relative;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 下拉框样式 */
+.course-select {
+  appearance: none; /* 去掉默认样式 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 36px 8px 12px; /* 内边距 */
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='12' height='7' viewBox='0 0 12 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='2' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 鼠标悬停效果 */
+.course-select:hover {
+  border-color: #888;
+}
+
+/* 聚焦效果 */
+.course-select:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* 禁用状态 */
+.course-select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* 可选：调整容器右边距 */
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 </style>

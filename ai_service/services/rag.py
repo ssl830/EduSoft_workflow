@@ -142,25 +142,89 @@ class RAGService:
         except Exception as e:
             logger.error(f"Error searching knowledge bases: {str(e)}")
             raise
-
+    
     def safe_json_loads(self, text):
         """
-        尝试从文本中提取并解析 JSON。
+        尝试从文本中提取并解析 JSON（更健壮）。
         """
+        def _strip_code_fences(s: str) -> str:
+            s = s.strip()
+            # 去掉 Markdown 代码块围栏 ``` 或 ```json
+            if s.startswith("```"):
+                # 删除第一行围栏
+                s = re.sub(r'^```[a-zA-Z0-9_-]*\n', '', s)
+                # 删除结尾围栏
+                s = re.sub(r'\n```\s*$', '', s)
+            return s
+
+        def _remove_bom_and_controls(s: str) -> str:
+            # 去掉BOM
+            if s.startswith('\ufeff'):
+                s = s.lstrip('\ufeff')
+            # 移除除 \t\n\r 外的 C0 控制字符，避免 json 解析报 Invalid control character
+            return re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F]', ' ', s)
+
+        def _balance_braces_extract(s: str) -> str | None:
+            # 从首个 { 开始，尝试平衡大括号，提取一个 JSON 对象字符串
+            start = s.find('{')
+            if start == -1:
+                return None
+            depth = 0
+            in_str = False
+            esc = False
+            for i, ch in enumerate(s[start:], start=start):
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif ch == '\\':
+                        esc = True
+                    elif ch == '"':
+                        in_str = False
+                else:
+                    if ch == '"':
+                        in_str = True
+                    elif ch == '{':
+                        depth += 1
+                    elif ch == '}':
+                        depth -= 1
+                        if depth == 0:
+                            return s[start:i+1]
+            return None
+
+        def _fix_trailing_commas(s: str) -> str:
+            # 移除对象或数组中末尾的多余逗号
+            return re.sub(r',\s*([}\]])', r'\1', s)
+
+        raw = _strip_code_fences(text)
+        raw = _remove_bom_and_controls(raw)
         try:
-            return json.loads(text)
+            return json.loads(raw)
         except Exception as e1:
+            # 继续尝试提取最外层 JSON 并做轻度修复
+            candidate = _balance_braces_extract(raw)
+            if candidate is None:
+                # 退而求其次：正则贪婪匹配
+                m = re.search(r'(\{[\s\S]*\})', raw)
+                candidate = m.group(1) if m else None
+            if candidate:
+                candidate = _remove_bom_and_controls(candidate)
+                candidate = _fix_trailing_commas(candidate)
+                try:
+                    return json.loads(candidate)
+                except Exception as e2:
+                    pass
+            # 最后兜底：请求模型将文本修正为合法 JSON（严格返回 JSON，无围栏）
             try:
-                # 尝试用正则提取最外层 JSON 对象
-                match = re.search(r'(\{[\s\S]*\})', text)
-                if match:
-                    json_str = match.group(1)
-                    # 去除常见的格式化占位符（如 ... 或 '）
-                    json_str = re.sub(r'\\?"[^"]*\\?": ?"[^"]*\.{2,}[^"]*"', '"key": "value"', json_str)
-                    return json.loads(json_str)
-            except Exception as e2:
-                pass
-            raise ValueError(f"JSON解析失败，原始内容：{text[:200]}... 错误信息: {e1}")
+                repair_prompt = (
+                    "将下面的模型输出修正为合法 JSON。只返回修正后的 JSON，本句不要出现在结果中，不要使用Markdown围栏：\n\n" + raw[:6000]
+                )
+                repaired = self._chat_completion([
+                    {"role": "user", "content": repair_prompt}
+                ], purpose="json_fix")
+                repaired = _strip_code_fences(_remove_bom_and_controls(repaired or ""))
+                return json.loads(repaired)
+            except Exception as e3:
+                raise ValueError(f"JSON解析失败，原始片段：{raw[:200]}... e1={e1} e2={e2 if 'e2' in locals() else ''} e3={e3}")
 
     def generate_teaching_content(self, course_outline: str, course_name: str, expected_hours: int, constraints: Optional[str] = None) -> Dict:
         """根据课程大纲生成教学内容 (支持 constraints)"""
@@ -309,7 +373,7 @@ class RAGService:
                 {"role": "user", "content": prompt}
             ], purpose="answer_evaluation")
 
-            result = json.loads(content)
+            result = self.safe_json_loads(content)
             logger.info("Successfully evaluated student answer")
             return result
 
@@ -393,14 +457,44 @@ class RAGService:
         """
         try:
             # 1. 检索相关知识库内容
+            # 如果课程名称不为空，则在问题前加上课程信息
+            if course_name:
+                question = f"对于{course_name}" + question
+            
             relevant_docs = self.search_knowledge_base(question, top_k=top_k)
+
+            # 1.1 对检索内容做清洗，移除潜在的控制字符并限制长度，避免影响大模型输出的 JSON 合法性
+            def _sanitize(s: str, max_len: int) -> str:
+                s = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F]', ' ', s or '')
+                s = s.replace('\u0000', ' ').strip()
+                if len(s) > max_len:
+                    s = s[:max_len] + '...'
+                return s
+
+            sanitized_docs = []
+            for d in relevant_docs:
+                sanitized_docs.append({
+                    'content': _sanitize(d.get('content', ''), 800),
+                    'source': _sanitize(d.get('source', ''), 200)
+                })
+
+            # 1.2 清洗问题与历史对话
+            safe_question = _sanitize(question, 500)
+            safe_history = None
+            if chat_history:
+                safe_history = []
+                for m in chat_history:
+                    safe_history.append({
+                        'role': m.get('role', 'user'),
+                        'content': _sanitize(m.get('content', ''), 500)
+                    })
 
             # 2. 构造提示词
             prompt = PromptTemplates.get_online_assistant_prompt(
-                question=question,
-                relevant_docs=relevant_docs,
+                question=safe_question,
+                relevant_docs=sanitized_docs,
                 course_name=course_name or "",
-                chat_history=chat_history
+                chat_history=safe_history
             )
 
             # 3. 调用大模型生成回答

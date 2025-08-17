@@ -290,8 +290,8 @@ CREATE TABLE WrongQuestion (
 -- 讨论区相关表
 CREATE TABLE Discussion (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    course_id BIGINT NOT NULL,
-    class_id BIGINT NOT NULL,
+    course_id BIGINT  NULL,
+    class_id BIGINT  NULL,
     creator_id BIGINT NOT NULL,
     creator_num VARCHAR(15) NOT NULL,
     title VARCHAR(200) NOT NULL,
@@ -323,6 +323,11 @@ CREATE TABLE DiscussionReply (
     FOREIGN KEY (user_num) REFERENCES User(user_id) ON DELETE CASCADE,
     FOREIGN KEY (parent_reply_id) REFERENCES DiscussionReply(id) ON DELETE CASCADE
 );
+
+-- 索引优化
+CREATE INDEX idx_discussion_course ON Discussion(course_id);
+CREATE INDEX idx_discussion_class ON Discussion(class_id);
+CREATE INDEX idx_discussion_creator ON Discussion(creator_id);
 
 -- 插入一些用户（一个老师、两个学生）
 INSERT INTO User (user_id, username, password_hash, role, email)
@@ -514,6 +519,38 @@ CREATE TABLE IF NOT EXISTS TeacherKnowledgeBase (
                      ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES User(id) ON DELETE CASCADE
 );
+
+-- 十三、任务管理与DDL提醒系统
+-- 用户任务表
+CREATE TABLE user_tasks (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    deadline DATETIME NOT NULL,
+    priority ENUM('HIGH', 'MEDIUM', 'LOW') DEFAULT 'MEDIUM',
+    status ENUM('PENDING', 'COMPLETED', 'CANCELLED') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+);
+
+-- 任务提醒记录表
+CREATE TABLE task_reminders (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    task_id BIGINT NOT NULL,
+    reminder_type ENUM('THREE_DAYS_BEFORE', 'ONE_DAY_BEFORE') NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('SENT', 'FAILED') DEFAULT 'SENT',
+    FOREIGN KEY (task_id) REFERENCES user_tasks(id) ON DELETE CASCADE
+);
+
+-- 创建索引优化查询性能
+CREATE INDEX idx_user_tasks_user_id ON user_tasks(user_id);
+CREATE INDEX idx_user_tasks_deadline ON user_tasks(deadline);
+CREATE INDEX idx_user_tasks_status ON user_tasks(status);
+CREATE INDEX idx_task_reminders_task_id ON task_reminders(task_id);
 
 --- 如果自测练习出现问题，请运行：
 ALTER TABLE question DROP FOREIGN KEY question_ibfk_2;

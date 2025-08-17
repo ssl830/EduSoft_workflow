@@ -95,7 +95,7 @@ class PromptTemplates:
         5. 确保总课时数与预期课时相符
         6. teachingAdvice 字段必须是字符串格式
 
-        请只返回标准 JSON 格式，不要 Markdown、不要注释、不要多余内容。
+        请只返回标准 JSON 格式，一次返回，不要 Markdown、不要注释、不要多余文字内容。
         """
 
     @staticmethod
@@ -337,8 +337,9 @@ class PromptTemplates:
         2. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
         3. 提取与问题相关的关键知识点列表。
         4. 指出回答引用的资料来源（source 字段）及其内容摘要。
+        5.如果课程资料与学生问题完全没有关系，可以不参考课程资料，并在回答后说明问题可能与课程库无关
 
-        请仅以 JSON 格式返回，结构如下：
+        请仅以 JSON 格式返回，不要用markdown包裹！结构如下：
         {{
             "answer": string,          // 详细回答
             "references": [            // 引用的资料片段
@@ -471,7 +472,7 @@ class PromptTemplates:
         6. 只允许使用传入参数中的内容进行扩展和细化，不得引入任何未给出的知识点或内容。
         7. practiceContent, teachingGuidance, title 字段必须是字符串格式，knowledgePoints 字段必须是字符串数组
         8. 如果教师提出额外要求，请充分考虑并体现：{constraints_part}
-        9. 返回内容必须为标准JSON格式，结构如下：
+        9. 返回内容必须为标准JSON格式，结构如下，注意严格按照格式：
 
         {{
             "title": "课时标题",
@@ -479,7 +480,7 @@ class PromptTemplates:
                 {{
                     "step": "环节名称",
                     "minutes": 时长,
-                    "content": "本环节详细内容，包含教学目标、活动安排、师生活动、互动方式等"
+                    "content": "字符串形式！，本环节详细内容，包含教学目标、活动安排、师生活动、互动方式等"
                 }}
             ],
             "knowledgePoints": ["知识点1"， "知识点2"],

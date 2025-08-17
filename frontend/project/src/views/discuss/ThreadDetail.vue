@@ -200,9 +200,9 @@ const fetchThreadDetails = async () => {
   loadingThread.value = true;
   threadError.value = null;
   try {
-    const response = await discussionApi.getDiscussionDetail(Number(threadId.value));
-    console.log('Thread details response:', response);
-    thread.value = response;
+  const response = await discussionApi.getDiscussionDetail(Number(threadId.value));
+  console.log('Thread details response:', response);
+  thread.value = (response && typeof response === 'object' && 'data' in response) ? (response as any).data : response;
   } catch (err: any) {
     console.error('Failed to fetch thread details:', err);
     threadError.value = err.response?.data?.message || '无法加载讨论帖详情。';
@@ -220,8 +220,14 @@ const fetchPosts = async () => {
     const response:any = await discussionApi.getTopLevelReplies(Number(threadId.value));
     console.log('Top level replies response:', response);
 
+    const topLevel: any[] = Array.isArray(response)
+      ? response
+      : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+        ? (response as any).data
+        : [];
+
     // 将后端返回的数据结构转换为前端需要的格式
-    posts.value = response.map((reply:any) => ({
+    posts.value = topLevel.map((reply:any) => ({
       id: reply.id,
       content: reply.content,
       creatorId: reply.userId,
@@ -242,7 +248,13 @@ const fetchPosts = async () => {
           const childrenResponse:any = await discussionApi.getChildReplies(post.id);
           console.log(`Child replies for post ${post.id}:`, childrenResponse);
 
-          post.children = (childrenResponse || []).map((child:any) => ({
+          const children = Array.isArray(childrenResponse)
+            ? childrenResponse
+            : (childrenResponse && typeof childrenResponse === 'object' && 'data' in childrenResponse && Array.isArray((childrenResponse as any).data))
+              ? (childrenResponse as any).data
+              : [];
+
+          post.children = children.map((child:any) => ({
             id: child.id,
             content: child.content,
             creatorId: child.userId,
@@ -276,9 +288,15 @@ const loadChildReplies = async (parentId: number) => {
     const response:any = await discussionApi.getChildReplies(parentId);
     console.log(`Loading child replies for parent ${parentId}:`, response);
 
+    const children = Array.isArray(response)
+      ? response
+      : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as any).data))
+        ? (response as any).data
+        : [];
+
     const parent = posts.value.find(p => p.id === parentId);
     if (parent) {
-      parent.children = (response || []).map((child:any) => ({
+      parent.children = children.map((child:any) => ({
         id: child.id,
         content: child.content,
         creatorId: child.userId,

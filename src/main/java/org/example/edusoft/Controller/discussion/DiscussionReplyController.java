@@ -4,11 +4,9 @@ import org.example.edusoft.service.discussion.DiscussionReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 import java.util.List;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.annotation.SaCheckRole;
 import org.example.edusoft.service.user.UserService;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +71,10 @@ public class DiscussionReplyController {
         reply.setDiscussionId(discussionId);
         // 如果是教师回复，设置标记
         reply.setIsTeacherReply(user.getRole() == User.UserRole.teacher);
+        // 兼容从 body 中传入 parentReplyId 的情况
+        if (parentReplyId == null && reply.getParentReplyId() != null) {
+            parentReplyId = reply.getParentReplyId();
+        }
         // 验证父回复是否存在（如果是回复其他回复）
         if (parentReplyId != null) {
             DiscussionReply parentReply = discussionReplyService.getReply(parentReplyId);
