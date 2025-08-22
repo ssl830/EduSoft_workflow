@@ -302,7 +302,7 @@ class PromptTemplates:
         - question: 学生提出的问题
         - relevant_docs: 与问题最相关的知识库片段，列表元素形如{"content": "...", "source": "..."}
         - course_name: 当前课程名称，可选
-        - chat_history: 历史对话，用于上下文记忆，可选，列表元素形如{"role": "user/assistant", "content": "..."}
+        - chat_history: 历史对话，用于上下文记忆，可选，列表元素形如{"role": "user/assistant/system", "content": "..."}
         """
         # 格式化参考资料
         formatted_docs = []
@@ -310,12 +310,20 @@ class PromptTemplates:
             formatted_docs.append(f"来源：{doc['source']}\n内容：{doc['content']}")
         docs_str = "\n\n".join(formatted_docs) if formatted_docs else "无"
 
-        # 格式化历史对话
+        # 格式化历史对话 - 区分历史摘要和最近对话
         history_lines = []
         if chat_history:
             for idx, msg in enumerate(chat_history, 1):
-                role = "学生" if msg.get("role") == "user" else "助教"
-                history_lines.append(f"{role}{idx}: {msg.get('content', '')}")
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                
+                if role == "system":
+                    # 这是历史摘要
+                    history_lines.append(f"[历史对话摘要]: {content}")
+                elif role == "user":
+                    history_lines.append(f"学生{idx}: {content}")
+                elif role == "assistant":
+                    history_lines.append(f"助教{idx}: {content}")
         history_str = "\n".join(history_lines) if history_lines else "无"
 
         return f"""
@@ -323,7 +331,7 @@ class PromptTemplates:
 
         课程名称：{course_name if course_name else '未指定'}
 
-        历史对话（如有）：
+        对话历史（包含历史摘要和最近对话）：
         {history_str}
 
         学生问题：
@@ -334,10 +342,11 @@ class PromptTemplates:
 
         请遵循以下要求生成回答：
         1. 首先给出对学生问题的详细解答，条理清晰、逻辑严谨。
-        2. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
-        3. 提取与问题相关的关键知识点列表。
-        4. 指出回答引用的资料来源（source 字段）及其内容摘要。
-        5.如果课程资料与学生问题完全没有关系，可以不参考课程资料，并在回答后说明问题可能与课程库无关
+        2. 如果有历史对话摘要，请结合历史讨论内容为学生提供连贯的回答。
+        3. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
+        4. 提取与问题相关的关键知识点列表。
+        5. 指出回答引用的资料来源（source 字段）及其内容摘要。
+        6. 如果课程资料与学生问题完全没有关系，可以不参考课程资料，并在回答后说明问题可能与课程库无关
 
         请仅以 JSON 格式返回，不要用markdown包裹！结构如下：
         {{

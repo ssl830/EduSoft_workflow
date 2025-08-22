@@ -25,11 +25,12 @@ import cn.dev33.satoken.stp.StpUtil;
 import org.example.edusoft.service.practice.QuestionService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.edusoft.service.chat.ChatManagementService;
 
 
 
 @Service
-public class AiAssistantService {
+public class AiAssistantService implements AiServiceCaller {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final String aiServiceUrl = "http://localhost:8000"; // Python 微服务地址
@@ -40,6 +41,9 @@ public class AiAssistantService {
 
     @Autowired
     private QuestionService questionService;
+    
+    @Autowired
+    private ChatManagementService chatManagementService;
 
     /**
      * 统计练习每题得分率并调用AI微服务分析
@@ -265,16 +269,103 @@ public class AiAssistantService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
+            @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "success", null);
-            return response.getBody();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> responseBody = response.getBody();
+            return responseBody;
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
             return Map.of(
                 "status", "fail",
                 "message", "AI在线助手服务调用失败: " + e.getMessage()
+            );
+        }
+    }
+
+    /**
+     * 带记忆功能的在线学习助手
+     */
+    public Map<String, Object> onlineAssistantWithMemory(Map<String, Object> req) {
+        long startTime = System.currentTimeMillis();
+        String endpoint = "/rag/assistant";
+        Long userId = null;
+        Long sessionId = null;
+        
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsLong();
+            }
+            
+            // 获取请求参数
+            String question = (String) req.get("question");
+            String courseName = (String) req.get("course_name");
+            Object sessionIdObj = req.get("sessionId");
+            
+            if (sessionIdObj instanceof Number) {
+                sessionId = ((Number) sessionIdObj).longValue();
+            }
+            
+            // 如果没有指定sessionId，创建新的会话
+            if (sessionId == null) {
+                Long courseId = req.get("courseId") instanceof Number ? 
+                    ((Number) req.get("courseId")).longValue() : null;
+                sessionId = chatManagementService.createNewChatSession(courseName, courseId);
+            }
+            
+            // 保存用户问题
+            chatManagementService.saveChatMessage(sessionId, "user", question, null, null);
+            
+            // 获取会话的记忆上下文，而不是使用前端传来的chat_history
+            List<Map<String, String>> memoryContext = chatManagementService.getSessionMemoryContext(sessionId);
+            
+            // 构建发送给AI服务的请求，使用记忆上下文
+            Map<String, Object> aiRequest = new HashMap<>();
+            aiRequest.put("question", question);
+            aiRequest.put("course_name", courseName);
+            aiRequest.put("chat_history", memoryContext);
+            
+            // 调用AI服务
+            String url = buildUrl(endpoint);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(aiRequest, headers);
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            
+            @SuppressWarnings("unchecked")
+            Map<String, Object> responseBody = response.getBody();
+            
+            if (responseBody != null) {
+                // 保存AI回答
+                String answer = (String) responseBody.get("answer");
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> references = (List<Map<String, Object>>) responseBody.get("references");
+                @SuppressWarnings("unchecked")
+                List<String> knowledgePoints = (List<String>) responseBody.get("knowledgePoints");
+                
+                chatManagementService.saveChatMessage(sessionId, "assistant", answer, references, knowledgePoints);
+                
+                // 在响应中包含sessionId
+                responseBody.put("sessionId", sessionId);
+            }
+            
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "success", null);
+            
+            return responseBody;
+            
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
+            return Map.of(
+                "status", "fail",
+                "message", "AI在线助手服务调用失败: " + e.getMessage(),
+                "sessionId", sessionId
             );
         }
     }
@@ -588,6 +679,35 @@ public class AiAssistantService {
             return resp.getBody();
         }catch(Exception e){
             return Map.of("status","fail","message","AI服务调用失败:"+e.getMessage());
+        }
+    }
+
+    /**
+     * 直接调用AI服务的通用方法（用于内部服务调用）
+     */
+    public Map<String, Object> callAiServiceDirectly(String endpoint, Map<String, Object> requestData) {
+        try {
+            String url = buildUrl(endpoint);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestData, headers);
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            
+            @SuppressWarnings("unchecked")
+            Map<String, Object> responseBody = response.getBody();
+            if (responseBody != null) {
+                responseBody.put("status", "success");
+                responseBody.put("data", responseBody);
+            }
+            
+            return responseBody;
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI服务调用失败: " + e.getMessage()
+            );
         }
     }
 
