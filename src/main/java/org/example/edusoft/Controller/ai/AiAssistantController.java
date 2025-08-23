@@ -64,7 +64,7 @@ public class AiAssistantController {
     @PostMapping("/rag/assistant")
     public Map<String, Object> onlineAssistant(@RequestBody Map<String, Object> req) {
         logger.info("收到在线学习助手请求: {}", req);
-        return aiAssistantService.onlineAssistant(req);
+        return aiAssistantService.onlineAssistantWithMemory(req);
     }
     
     @PostMapping("/evaluate-subjective")

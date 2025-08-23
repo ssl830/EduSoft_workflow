@@ -60,6 +60,12 @@ const videoProgress = ref(0)
 const watchedDuration = ref(0)
 const playerRef = ref<HTMLVideoElement | null>(null)
 
+// 视频摘要相关
+const showSummaryModal = ref(false)
+const currentSummary = ref<any>(null)
+const summaryLoading = ref(false)
+const summaryError = ref('')
+
 // 上传教学资源视频
 const showUploadForm = ref(false)
 const uploadForm = ref({
@@ -316,6 +322,20 @@ const uploadVideo = async () => {
         return
     }
 
+    // 检查文件大小 (限制为500MB)
+    const maxSize = 500 * 1024 * 1024 // 500MB
+    if (uploadForm.value.file.size > maxSize) {
+        uploadError.value = '视频文件大小不能超过500MB'
+        return
+    }
+
+    // 检查文件类型
+    const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/flv', 'video/webm']
+    if (!allowedTypes.includes(uploadForm.value.file.type)) {
+        uploadError.value = '请选择支持的视频格式：MP4、AVI、MOV、WMV、FLV、WebM'
+        return
+    }
+
     uploadProgress.value = 0
     uploadError.value = ''
     console.log(props.courseId)
@@ -332,20 +352,50 @@ const uploadVideo = async () => {
         formData.append('description', uploadForm.value.description)
     }
 
-    try {
-        await ResourceApi.uploadVideo(formData, (progress) => {
-            uploadProgress.value = progress
-        })
+    let retryCount = 0
+    const maxRetries = 2
 
-        // Reset form and refresh list
-        showUploadForm.value = false
-        resetUploadForm()
-        fetchVideos()
+    const attemptUpload = async (): Promise<void> => {
+        try {
+            await ResourceApi.uploadVideo(formData, (progress) => {
+                uploadProgress.value = progress
+            })
 
-    } catch (err) {
-        uploadError.value = '上传视频失败，请稍后再试'
-        console.error(err)
+            // Reset form and refresh list
+            showUploadForm.value = false
+            resetUploadForm()
+            fetchVideos()
+
+        } catch (err: any) {
+            console.error('上传错误:', err)
+            
+            // 检查是否是网络错误且可以重试
+            const isNetworkError = err.message?.includes('Network Error') || 
+                                 err.code === 'ERR_CONNECTION_RESET' ||
+                                 err.code === 'ERR_NETWORK'
+            
+            if (isNetworkError && retryCount < maxRetries) {
+                retryCount++
+                uploadError.value = `上传失败，正在重试 (${retryCount}/${maxRetries})...`
+                // 等待2秒后重试
+                await new Promise(resolve => setTimeout(resolve, 2000))
+                return attemptUpload()
+            } else {
+                // 根据错误类型显示不同的错误信息
+                if (isNetworkError) {
+                    uploadError.value = '网络连接失败，请检查网络连接后重试'
+                } else if (err.response?.status === 413) {
+                    uploadError.value = '文件太大，服务器无法处理'
+                } else if (err.response?.status === 500) {
+                    uploadError.value = '服务器处理错误，请稍后再试'
+                } else {
+                    uploadError.value = '上传视频失败：' + (err.message || '未知错误')
+                }
+            }
+        }
     }
+
+    await attemptUpload()
 }
 
 // Reset upload form
@@ -361,6 +411,70 @@ const resetUploadForm = () => {
     }
     uploadProgress.value = 0
     uploadError.value = ''
+}
+
+// 视频摘要相关方法
+const openSummaryModal = async (video: VideoResource) => {
+    currentVideo.value = video  // 设置当前视频
+    summaryLoading.value = true
+    summaryError.value = ''
+    showSummaryModal.value = true
+    currentSummary.value = null
+
+    try {
+        const response = await ResourceApi.getVideoSummary(video.id.toString())
+        if (response && response.code === 200) {
+            currentSummary.value = response.data
+        } else {
+            summaryError.value = '获取视频摘要失败'
+        }
+    } catch (err) {
+        console.error('获取视频摘要失败:', err)
+        summaryError.value = '获取视频摘要失败，可能尚未生成摘要'
+    } finally {
+        summaryLoading.value = false
+    }
+}
+
+const generateSummary = async (video: VideoResource) => {
+    summaryLoading.value = true
+    summaryError.value = ''
+
+    try {
+        const response = await ResourceApi.generateVideoSummary(video.id.toString())
+        if (response && response.code === 200) {
+            currentSummary.value = response.data
+        } else {
+            summaryError.value = '生成视频摘要失败'
+        }
+    } catch (err) {
+        console.error('生成视频摘要失败:', err)
+        summaryError.value = '生成视频摘要失败，请稍后再试'
+    } finally {
+        summaryLoading.value = false
+    }
+}
+
+const closeSummaryModal = () => {
+    showSummaryModal.value = false
+    currentSummary.value = null
+    summaryError.value = ''
+}
+
+const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
+
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // Filter videos when criteria change
@@ -434,6 +548,7 @@ onMounted(() => {
 
             <div class="form-group">
                 <label for="video">选择视频文件</label>
+                <p class="file-hint">支持格式：MP4、AVI、MOV、WMV、FLV、WebM，文件大小不超过500MB</p>
                 <input
                     id="video"
                     type="file"
@@ -441,6 +556,11 @@ onMounted(() => {
                     @change="handleFileChange"
                     required
                 />
+                <div v-if="uploadForm.file" class="file-info">
+                    <p><strong>文件名：</strong>{{ uploadForm.file.name }}</p>
+                    <p><strong>文件大小：</strong>{{ formatFileSize(uploadForm.file.size) }}</p>
+                    <p><strong>文件类型：</strong>{{ uploadForm.file.type }}</p>
+                </div>
             </div>
 
             <div v-if="uploadProgress > 0" class="upload-progress">
@@ -536,6 +656,13 @@ onMounted(() => {
                         >
                             观看
                         </button>
+                        <button
+                            class="btn-action summary"
+                            @click="openSummaryModal(video)"
+                            title="查看摘要"
+                        >
+                            摘要
+                        </button>
                     </td>
                 </tr>
                 </tbody>
@@ -577,6 +704,103 @@ onMounted(() => {
                     </div>
                     <div class="duration-text">
                         已观看: {{ formatDuration(watchedDuration) }} / {{ currentVideo?.formattedDuration || '00:00' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频摘要模态框 -->
+    <div v-if="showSummaryModal" class="modal-overlay" @click="closeSummaryModal">
+        <div class="summary-modal" @click.stop>
+            <div class="modal-header">
+                <h3>视频摘要</h3>
+                <button class="close-btn" @click="closeSummaryModal">&times;</button>
+            </div>
+            
+            <div class="modal-content">
+                <div v-if="summaryLoading" class="loading">
+                    生成摘要中...
+                </div>
+                
+                <div v-else-if="summaryError" class="error">
+                    <p>{{ summaryError }}</p>
+                    <button 
+                        class="btn-primary" 
+                        @click="generateSummary(currentVideo!)"
+                        :disabled="summaryLoading"
+                    >
+                        生成摘要
+                    </button>
+                </div>
+                
+                <div v-else-if="currentSummary" class="summary-content">
+                    <!-- 概述 -->
+                    <div class="summary-section">
+                        <h4>内容概述</h4>
+                        <p>{{ currentSummary.summary }}</p>
+                    </div>
+                    
+                    <!-- 阶段划分 -->
+                    <div v-if="currentSummary.stages && currentSummary.stages.length > 0" class="summary-section">
+                        <h4>阶段划分</h4>
+                        <div class="stages-list">
+                            <div 
+                                v-for="(stage, index) in currentSummary.stages" 
+                                :key="index"
+                                class="stage-item"
+                            >
+                                <div class="stage-header">
+                                    <span class="stage-title">{{ stage.title }}</span>
+                                    <span class="stage-time">
+                                        {{ formatTime(stage.startTime) }} - {{ formatTime(stage.endTime) }}
+                                    </span>
+                                </div>
+                                <p class="stage-description">{{ stage.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 知识点 -->
+                    <div v-if="currentSummary.keyPoints && currentSummary.keyPoints.length > 0" class="summary-section">
+                        <h4>重要知识点</h4>
+                        <div class="keypoints-list">
+                            <div 
+                                v-for="(point, index) in currentSummary.keyPoints" 
+                                :key="index"
+                                class="keypoint-item"
+                                :class="`importance-${point.importance}`"
+                            >
+                                <div class="keypoint-header">
+                                    <span class="keypoint-text">{{ point.point }}</span>
+                                    <span class="keypoint-time">{{ formatTime(point.timestamp) }}</span>
+                                </div>
+                                <span class="importance-badge">{{ 
+                                    point.importance === 'high' ? '高' : 
+                                    point.importance === 'medium' ? '中' : '低' 
+                                }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 重要时间点 -->
+                    <div v-if="currentSummary.keyTimestamps && currentSummary.keyTimestamps.length > 0" class="summary-section">
+                        <h4>重要时间点</h4>
+                        <div class="timestamps-list">
+                            <div 
+                                v-for="(timestamp, index) in currentSummary.keyTimestamps" 
+                                :key="index"
+                                class="timestamp-item"
+                            >
+                                <span class="timestamp-time">{{ formatTime(timestamp.time) }}</span>
+                                <span class="timestamp-type">{{ 
+                                    timestamp.type === 'concept' ? '概念' : 
+                                    timestamp.type === 'example' ? '示例' : 
+                                    timestamp.type === 'summary' ? '总结' : '问题' 
+                                }}</span>
+                                <span class="timestamp-event">{{ timestamp.event }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -980,5 +1204,251 @@ input[type="radio"] {
 
 .form-group textarea {
     resize: vertical;
+}
+
+/* 视频摘要模态框样式 */
+.summary-modal {
+    background: white;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-content {
+    padding: 1.5rem;
+}
+
+.loading, .error {
+    text-align: center;
+    padding: 2rem;
+}
+
+.error {
+    color: #d32f2f;
+}
+
+.summary-content {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.summary-section {
+    margin-bottom: 2rem;
+}
+
+.summary-section h4 {
+    color: #2c6ecf;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 0.5rem;
+}
+
+.summary-section p {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 阶段列表样式 */
+.stages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stage-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #2c6ecf;
+    margin-bottom: 1rem;
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.stage-title {
+    font-weight: 600;
+    color: #333;
+}
+
+.stage-time {
+    color: #666;
+    font-size: 0.9rem;
+    background: #e3f2fd;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.stage-description {
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 知识点列表样式 */
+.keypoints-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.keypoint-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+}
+
+.keypoint-header {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.keypoint-text {
+    color: #333;
+}
+
+.keypoint-time {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.importance-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.importance-high .importance-badge {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.importance-medium .importance-badge {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.importance-low .importance-badge {
+    background: #e8f5e8;
+    color: #388e3c;
+}
+
+/* 时间点列表样式 */
+.timestamps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.timestamp-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 0.5rem;
+}
+
+.timestamp-time {
+    color: #2c6ecf;
+    font-weight: 600;
+    min-width: 4rem;
+}
+
+.timestamp-type {
+    background: #e3f2fd;
+    color: #2c6ecf;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    min-width: 3rem;
+    text-align: center;
+}
+
+.timestamp-event {
+    color: #666;
+    flex: 1;
+}
+
+/* 摘要按钮样式 */
+.btn-action.summary {
+    background-color: #4caf50;
+    color: white;
+}
+
+.btn-action.summary:hover {
+    background-color: #45a049;
+}
+
+/* 文件上传相关样式 */
+.file-hint {
+    font-size: 0.875rem;
+    color: #757575;
+    margin: 0.25rem 0;
+}
+
+.file-info {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.file-info p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.file-info strong {
+    color: #424242;
 }
 </style>

@@ -3,13 +3,14 @@ from __future__ import annotations
 """Model selection & fallback utility for ai_service.
 
 This centralises all LLM access so we can dynamically choose between
-multiple providers (ChatGLM, Yi-6B, DeepSeek) without touching calling
+multiple providers (ChatGLM, Yi-6B, DeepSeek, qwen-plus) without touching calling
 code.
 
 Priority order is determined by evaluation results:
     1. glm-4  – best overall quality / latency
-    2. yi-34b-chat    – best source-recall, longer context
-    3. DeepSeek-V3   – rich code explanations, existing default
+    2. qwen-plus – high reasoning capability
+    3. yi-34b-chat    – best source-recall, longer context
+    4. DeepSeek-V3   – rich code explanations, existing default
 
 If the primary model is unavailable or raises an exception, the
 selector will transparently fall back to the next one.
@@ -20,6 +21,11 @@ that backend):
     CHATGLM_API_KEY
     CHATGLM_BASE_URL          (default https://open.bigmodel.cn/api/paas/v4)
     CHATGLM_MODEL_NAME        (default glm-4)
+
+    # qwen-plus
+    QWEN_API_KEY
+    QWEN_BASE_URL             (default https://dashscope.aliyuncs.com/compatible-mode/v1)
+    QWEN_MODEL_NAME           (default qwen-plus)
 
     # yi-34b-chat (01.ai)
     YI_API_KEY
@@ -32,7 +38,7 @@ that backend):
     DEEPSEEK_MODEL_NAME       (default deepseek-chat)
 
 Optionally override default priority by setting PRIMARY_LLM_MODEL to
-"chatglm" | "yi" | "deepseek".
+"chatglm" | "qwen" | "yi" | "deepseek".
 """
 
 import os
@@ -61,6 +67,7 @@ class ModelSelector:
         default_order = [
             os.getenv("PRIMARY_LLM_MODEL", "chatglm"),  # user-preferred first
             "chatglm",
+            "qwen",
             "yi",
             "deepseek",
         ]
@@ -148,6 +155,20 @@ class ModelSelector:
             logger.info("ChatGLM backend enabled (%s)", model_name)
         else:
             logger.info("ChatGLM backend disabled – no CHATGLM_API_KEY found")
+            
+        # qwen-pluss --------------------------------------------------------
+        qwen_key = os.getenv("QWEN_API_KEY")
+        if qwen_key:
+            base_url = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+            model_name = os.getenv("QWEN_MODEL_NAME", "qwen-pluss")
+            client = OpenAI(api_key=qwen_key, base_url=base_url)
+            self._clients["qwen"] = {
+                "client": client,
+                "model_name": model_name,
+            }
+            logger.info("qwen-plus backend enabled (%s)", model_name)
+        else:
+            logger.info("qwen-plus backend disabled – no QWEN_API_KEY found")
 
         # Yi-6B -----------------------------------------------------------
         yi_key = os.getenv("YI_API_KEY")
@@ -184,6 +205,8 @@ class ModelSelector:
         ident = (ident or "").strip().lower()
         if ident in {"glm", "chatglm"}:
             ident = "chatglm"
+        if ident in {"qwen", "qwen-plus", "qwenmax", "qwen_max"}:
+            ident = "qwen"
         if ident in {"yi", "01ai", "yi-34b", "yi-34b-chat"}:
             ident = "yi"
         if ident in {"deepseek", "deepseek-v3", "deepseek_chat", "deepseek-chat"}:

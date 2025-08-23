@@ -38,6 +38,7 @@ export interface AssistantRequest {
   question: string
   courseName?: string
   chatHistory?: { role: 'user' | 'assistant'; content: string }[]
+  sessionId?: string
 }
 
 export interface AssistantResponse {
