@@ -8,21 +8,21 @@ import java.util.List;
 @Mapper
 public interface DiscussionLikeMapper extends BaseMapper<DiscussionLike> {
     
-    @Select("SELECT * FROM DiscussionLike WHERE discussion_id = #{discussionId}")
+    @Select("SELECT * FROM discussionlike WHERE discussion_id = #{discussionId}")
     List<DiscussionLike> findByDiscussionId(@Param("discussionId") Long discussionId);
     
-    @Select("SELECT * FROM DiscussionLike WHERE user_id = #{userId}")
+    @Select("SELECT * FROM discussionlike WHERE user_id = #{userId}")
     List<DiscussionLike> findByUserId(@Param("userId") Long userId);
     
-    @Select("SELECT COUNT(*) FROM DiscussionLike WHERE discussion_id = #{discussionId}")
+    @Select("SELECT COUNT(*) FROM discussionlike WHERE discussion_id = #{discussionId}")
     int countByDiscussionId(@Param("discussionId") Long discussionId);
     
-    @Select("SELECT COUNT(*) FROM DiscussionLike WHERE user_id = #{userId}")
+    @Select("SELECT COUNT(*) FROM discussionlike WHERE user_id = #{userId}")
     int countByUserId(@Param("userId") Long userId);
     
-    @Select("SELECT * FROM DiscussionLike WHERE discussion_id = #{discussionId} AND user_id = #{userId}")
+    @Select("SELECT * FROM discussionlike WHERE discussion_id = #{discussionId} AND user_id = #{userId}")
     DiscussionLike findByDiscussionAndUser(@Param("discussionId") Long discussionId, @Param("userId") Long userId);
     
-    @Delete("DELETE FROM DiscussionLike WHERE discussion_id = #{discussionId} AND user_id = #{userId}")
+    @Delete("DELETE FROM discussionlike WHERE discussion_id = #{discussionId} AND user_id = #{userId}")
     int deleteByDiscussionAndUser(@Param("discussionId") Long discussionId, @Param("userId") Long userId);
 } 

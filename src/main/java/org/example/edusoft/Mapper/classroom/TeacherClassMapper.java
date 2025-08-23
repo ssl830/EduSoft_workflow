@@ -11,8 +11,8 @@ public interface TeacherClassMapper {
     @Select("""
         SELECT c.id as classId, c.name as className, c.class_code as classCode, 
                c.course_id as courseId, co.name as courseName
-        FROM Class c
-        JOIN Course co ON c.course_id = co.id
+        FROM class c
+        JOIN course co ON c.course_id = co.id
         WHERE co.teacher_id = #{teacherId}
     """)
     List<TeacherClassDTO> getClassesByTeacherId(@Param("teacherId") Long teacherId);

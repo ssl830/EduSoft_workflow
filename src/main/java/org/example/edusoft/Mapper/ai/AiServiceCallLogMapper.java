@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Mapper
 public interface AiServiceCallLogMapper extends BaseMapper<AiServiceCallLog> {
 
-    @Insert("INSERT INTO AiServiceCallLog (user_id, endpoint, duration_ms, status, error_message) " +
+    @Insert("INSERT INTO aiservicecalllog (user_id, endpoint, duration_ms, status, error_message) " +
             "VALUES (#{userId}, #{endpoint}, #{durationMs}, #{status}, #{errorMessage})")
     void insertLog(AiServiceCallLog log);
 
@@ -25,7 +25,7 @@ public interface AiServiceCallLogMapper extends BaseMapper<AiServiceCallLog> {
      * @return 平均耗时（毫秒），如果没有数据则返回0.0
      */
     @Select("""
-            SELECT IFNULL(AVG(duration_ms), 0.0) FROM AiServiceCallLog
+            SELECT IFNULL(AVG(duration_ms), 0.0) FROM aiservicecalllog
             WHERE endpoint = #{endpoint} AND DATE(call_time) BETWEEN #{start} AND #{end}
             """)
     Double getAverageDuration(@Param("endpoint") String endpoint,
@@ -41,7 +41,7 @@ public interface AiServiceCallLogMapper extends BaseMapper<AiServiceCallLog> {
      * @return 调用次数
      */
     @Select("""
-            SELECT COUNT(*) FROM AiServiceCallLog
+            SELECT COUNT(*) FROM aiservicecalllog
             WHERE endpoint = #{endpoint} AND DATE(call_time) BETWEEN #{start} AND #{end}
             """)
     int getCallCount(@Param("endpoint") String endpoint,

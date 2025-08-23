@@ -12,8 +12,8 @@ import java.util.List;
 @Mapper
 public interface CourseMapper extends BaseMapper<Course> {
     
-    @Select("SELECT c.* FROM Course c " +
-            "LEFT JOIN ClassUser cu ON c.id = cu.class_id " +
+    @Select("SELECT c.* FROM course c " +
+            "LEFT JOIN classuser cu ON c.id = cu.class_id " +
             "WHERE c.teacher_id = #{userId} OR cu.user_id = #{userId}")
     List<Course> getCoursesByUserId(Long userId);
 
@@ -22,21 +22,21 @@ public interface CourseMapper extends BaseMapper<Course> {
                 c.*,
                 u.username as teacherName,
                 (SELECT COUNT(DISTINCT cu.user_id) 
-                 FROM ClassUser cu 
-                 JOIN Class cl ON cu.class_id = cl.id 
+                 FROM classuser cu 
+                 JOIN class cl ON cu.class_id = cl.id 
                  WHERE cl.course_id = c.id) as studentCount,
-                (SELECT COUNT(*) FROM Practice p WHERE p.course_id = c.id) as practiceCount,
-                (SELECT COUNT(*) FROM Homework h 
-                 JOIN Class cl ON h.class_id = cl.id 
+                (SELECT COUNT(*) FROM practice p WHERE p.course_id = c.id) as practiceCount,
+                (SELECT COUNT(*) FROM homework h 
+                 JOIN class cl ON h.class_id = cl.id 
                  WHERE cl.course_id = c.id) as homeworkCount,
                 0 as resourceCount
-            FROM Course c
-            LEFT JOIN User u ON c.teacher_id = u.id
+            FROM course c
+            LEFT JOIN user u ON c.teacher_id = u.id
             WHERE c.id = #{courseId}
             """)
     CourseDetailDTO getCourseDetailById(Long courseId);
 
-    @Select("SELECT * FROM CourseSection WHERE course_id = #{courseId} ORDER BY sort_order")
+    @Select("SELECT * FROM coursesection WHERE course_id = #{courseId} ORDER BY sort_order")
     List<CourseSection> getSectionsByCourseId(Long courseId);
 
     @Select("""
@@ -44,19 +44,19 @@ public interface CourseMapper extends BaseMapper<Course> {
                 c.*,
                 u.username as teacherName,
                 (SELECT COUNT(DISTINCT cu.user_id) 
-                 FROM ClassUser cu 
-                 JOIN Class cl ON cu.class_id = cl.id 
+                 FROM classuser cu 
+                 JOIN class cl ON cu.class_id = cl.id 
                  WHERE cl.course_id = c.id) as studentCount,
-                (SELECT COUNT(*) FROM Practice p WHERE p.course_id = c.id) as practiceCount,
-                (SELECT COUNT(*) FROM Homework h 
-                 JOIN Class cl ON h.class_id = cl.id 
+                (SELECT COUNT(*) FROM practice p WHERE p.course_id = c.id) as practiceCount,
+                (SELECT COUNT(*) FROM homework h 
+                 JOIN class cl ON h.class_id = cl.id 
                  WHERE cl.course_id = c.id) as homeworkCount,
                 0 as resourceCount
-            FROM Course c
-            LEFT JOIN User u ON c.teacher_id = u.id
+            FROM course c
+            LEFT JOIN user u ON c.teacher_id = u.id
             WHERE c.teacher_id = #{userId} OR EXISTS (
-                SELECT 1 FROM ClassUser cu 
-                JOIN Class cl ON cu.class_id = cl.id 
+                SELECT 1 FROM classuser cu 
+                JOIN class cl ON cu.class_id = cl.id 
                 WHERE cl.course_id = c.id AND cu.user_id = #{userId}
             )
             """)
@@ -111,10 +111,10 @@ public interface CourseMapper extends BaseMapper<Course> {
                 cl.name,
                 cl.class_code as classCode,
                 (SELECT COUNT(DISTINCT cu.user_id) 
-                 FROM ClassUser cu 
+                 FROM classuser cu 
                  WHERE cu.class_id = cl.id) as studentCount
-            FROM CourseClass cc
-            JOIN Class cl ON cc.class_id = cl.id
+            FROM courseclass cc
+            JOIN class cl ON cc.class_id = cl.id
             WHERE cc.course_id = #{courseId}
             """)
     List<CourseDetailDTO.ClassInfo> getClassesByCourseId(Long courseId);

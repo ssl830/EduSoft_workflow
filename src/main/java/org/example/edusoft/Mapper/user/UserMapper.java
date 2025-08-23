@@ -20,10 +20,10 @@ public interface UserMapper {
     })
     User findByUserId(@Param("userId") String userId);
 
-    @Select("SELECT * FROM User WHERE id = #{id}")
+    @Select("SELECT * FROM user WHERE id = #{id}")
     User findById(@Param("id")Long id);
 
-    @Select("SELECT * FROM User WHERE role = 'teacher'")
+    @Select("SELECT * FROM user WHERE role = 'teacher'")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "username", column = "username"),
@@ -36,7 +36,7 @@ public interface UserMapper {
         })
     List<User> getAllTeachers();
 
-    @Select("SELECT * FROM User WHERE role = 'student'")
+    @Select("SELECT * FROM user WHERE role = 'student'")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "username", column = "username"),
@@ -49,7 +49,7 @@ public interface UserMapper {
         })
     List<User> getAllStudents();
 
-    @Select("SELECT * FROM User WHERE role = 'tutor'")
+    @Select("SELECT * FROM user WHERE role = 'tutor'")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "username", column = "username"),
@@ -65,13 +65,13 @@ public interface UserMapper {
     @Delete("DELETE FROM user WHERE id = #{id}")
     int deleteUser(@Param("id") Long id);
 
-    @Insert("INSERT INTO User (username, user_id, password_hash, role, email, created_at, updated_at) " +
+    @Insert("INSERT INTO user (username, user_id, password_hash, role, email, created_at, updated_at) " +
            "VALUES (#{username},#{userId}, #{passwordHash}, #{role},  #{email}, " +
            "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(User user);
 
-    @Update("UPDATE User SET username = #{username}, user_id=#{userId}, password_hash = #{passwordHash}, " +
+    @Update("UPDATE user SET username = #{username}, user_id=#{userId}, password_hash = #{passwordHash}, " +
             "role = #{role}, email = #{email} " +
             "WHERE id = #{id}")
     void update(User user);

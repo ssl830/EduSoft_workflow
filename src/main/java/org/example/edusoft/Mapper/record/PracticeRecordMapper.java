@@ -25,13 +25,13 @@ public interface PracticeRecordMapper {
                     c.name as course_name,
                     (
                       SELECT GROUP_CONCAT(DISTINCT cl.name)
-                      FROM ClassUser cu
-                      JOIN Class cl ON cu.class_id = cl.id
+                      FROM classuser cu
+                      JOIN class cl ON cu.class_id = cl.id
                       WHERE cu.user_id = s.student_id AND cl.course_id = c.id
                     ) as class_name
-                FROM Submission s
-                JOIN Practice p ON s.practice_id = p.id
-                JOIN Course c ON p.course_id = c.id
+                FROM submission s
+                JOIN practice p ON s.practice_id = p.id
+                JOIN course c ON p.course_id = c.id
                 WHERE s.student_id = #{studentId}
                 GROUP BY s.id
                 ORDER BY s.submitted_at DESC
@@ -59,13 +59,13 @@ public interface PracticeRecordMapper {
                     c.name as course_name,
                     (
                       SELECT GROUP_CONCAT(DISTINCT cl.name)
-                      FROM ClassUser cu
-                      JOIN Class cl ON cu.class_id = cl.id
+                      FROM classuser cu
+                      JOIN class cl ON cu.class_id = cl.id
                       WHERE cu.user_id = s.student_id AND cl.course_id = c.id
                     ) as class_name
-                FROM Submission s
-                JOIN Practice p ON s.practice_id = p.id
-                JOIN Course c ON p.course_id = c.id
+                FROM submission s
+                JOIN practice p ON s.practice_id = p.id
+                JOIN course c ON p.course_id = c.id
                 WHERE s.student_id = #{studentId} and p.course_id=#{courseId}
                 GROUP BY s.id
                 ORDER BY s.submitted_at DESC
@@ -95,8 +95,8 @@ public interface PracticeRecordMapper {
                     q.answer as correctAnswer,
                     a.correct as isCorrect,
                     a.score
-                FROM Answer a
-                JOIN Question q ON a.question_id = q.id
+                FROM answer a
+                JOIN question q ON a.question_id = q.id
                 WHERE a.submission_id = #{submissionId}
                 ORDER BY q.id
             """)
@@ -117,7 +117,7 @@ public interface PracticeRecordMapper {
 
     @Select("""
                 SELECT COUNT(DISTINCT student_id)
-                FROM Submission
+                FROM submission
                 WHERE practice_id = #{practiceId}
             """)
     int getTotalStudentsInPractice(@Param("practiceId") Long practiceId);
@@ -133,12 +133,12 @@ public interface PracticeRecordMapper {
                     p.title as practice_title,
                     c.name as course_name,
                     (SELECT GROUP_CONCAT(DISTINCT cl.name) 
-                     FROM ClassUser cu 
-                     JOIN Class cl ON cu.class_id = cl.id 
+                     FROM classuser cu 
+                     JOIN class cl ON cu.class_id = cl.id 
                      WHERE cu.user_id = s.student_id) as class_name
-                FROM Submission s
-                JOIN Practice p ON s.practice_id = p.id
-                JOIN Course c ON p.course_id = c.id
+                FROM submission s
+                JOIN practice p ON s.practice_id = p.id
+                JOIN course c ON p.course_id = c.id
                 WHERE s.id = #{submissionId}
                 AND s.student_id = #{studentId}
                 LIMIT 1
@@ -160,11 +160,11 @@ public interface PracticeRecordMapper {
 
     @Select("""
                 SELECT COUNT(*) + 1
-                FROM Submission s1
+                FROM submission s1
                 WHERE s1.practice_id = #{practiceId}
                 AND s1.score > (
                     SELECT score
-                    FROM Submission s2
+                    FROM submission s2
                     WHERE s2.practice_id = #{practiceId}
                     AND s2.student_id = #{studentId}
                 )
@@ -183,7 +183,7 @@ public interface PracticeRecordMapper {
                     END as score_range,
                     COUNT(*) as count,
                     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-                FROM Submission
+                FROM submission
                 WHERE practice_id = #{practiceId}
                 GROUP BY
                     CASE
@@ -208,12 +208,12 @@ public interface PracticeRecordMapper {
                     END as score_range,
                     COUNT(*) as count,
                     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-                FROM Submission s
-                JOIN ClassUser cu ON s.student_id = cu.user_id
+                FROM submission s
+                JOIN classuser cu ON s.student_id = cu.user_id
                 WHERE s.practice_id = #{practiceId}
                 AND cu.class_id = (
                     SELECT cu2.class_id
-                    FROM ClassUser cu2
+                    FROM classuser cu2
                     WHERE cu2.user_id = #{studentId}
                     LIMIT 1
                 )
@@ -261,8 +261,8 @@ public interface PracticeRecordMapper {
                     a.answer_text as student_answer,
                     a.correct as is_correct,
                     a.score
-                FROM Answer a
-                JOIN Question q ON a.question_id = q.id
+                FROM answer a
+                JOIN question q ON a.question_id = q.id
                 WHERE a.submission_id = #{submissionId}
                 ORDER BY q.id
             """)
@@ -281,12 +281,12 @@ public interface PracticeRecordMapper {
 
     @Select("""
                 SELECT COUNT(*) + 1
-                FROM Submission s1
+                FROM submission s1
                 WHERE s1.practice_id = (
-                    SELECT practice_id FROM Submission WHERE id = #{submissionId}
+                    SELECT practice_id FROM submission WHERE id = #{submissionId}
                 )
                 AND s1.score > (
-                    SELECT score FROM Submission WHERE id = #{submissionId}
+                    SELECT score FROM submission WHERE id = #{submissionId}
                 )
             """)
     int getSubmissionRank(
@@ -304,9 +304,9 @@ public interface PracticeRecordMapper {
                     END as score_range,
                     COUNT(*) as count,
                     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-                FROM Submission
+                FROM submission
                 WHERE practice_id = (
-                    SELECT practice_id FROM Submission WHERE id = #{submissionId}
+                    SELECT practice_id FROM submission WHERE id = #{submissionId}
                 )
                 GROUP BY
                     CASE
@@ -322,7 +322,7 @@ public interface PracticeRecordMapper {
 
     @Select("""
         SELECT COUNT(*) as total_submissions, AVG(score) as average_score
-        FROM Submission
+        FROM submission
         WHERE practice_id = #{practiceId}
     """)
     Map<String, Object> getSubmissionStatsByPracticeId(@Param("practiceId") Long practiceId);

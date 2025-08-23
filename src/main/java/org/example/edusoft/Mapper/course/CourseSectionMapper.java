@@ -8,6 +8,6 @@ import java.util.List;
 
 @Mapper
 public interface CourseSectionMapper extends BaseMapper<CourseSection> {
-    @Select("SELECT * FROM CourseSection WHERE course_id = #{courseId} ORDER BY sort_order")
+    @Select("SELECT * FROM coursesection WHERE course_id = #{courseId} ORDER BY sort_order")
     List<CourseSection> getSectionsByCourseId(Long courseId);
 } 

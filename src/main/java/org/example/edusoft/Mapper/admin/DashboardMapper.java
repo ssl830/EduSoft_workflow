@@ -22,7 +22,7 @@ public interface DashboardMapper {
     /** 上传课件 / 视频数量 */
     @Select("""
             SELECT COUNT(*) FROM file_node f
-            JOIN User u ON f.uploader_id = u.id
+            JOIN user u ON f.uploader_id = u.id
             WHERE u.role = 'teacher' AND DATE(f.created_at) BETWEEN #{start} AND #{end}
             """)
     int countTeacherUploadResource(@Param("start") LocalDate start,
@@ -31,7 +31,7 @@ public interface DashboardMapper {
     /** 创建作业数量 */
     @Select("""
             SELECT COUNT(*) FROM homework h
-            JOIN User u ON h.created_by = u.id
+            JOIN user u ON h.created_by = u.id
             WHERE u.role = 'teacher' AND DATE(h.created_at) BETWEEN #{start} AND #{end}
             """)
     int countTeacherCreateHomework(@Param("start") LocalDate start,
@@ -40,7 +40,7 @@ public interface DashboardMapper {
     /** 创建练习数量 */
     @Select("""
             SELECT COUNT(*) FROM practice p
-            JOIN User u ON p.created_by = u.id
+            JOIN user u ON p.created_by = u.id
             WHERE u.role = 'teacher' AND DATE(p.created_at) BETWEEN #{start} AND #{end}
             """)
     int countTeacherCreatePractice(@Param("start") LocalDate start,
@@ -49,7 +49,7 @@ public interface DashboardMapper {
     /** 生成 / 创建题目量 */
     @Select("""
             SELECT COUNT(*) FROM question q
-            JOIN User u ON q.creator_id = u.id
+            JOIN user u ON q.creator_id = u.id
             WHERE u.role = 'teacher' AND DATE(q.created_at) BETWEEN #{start} AND #{end}
             """)
     int countTeacherCreateQuestion(@Param("start") LocalDate start,
@@ -68,7 +68,7 @@ public interface DashboardMapper {
     /** 下载资源 / 观看视频次数（以 learning_progress 更新计） */
     @Select("""
             SELECT COUNT(*) FROM learning_progress lp
-            JOIN User u ON lp.student_id = u.id
+            JOIN user u ON lp.student_id = u.id
             WHERE u.role = 'student' AND DATE(lp.updated_at) BETWEEN #{start} AND #{end}
             """)
     int countStudentDownloadResource(@Param("start") LocalDate start,
@@ -77,7 +77,7 @@ public interface DashboardMapper {
     /** 提交作业数量 */
     @Select("""
             SELECT COUNT(*) FROM homeworksubmission hs
-            JOIN User u ON hs.student_id = u.id
+            JOIN user u ON hs.student_id = u.id
             WHERE u.role = 'student' AND DATE(hs.submitted_at) BETWEEN #{start} AND #{end}
             """)
     int countStudentSubmitHomework(@Param("start") LocalDate start,
@@ -86,7 +86,7 @@ public interface DashboardMapper {
     /** 提交练习数量 */
     @Select("""
             SELECT COUNT(*) FROM submission s
-            JOIN User u ON s.student_id = u.id
+            JOIN user u ON s.student_id = u.id
             WHERE u.role = 'student' AND DATE(s.submitted_at) BETWEEN #{start} AND #{end}
             """)
     int countStudentSubmitPractice(@Param("start") LocalDate start,
@@ -108,7 +108,7 @@ public interface DashboardMapper {
      * @return 平均耗时 (ms)
      */
     @Select("""
-            SELECT IFNULL(AVG(duration_ms), 0.0) FROM AiServiceCallLog
+            SELECT IFNULL(AVG(duration_ms), 0.0) FROM aiservicecalllog
             WHERE endpoint = #{endpoint} AND DATE(call_time) BETWEEN #{start} AND #{end}
             """)
     Double getAiServiceAverageDuration(@Param("endpoint") String endpoint,
@@ -124,7 +124,7 @@ public interface DashboardMapper {
      * @return 调用次数
      */
     @Select("""
-            SELECT COUNT(*) FROM AiServiceCallLog
+            SELECT COUNT(*) FROM aiservicecalllog
             WHERE endpoint = #{endpoint} AND DATE(call_time) BETWEEN #{start} AND #{end}
             """)
     int getAiServiceCallCount(@Param("endpoint") String endpoint,
@@ -140,9 +140,9 @@ public interface DashboardMapper {
     @Select("""
             SELECT
                 q.course_id, q.section_id, AVG(a.score) as average_score
-            FROM Answer a
-            JOIN Submission s ON a.submission_id = s.id
-            JOIN Question q ON a.question_id = q.id
+            FROM answer a
+            JOIN submission s ON a.submission_id = s.id
+            JOIN question q ON a.question_id = q.id
             WHERE DATE(s.submitted_at) BETWEEN #{start} AND #{end}
             GROUP BY q.course_id, q.section_id
             """)
@@ -156,8 +156,8 @@ public interface DashboardMapper {
     @Select("""
             SELECT
                 wq.question_id, COUNT(wq.id) as wrong_count, q.course_id, q.section_id, q.content
-            FROM WrongQuestion wq
-            JOIN Question q ON wq.question_id = q.id
+            FROM wrongquestion wq
+            JOIN question q ON wq.question_id = q.id
             WHERE DATE(wq.last_wrong_time) BETWEEN #{start} AND #{end}
             GROUP BY wq.question_id, q.course_id, q.section_id, q.content
             ORDER BY wrong_count DESC
@@ -171,15 +171,15 @@ public interface DashboardMapper {
      */
     @Select("""
             SELECT c.id as course_id, c.name as course_name, cs.id as section_id, cs.title as section_name
-            FROM Course c
-            JOIN CourseSection cs ON c.id = cs.course_id
+            FROM course c
+            JOIN coursesection cs ON c.id = cs.course_id
             """)
     List<Map<String, Object>> getAllCoursesAndSections();
 
     /**
      * 获取所有班级ID和名称
      */
-    @Select("SELECT id as class_id, name as class_name FROM Class")
+    @Select("SELECT id as class_id, name as class_name FROM class")
     List<Map<String, Object>> getAllClasses();
 
     /**
@@ -193,10 +193,10 @@ public interface DashboardMapper {
                 q.section_id,
                 AVG(s.score) as average_score,
                 SUM(CASE WHEN s.score >= 60 THEN 1 ELSE 0 END) * 1.0 / COUNT(s.id) as pass_rate
-            FROM Submission s
-            JOIN Practice p ON s.practice_id = p.id
-            JOIN PracticeQuestion pq ON pq.practice_id = p.id
-            JOIN Question q ON pq.question_id = q.id
+            FROM submission s
+            JOIN practice p ON s.practice_id = p.id
+            JOIN practicequestion pq ON pq.practice_id = p.id
+            JOIN question q ON pq.question_id = q.id
             WHERE DATE(s.submitted_at) BETWEEN #{start} AND #{end}
             GROUP BY p.class_id, q.course_id, q.section_id
             """)
@@ -210,11 +210,11 @@ public interface DashboardMapper {
             AVG(a.score) as average_score,
             COUNT(CASE WHEN a.correct = 0 THEN 1 END) * 100.0 / COUNT(*) as error_rate,
             COUNT(DISTINCT s.student_id) as student_count
-        FROM Question q
-        JOIN PracticeQuestion pq ON q.id = pq.question_id
-        JOIN Practice p ON pq.practice_id = p.id
-        JOIN Submission s ON p.id = s.practice_id
-        JOIN Answer a ON s.id = a.submission_id AND q.id = a.question_id
+        FROM question q
+        JOIN practicequestion pq ON q.id = pq.question_id
+        JOIN practice p ON pq.practice_id = p.id
+        JOIN submission s ON p.id = s.practice_id
+        JOIN answer a ON s.id = a.submission_id AND q.id = a.question_id
         WHERE q.course_id = #{courseId} AND q.section_id = #{sectionId}
         GROUP BY q.course_id, q.section_id
     """)
@@ -225,15 +225,15 @@ public interface DashboardMapper {
             q.content as question_content,
             COUNT(CASE WHEN a.correct = 0 THEN 1 END) as wrong_count,
             COUNT(*) as total_attempts
-        FROM Question q
-        JOIN PracticeQuestion pq ON q.id = pq.question_id
-        JOIN Practice p ON pq.practice_id = p.id
-        JOIN Submission s ON p.id = s.practice_id
-        JOIN Answer a ON s.id = a.submission_id AND q.id = a.question_id
+        FROM question q
+        JOIN practicequestion pq ON q.id = pq.question_id
+        JOIN practice p ON pq.practice_id = p.id
+        JOIN submission s ON p.id = s.practice_id
+        JOIN answer a ON s.id = a.submission_id AND q.id = a.question_id
         WHERE q.course_id = #{courseId} AND q.section_id = #{sectionId}
         GROUP BY q.id, q.content
         ORDER BY wrong_count DESC
         LIMIT 5
     """)
     List<Map<String, Object>> getTopWrongQuestions(Long courseId, Long sectionId);
-} 
+}

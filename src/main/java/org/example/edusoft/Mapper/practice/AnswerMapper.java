@@ -8,23 +8,23 @@ import org.example.edusoft.entity.practice.*;
 @Mapper
 public interface AnswerMapper {
     @Insert({
-        "INSERT INTO Answer(submission_id, question_id, answer_text, is_judged, correct, score, sort_order)",
+        "INSERT INTO answer(submission_id, question_id, answer_text, is_judged, correct, score, sort_order)",
         "VALUES(#{submissionId}, #{questionId}, #{answerText}, #{isJudged}, #{correct}, #{score}, #{sortOrder})"
     })
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Answer answer);
 
     @Update({
-        "UPDATE Answer SET answer_text=#{answerText}, is_judged=#{isJudged},",
+        "UPDATE answer SET answer_text=#{answerText}, is_judged=#{isJudged},",
         "correct=#{correct}, score=#{score} WHERE id=#{id}"
     })
     void update(Answer answer);
 
-    @Select("SELECT * FROM Answer WHERE submission_id = #{submissionId}")
+    @Select("SELECT * FROM answer WHERE submission_id = #{submissionId}")
     List<Answer> findBySubmissionId(Long submissionId);
 
     @Select("<script>" +
-            "SELECT * FROM Answer WHERE question_id IN " +
+            "SELECT * FROM answer WHERE question_id IN " +
             "<foreach collection='questionIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}" +
             "</foreach>" +
@@ -36,7 +36,7 @@ public interface AnswerMapper {
 
     
     @Select("<script>" +
-            "SELECT * FROM Answer WHERE submission_id IN " +
+            "SELECT * FROM answer WHERE submission_id IN " +
             "<foreach collection='submissionIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}" +
             "</foreach>" +
@@ -49,12 +49,12 @@ public interface AnswerMapper {
                                                   @Param("submissionIds") List<Long> submissionIds);
 
     @Update({
-        "UPDATE Answer SET score=#{score}, is_judged=#{isJudged}, correct=#{correct} WHERE id=#{id}"
+        "UPDATE answer SET score=#{score}, is_judged=#{isJudged}, correct=#{correct} WHERE id=#{id}"
     })
     void updateScoreAndJudgment(Answer answer);
 
     @Select("<script>" +
-            "SELECT * FROM Answer WHERE question_id IN " +
+            "SELECT * FROM answer WHERE question_id IN " +
             "<foreach collection='questionIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}" +
             "</foreach>" +
@@ -66,7 +66,7 @@ public interface AnswerMapper {
 
 
     @Select("<script>" +
-            "SELECT * FROM Answer WHERE submission_id IN " +
+            "SELECT * FROM answer WHERE submission_id IN " +
             "<foreach collection='submissionIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}" +
             "</foreach>" +
@@ -82,11 +82,11 @@ public interface AnswerMapper {
     /**
      * 根据提交ID和题目顺序查找答案
      */
-    @Select("SELECT * FROM Answer WHERE submission_id = #{submissionId} AND sort_order = #{sortOrder}")
+    @Select("SELECT * FROM answer WHERE submission_id = #{submissionId} AND sort_order = #{sortOrder}")
     Answer findBySubmissionIdAndSortOrder(@Param("submissionId") Long submissionId, @Param("sortOrder") Long sortOrder);
 
     @Delete("<script>" +
-            "DELETE FROM Answer WHERE submission_id IN " +
+            "DELETE FROM answer WHERE submission_id IN " +
             "<foreach collection='submissionIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}" +
             "</foreach>" +

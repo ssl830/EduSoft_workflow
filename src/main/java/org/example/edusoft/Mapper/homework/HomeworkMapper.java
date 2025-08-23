@@ -13,7 +13,7 @@ public interface HomeworkMapper {
      * 创建新作业
      */
     @Insert({
-        "INSERT INTO Homework(title, description, class_id, created_by, attachment_url,",
+        "INSERT INTO homework(title, description, class_id, created_by, attachment_url,",
         "object_name, deadline, created_at, updated_at)",
         "VALUES(#{title}, #{description}, #{classId}, #{createdBy}, #{attachmentUrl},",
         "#{objectName}, #{deadline}, #{createdAt}, #{updatedAt})"
@@ -24,20 +24,20 @@ public interface HomeworkMapper {
     /**
      * 根据ID查询作业
      */
-    @Select("SELECT * FROM Homework WHERE id = #{id}")
+    @Select("SELECT * FROM homework WHERE id = #{id}")
     Homework selectById(Long id);
 
     /**
      * 根据班级ID查询作业列表
      */
-    @Select("SELECT * FROM Homework WHERE class_id = #{classId} ORDER BY created_at DESC")
+    @Select("SELECT * FROM homework WHERE class_id = #{classId} ORDER BY created_at DESC")
     List<Homework> selectByClassId(Long classId);
 
     /**
      * 更新作业信息
      */
     @Update({
-        "UPDATE Homework",
+        "UPDATE homework",
         "SET title = #{title},",
         "    description = #{description},",
         "    attachment_url = #{attachmentUrl},",
@@ -51,12 +51,12 @@ public interface HomeworkMapper {
     /**
      * 删除作业
      */
-    @Delete("DELETE FROM Homework WHERE id = #{id}")
+    @Delete("DELETE FROM homework WHERE id = #{id}")
     void deleteById(Long id);
 
     /**
      * 检查作业是否属于指定班级
      */
-    @Select("SELECT COUNT(*) FROM Homework WHERE id = #{homeworkId} AND class_id = #{classId}")
+    @Select("SELECT COUNT(*) FROM homework WHERE id = #{homeworkId} AND class_id = #{classId}")
     int checkHomeworkBelongsToClass(@Param("homeworkId") Long homeworkId, @Param("classId") Long classId);
 } 

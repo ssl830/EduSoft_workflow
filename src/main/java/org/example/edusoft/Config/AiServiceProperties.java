@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "ai.service")
 public class AiServiceProperties {
+    private String url;
     private String baseUrl;
     private Integer connectTimeout;
     private Integer readTimeout;
