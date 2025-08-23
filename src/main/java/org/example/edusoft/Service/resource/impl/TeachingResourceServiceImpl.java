@@ -6,6 +6,7 @@ import org.example.edusoft.entity.resource.ResourceProgressDTO;
 import org.example.edusoft.mapper.resource.TeachingResourceMapper;
 import org.example.edusoft.mapper.resource.LearningProgressMapper;
 import org.example.edusoft.service.resource.TeachingResourceService;
+import org.example.edusoft.service.resource.VideoSummaryService;
 import org.example.edusoft.common.storage.IFileStorage;
 import org.example.edusoft.common.storage.IFileStorageProvider;
 import org.example.edusoft.common.domain.FileBo;
@@ -56,6 +57,9 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
     @Autowired
     private AIServiceClient aiServiceClient;
 
+    @Autowired
+    private VideoSummaryService videoSummaryService;
+
     /**
      * 上传教学资源
      */
@@ -84,6 +88,14 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
         
         // 保存到数据库
         resourceMapper.insert(resource);
+        
+        // 异步生成视频摘要
+        try {
+            videoSummaryService.generateSummaryForResource(resource.getId());
+        } catch (Exception e) {
+            log.warn("自动生成视频摘要失败, resourceId: " + resource.getId(), e);
+            // 不影响视频上传的成功，仅记录警告日志
+        }
         
         return resource;
     }

@@ -1,6 +1,7 @@
 import axios from './axios'
 import  http  from './axios'
 import type { AxiosProgressEvent } from 'axios'
+import type { ApiResponse } from './axios'
 
 const ResourceApi = {
   // 获取课程视频列表
@@ -24,6 +25,24 @@ const ResourceApi = {
         }
       }
     })
+  },
+
+  // 视频摘要相关API
+  // 获取视频摘要
+  getVideoSummary(resourceId: string): Promise<ApiResponse<any>> {
+    return axios.get(`/api/video-summary/resource/${resourceId}`)
+  },
+  // 生成视频摘要
+  generateVideoSummary(resourceId: string): Promise<ApiResponse<any>> {
+    return axios.post(`/api/video-summary/generate/${resourceId}`)
+  },
+  // 重新生成视频摘要
+  regenerateVideoSummary(resourceId: string): Promise<ApiResponse<any>> {
+    return axios.post(`/api/video-summary/regenerate/${resourceId}`)
+  },
+  // 删除视频摘要
+  deleteVideoSummary(resourceId: string): Promise<ApiResponse<any>> {
+    return axios.delete(`/api/video-summary/resource/${resourceId}`)
   },
 
 

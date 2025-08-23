@@ -61,12 +61,41 @@ public class TeachingResourceController {
             @RequestParam("description") String description,
             @RequestParam("createdBy") Long createdBy) {
         try {
+            // 文件大小检查
+            if (file.isEmpty()) {
+                return Result.error("上传文件不能为空");
+            }
+            
+            // 检查文件大小 (500MB)
+            long maxSize = 500 * 1024 * 1024L;
+            if (file.getSize() > maxSize) {
+                return Result.error("文件大小不能超过500MB");
+            }
+            
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("video/")) {
+                return Result.error("请上传视频文件");
+            }
+            
+            log.info("开始上传文件: {}, 大小: {} bytes", file.getOriginalFilename(), file.getSize());
+            
             TeachingResource resource = resourceService.uploadResource(
                 file, courseId, chapterId, chapterName, title, description, createdBy);
+                
+            log.info("文件上传成功, 资源ID: {}", resource.getId());
+            
             // 课件上传成功后，自动同步到AI知识库
-            resourceService.syncToAIKnowledgeBase(file, resource.getId());
+            try {
+                resourceService.syncToAIKnowledgeBase(file, resource.getId());
+            } catch (Exception e) {
+                log.warn("同步到AI知识库失败: {}", e.getMessage());
+                // 不影响主流程，只记录警告
+            }
+            
             return Result.ok(resource, "资源上传成功");
         } catch (Exception e) {
+            log.error("资源上传失败", e);
             return Result.error("资源上传失败：" + e.getMessage());
         }
     }

@@ -1,7 +1,7 @@
 """
 提示词管理模块
 """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import json
 
 class PromptTemplates:
@@ -302,7 +302,7 @@ class PromptTemplates:
         - question: 学生提出的问题
         - relevant_docs: 与问题最相关的知识库片段，列表元素形如{"content": "...", "source": "..."}
         - course_name: 当前课程名称，可选
-        - chat_history: 历史对话，用于上下文记忆，可选，列表元素形如{"role": "user/assistant", "content": "..."}
+        - chat_history: 历史对话，用于上下文记忆，可选，列表元素形如{"role": "user/assistant/system", "content": "..."}
         """
         # 格式化参考资料
         formatted_docs = []
@@ -310,12 +310,20 @@ class PromptTemplates:
             formatted_docs.append(f"来源：{doc['source']}\n内容：{doc['content']}")
         docs_str = "\n\n".join(formatted_docs) if formatted_docs else "无"
 
-        # 格式化历史对话
+        # 格式化历史对话 - 区分历史摘要和最近对话
         history_lines = []
         if chat_history:
             for idx, msg in enumerate(chat_history, 1):
-                role = "学生" if msg.get("role") == "user" else "助教"
-                history_lines.append(f"{role}{idx}: {msg.get('content', '')}")
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                
+                if role == "system":
+                    # 这是历史摘要
+                    history_lines.append(f"[历史对话摘要]: {content}")
+                elif role == "user":
+                    history_lines.append(f"学生{idx}: {content}")
+                elif role == "assistant":
+                    history_lines.append(f"助教{idx}: {content}")
         history_str = "\n".join(history_lines) if history_lines else "无"
 
         return f"""
@@ -323,7 +331,7 @@ class PromptTemplates:
 
         课程名称：{course_name if course_name else '未指定'}
 
-        历史对话（如有）：
+        对话历史（包含历史摘要和最近对话）：
         {history_str}
 
         学生问题：
@@ -334,10 +342,11 @@ class PromptTemplates:
 
         请遵循以下要求生成回答：
         1. 首先给出对学生问题的详细解答，条理清晰、逻辑严谨。
-        2. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
-        3. 提取与问题相关的关键知识点列表。
-        4. 指出回答引用的资料来源（source 字段）及其内容摘要。
-        5.如果课程资料与学生问题完全没有关系，可以不参考课程资料，并在回答后说明问题可能与课程库无关
+        2. 如果有历史对话摘要，请结合历史讨论内容为学生提供连贯的回答。
+        3. 回答应引用上述资料片段中的关键信息，但不得照搬，可适当改写确保通顺。
+        4. 提取与问题相关的关键知识点列表。
+        5. 指出回答引用的资料来源（source 字段）及其内容摘要。
+        6. 如果课程资料与学生问题完全没有关系，可以不参考课程资料，并在回答后说明问题可能与课程库无关
 
         请仅以 JSON 格式返回，不要用markdown包裹！结构如下：
         {{
@@ -618,3 +627,84 @@ class PromptTemplates:
         import json
         return f"""
         你是一位教学设计专家，正在完善课时 \"{lesson_title}\" 的教学环节。\n\n当前环节：{step_name}\n\n该环节已有内容：{current_content if current_content else '（无）'}\n\n该课时涉及的知识点：{json.dumps(knowledge_points, ensure_ascii=False, indent=2)}\n\n请基于以上信息，为 {step_name} 环节生成更详细的教学设计，包括：\n1. 教学目标\n2. 活动流程(可分多步)\n3. 师生活动要点\n4. 评估方式\n5. 所需教具/资源\n\n返回格式要求(JSON)：\n{{\n  \"step\": \"{step_name}\",\n  \"objectives\": [string],\n  \"activities\": [string],\n  \"teacherGuidance\": string,\n  \"studentTasks\": [string],\n  \"assessment\": string,\n  \"resources\": [string]\n}}\n\n仅返回合法 JSON，不要包含 Markdown、注释或多余文字。"""
+
+    @staticmethod
+    def get_video_summary_prompt(
+        transcript: str,
+        segments: List[Dict[str, Any]],
+        video_title: str = "",
+        course_name: str = "",
+        duration: int = 0
+    ) -> str:
+        """生成视频摘要的提示词"""
+        # 格式化分段信息
+        segments_text = ""
+        if segments:
+            segments_text = "\n时间轴信息："
+            for seg in segments[:20]:  # 限制显示前20个分段，避免提示词过长
+                start_time = seg.get('start', 0)
+                end_time = seg.get('end', 0)
+                text = seg.get('text', '')
+                segments_text += f"\n{start_time:.1f}s-{end_time:.1f}s: {text}"
+            if len(segments) > 20:
+                segments_text += f"\n... (还有{len(segments)-20}个分段)"
+
+        return f"""
+        作为一名专业的教育内容分析师，请对以下视频内容进行深度分析并生成详细摘要：
+
+        视频信息：
+        - 标题：{video_title or "未知标题"}
+        - 课程：{course_name or "未知课程"}
+        - 时长：{duration}秒 ({duration//60}分{duration%60}秒)
+
+        视频转写内容：
+        {transcript}
+        {segments_text}
+
+        请分析视频内容并生成详细摘要，要求包括：
+
+        1. 内容概述：对整个视频内容的简洁总结
+        2. 阶段划分：将视频内容分为几个逻辑阶段，每个阶段包括：
+           - 阶段标题
+           - 起始时间和结束时间
+           - 该阶段的核心内容描述
+        3. 重要知识点：提取视频中的关键知识点和要点
+        4. 重要时间点：标注一些关键的时间节点（如重要概念讲解、示例演示等）
+
+        请以JSON格式返回，结构如下：
+        {{
+            "summary": "视频整体内容概述",
+            "stages": [
+                {{
+                    "title": "阶段标题",
+                    "start_time": 开始时间(秒),
+                    "end_time": 结束时间(秒),
+                    "description": "该阶段核心内容描述"
+                }}
+            ],
+            "keyPoints": [
+                {{
+                    "point": "知识点内容",
+                    "timestamp": 相关时间点(秒),
+                    "importance": "high|medium|low"
+                }}
+            ],
+            "keyTimestamps": [
+                {{
+                    "time": 时间点(秒),
+                    "event": "重要事件或内容描述",
+                    "type": "concept|example|summary|question"
+                }}
+            ]
+        }}
+
+        注意事项：
+        1. 阶段划分要合理，每个阶段应该有明确的主题
+        2. 时间点要准确，基于提供的时间轴信息
+        3. 知识点要具体且有教学价值
+        4. 重要程度要根据内容的核心性和复杂性判断
+        5. 确保返回的JSON格式正确，不要包含Markdown标记
+        6. 如果视频内容较短，阶段可以相应减少
+
+        请只返回标准JSON格式，不要包含任何额外的文字说明。
+        """
