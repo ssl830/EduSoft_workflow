@@ -101,7 +101,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { askAssistant } from '@/api/ai'
 import CourseApi from '@/api/course'
 import { useAuthStore } from '@/stores/auth'
-import http, { ApiResponse } from '@/api/axios'
+import http from '@/api/axios'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
