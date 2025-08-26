@@ -51,12 +51,13 @@ public class CourseOptimizationService {
         Map<String, Object> requestData = new HashMap<>();
         requestData.put("courseName", course.getName());
         requestData.put("sectionName", section.getTitle());
-        requestData.put("averageScore", statistics.get("average_score"));
-        requestData.put("errorRate", statistics.get("error_rate"));
-        requestData.put("studentCount", statistics.get("student_count"));
+
+        requestData.put("averageScore", statistics != null ? (Double) statistics.get("average_score") : null);
+        requestData.put("errorRate", statistics != null ? (Double) statistics.get("error_rate") : null);
+        requestData.put("studentCount", statistics != null ? (Integer) statistics.get("student_count") : null);
         requestData.put("topWrongQuestions", topWrongQuestions);
 
         // 调用 AI 服务
         return aiServiceClient.optimizeCourse(requestData);
     }
-} 
+}

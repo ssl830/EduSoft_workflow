@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import org.example.edusoft.common.storage.IFileStorage;
 import org.example.edusoft.common.storage.IFileStorageProvider;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.example.edusoft.entity.file.FileInfo;
@@ -26,7 +27,7 @@ public class FilePreviewServiceImpl implements FilePreviewService {
             FileInfo fileInfo = fileMapper.selectById(fileId);
             if (fileInfo == null || fileInfo.getIsDir()) {
                 throw new IllegalArgumentException("仅支持预览单个文件");
-        }
+            }
 
         // 获取文件类型（可以从扩展名判断）
         String fileName = fileInfo.getObjectName().toLowerCase();
@@ -37,9 +38,9 @@ public class FilePreviewServiceImpl implements FilePreviewService {
         // 设置 disposition 为 inline，而不是 attachment（下载）
         String encodedName = URLEncoder.encode(fileInfo.getName(), StandardCharsets.UTF_8.toString());
         response.setHeader("Content-Disposition", "inline; filename=\"" + encodedName + "\"");
- 
+
         IFileStorage storage = storageProvider.getStorage();
-        storage.download(fileInfo.getObjectName(), response.getOutputStream()); 
+        storage.download(fileInfo.getObjectName(), response.getOutputStream());
     } catch (IOException e) {
         throw new RuntimeException("文件预览失败", e);
     }

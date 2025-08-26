@@ -16,4 +16,4 @@ public class SubmissionDetailDTO {
     private Integer maxScore;      // 题目满分
     private String studentName;    // 学生姓名
     private Long sortOrder;        // 题目顺序
-} 
+}

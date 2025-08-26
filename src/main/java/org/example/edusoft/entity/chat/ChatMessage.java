@@ -40,4 +40,13 @@ public class ChatMessage {
     
     @TableField("token_count")
     private Integer tokenCount;
+
+    public ChatMessage(String assistant, String s) {
+        this.role = assistant;
+        this.content = s;
+    }
+
+    public ChatMessage() {
+
+    }
 }

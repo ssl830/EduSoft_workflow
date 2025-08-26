@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 @Service
 public class DashboardService {
@@ -72,18 +73,23 @@ public class DashboardService {
 
         // 课程优化方向分析
         List<Map<String, Object>> stats = dashboardMapper.getClassCourseSectionStats(start, end);
+        if (stats == null) {
+            stats = Collections.emptyList();
+        }
+
         List<Map<String, Object>> allCoursesAndSections = dashboardMapper.getAllCoursesAndSections();
         List<Map<String, Object>> allClasses = dashboardMapper.getAllClasses();
-        Map<String, String> courseSectionNames = allCoursesAndSections.stream()
-                .collect(Collectors.toMap(
+        Map<String, String> courseSectionNames = allCoursesAndSections != null ?
+                allCoursesAndSections.stream().collect(Collectors.toMap(
                         map -> map.get("course_id") + "-" + map.get("section_id"),
                         map -> map.get("course_name") + " - " + map.get("section_name")
-                ));
-        Map<String, String> classNames = allClasses.stream()
+                )) : new HashMap<>();
+        Map<String, String> classNames = allClasses != null ?
+                allClasses.stream()
                 .collect(Collectors.toMap(
                         map -> map.get("class_id").toString(),
                         map -> map.get("class_name").toString()
-                ));
+                )) : new HashMap<>();
         StringBuilder advice = new StringBuilder();
         int count = 0;
         for (Map<String, Object> stat : stats) {
@@ -163,4 +169,4 @@ public class DashboardService {
 
         return overview;
     }
-} 
+}

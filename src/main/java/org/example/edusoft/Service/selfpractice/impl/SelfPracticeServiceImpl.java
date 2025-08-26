@@ -103,7 +103,7 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
             return false;
         }
         
-        SelfPractice practice = this.getById(practiceId);
+        SelfPractice practice = this.baseMapper.selectById(practiceId);
         boolean exists = practice != null;
         logger.info("检查练习是否存在 - 练习ID: {}, 结果: {}", practiceId, exists);
         return exists;
@@ -120,7 +120,7 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
         if (subs == null || subs.isEmpty()) return java.util.Collections.emptyList();
         java.util.List<Map<String, Object>> list = new java.util.ArrayList<>();
         for (SelfSubmission sub : subs) {
-            SelfPractice sp = this.getById(sub.getSelfPracticeId());
+            SelfPractice sp = this.baseMapper.selectById(sub.getSelfPracticeId());
             java.util.Map<String, Object> item = new java.util.HashMap<>();
             item.put("practiceId", sub.getSelfPracticeId());
             item.put("title", sp != null ? sp.getTitle() : "AI自测");
@@ -164,4 +164,4 @@ public class SelfPracticeServiceImpl extends ServiceImpl<SelfPracticeMapper, Sel
         }
         return result;
     }
-} 
+}
