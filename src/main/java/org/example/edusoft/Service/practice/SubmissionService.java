@@ -101,6 +101,6 @@ public class SubmissionService {
         }
         submissionMapper.update(submission);
 
-        return Result.ok(submission.getId(), "提交成功");
+        return Result.success(submission.getId(), "提交成功");
     }
 }

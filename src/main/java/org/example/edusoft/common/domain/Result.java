@@ -47,4 +47,13 @@ public class Result<T> {
         result.setMsg(msg);
         return result;
     }
+
+    public static <T> Result<T> success(T data, String msg) {
+        Result<T> result = new Result<>();
+        result.setCode(0);
+        result.setMsg(msg);
+        result.setData(data);
+        return result;
+    }
+
 }

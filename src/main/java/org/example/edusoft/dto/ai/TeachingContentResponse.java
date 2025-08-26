@@ -24,7 +24,7 @@ public class TeachingContentResponse {
      * 教学建议
      */
     private String teachingAdvice;
-    
+
     @Data
     public static class LessonContent {
         /**

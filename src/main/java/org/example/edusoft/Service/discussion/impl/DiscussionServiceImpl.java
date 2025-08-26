@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 
 @Service
 public class DiscussionServiceImpl implements DiscussionService {
-    
+
     @Autowired
     private DiscussionMapper discussionMapper;
-    
+
     @Override
     @Transactional
     public Discussion createDiscussion(Discussion discussion) {
@@ -22,11 +22,11 @@ public class DiscussionServiceImpl implements DiscussionService {
         LocalDateTime now = LocalDateTime.now();
         discussion.setCreatedAt(now);
         discussion.setUpdatedAt(now);
-        
+
         discussionMapper.insert(discussion);
         return discussion;
     }
-    
+
     @Override
     @Transactional
     public Discussion updateDiscussion(Discussion discussion) {
@@ -44,70 +44,74 @@ public class DiscussionServiceImpl implements DiscussionService {
             discussion.setIsPinned(existingDiscussion.getIsPinned());
             discussion.setIsClosed(existingDiscussion.getIsClosed());
         }
-        
+
         // 设置更新时间
         discussion.setUpdatedAt(LocalDateTime.now());
-        
+
         discussionMapper.updateById(discussion);
         return discussion;
     }
-    
+
     @Override
     @Transactional
     public void deleteDiscussion(Long id) {
+        if (id == null) return;
         discussionMapper.deleteById(id);
     }
-    
+
     @Override
     public Discussion getDiscussion(Long id) {
         return discussionMapper.selectById(id);
     }
-    
+
     @Override
     public List<Discussion> getDiscussionsByCourse(Long courseId) {
         return discussionMapper.findByCourseId(courseId);
     }
-    
+
     @Override
     public List<Discussion> getDiscussionsByClass(Long classId) {
         return discussionMapper.findByClassId(classId);
     }
-    
+
     @Override
     public List<Discussion> getDiscussionsByCreator(Long creatorId) {
         return discussionMapper.findByCreatorId(creatorId);
     }
-    
+
     @Override
     public List<Discussion> getDiscussionsByCourseAndClass(Long courseId, Long classId) {
         return discussionMapper.findByCourseAndClass(courseId, classId);
     }
-    
+
     @Override
     @Transactional
     public void incrementViewCount(Long id) {
+        if (id == null) return;
         discussionMapper.incrementViewCount(id);
     }
-    
+
     @Override
     @Transactional
     public void updatePinnedStatus(Long id, Boolean isPinned) {
+        if (id == null) return;
         discussionMapper.updatePinnedStatus(id, isPinned);
     }
-    
+
     @Override
     @Transactional
     public void updateClosedStatus(Long id, Boolean isClosed) {
+        if (id == null) return;
         discussionMapper.updateClosedStatus(id, isClosed);
     }
-    
+
     @Override
     public int countDiscussionsByCourse(Long courseId) {
         return discussionMapper.countByCourseId(courseId);
     }
-    
+
     @Override
     public int countDiscussionsByClass(Long classId) {
         return discussionMapper.countByClassId(classId);
     }
-} 
+}
