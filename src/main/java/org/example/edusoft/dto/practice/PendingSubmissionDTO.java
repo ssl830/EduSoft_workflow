@@ -14,4 +14,4 @@ public class PendingSubmissionDTO {
     private String studentName;    // 学生姓名
     private String practiceName;   // 练习名称
     private Long submissionId;     // 提交ID
-} 
+}

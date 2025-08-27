@@ -92,7 +92,7 @@ public class ChatMemoryService {
     /**
      * 生成备用摘要（当AI生成失败时使用）
      */
-    private String generateFallbackSummary(List<ChatMessage> messages) {
+    String generateFallbackSummary(List<ChatMessage> messages) {
         if (messages == null || messages.isEmpty()) {
             return "空对话";
         }
