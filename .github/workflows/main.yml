@@ -95,3 +95,25 @@ jobs:
       - name: 推送前端镜像
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/edusoft-frontend:latest
+
+  dockerize_ai_service:
+    name: AI服务镜像化并推送
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 登录Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 构建AI服务镜像
+        run: |
+          cd ai_service
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/edusoft-ai-service:latest .
+
+      - name: 推送AI服务镜像
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/edusoft-ai-service:latest
