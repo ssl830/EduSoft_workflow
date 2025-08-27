@@ -1,9 +1,9 @@
 # 基于 Node 构建前端产物，再用 Nginx 生产环境托管
 FROM node:20 AS build
 WORKDIR /app
-COPY frontend/package.json frontend/package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm install --registry=https://registry.npmmirror.com
-COPY frontend/ ./
+COPY . .
 RUN npm run build
 
 FROM nginx:1.25-alpine
