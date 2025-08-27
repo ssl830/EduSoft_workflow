@@ -58,26 +58,6 @@ class RecordControllerTest {
         // assertTrue(result.getMessage().contains("请先登录"));
     }
 
-    // getStudyRecordsByCourse
-    @Test
-    void testGetStudyRecordsByCourse_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = true; loginId = 2L;
-        // List<StudyRecord> list = Arrays.asList(new StudyRecord());
-        // when(recordService.getStudyRecordsByCourse(2L, 10L)).thenReturn(list);
-        // Result<List<StudyRecord>> result = controller.getStudyRecordsByCourse(10L);
-        // assertEquals(200, result.getCode());
-        // assertEquals(list, result.getData());
-    }
-    
-    @Test
-    void testGetStudyRecordsByCourse_NotLogin() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = false;
-        // Result<List<StudyRecord>> result = controller.getStudyRecordsByCourse(10L);
-        // assertNotEquals(200, result.getCode());
-        // assertTrue(result.getMessage().contains("请先登录"));
-    }
 
     // getPracticeRecords
     @Test

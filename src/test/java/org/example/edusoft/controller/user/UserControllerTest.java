@@ -102,26 +102,6 @@ class UserControllerTest {
         assertTrue(result.getMsg().contains("注册失败"));
     }
 
-    // login
-    @Test
-    void testLogin_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // User user = new User();
-        // user.setId(1L);
-        // user.setUserId("u1");
-        // user.setUsername("name1");
-        // user.setEmail("e@e.com");
-        // user.setRole(User.UserRole.student);
-        // user.setPasswordHash("pw_hash");
-        // when(userService.findByUserId("u1")).thenReturn(user);
-        // // 密码正确
-        // SaResult result = controller.login("u1", "pw");
-        // assertEquals(200, result.getCode());
-        // assertEquals("登录成功", result.getMsg());
-        // Map<String, Object> data = (Map<String, Object>) result.getData();
-        // assertEquals(tokenValue, data.get("token"));
-    }
-
     @Test
     void testLogin_UserNotExist() {
         when(userService.findByUserId("notfound")).thenReturn(null);
@@ -149,15 +129,6 @@ class UserControllerTest {
         assertTrue(result.getMsg().contains("登录失败"));
     }
 
-    // logout
-    @Test
-    void testLogout_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = true;
-        // SaResult result = controller.logout();
-        // assertEquals(200, result.getCode());
-        // assertEquals("退出登录成功", result.getMsg());
-    }
 
     @Test
     void testLogout_NotLogin() {
@@ -188,20 +159,6 @@ class UserControllerTest {
         assertTrue(result.getMsg().contains("退出登录失败"));
     }
 
-    // getUserInfo
-    @Test
-    void testGetUserInfo_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = true; loginId = 1L;
-        // User user = new User();
-        // user.setId(1L);
-        // user.setPasswordHash("pw");
-        // when(userService.findById(1L)).thenReturn(user);
-        // SaResult result = controller.getUserInfo();
-        // assertEquals(200, result.getCode());
-        // assertEquals("获取成功", result.getMsg());
-        // assertNull(((User) result.getData()).getPasswordHash());
-    }
 
     @Test
     void testGetUserInfo_UserNotExist() {
@@ -231,23 +188,7 @@ class UserControllerTest {
         assertTrue(result.getMsg().contains("失败"));
     }
 
-    // updateUserInfo
-    @Test
-    void testUpdateUserInfo_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = true; loginId = 3L;
-        // User user = new User();
-        // user.setId(3L);
-        // when(userService.findById(3L)).thenReturn(user);
-        // doNothing().when(userService).save(any());
-        // UserUpdate update = new UserUpdate();
-        // update.setUsername("newName");
-        // update.setEmail("e@a.com");
-        // SaResult result = controller.updateUserInfo(update);
-        // assertEquals(200, result.getCode());
-        // assertEquals("更新成功", result.getMsg());
-    }
-
+   
     @Test
     void testUpdateUserInfo_NotExist() {
         isLogin = true; loginId = 4L;
@@ -266,21 +207,6 @@ class UserControllerTest {
         SaResult result = controller.updateUserInfo(update);
         assertNotEquals(200, result.getCode());
         assertTrue(result.getMsg().contains("失败"));
-    }
-
-    // changePassword
-    @Test
-    void testChangePassword_Success() {
-        // 由于静态方法mock未实现，暂时跳过此测试
-        // isLogin = true; loginId = 6L;
-        // User user = new User();
-        // user.setId(6L);
-        // user.setPasswordHash(encryptOld);
-        // when(userService.findById(6L)).thenReturn(user);
-        // doNothing().when(userService).save(any());
-        // SaResult result = controller.changePassword("old", "new");
-        // assertEquals(200, result.getCode());
-        // assertEquals("密码修改成功", result.getMsg());
     }
 
     @Test
