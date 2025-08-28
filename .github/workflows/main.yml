@@ -157,3 +157,35 @@ jobs:
       - name: 推送后端镜像
         run: |
           docker push crpi-z38aw29its2zwb1p.cn-beijing.personal.cr.aliyuncs.com/sjy330/edusoft-backend:latest
+
+  deploy_to_k8s:
+    name: 部署到Kubernetes集群
+    runs-on: ubuntu-latest
+    needs: [dockerize_frontend, dockerize_ai_service, dockerize_backend]
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装SSH客户端
+        run: sudo apt-get install -y openssh-client
+
+      - name: 配置SSH密钥
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 60.205.159.21 >> ~/.ssh/known_hosts
+
+      - name: 部署到K8s集群
+        run: |
+          ssh root@60.205.159.21 '
+            cd ~/edusoft-k8s
+            kubectl rollout restart deployment/edusoft-frontend
+            kubectl rollout restart deployment/edusoft-backend
+            kubectl rollout restart deployment/edusoft-ai-service
+            # 添加等待逻辑，确保部署成功
+            kubectl rollout status deployment/edusoft-frontend --timeout=120s
+            kubectl rollout status deployment/edusoft-backend --timeout=120s
+            kubectl rollout status deployment/edusoft-ai-service --timeout=120s
+            echo "所有服务已成功重新部署！"
+          '
