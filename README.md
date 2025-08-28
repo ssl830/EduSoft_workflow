@@ -30,39 +30,79 @@ EduSoft/
 ### 1. 克隆项目
 ```bash
 git clone https://github.com/ssl830/EduSoft_workflow.git
-cd EduSoft_workflow/EduSoft
+cd EduSoft
 ```
 
 ### 2. 数据库初始化
-- 使用 `courseplatfoem.sql` 脚本初始化 MySQL 数据库
+- 使用 `courseplatform.sql` 脚本初始化 MySQL 数据库
 - 默认数据库名：`courseplatform`
 
-### 3. 启动后端服务
+### 3. 完成环境配置
+- 在src目录下新建.env文件，并填写以下内容：
+```ini
+OSS_ACCESS_KEY=你的key
+OSS_SECRET_KEY=你的secret
+OSS_ENDPOINT=oss-cn-beijing.aliyuncs.com
+OSS_BUCKET=edusoft-file
+DB_PASSWORD=你的数据库密码
+DB_USERNAME=你的数据库用户名
+```
+
+在ai_service目录下新建.env文件，并填写以下内容：
+```ini
+DEEPSEEK_API_KEY=
+DASHSCOPE_API_KEY=
+QWEN_EMBEDDING_URL=https://dashscope.aliyuncs.com/compatible-mode/v1  # 推荐，默认已是此值
+QWEN_EMBEDDING_MODEL=text-embedding-v3
+QWEN_EMBEDDING_DIM=1024         # v3支持: 64,128,256,512,768,1024
+# QWEN_EMBEDDING_MODEL=text-embedding-v4
+# QWEN_EMBEDDING_DIM=1536       # v4支持: 1024,1536,2048,3072,4096
+
+# Storage Configuration
+STORAGE_ROOT=storage
+VECTOR_DB_PATH=data/vector_db
+TEMP_DIR=storage/temp
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+
+# OpenMP Configuration
+KMP_DUPLICATE_LIB_OK=TRUE
+```
+
+### 4. 启动后端服务
 ```bash
 cd EduSoft
 mvn clean package
 java -jar target/*.jar
 ```
 
-### 4. 启动前端服务
+### 5. 启动前端服务
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 5. 启动 AI 服务
+### 6. 启动 AI 服务
 ```bash
 cd ai_service
+python -m venv venv
+.\venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload   
 ```
+在运行网站下的/docs可以看到Swapper网站查看接口文档
+如：http://127.0.0.1:8000/docs
 
-### 6. Docker & K8s 部署
+
+### 7. Docker & K8s 部署
 - 提供 Dockerfile 和 Kubernetes YAML 文件，支持一键部署
 - 可参考 `配置说明和部署说明.md` 文档
 
-### 7. CI/CD 自动化
+### 8. CI/CD 自动化
 - 已集成 GitHub Actions 自动构建、推送镜像、自动部署到 K8s
 - 需配置阿里云镜像仓库和 SSH 密钥
 
