@@ -1,0 +1,64 @@
+# 多阶段构建 - 构建阶段
+FROM python:3.10-slim AS builder
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装构建依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制依赖文件
+COPY requirements.txt .
+
+# 创建虚拟环境并安装依赖
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# 安装依赖，禁用缓存，优化安装
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# 多阶段构建 - 运行阶段
+FROM python:3.10-slim AS runtime
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装运行时必要的系统依赖（只保留必要的）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-chi-sim \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 从构建阶段复制虚拟环境
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# 复制应用代码（可选择只复制必要文件）
+COPY main.py .
+COPY services/ ./services/
+COPY utils/ ./utils/
+
+# 创建必要的目录
+RUN mkdir -p /app/data/vector_db /app/storage/documents /app/storage/temp /app/logs
+
+# 设置环境变量
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH=/app
+
+# 使用非root用户运行（安全最佳实践）
+RUN useradd -m appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# 运行应用
+CMD ["python", "main.py"]

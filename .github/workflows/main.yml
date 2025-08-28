@@ -115,6 +115,18 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      # 设置 Docker Buildx
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      # 设置缓存
+      - name: 缓存 Docker 层
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-ai-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-ai-
 
       - name: 登录阿里云镜像仓库
         uses: docker/login-action@v3
@@ -123,15 +135,27 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
+      # 优化镜像构建过程
+      - name: 构建并推送AI服务镜像
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ai_service
+          push: true
+          tags: crpi-z38aw29its2zwb1p.cn-beijing.personal.cr.aliyuncs.com/sjy330/edusoft-ai-service:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          # 启用 BuildKit 优化
+          platforms: linux/amd64
+          # 使用优化的 Dockerfile
+          file: ./ai_service/Dockerfile.optimized
 
-      - name: 构建AI服务镜像
+      # 更新缓存
+      - name: 移动缓存
         run: |
-          cd ai_service
-          docker build -t crpi-z38aw29its2zwb1p.cn-beijing.personal.cr.aliyuncs.com/sjy330/edusoft-ai-service:latest .
-
-      - name: 推送AI服务镜像
-        run: |
-          docker push crpi-z38aw29its2zwb1p.cn-beijing.personal.cr.aliyuncs.com/sjy330/edusoft-ai-service:latest
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   dockerize_backend:
     name: 后端镜像化并推送
